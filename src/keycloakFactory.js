@@ -1,12 +1,12 @@
 import Keycloak from 'keycloak-js';
 
 const cfg = {
-    url: 'https://auth.keypractica.com/auth',
+    url: 'https://auth.keypractica.com',
     realm: 'keypractica_auth',
     clientId: 'keypractica_projects',
-    onLoad: 'login-required',  // This matches the KeycloakOptions interface
+    onLoad: 'check-sso',
     pkceMethod: 'S256',
-    scope: 'openid'
+    scope: 'openid offline_access'
 };
 
 const keycloakInst = new Keycloak(cfg);

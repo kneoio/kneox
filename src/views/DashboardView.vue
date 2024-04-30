@@ -2,7 +2,7 @@
   <div class="home">
     <div class="top-middle-section">
       <div class="top-section">
-        <n-h1 class="title">KNEOX</n-h1>
+        <n-h1 class="title">Kneox</n-h1>
         <p v-if="userData.profile && userData.profile.username">Hello, {{ userData.profile.username }}</p>
         <n-button v-if="userData.profile" @click="logout">Logout</n-button>
       </div>
@@ -18,6 +18,7 @@
     </div>
   </div>
 </template>
+
 
 <script lang="ts">
 import { defineComponent, ref, inject } from 'vue';

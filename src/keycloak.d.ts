@@ -13,6 +13,7 @@ declare module 'keycloak-js' {
         login(options?: any): Promise<void>;
         logout(options?: any): Promise<void>;
         isAuthenticated(): boolean;
+        authenticated?: boolean;
     }
 
     const Keycloak: (config?: KeycloakOptions) => KeycloakInstance;
