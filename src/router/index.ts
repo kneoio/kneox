@@ -1,8 +1,9 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
 
-import AboutView from '../views/AboutView.vue';
+import AboutView from '../views/AboutPage.vue';
 import HomeView from "../views/HomeView.vue";
 import DashboardView from "../views/DashboardView.vue";
+import LicensePage from "../views/LicensePage.vue";
 
 
 const routes: Array<RouteRecordRaw> = [
@@ -21,7 +22,8 @@ const routes: Array<RouteRecordRaw> = [
         path: '/about',
         name: 'About',
         component: AboutView
-    }
+    },
+    { path: '/license', component: LicensePage },
 ];
 
 const router = createRouter({

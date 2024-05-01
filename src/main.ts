@@ -33,7 +33,7 @@ keycloak.init({
             startApp();
         });
     } else {
-        console.error('Authentication failed - proceeding without authentication');
+        console.warn('Authentication failed - proceeding without authentication');
         startApp();
     }
 }).catch((error: any) => {
