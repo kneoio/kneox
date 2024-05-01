@@ -1,57 +1,195 @@
 <template>
-  <div class="layout">
-    <n-layout has-sider>
-      <n-layout-sider bordered :collapsed-width="0" :width="240" :collapsed="collapsed" class="sidebar">
-        <div class="toggle-button" @click="toggleSidebar">
-          <n-icon size="24" :component="collapsed ? MenuUnfoldOutlined : MenuFoldOutlined" />
-        </div>
-        <n-menu :options="menuOptions" :collapsed="collapsed" />
-      </n-layout-sider>
-      <n-layout>
-        <n-layout-header bordered>
-          <div class="header-content">
-            <n-h1 class="title">Kneox</n-h1>
+    <n-layout class="layout-full-height">
+      <n-grid x-gap="12" :cols="4">
+      </n-grid>
+      <n-layout-header :inverted="inverted" bordered>
+        <n-grid x-gap="12" :cols="4">
+          <n-gi>
+            <n-h1 class="title">&nbsp;&nbsp;Kneox</n-h1>
+          </n-gi>
+          <n-gi :offset="2">
             <div class="user-info" v-if="userData.profile">
-              <span>Hello, {{ userData.profile.username }}</span>
+              <n-space justify="end">
+              <n-h6>Hello, {{ userData.profile.username }}</n-h6>
               <n-button @click="logout">Logout</n-button>
+              </n-space>
             </div>
             <n-button v-else @click="login">Login</n-button>
-          </div>
-        </n-layout-header>
-        <n-layout-content>
-          <div class="document-list">
-            <n-list>
-              <n-list-item v-for="document in documents" :key="document.id">
-                {{ document.title }}
-              </n-list-item>
-            </n-list>
-          </div>
-        </n-layout-content>
-        <n-layout-footer bordered>
-          <div class="footer-content">
-            <div class="language-select">
-              <n-select v-model:value="selectedLanguage" :options="languageOptions" />
-            </div>
-            <div class="links">
-              <router-link to="/license"><n-button text>license</n-button></router-link>&nbsp;&nbsp;&nbsp;
-              <router-link to="/about"><n-button text>about</n-button></router-link>
-            </div>
-          </div>
-        </n-layout-footer>
+          </n-gi>
+        </n-grid>
+        <n-grid x-gap="12" :cols="1">
+          <n-gi>
+            <n-menu mode="horizontal" :inverted="inverted" :options="menuOptions"/>
+          </n-gi>
+        </n-grid>
+      </n-layout-header>
+      <n-layout has-sider class="layout-content-expand">
+        <n-layout-sider
+            bordered
+            show-trigger
+            collapse-mode="width"
+            :collapsed-width="64"
+            :width="240"
+            :native-scrollbar="false"
+            :inverted="inverted"
+        >
+          <n-menu
+              :inverted="inverted"
+              :collapsed-width="64"
+              :collapsed-icon-size="22"
+              :options="projectMenuOptions"
+          />
+        </n-layout-sider>
+        <n-layout class="layout-content-expand">
+          <!-- Perhaps some default content or placeholders to ensure expansion -->
+        </n-layout>
       </n-layout>
+      <n-layout-footer :inverted="inverted" bordered>
+        <n-grid :x-gap="12" :cols="4">
+          <n-gi>
+            <n-h6 class="title">Copyright ©</n-h6>
+          </n-gi>
+          <n-gi :offset="2">
+            <n-select v-model="selectedLanguage" :options="languageOptions"/>
+          </n-gi>
+        </n-grid>
+      </n-layout-footer>
     </n-layout>
-  </div>
+
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, inject } from 'vue';
-import {  NIcon, NGrid, NGi , NLayout, NLayoutSider, NLayoutHeader, NLayoutContent, NLayoutFooter, NMenu, NButton, NList, NListItem, NSelect, NH1 } from 'naive-ui';
-import { MenuUnfoldOutlined, MenuFoldOutlined } from '@vicons/antd';
-import { KeycloakInstance } from 'keycloak-js';
+import {h, defineComponent, ref, Component, inject} from 'vue'
+import {
+  NSpace,
+  NIcon,
+  NLayout,
+  NLayoutHeader,
+  NLayoutFooter,
+  NLayoutSider,
+  NLayoutContent,
+  NMenu,
+  NButton,
+  NList, NListItem, NSelect, NH1, NH6, NGrid, NGi
+} from 'naive-ui'
+import { UserOutlined,  CoffeeOutlined, ProjectOutlined, EuroOutlined, PushpinOutlined, RobotOutlined } from '@vicons/antd'
+import {KeycloakInstance} from "keycloak-js";
+
+function renderIcon(icon: Component) {
+  return () => h(NIcon, null, {default: () => h(icon)})
+}
+
+const menuOptions = [
+  {
+    label: 'Projects and tasks',
+    key: 'projects-and-tasks',
+    icon: renderIcon(ProjectOutlined)
+  },
+  {
+    label: 'Debts',
+    key: 'debts',
+    icon: renderIcon(EuroOutlined),
+    disabled: true,
+    children: [
+      {
+        label: 'Rat',
+        key: 'rat'
+      }
+    ]
+  },
+  {
+    label: 'Wishes',
+    key: 'wishes',
+    disabled: true,
+    icon: renderIcon(PushpinOutlined)
+  },
+  {
+    label: 'Assistant bot',
+    key: 'assistant-bot',
+    icon: renderIcon(RobotOutlined),
+    children: [
+      {
+        type: 'group',
+        label: 'People',
+        key: 'people',
+        children: [
+          {
+            label: 'Narrator',
+            key: 'narrator',
+            icon: renderIcon(UserOutlined)
+          },
+          {
+            label: 'Sheep Man',
+            key: 'sheep-man',
+            icon: renderIcon(UserOutlined)
+          }
+        ]
+      },
+      {
+        label: 'Beverage',
+        key: 'beverage',
+        icon: renderIcon(CoffeeOutlined),
+        children: [
+          {
+            label: 'Whisky',
+            key: 'whisky'
+          }
+        ]
+      },
+      {
+        label: 'Food',
+        key: 'food',
+        children: [
+          {
+            label: 'Sandwich',
+            key: 'sandwich'
+          }
+        ]
+      },
+      {
+        label: 'The past increases. The future recedes.',
+        key: 'the-past-increases-the-future-recedes'
+      }
+    ]
+  }
+]
+
+const projectMenuOptions = [
+  {
+    label: 'Projects',
+    key: 'projects',
+    icon: renderIcon(ProjectOutlined)
+  },
+  {
+    label: 'Tasks',
+    key: 'tasks',
+    icon: renderIcon(ProjectOutlined),
+    children: [
+      {
+        label: 'By Author',
+        key: 'by-author',
+        icon: renderIcon(UserOutlined)
+      },
+      {
+        label: 'By project',
+        key: 'by-project',
+        icon: renderIcon(ProjectOutlined)
+      }
+    ]
+  }
+]
+
+const selectedLanguage = ref('en');
+
+const languageOptions = [
+  {label: 'English', value: 'en'},
+  {label: 'Portuguese', value: 'pt'},
+];
 
 export default defineComponent({
   components: {
     NLayout,
+    NSpace,
     NIcon,
     NLayoutSider,
     NLayoutHeader,
@@ -63,40 +201,13 @@ export default defineComponent({
     NListItem,
     NSelect,
     NH1,
+    NH6,
     NGrid,
     NGi,
   },
   setup() {
-    const menuOptions = [
-      {
-        label: 'Home',
-        key: 'home',
-      },
-      {
-        label: 'Documents',
-        key: 'documents',
-      },
-      {
-        label: 'Settings',
-        key: 'settings',
-      },
-    ];
-
-    const documents = ref([
-      { id: 1, title: 'Document 1' },
-      { id: 2, title: 'Document 2' },
-      { id: 3, title: 'Document 3' },
-    ]);
-
-    const selectedLanguage = ref('en');
-    const languageOptions = [
-      { label: 'English', value: 'en' },
-      { label: 'Portuguese', value: 'pt' },
-    ];
-
     const kc = inject<KeycloakInstance>('keycloak');
     const userData = inject<any>('userData');
-
 
     const login = async () => {
       if (kc) {
@@ -122,135 +233,32 @@ export default defineComponent({
       }
     };
 
-    const collapsed = ref(false);
-
-    const toggleSidebar = () => {
-      collapsed.value = !collapsed.value;
-    };
-
-
     return {
-      menuOptions,
-      toggleSidebar,
-      MenuFoldOutlined,
-      MenuUnfoldOutlined,
-      collapsed,
-      documents,
-      selectedLanguage,
-      languageOptions,
+      userData,
       login,
       logout,
-      userData,
-    };
-  },
-});
+      inverted: ref(false),
+      menuOptions,
+      projectMenuOptions,
+      selectedLanguage,
+      languageOptions
+    }
+  }
+})
 </script>
 
 <style scoped>
-.layout {
-  height: 100vh;
-}
-
-.header-content {
+.layout-full-height {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 20px;
+  flex-direction: column;
+  min-height: 100vh; /* Change to min-height to ensure it at least covers the viewport */
+  overflow: hidden; /* Add this if you want to avoid any unwanted overflow */
 }
 
-.title {
-  font-size: 24px;
-  font-weight: bold;
-}
-
-.user-info {
+.layout-content-expand {
+  flex-grow: 1; /* This will ensure it takes up all available space */
   display: flex;
-  align-items: center;
+  flex-direction: column; /* This ensures all child elements are aligned vertically */
 }
-
-.user-info span {
-  margin-right: 10px;
-}
-
-.document-list {
-  padding: 20px;
-}
-
-.footer-content {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  align-items: center;
-  padding: 0 20px;
-}
-
-.language-select {
-  justify-self: start;
-}
-
-.links {
-  justify-self: end;
-}
-
-.sidebar {
-  position: relative;
-  transition: width 0.3s ease;
-}
-
-.toggle-button {
-  position: absolute;
-  top: 20px;
-  right: -12px;
-  width: 24px;
-  height: 24px;
-  background-color: #fff;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 1;
-  transition: transform 0.3s ease;
-}
-
-.toggle-button:hover {
-  transform: scale(1.1);
-}
-
-
-@media (max-width: 600px) {
-  .n-layout-sider {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    z-index: 1000;
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
-  }
-
-  .n-layout-sider.n-layout-sider--collapsed {
-    transform: translateX(0);
-  }
-
-  .header-content {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .title {
-    margin-bottom: 10px;
-  }
-
-  .footer-content {
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
-
-  .language-select,
-  .links {
-    justify-self: center;
-  }
-}
-
 
 </style>

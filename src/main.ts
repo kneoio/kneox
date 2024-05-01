@@ -1,5 +1,5 @@
 import {createApp, reactive} from 'vue';
-import App from './App.vue';
+import App from "./App.vue";
 import keycloakInst from "./keycloakFactory";
 import router from "./router";
 
