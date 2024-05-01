@@ -3,8 +3,11 @@
     <div class="top-middle-section">
       <div class="top-section">
         <n-h1 class="title">KNEOX</n-h1>
+        <!-- Show username and logout button if logged in -->
         <p v-if="userData.profile && userData.profile.username">Hello, {{ userData.profile.username }}</p>
         <n-button v-if="userData.profile" @click="logout">Logout</n-button>
+        <!-- Show login button if not logged in -->
+        <n-button v-else @click="login">Login</n-button>
       </div>
     </div>
     <div class="bottom-section">
@@ -18,6 +21,7 @@
     </div>
   </div>
 </template>
+
 
 <script lang="ts">
 import { defineComponent, ref, inject } from 'vue';
@@ -40,6 +44,18 @@ export default defineComponent({
     const kc = inject<KeycloakInstance>('keycloak');
     const userData = inject<any>('userData');
 
+    const login = async () => {
+      if (kc) {
+        try {
+          await kc.login();
+        } catch (error) {
+          console.error('Login failed', error);
+        }
+      } else {
+        console.error('Keycloak instance is not available');
+      }
+    };
+
     const logout = async () => {
       if (kc) {
         try {
@@ -55,6 +71,7 @@ export default defineComponent({
     return {
       selectedLanguage,
       languageOptions,
+      login,
       logout,
       userData
     };

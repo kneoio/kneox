@@ -18,9 +18,9 @@ const keycloak = keycloakInst;
 const userData = reactive<UserData>({ profile: null });
 
 keycloak.init({
-    scope: 'openid',
-    onLoad: 'login-required',
-    pkceMethod: 'S256'
+    onLoad: 'check-sso',
+    pkceMethod: 'S256',
+    scope: 'openid offline_access'
 }).then((authenticated: boolean) => {
     if (authenticated) {
         console.log('User authenticated');
