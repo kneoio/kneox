@@ -49,11 +49,12 @@
           <n-gi>
             <n-h6 class="title">Copyright ©</n-h6>
           </n-gi>
-          <n-gi :offset="2">
-            <n-select v-model="selectedLanguage" :options="languageOptions"/>
+          <n-gi :offset="2" style="margin-top: 5px; margin-right: 5px;  width: 10%; justify-self: end;">
+            <n-select v-model="selectedLanguage" :options="languageOptions" default-value="en" />
           </n-gi>
         </n-grid>
       </n-layout-footer>
+
     </n-layout>
 
 </template>

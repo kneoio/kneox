@@ -7,12 +7,13 @@
 </template>
 
 <script>
-import {NConfigProvider} from 'naive-ui';
+import {NConfigProvider, NLoadingBarProvider } from 'naive-ui';
 
 export default {
   name: 'App',
   components: {
-    NConfigProvider
+    NConfigProvider,
+    NLoadingBarProvider
   }
 }
 
