@@ -2,6 +2,7 @@ import {createApp, reactive} from 'vue';
 import App from "./App.vue";
 import keycloakInst from "./keycloakFactory";
 import router from "./router";
+import IconWrapper from "./components/IconWrapper.vue";
 
 interface UserProfile {
     id?: string;
@@ -43,6 +44,7 @@ keycloak.init({
 
 function startApp() {
     const app = createApp(App);
+    app.component('IconWrapper', IconWrapper);
     app.provide('keycloak', keycloak);
     app.provide('userData', userData);
     app.use(router);

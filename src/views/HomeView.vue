@@ -3,31 +3,7 @@
       <kneo-header/>
       <kneo-top-menu/>
       <n-layout has-sider class="layout-content-expand">
-        <n-layout-sider
-            bordered
-            show-trigger
-            collapse-mode="width"
-            :collapsed-width="64"
-            :width="240"
-            :native-scrollbar="false"
-            :inverted="inverted"
-        >
-          <n-menu
-              :inverted="inverted"
-              :collapsed-width="64"
-              :collapsed-icon-size="22"
-              :options="projectMenuOptions"
-          />
-        </n-layout-sider>
-        <n-layout class="layout-content-expand">
-          <n-data-table
-              :columns="columns"
-              :data="data"
-              :pagination="pagination"
-              :bordered="false"
-          />
-
-        </n-layout>
+        <kneo-projects-outline/>
       </n-layout>
       <n-layout-footer :inverted="inverted" bordered>
         <n-grid :x-gap="12" :cols="4">
@@ -43,9 +19,8 @@
 </template>
 
 <script lang="ts">
-import {h, defineComponent, ref, inject, Component} from 'vue'
+import {defineComponent, ref, inject} from 'vue'
 import {
-  useMessage,
   NSpace,
   NIcon,
   NLayout,
@@ -55,40 +30,11 @@ import {
   NLayoutContent,
   NMenu,
   NButton,
-  NList, NListItem, NSelect, NH1, NH6, NGrid, NGi, DataTableColumns, NDataTable
+  NList, NListItem, NSelect, NH1, NH6, NGrid, NGi, NDataTable
 } from 'naive-ui'
-import { UserOutlined,   ProjectOutlined} from '@vicons/antd'
 import KneoHeader from "../components/KneoHeader.vue";
 import KneoTopMenu from "../components/KneoTopMenu.vue";
-
-function renderIcon(icon: Component) {
-  return () => h(NIcon, null, {default: () => h(icon)})
-}
-
-const projectMenuOptions = [
-  {
-    label: 'Projects',
-    key: 'projects',
-    icon: renderIcon(ProjectOutlined)
-  },
-  {
-    label: 'Tasks',
-    key: 'tasks',
-    icon: renderIcon(ProjectOutlined),
-    children: [
-      {
-        label: 'By Author',
-        key: 'by-author',
-        icon: renderIcon(UserOutlined)
-      },
-      {
-        label: 'By project',
-        key: 'by-project',
-        icon: renderIcon(ProjectOutlined)
-      }
-    ]
-  }
-]
+import KneoProjectsOutline from "../components/KneoProjectsOutline.vue";
 
 const selectedLanguage = ref('en');
 
@@ -99,6 +45,7 @@ const languageOptions = [
 
 export default defineComponent({
   components: {
+    KneoProjectsOutline,
     KneoTopMenu,
     KneoHeader,
     NLayout,
@@ -121,68 +68,11 @@ export default defineComponent({
   },
   setup() {
     const userData = inject<any>('userData');
-    const message = useMessage();
-
-    type Song = {
-      no: number
-      title: string
-      length: string
-    }
-
-    const createColumns = ({
-                             play
-                           }: {
-      play: (row: Song) => void
-    }): DataTableColumns<Song> => {
-      return [
-        {
-          title: 'No',
-          key: 'no'
-        },
-        {
-          title: 'Title',
-          key: 'title'
-        },
-        {
-          title: 'Length',
-          key: 'length'
-        },
-        {
-          title: 'Action',
-          key: 'actions',
-          render (row) {
-            return h(
-                NButton,
-                {
-                  strong: true,
-                  tertiary: true,
-                  size: 'small',
-                  onClick: () => play(row)
-                },
-                { default: () => 'Play' }
-            )
-          }
-        }
-      ]
-    }
-
-    const data: Song[] = [
-      { no: 3, title: 'Wonderwall', length: '4:18' },
-      { no: 4, title: "Don't Look Back in Anger", length: '4:48' },
-      { no: 12, title: 'Champagne Supernova', length: '7:27' }
-    ]
 
     return {
       userData,
-      projectMenuOptions,
       selectedLanguage,
       languageOptions,
-      data,
-      columns: createColumns({
-        play (row: Song) {
-          message.info(`Play ${row.title}`)
-        }
-      }),
       pagination: false as const,
       inverted: ref(false),
     }

@@ -10,12 +10,10 @@
 
 <script lang="ts">
 import {
-  CoffeeOutlined,
   EuroOutlined,
   ProjectOutlined,
   PushpinOutlined,
-  RobotOutlined,
-  UserOutlined,
+  RobotOutlined
 } from "@vicons/antd";
 import {Component, defineComponent, h, ref} from "vue";
 import {NGrid, NGi, NIcon, NMenu, NLayoutHeader} from "naive-ui";
@@ -56,51 +54,7 @@ export default defineComponent({
       {
         label: 'Assistant bot',
         key: 'assistant-bot',
-        icon: renderIcon(RobotOutlined),
-        children: [
-          {
-            type: 'group',
-            label: 'People',
-            key: 'people',
-            children: [
-              {
-                label: 'Narrator',
-                key: 'narrator',
-                icon: renderIcon(UserOutlined)
-              },
-              {
-                label: 'Sheep Man',
-                key: 'sheep-man',
-                icon: renderIcon(UserOutlined)
-              }
-            ]
-          },
-          {
-            label: 'Beverage',
-            key: 'beverage',
-            icon: renderIcon(CoffeeOutlined),
-            children: [
-              {
-                label: 'Whisky',
-                key: 'whisky'
-              }
-            ]
-          },
-          {
-            label: 'Food',
-            key: 'food',
-            children: [
-              {
-                label: 'Sandwich',
-                key: 'sandwich'
-              }
-            ]
-          },
-          {
-            label: 'The past increases. The future recedes.',
-            key: 'the-past-increases-the-future-recedes'
-          }
-        ]
+        icon: renderIcon(RobotOutlined)
       }
     ]
 
