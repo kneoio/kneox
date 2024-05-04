@@ -1,19 +1,22 @@
 <template>
   <n-config-provider :font-size="20">
     <n-loading-bar-provider>
-      <router-view/>
+      <n-message-provider>
+        <router-view/>
+      </n-message-provider>
     </n-loading-bar-provider>
   </n-config-provider>
 </template>
 
 <script>
-import {NConfigProvider, NLoadingBarProvider } from 'naive-ui';
+import {NConfigProvider, NLoadingBarProvider, NMessageProvider} from 'naive-ui';
 
 export default {
   name: 'App',
   components: {
     NConfigProvider,
-    NLoadingBarProvider
+    NLoadingBarProvider,
+    NMessageProvider
   }
 }
 
