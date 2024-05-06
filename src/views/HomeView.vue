@@ -3,7 +3,7 @@
       <kneo-header/>
       <kneo-top-menu/>
       <n-layout has-sider class="layout-content-expand">
-        <kneo-projects-outline/>
+        <router-view/>
       </n-layout>
       <n-layout-footer :inverted="inverted" bordered>
         <n-grid :x-gap="12" :cols="4">
@@ -84,14 +84,48 @@ export default defineComponent({
 .layout-full-height {
   display: flex;
   flex-direction: column;
-  min-height: 100vh; /* Change to min-height to ensure it at least covers the viewport */
-  overflow: hidden; /* Add this if you want to avoid any unwanted overflow */
+  min-height: 100vh;
+  overflow: hidden;
 }
 
 .layout-content-expand {
-  flex-grow: 1; /* This will ensure it takes up all available space */
+  flex-grow: 1;
   display: flex;
-  flex-direction: column; /* This ensures all child elements are aligned vertically */
+  flex-direction: column;
 }
 
+@media (max-width: 768px) { /* Adjustments for tablets and below */
+  .layout-full-height {
+    flex-direction: column;
+  }
+
+  .layout-content-expand {
+    flex-direction: column; /* Stack elements vertically on smaller screens */
+  }
+
+  n-layout-footer {
+    padding: 12px 20px; /* Reduce padding on smaller screens */
+  }
+
+  .n-gi {
+    flex-basis: 100%; /* Stack grid items vertically */
+    margin-top: 10px;
+    justify-content: center; /* Center content */
+  }
+
+  n-select {
+    width: 100%; /* Full width for select boxes */
+  }
+}
+
+@media (max-width: 480px) { /* Adjustments for phones */
+  .layout-content-expand {
+    padding: 0 10px; /* Reduce padding on very small screens */
+  }
+
+  kneo-top-menu,
+  kneo-header {
+    display: none; /* Optionally hide top menu and header on very small screens */
+  }
+}
 </style>
