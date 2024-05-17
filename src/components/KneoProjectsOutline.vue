@@ -26,12 +26,14 @@
     />
   </n-layout>
 </template>
+
 <script lang="ts">
-import {defineComponent, h, onMounted, ref} from "vue";
+import {defineComponent, h, inject, onMounted, ref} from "vue";
 import axios from 'axios';
 import {DataTableColumns, NDataTable, NLayout, NLayoutSider, NMenu, useMessage} from "naive-ui";
-import { ProjectOutlined, UserOutlined } from "@vicons/antd";
+import {ProjectOutlined, UserOutlined} from "@vicons/antd";
 import IconWrapper from "./IconWrapper.vue";
+import {KeycloakInstance} from "keycloak-js";
 
 interface Project {
   id: number;
@@ -42,13 +44,23 @@ interface Project {
 export default defineComponent({
   components: { NLayoutSider, NLayout, NDataTable, NMenu, IconWrapper },
   setup() {
+    const kc = inject<KeycloakInstance>('keycloak');
     const msgPopup = useMessage();
     const projects = ref<Project[]>([]);
     const sidebarOpen = ref(false);
     const isMobile = ref(window.innerWidth < 768);
     const toggleSidebar = () => { sidebarOpen.value = !sidebarOpen.value; };
+
     const apiClient = axios.create({
       baseURL: 'https://api.keypractica.com'
+    });
+
+    apiClient.interceptors.request.use(async (config) => {
+      const token = kc?.token;
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
     });
 
     window.addEventListener('resize', () => { isMobile.value = window.innerWidth < 768; });
@@ -64,8 +76,12 @@ export default defineComponent({
     };
 
     onMounted(() => {
-      fetchProjects();
-      window.addEventListener('resize', () => { isMobile.value = window.innerWidth < 768; });
+      if (kc) {
+        fetchProjects();
+        window.addEventListener('resize', () => { isMobile.value = window.innerWidth < 768; });
+      } else {
+        msgPopup.error('Keycloak instance is not available');
+      }
     });
 
     const projectMenuOptions = [
@@ -88,7 +104,7 @@ export default defineComponent({
     return {
       projectMenuOptions,
       inverted: ref(false),
-      expandedKeys: ref(['projects']),
+      expandedKeys: ref(['tasks']),
       projects,
       pagination: false as const,
       columns,
@@ -123,4 +139,3 @@ export default defineComponent({
   }
 }
 </style>
-

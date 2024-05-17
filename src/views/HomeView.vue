@@ -5,36 +5,36 @@
       <n-layout has-sider class="layout-content-expand">
         <router-view/>
       </n-layout>
-      <n-layout-footer :inverted="inverted" bordered>
-        <n-grid :x-gap="12" :cols="4">
-          <n-gi>
-          </n-gi>
-          <n-gi :offset="2" style="margin-top: 3px; margin-right: 5px;  width: 10%; justify-self: end;">
-            <n-select v-model="selectedLanguage" :options="languageOptions" default-value="en" />
-          </n-gi>
-        </n-grid>
-      </n-layout-footer>
+      <kneo-footer :inverted="inverted" />
     </n-layout>
 
 </template>
 
 <script lang="ts">
-import {defineComponent, ref, inject} from 'vue'
+import {defineComponent, inject, ref} from 'vue'
 import {
-  NSpace,
+  NButton,
+  NDataTable,
+  NGi,
+  NGrid,
+  NH1,
+  NH6,
   NIcon,
   NLayout,
-  NLayoutHeader,
-  NLayoutFooter,
-  NLayoutSider,
   NLayoutContent,
+  NLayoutFooter,
+  NLayoutHeader,
+  NLayoutSider,
+  NList,
+  NListItem,
   NMenu,
-  NButton,
-  NList, NListItem, NSelect, NH1, NH6, NGrid, NGi, NDataTable
+  NSelect,
+  NSpace
 } from 'naive-ui'
 import KneoHeader from "../components/KneoHeader.vue";
 import KneoTopMenu from "../components/KneoTopMenu.vue";
 import KneoProjectsOutline from "../components/KneoProjectsOutline.vue";
+import KneoFooter from "../components/KneoFooter.vue";
 
 const selectedLanguage = ref('en');
 
@@ -45,6 +45,7 @@ const languageOptions = [
 
 export default defineComponent({
   components: {
+    KneoFooter,
     KneoProjectsOutline,
     KneoTopMenu,
     KneoHeader,

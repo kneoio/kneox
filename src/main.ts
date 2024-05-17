@@ -3,6 +3,7 @@ import App from "./App.vue";
 import keycloakInst from "./keycloakFactory";
 import router from "./router";
 import IconWrapper from "./components/IconWrapper.vue";
+import './assets/tailwind.css';
 
 interface UserProfile {
     id?: string;
