@@ -6,12 +6,12 @@
       </n-gi>
       <n-gi :offset="2">
         <div class="user-info" v-if="userData.profile">
-          <n-space justify="end">
-            <n-h6>Hello, {{ userData.profile.username }}</n-h6>
-            <n-button @click="logout">Logout</n-button>
+          <n-space justify="end" class="mt-4 mr-4">
+            <n-h6 class="mt-2 mr-2">Hello, {{ userData.profile.username }}</n-h6>
+            <n-button @click="logout" class="mt-2 mr-2">Logout</n-button>
           </n-space>
         </div>
-        <n-button v-else @click="login">Login</n-button>
+        <n-button v-else @click="login" class="mt-4 mr-4">Login</n-button>
       </n-gi>
     </n-grid>
   </n-layout-header>
@@ -68,5 +68,26 @@ export default defineComponent({
     }
   }
 });
-
 </script>
+
+<style scoped>
+.title {
+  margin-left: 8px;
+}
+
+.mt-2 {
+  margin-top: 0.5rem;
+}
+
+.mr-2 {
+  margin-right: 0.5rem;
+}
+
+.mt-4 {
+  margin-top: 1rem;
+}
+
+.mr-4 {
+  margin-right: 1rem;
+}
+</style>

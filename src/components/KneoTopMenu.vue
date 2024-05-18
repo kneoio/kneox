@@ -14,15 +14,10 @@
 </template>
 
 <script lang="ts">
-import {
-  EuroOutlined,
-  ProjectOutlined,
-  RobotOutlined,
-  MenuOutlined
-} from "@vicons/antd";
-import {Component, defineComponent, h, ref, onMounted, onUnmounted} from "vue";
-import {NGrid, NGi, NIcon, NMenu, NLayoutHeader} from "naive-ui";
-import { useRouter } from "vue-router";
+import {EuroOutlined, MenuOutlined, ProjectOutlined, RobotOutlined} from "@vicons/antd";
+import {Component, defineComponent, h, onMounted, onUnmounted, ref} from "vue";
+import {NGi, NGrid, NIcon, NLayoutHeader, NMenu} from "naive-ui";
+import {useRouter} from "vue-router";
 
 export default defineComponent({
   components: {
@@ -69,7 +64,7 @@ export default defineComponent({
       menuOptions,
       handleNavigate,
       inverted: ref(false),
-      expandedKeys: ref(['projects']),
+      expandedKeys: ref(['/projects']),
       menuOpen,
       toggleMenu,
       isMobile,
