@@ -14,6 +14,7 @@
         :collapsed-width="64"
         :collapsed-icon-size="22"
         :options="projectMenuOptions"
+        :value="selectedMenuKey"
     />
   </n-layout-sider>
   <button class="sidebar-toggle" @click="toggleSidebar" v-show="isMobile">&#9776;</button>
@@ -68,6 +69,7 @@ import {
   useMessage
 } from "naive-ui";
 import {ProjectOutlined, UserOutlined} from "@vicons/antd";
+import {useRoute} from 'vue-router';
 import IconWrapper from "./IconWrapper.vue";
 import {KeycloakInstance} from "keycloak-js";
 
@@ -83,6 +85,8 @@ export default defineComponent({
   setup() {
     const kc = inject<KeycloakInstance>('keycloak');
     const msgPopup = useMessage();
+    const route = useRoute();
+
     const projects = ref<Project[]>([]);
     const allSelected = ref(false);
     const sidebarOpen = ref(false);
@@ -103,6 +107,15 @@ export default defineComponent({
 
     window.addEventListener('resize', () => { isMobile.value = window.innerWidth < 768; });
 
+    onMounted(() => {
+      if (kc) {
+        fetchProjects();
+        window.addEventListener('resize', () => { isMobile.value = window.innerWidth < 768; });
+      } else {
+        msgPopup.error('Keycloak instance is not available');
+      }
+    });
+
     const fetchProjects = async () => {
       try {
         const response = await apiClient.get<{ payload: { view_data: { entries: Project[] } } }>('/projects');
@@ -113,25 +126,23 @@ export default defineComponent({
       }
     };
 
-    onMounted(() => {
-      if (kc) {
-        fetchProjects();
-        window.addEventListener('resize', () => { isMobile.value = window.innerWidth < 768; });
-      } else {
-        msgPopup.error('Keycloak instance is not available');
-      }
-    });
-
     const projectMenuOptions = [
-      { label: 'Projects', key: '/projects', icon: () => h('IconWrapper', { icon: ProjectOutlined }) },
+      { label: 'Projects', key: '/projects_and_tasks/projects', icon: () => h('IconWrapper', { icon: ProjectOutlined }) },
       {
         label: 'Tasks', key: '/tasks', icon: () => h('IconWrapper', { icon: ProjectOutlined }),
         children: [
-          { label: 'By Author', key: '/by-author', icon: () => h('IconWrapper', { icon: UserOutlined }) },
-          { label: 'By project', key: '/by-project', icon: () => h('IconWrapper', { icon: ProjectOutlined }) }
+          { label: 'By Author', key: '/projects_and_tasks/projects/by-author', icon: () => h('IconWrapper', { icon: UserOutlined }) },
+          { label: 'By project', key: '/projects_and_tasks/projects/by-project', icon: () => h('IconWrapper', { icon: ProjectOutlined }) }
         ]
       }
     ];
+
+    const selectedMenuKey = computed(() => {
+      if (route.path.startsWith('/projects_and_tasks/projects')) {
+        return '/projects_and_tasks/projects';
+      }
+      return '';
+    });
 
     const toggleSelectAll = () => {
       allSelected.value = !allSelected.value;
@@ -188,7 +199,7 @@ export default defineComponent({
     return {
       projectMenuOptions,
       inverted: ref(false),
-      expandedKeys: ref(['/tasks']),
+      expandedKeys: ref(['tasks']),
       projects,
       pagination,
       columns,
@@ -201,10 +212,12 @@ export default defineComponent({
       handlePageSizeChange,
       handleNewClick,
       handleArchiveClick,
+      selectedMenuKey,
     };
   }
 });
 </script>
+
 
 <style scoped>
 .sidebar-toggle {

@@ -2,12 +2,19 @@
   <n-layout-header :inverted="inverted" bordered>
     <div class="mobile-menu-button" @click="toggleMenu" v-show="isMobile">
       <!-- Simple hamburger icon -->
-      <n-icon><menu-outlined /></n-icon>
+      <n-icon>
+        <menu-outlined/>
+      </n-icon>
     </div>
     <n-grid x-gap="12" :cols="1">
       <n-gi>
-        <n-menu mode="horizontal" :expanded-keys="expandedKeys" :inverted="inverted"
-                :options="menuOptions" @update:value="handleNavigate" v-show="!isMobile || menuOpen" />
+        <n-menu mode="horizontal"
+                :expanded-keys="expandedKeys"
+                :inverted="inverted"
+                :options="menuOptions"
+                @update:value="handleNavigate"
+                v-show="!isMobile || menuOpen"
+                :value="selectedKey"/>
       </n-gi>
     </n-grid>
   </n-layout-header>
@@ -17,7 +24,7 @@
 import {EuroOutlined, MenuOutlined, ProjectOutlined, RobotOutlined} from "@vicons/antd";
 import {Component, defineComponent, h, onMounted, onUnmounted, ref} from "vue";
 import {NGi, NGrid, NIcon, NLayoutHeader, NMenu} from "naive-ui";
-import {useRouter} from "vue-router";
+import {useRoute, useRouter} from "vue-router";
 
 export default defineComponent({
   components: {
@@ -30,33 +37,57 @@ export default defineComponent({
   },
   setup() {
     const router = useRouter();
+    const route = useRoute();
+    const selectedKey = ref(route.path === '/projects' ? '/projects_and_tasks/projects' : route.path);
     const menuOptions = [
-      { label: 'Projects and tasks', key: '/projects', icon: renderIcon(ProjectOutlined), action: () => router.push('/projects') },
-      { label: 'Debts', key: '/money', icon: renderIcon(EuroOutlined), action: () => router.push('/money'), disabled: true },
-      { label: 'Assistant bot', key: '/ai', icon: renderIcon(RobotOutlined), action: () => router.push('/ai') }
+      {
+        label: 'Projects and tasks',
+        key: '/projects_and_tasks/projects',
+        icon: renderIcon(ProjectOutlined),
+        action: () => router.push('/projects_and_tasks/projects')
+      },
+      {
+        label: 'Debts',
+        key: '/money',
+        icon: renderIcon(EuroOutlined),
+        action: () => router.push('/money'),
+        disabled: true
+      },
+      {label: 'Assistant bot', key: '/ai', icon: renderIcon(RobotOutlined), action: () => router.push('/ai')}
     ];
+    const menuOpen = ref(false);
+    const isMobile = ref(window.innerWidth < 768);
+    const toggleMenu = () => {
+      menuOpen.value = !menuOpen.value;
+    };
+
+    onMounted(() => {
+      window.addEventListener('resize', updateIsMobile);
+      if (route.path === '/projects') {
+        router.push('/projects_and_tasks/projects');
+        selectedKey.value = '/projects_and_tasks/projects';
+      } else {
+        selectedKey.value = route.path;
+      }
+    });
+
+    onUnmounted(() => window.removeEventListener('resize', updateIsMobile));
 
     function renderIcon(icon: Component) {
       return () => h(NIcon, null, {default: () => h(icon)});
     }
-
-    const menuOpen = ref(false);
-    const isMobile = ref(window.innerWidth < 768);
-    const toggleMenu = () => { menuOpen.value = !menuOpen.value; };
 
     function updateIsMobile() {
       isMobile.value = window.innerWidth < 768;
     }
 
     window.addEventListener('resize', updateIsMobile);
-    onMounted(() => window.addEventListener('resize', updateIsMobile));
-    onUnmounted(() => window.removeEventListener('resize', updateIsMobile));
 
     function handleNavigate(key: string): void {
-      console.log("Navigating to:", key);
       router.push(key);
+      selectedKey.value = key;
       if (isMobile.value) {
-        menuOpen.value = false;  // Automatically close the menu on selection
+        menuOpen.value = false;
       }
     }
 
@@ -64,15 +95,17 @@ export default defineComponent({
       menuOptions,
       handleNavigate,
       inverted: ref(false),
-      expandedKeys: ref(['/projects']),
+      expandedKeys: ref(['projects']),
       menuOpen,
       toggleMenu,
       isMobile,
+      selectedKey,
       MenuOutlined
     }
   }
 });
 </script>
+
 
 <style scoped>
 .mobile-menu-button {

@@ -18,8 +18,31 @@ const routes: Array<RouteRecordRaw> = [
         component: HomeView,
         children: [
             {
-                path: 'projects',
-                component: KneoProjectsOutline
+                path: 'projects_and_tasks',
+                component: KneoProjectsOutline,
+                redirect: '/projects_and_tasks/projects',
+                children: [
+                    {
+                        path: 'projects',
+                        component: KneoKickNeo
+                    },
+                    {
+                        path: 'tasks',
+                        component: KneoChatGPT,
+                        children: [
+                            {
+                                path: 'by-author',
+                                component: KneoKickNeo
+                            },
+                            {
+                                path: 'by-project',
+                                component: KneoKickNeo
+                            }
+
+                        ]
+                    }
+
+                ]
             },
             {
                 path: 'money',
@@ -39,6 +62,10 @@ const routes: Array<RouteRecordRaw> = [
                     }
 
                 ]
+            },
+            {
+                path: '/projects',
+                redirect: '/projects_and_tasks/projects'  // Redirect /projects to /projects_and_tasks/projects
             }
         ]
     },
