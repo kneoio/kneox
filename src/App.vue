@@ -2,7 +2,9 @@
   <n-config-provider :font-size="20">
     <n-loading-bar-provider>
       <n-message-provider>
-        <router-view/>
+        <n-loading-bar-provider>
+          <router-view/>
+        </n-loading-bar-provider>
       </n-message-provider>
     </n-loading-bar-provider>
   </n-config-provider>
@@ -16,7 +18,7 @@ export default {
   components: {
     NConfigProvider,
     NLoadingBarProvider,
-    NMessageProvider
+    NMessageProvider,
   }
 }
 

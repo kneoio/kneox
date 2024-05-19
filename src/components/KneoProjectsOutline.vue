@@ -32,6 +32,8 @@
             :data="currentPageData"
             :pagination="false"
             :bordered="false"
+            row-class-name="cursor-pointer"
+            :row-props="getRowProps"
         />
       </n-gi>
       <n-gi span="24">
@@ -66,10 +68,11 @@ import {
   NLayoutSider,
   NMenu,
   NPagination,
+  useLoadingBar,
   useMessage
 } from "naive-ui";
 import {ProjectOutlined, UserOutlined} from "@vicons/antd";
-import {useRoute} from 'vue-router';
+import {useRoute, useRouter} from 'vue-router';
 import IconWrapper from "./IconWrapper.vue";
 import {KeycloakInstance} from "keycloak-js";
 
@@ -85,7 +88,9 @@ export default defineComponent({
   setup() {
     const kc = inject<KeycloakInstance>('keycloak');
     const msgPopup = useMessage();
+    const loadingBar = useLoadingBar()
     const route = useRoute();
+    const router = useRouter();
 
     const projects = ref<Project[]>([]);
     const allSelected = ref(false);
@@ -117,12 +122,19 @@ export default defineComponent({
     });
 
     const fetchProjects = async () => {
+      loadingBar.start();
       try {
         const response = await apiClient.get<{ payload: { view_data: { entries: Project[] } } }>('/projects');
         projects.value = response.data.payload.view_data.entries.map((project: Project) => ({ ...project, selected: false }));
-      } catch (error) {
-        msgPopup.error('Failed to fetch projects');
-        console.error(error);
+      } catch (error: unknown) {
+        loadingBar.error();
+        if (error instanceof Error) {
+          msgPopup.error(error.message);
+        } else {
+          msgPopup.error('An unknown error occurred.');
+        }
+      } finally {
+        loadingBar.finish();
       }
     };
 
@@ -196,10 +208,20 @@ export default defineComponent({
       msgPopup.info('Archive button clicked');
     };
 
+    const getRowProps = (row: Project) => {
+      return {
+        onClick: () => {
+          console.log(row);
+          router.push({ name: 'KneoProjectForm', params: { id: row.id } });
+        }
+      };
+    };
+
+
     return {
       projectMenuOptions,
       inverted: ref(false),
-      expandedKeys: ref(['tasks']),
+      expandedKeys: ref(['projects']),
       projects,
       pagination,
       columns,
@@ -213,11 +235,11 @@ export default defineComponent({
       handleNewClick,
       handleArchiveClick,
       selectedMenuKey,
+      getRowProps,
     };
   }
 });
 </script>
-
 
 <style scoped>
 .sidebar-toggle {
@@ -241,4 +263,9 @@ export default defineComponent({
     display: none; /* Hide sidebar by default on small screens */
   }
 }
+
+.cursor-pointer:hover {
+  cursor: pointer;
+}
+
 </style>

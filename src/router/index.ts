@@ -9,7 +9,7 @@ import KneoAIAssistantOutline from "../components/KneoAIAssitantOutline.vue";
 import KneoProjectsOutline from "../components/KneoProjectsOutline.vue";
 import KneoKickNeo from "../components/KneoKickNeo.vue";
 import KneoChatGPT from "../components/KneoChatGPT.vue";
-
+import KneoProjectForm from "../components/KneoProjectForm.vue";
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -24,7 +24,14 @@ const routes: Array<RouteRecordRaw> = [
                 children: [
                     {
                         path: 'projects',
-                        component: KneoKickNeo
+                        component: KneoKickNeo,
+                        children: [
+                            {
+                                path: ':id',
+                                name: 'KneoProjectForm',
+                                component: KneoProjectForm
+                            }
+                        ]
                     },
                     {
                         path: 'tasks',
@@ -38,10 +45,8 @@ const routes: Array<RouteRecordRaw> = [
                                 path: 'by-project',
                                 component: KneoKickNeo
                             }
-
                         ]
                     }
-
                 ]
             },
             {
@@ -60,7 +65,6 @@ const routes: Array<RouteRecordRaw> = [
                         path: 'gpt',
                         component: KneoChatGPT
                     }
-
                 ]
             },
             {
@@ -73,14 +77,17 @@ const routes: Array<RouteRecordRaw> = [
         path: '/dashboard',
         name: 'Dashboard',
         component: DashboardView,
-        meta: {requiresAuth: true}
+        meta: { requiresAuth: true }
     },
     {
         path: '/about',
         name: 'About',
         component: AboutView
     },
-    {path: '/license', component: LicensePage}
+    {
+        path: '/license',
+        component: LicensePage
+    }
 ];
 
 const router = createRouter({
