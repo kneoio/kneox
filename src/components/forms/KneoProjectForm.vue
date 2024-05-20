@@ -22,6 +22,7 @@ import axios from 'axios';
 import {NButton, NForm, NFormItem, NInput, NSelect} from 'naive-ui';
 
 export default defineComponent({
+  name: 'KneoProjectForm',
   components: {
     NForm, NFormItem, NInput, NSelect, NButton
   },
@@ -38,7 +39,7 @@ export default defineComponent({
     const fetchProjectDetails = async () => {
       const projectId = route.params.id as string;
       try {
-        const response = await axios.get(`http://localhost:38707/projects/${projectId}`);
+        const response = await axios.get(`http://localhost:38707/kneox/projects/${projectId}`);
         project.value = response.data;
       } catch (error) {
         console.error('Failed to fetch project details', error);

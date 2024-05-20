@@ -1,15 +1,11 @@
 import {createRouter, createWebHistory, RouteRecordRaw} from 'vue-router';
-
 import AboutView from '../views/AboutPage.vue';
-import HomeView from "../views/HomeView.vue";
-import DashboardView from "../views/DashboardView.vue";
-import LicensePage from "../views/LicensePage.vue";
-import KneoMoneyOutline from "../components/KneoMoneyOutline.vue";
-import KneoAIAssistantOutline from "../components/KneoAIAssitantOutline.vue";
-import KneoProjectsOutline from "../components/KneoProjectsOutline.vue";
-import KneoKickNeo from "../components/KneoKickNeo.vue";
-import KneoChatGPT from "../components/KneoChatGPT.vue";
-import KneoProjectForm from "../components/KneoProjectForm.vue";
+import HomeView from '../views/HomeView.vue';
+import DashboardView from '../views/DashboardView.vue';
+import LicensePage from '../views/LicensePage.vue';
+import ProjectsAndTasks from '../components/lists/ProjectAndTasks.vue';
+import ProjectsList from '../components/lists/ProjectsList.vue';
+import KneoProjectForm from '../components/forms/KneoProjectForm.vue';
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -19,31 +15,28 @@ const routes: Array<RouteRecordRaw> = [
         children: [
             {
                 path: 'projects_and_tasks',
-                component: KneoProjectsOutline,
-                redirect: '/projects_and_tasks/projects',
+                component: ProjectsAndTasks,
                 children: [
                     {
                         path: 'projects',
-                        component: KneoKickNeo,
-                        children: [
-                            {
-                                path: ':id',
-                                name: 'KneoProjectForm',
-                                component: KneoProjectForm
-                            }
-                        ]
+                        component: ProjectsList
+                    },
+                    {
+                        path: 'projects/:id',
+                        name: 'KneoProjectForm',
+                        component: KneoProjectForm
                     },
                     {
                         path: 'tasks',
-                        component: KneoChatGPT,
+                        component: ProjectsList,
                         children: [
                             {
                                 path: 'by-author',
-                                component: KneoKickNeo
+                                component: ProjectsList
                             },
                             {
                                 path: 'by-project',
-                                component: KneoKickNeo
+                                component: ProjectsList
                             }
                         ]
                     }
@@ -51,19 +44,19 @@ const routes: Array<RouteRecordRaw> = [
             },
             {
                 path: 'money',
-                component: KneoMoneyOutline
+                component: ProjectsList
             },
             {
                 path: 'ai',
-                component: KneoAIAssistantOutline,
+                component: ProjectsList,
                 children: [
                     {
                         path: 'kickneo',
-                        component: KneoKickNeo
+                        component: ProjectsList
                     },
                     {
                         path: 'gpt',
-                        component: KneoChatGPT
+                        component: ProjectsList
                     }
                 ]
             },

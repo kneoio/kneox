@@ -33,7 +33,7 @@ import {
 } from 'naive-ui'
 import KneoHeader from "../components/KneoHeader.vue";
 import KneoTopMenu from "../components/KneoTopMenu.vue";
-import KneoProjectsOutline from "../components/KneoProjectsOutline.vue";
+import KneoProjectsOutline from "../components/lists/ProjectAndTasks.vue";
 import KneoFooter from "../components/KneoFooter.vue";
 
 const selectedLanguage = ref('en');

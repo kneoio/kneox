@@ -29,8 +29,8 @@
 import {defineComponent, h, onMounted, ref} from "vue";
 import axios from 'axios';
 import {DataTableColumns, NDataTable, NLayout, NLayoutSider, NMenu, useMessage} from "naive-ui";
-import { ProjectOutlined, UserOutlined } from "@vicons/antd";
-import IconWrapper from "./IconWrapper.vue";
+import {ProjectOutlined, UserOutlined} from "@vicons/antd";
+import IconWrapper from "../IconWrapper.vue";
 
 interface Project {
   id: number;
