@@ -40,11 +40,10 @@ app.use((req, res, next) => {
     })(req, res, next);
 });
 
-// Set EJS as the view engine and set the views directory to 'src/views'
-const viewsPath = path.join(__dirname, 'src', 'views');
+// Set EJS as the view engine and set the views directory to the current directory
 app.set('view engine', 'ejs');
-app.set('views', viewsPath);
-console.log(`Views directory set to: ${viewsPath}`);
+app.set('views', __dirname); // Views directory set to current directory
+console.log(`Views directory set to: ${__dirname}`);
 
 // Serve static files from the 'dist' directory
 const staticPath = path.join(__dirname, 'dist');
