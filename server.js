@@ -30,23 +30,26 @@ app.use((req, res, next) => {
     next();
 });
 
-// CSP configuration with helmet
-app.use(helmet.contentSecurityPolicy({
-    directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", `'nonce-${res.locals.nonce}'`, 'https://www.keypractica.com'],
-        styleSrc: ["'self'", "'unsafe-inline'", 'https://www.keypractica.com'],
-        imgSrc: ["'self'", "data:"],
-        connectSrc: ["'self'"],
-        fontSrc: ["'self'", "https:"],
-        frameSrc: ["'self'", "https://auth.keypractica.com"],
-        frameAncestors: ["'self'", "https://auth.keypractica.com"], // Corrected here
-        objectSrc: ["'none'"],
-        upgradeInsecureRequests: [],
-        baseUri: ["'self'"],
-        formAction: ["'self'"],
-    },
-}));
+// Middleware to set CSP headers
+app.use((req, res, next) => {
+    console.log('Setting CSP headers');
+    helmet.contentSecurityPolicy({
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", `'nonce-${res.locals.nonce}'`, 'https://www.keypractica.com'],
+            styleSrc: ["'self'", "'unsafe-inline'", 'https://www.keypractica.com'],
+            imgSrc: ["'self'", "data:"],
+            connectSrc: ["'self'"],
+            fontSrc: ["'self'", "https:"],
+            frameSrc: ["'self'", "https://auth.keypractica.com"],
+            frameAncestors: ["'self'", "https://auth.keypractica.com"], // Ensure this is set
+            objectSrc: ["'none'"],
+            upgradeInsecureRequests: [],
+            baseUri: ["'self'"],
+            formAction: ["'self'"],
+        },
+    })(req, res, next);
+});
 
 // Middleware to add a custom header to verify changes
 app.use((req, res, next) => {
