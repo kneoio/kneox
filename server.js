@@ -30,10 +30,9 @@ app.use((req, res, next) => {
     next();
 });
 
-// CSP configuration with nonce
-app.use((req, res, next) => {
-    console.log('Setting CSP headers');
-    helmet.contentSecurityPolicy({
+// CSP configuration with helmet
+app.use(helmet({
+    contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
             scriptSrc: ["'self'", `'nonce-${res.locals.nonce}'`, 'https://www.keypractica.com'],
@@ -41,13 +40,15 @@ app.use((req, res, next) => {
             imgSrc: ["'self'", "data:"],
             connectSrc: ["'self'"],
             fontSrc: ["'self'", "https:"],
-            frameSrc: ["'self'", isDevelopment ? "http://localhost:8090" : "https://auth.keypractica.com"],
-            frameAncestors: ["'self'", "http://localhost:8090", "https://auth.keypractica.com"], // Added this line
+            frameSrc: ["'self'", "https://auth.keypractica.com"],
+            frameAncestors: ["'self'", "http://localhost:8090", "https://auth.keypractica.com"],
             objectSrc: ["'none'"],
             upgradeInsecureRequests: [],
+            baseUri: ["'self'"],
+            formAction: ["'self'"],
         },
-    })(req, res, next);
-});
+    },
+}));
 
 // Set EJS as the view engine and set the views directory to the current directory
 app.set('view engine', 'ejs');
