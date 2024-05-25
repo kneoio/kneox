@@ -40,14 +40,16 @@ app.use((req, res, next) => {
     })(req, res, next);
 });
 
-// Set EJS as the view engine and set the views directory to the current directory
+// Set EJS as the view engine and set the views directory to 'src/views'
+const viewsPath = path.join(__dirname, 'src', 'views');
 app.set('view engine', 'ejs');
-app.set('views', __dirname); // Updated to current directory
-console.log(`Views directory set to: ${__dirname}`);
+app.set('views', viewsPath);
+console.log(`Views directory set to: ${viewsPath}`);
 
 // Serve static files from the 'dist' directory
-app.use(express.static(path.join(__dirname, 'dist')));
-console.log(`Static files served from: ${path.join(__dirname, 'dist')}`);
+const staticPath = path.join(__dirname, 'dist');
+app.use(express.static(staticPath));
+console.log(`Static files served from: ${staticPath}`);
 
 // Serve the HTML file with injected nonce and dynamic title
 app.get('*', (req, res) => {
