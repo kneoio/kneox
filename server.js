@@ -20,21 +20,18 @@ if (fs.existsSync(manifestPath)) {
     console.log('Manifest loaded:', manifest);
 }
 
-// Middleware to generate a nonce and add it to res.locals
 app.use((req, res, next) => {
     res.locals.nonce = crypto.randomBytes(16).toString('base64');
     console.log(`Generated nonce: ${res.locals.nonce}`);
     next();
 });
 
-// Middleware to set CSP headers manually
 app.use((req, res, next) => {
     console.log('Setting CSP headers manually');
     res.setHeader("Content-Security-Policy", `default-src 'self'; script-src 'self' 'nonce-${res.locals.nonce}' https://www.keypractica.com; style-src 'self' 'unsafe-inline' https://www.keypractica.com; img-src 'self' data:; connect-src 'self'; font-src 'self' https:; frame-src 'self' https://auth.keypractica.com; frame-ancestors 'self' https://auth.keypractica.com; object-src 'none'; upgrade-insecure-requests; base-uri 'self'; form-action 'self';`);
     next();
 });
 
-// Middleware to add a custom header to verify changes
 app.use((req, res, next) => {
     res.setHeader('X-Custom-Header', 'CSP-Updated');
     next();
@@ -55,7 +52,7 @@ app.get('*', (req, res) => {
     const title = "kneox"; // Set your dynamic title here
     const mainJs = manifest['src/main.ts']?.file || 'assets/index-qhnKbt7S.js'; // Default fallback
     console.log(`Rendering index.ejs with title: ${title}, nonce: ${res.locals.nonce}, and script: ${mainJs}`);
-    res.render('index', { nonce: res.locals.nonce, title, mainJs });
+    res.render('index', {nonce: res.locals.nonce, title, mainJs});
 });
 
 const port = process.env.PORT || 3000;
