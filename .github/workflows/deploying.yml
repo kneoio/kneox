@@ -29,25 +29,24 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
 
-      - name: Check if key is added
-        run: ssh-add -l
+      - name: Stop the service
+        run: ssh -o StrictHostKeyChecking=no root@${{ secrets.HOST_NAME }} 'sudo systemctl stop keypracticafe'
 
-      - name: Setup Python
-        uses: actions/setup-python@v5.1.0
-        with:
-          python-version: '3.x'
-
-      - name: Install Ansible
+      - name: Update the project from GitHub
         run: |
-          python -m pip install --upgrade pip
-          pip install ansible
+          ssh -o StrictHostKeyChecking=no root@${{ secrets.HOST_NAME }} '
+            if [ ! -d /home/keypractica/fe_server ]; then
+              git clone https://github.com/kneoio/kneox.git /home/keypractica/fe_server
+            else
+              cd /home/keypractica/fe_server && git pull
+            fi
+          '
 
-      - name: Install Ansible Community General Collection
-        run: ansible-galaxy collection install community.general
+      - name: Run npm install on remote server
+        run: ssh -o StrictHostKeyChecking=no root@${{ secrets.HOST_NAME }} 'cd /home/keypractica/fe_server && npm install'
 
-      - name: Run Ansible Playbook
-        env:
-          ANSIBLE_HOST_KEY_CHECKING: False
-        run: |
-          ansible-playbook -i root@${{ secrets.HOST_NAME }}, playbook.yml -e ansible_port=${{ secrets.SSH_PORT }} -vvv
-        working-directory: ./ansible
+      - name: Build the Vue.js application on remote server
+        run: ssh -o StrictHostKeyChecking=no root@${{ secrets.HOST_NAME }} 'cd /home/keypractica/fe_server && npm run build'
+
+      - name: Start the service
+        run: ssh -o StrictHostKeyChecking=no root@${{ secrets.HOST_NAME }} 'sudo systemctl start keypracticafe'

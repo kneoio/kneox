@@ -10,9 +10,18 @@ import KneoProjectForm from '../components/forms/KneoProjectForm.vue';
 const routes: Array<RouteRecordRaw> = [
     {
         path: '/',
-        name: 'Home',
+        redirect: '/dashboard'  // Redirect / to /dashboard
+    },
+    {
+        path: '/',
         component: HomeView,
         children: [
+            {
+                path: 'dashboard',
+                name: 'Dashboard',
+                component: DashboardView,
+                meta: { requiresAuth: true }
+            },
             {
                 path: 'projects_and_tasks',
                 component: ProjectsAndTasks,
@@ -61,16 +70,10 @@ const routes: Array<RouteRecordRaw> = [
                 ]
             },
             {
-                path: '/projects',
+                path: 'projects',
                 redirect: '/projects_and_tasks/projects'  // Redirect /projects to /projects_and_tasks/projects
             }
         ]
-    },
-    {
-        path: '/dashboard',
-        name: 'Dashboard',
-        component: DashboardView,
-        meta: { requiresAuth: true }
     },
     {
         path: '/about',

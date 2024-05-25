@@ -30,9 +30,11 @@ keycloak.init({
             userData.profile = profile;
             console.log('User profile loaded', profile);
             startApp();
+            cleanUpUrl();
         }).catch((error: any) => {
             console.error('Failed to load user profile', error);
             startApp();
+            cleanUpUrl();
         });
     } else {
         console.warn('Authentication failed - proceeding without authentication');
@@ -50,4 +52,8 @@ function startApp() {
     app.provide('userData', userData);
     app.use(router);
     app.mount('#app');
+}
+
+function cleanUpUrl() {
+    router.replace(window.location.pathname); // Remove query parameters from the URL
 }

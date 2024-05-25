@@ -51,6 +51,7 @@ import {
 import {useRouter} from 'vue-router';
 import IconWrapper from "../IconWrapper.vue";
 import {KeycloakInstance} from "keycloak-js";
+import {fetchProjects} from "../../apiClient";
 
 interface Project {
   id: string;
@@ -90,7 +91,8 @@ export default defineComponent({
 
     onMounted(() => {
       if (kc) {
-        fetchProjects();
+        //fetchProjects();
+        fetchProjectsData();
         window.addEventListener('resize', () => {
           isMobile.value = window.innerWidth < 768;
         });
@@ -99,7 +101,7 @@ export default defineComponent({
       }
     });
 
-    const fetchProjects = async () => {
+   /* const fetchProjects = async () => {
       loadingBar.start();
       try {
         const response = await apiClient.get<{ payload: { view_data: { entries: Project[] } } }>('/projects');
@@ -107,6 +109,25 @@ export default defineComponent({
           ...project,
           selected: false
         }));
+      } catch (error: unknown) {
+        loadingBar.error();
+        if (error instanceof Error) {
+          msgPopup.error(error.message);
+        } else {
+          msgPopup.error('An unknown error occurred.');
+        }
+      } finally {
+        loadingBar.finish();
+      }
+    };*/
+
+    const fetchProjectsData = async () => {
+      loadingBar.start();
+      try {
+        projects.value = await fetchProjects();
+        projects.value.forEach((project: Project) => {
+          project.selected = false;
+        });
       } catch (error: unknown) {
         loadingBar.error();
         if (error instanceof Error) {
