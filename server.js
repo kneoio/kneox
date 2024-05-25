@@ -11,14 +11,20 @@ const app = express();
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 
+console.log('Starting server...');
+console.log(`Environment: ${process.env.NODE_ENV}`);
+console.log(`Serving static files from: ${path.join(__dirname, 'dist')}`);
+
 // Middleware to generate a nonce and add it to res.locals
 app.use((req, res, next) => {
     res.locals.nonce = crypto.randomBytes(16).toString('base64');
+    console.log(`Generated nonce: ${res.locals.nonce}`);
     next();
 });
 
 // CSP configuration with nonce
 app.use((req, res, next) => {
+    console.log('Setting CSP headers');
     helmet.contentSecurityPolicy({
         directives: {
             defaultSrc: ["'self'"],
@@ -34,16 +40,19 @@ app.use((req, res, next) => {
     })(req, res, next);
 });
 
-// Set EJS as the view engine and set the views directory to current directory
+// Set EJS as the view engine and set the views directory to the current directory
 app.set('view engine', 'ejs');
 app.set('views', __dirname); // Updated to current directory
+console.log(`Views directory set to: ${__dirname}`);
 
-// Serve static files
+// Serve static files from the 'dist' directory
 app.use(express.static(path.join(__dirname, 'dist')));
+console.log(`Static files served from: ${path.join(__dirname, 'dist')}`);
 
 // Serve the HTML file with injected nonce and dynamic title
 app.get('*', (req, res) => {
     const title = "kneox"; // Set your dynamic title here
+    console.log(`Rendering index.ejs with title: ${title} and nonce: ${res.locals.nonce}`);
     res.render('index', { nonce: res.locals.nonce, title });
 });
 
