@@ -2,23 +2,18 @@ import express from 'express';
 import path from 'path';
 import helmet from 'helmet';
 import crypto from 'crypto';
-import fs from 'fs';
 import {fileURLToPath} from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 const app = express();
-
 const isDevelopment = process.env.NODE_ENV === 'development';
 
-// Middleware to generate a nonce and add it to res.locals
 app.use((req, res, next) => {
     res.locals.nonce = crypto.randomBytes(16).toString('base64');
     next();
 });
 
-// CSP configuration with nonce
 app.use((req, res, next) => {
     helmet.contentSecurityPolicy({
         directives: {
@@ -36,21 +31,23 @@ app.use((req, res, next) => {
     })(req, res, next);
 });
 
-// Serve static files
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'src', 'view'));
 app.use(express.static(path.join(__dirname, 'dist')));
 
-// Serve the HTML file with injected nonce
+app.get('/config', (req, res) => {
+    const config = {
+        "realm": process.env.KEYPRACTICA_REALM,
+        "auth-server-url": process.env.KEYPRACTICA_AUTH_SERVER_URL,
+        "resource": process.env.KEYPRACTICA_RESOURCE,
+        "client-realm": "semantyca.com"
+    };
+    res.json(config);
+});
+
 app.get('*', (req, res) => {
-    fs.readFile(path.join(__dirname, 'dist', 'index.html'), 'utf8', (err, data) => {
-        if (err) {
-            return res.status(500).send('Error reading index.html');
-        }
-        const nonce = res.locals.nonce;
-        const updatedData = data
-            .replace('<script type="module" src="/src/main.ts"></script>', `<script type="module" nonce="${nonce}" src="/src/main.ts"></script>`)
-            .replace('<script>', `<script nonce="${nonce}">`);
-        res.send(updatedData);
-    });
+    const title = "kneox";
+    res.render('index', { nonce: res.locals.nonce, title });
 });
 
 const port = process.env.PORT || 3000;
