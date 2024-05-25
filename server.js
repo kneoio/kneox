@@ -1,6 +1,7 @@
 import express from 'express';
 import path from 'path';
 import helmet from 'helmet';
+import crypto from 'crypto';
 import {fileURLToPath} from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -8,23 +9,29 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const isDevelopment = process.env.NODE_ENV === 'development';
 
-const cspDirectives = {
-    directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", "data:"],
-        connectSrc: ["'self'"],
-        fontSrc: ["'self'", "https:"],
-        frameSrc: ["'self'", isDevelopment ? "http://localhost:8090" : "https://auth.keypractica.com"],
-        objectSrc: ["'none'"],
-        upgradeInsecureRequests: [],
-    },
-};
+app.use((req, res, next) => {
+    res.locals.nonce = crypto.randomBytes(16).toString('base64');
+    next();
+});
 
-app.use(helmet.contentSecurityPolicy(cspDirectives));
+app.use((req, res, next) => {
+    helmet.contentSecurityPolicy({
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", `'nonce-${res.locals.nonce}'`, "'strict-dynamic'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", "data:"],
+            connectSrc: ["'self'"],
+            fontSrc: ["'self'", "https:"],
+            frameSrc: ["'self'", isDevelopment ? "http://localhost:8090" : "https://auth.keypractica.com"],
+            objectSrc: ["'none'"],
+            upgradeInsecureRequests: [],
+        },
+    })(req, res, next);
+});
+
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'narseler'));
+app.set('views', path.join(__dirname, 'views')); // Assuming your views are in the 'views' folder
 app.use(express.static(path.join(__dirname, 'dist')));
 
 app.get('/config', (req, res) => {
@@ -38,7 +45,7 @@ app.get('/config', (req, res) => {
 });
 
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+    res.render('index', { nonce: res.locals.nonce });
 });
 
 const port = process.env.PORT || 3000;
