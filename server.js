@@ -42,6 +42,7 @@ app.use((req, res, next) => {
             connectSrc: ["'self'"],
             fontSrc: ["'self'", "https:"],
             frameSrc: ["'self'", isDevelopment ? "http://localhost:8090" : "https://auth.keypractica.com"],
+            frameAncestors: ["'self'", "http://localhost:8090", "https://auth.keypractica.com"],
             objectSrc: ["'none'"],
             upgradeInsecureRequests: [],
         },
