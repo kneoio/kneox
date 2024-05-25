@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'path';
 import helmet from 'helmet';
 import crypto from 'crypto';
+import fs from 'fs';
 import {fileURLToPath} from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -22,7 +23,8 @@ app.use((req, res, next) => {
     helmet.contentSecurityPolicy({
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", `'nonce-${res.locals.nonce}'`, "'strict-dynamic'"],
+            scriptSrc: ["'self'", `'nonce-${res.locals.nonce}'`],
+            scriptSrcElem: ["'self'", 'https://www.keypractica.com'],
             styleSrc: ["'self'", "'unsafe-inline'"],
             imgSrc: ["'self'", "data:"],
             connectSrc: ["'self'"],
@@ -34,24 +36,19 @@ app.use((req, res, next) => {
     })(req, res, next);
 });
 
-// Set EJS as the view engine
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
-
+// Serve static files
 app.use(express.static(path.join(__dirname, 'dist')));
 
-app.get('/config', (req, res) => {
-    const config = {
-        "realm": process.env.KEYPRACTICA_REALM,
-        "auth-server-url": process.env.KEYPRACTICA_AUTH_SERVER_URL,
-        "resource": process.env.KEYPRACTICA_RESOURCE,
-        "client-realm": "semantyca.com"
-    };
-    res.json(config);
-});
-
+// Serve the HTML file with injected nonce
 app.get('*', (req, res) => {
-    res.render('index', { nonce: res.locals.nonce });
+    fs.readFile(path.join(__dirname, 'dist', 'index.html'), 'utf8', (err, data) => {
+        if (err) {
+            return res.status(500).send('Error reading index.html');
+        }
+        const nonce = res.locals.nonce;
+        const updatedData = data.replace('<script type="module" src="/src/main.ts"></script>', `<script type="module" nonce="${nonce}" src="/src/main.ts"></script>`);
+        res.send(updatedData);
+    });
 });
 
 const port = process.env.PORT || 3000;
