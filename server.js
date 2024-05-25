@@ -1,12 +1,27 @@
 import express from 'express';
 import path from 'path';
 import {fileURLToPath} from 'url';
+import helmet from 'helmet';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 const app = express();
+const isDevelopment = process.env.NODE_ENV === 'development';
+const cspDirectives = {
+    directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:"],
+        connectSrc: ["'self'"],
+        fontSrc: ["'self'", "https:"],
+        frameAncestors: ["'self'", isDevelopment ? "http://localhost:8090" : "https://your-production-site.com"],
+        objectSrc: ["'none'"],
+        upgradeInsecureRequests: [],
+    },
+};
 
+app.use(helmet.contentSecurityPolicy(cspDirectives));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'narseler'));
 app.use(express.static(path.join(__dirname, 'dist')));
@@ -25,6 +40,7 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
-app.listen(process.env.PORT, () => {
-    console.log(`Server is listening on port ${process.env.PORT}`);
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+    console.log(`Server is listening on port ${port}`);
 });
