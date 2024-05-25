@@ -34,9 +34,12 @@ app.use((req, res, next) => {
     })(req, res, next);
 });
 
-// Set EJS as the view engine and set the views directory
+// Set EJS as the view engine and set the views directory to current directory
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'src', 'view'));
+app.set('views', __dirname); // Updated to current directory
+
+// Serve static files
+app.use(express.static(path.join(__dirname, 'dist')));
 
 // Serve the HTML file with injected nonce and dynamic title
 app.get('*', (req, res) => {
