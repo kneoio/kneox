@@ -8,13 +8,12 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: NuHost
     steps:
       - name: Checkout code
         uses: actions/checkout@v4.1.4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '16.x'
 
@@ -30,11 +29,11 @@ jobs:
           ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
 
       - name: Stop the service
-        run: ssh -o StrictHostKeyChecking=no root@${{ secrets.HOST_NAME }} 'sudo systemctl stop keypracticafe'
+        run: ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.USER_NAME }}@${{ secrets.HOST_NAME }} 'sudo systemctl stop keypracticafe'
 
       - name: Update the project from GitHub
         run: |
-          ssh -o StrictHostKeyChecking=no root@${{ secrets.HOST_NAME }} '
+          ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.USER_NAME }}@${{ secrets.HOST_NAME }} '
             if [ ! -d /home/keypractica/fe_server ]; then
               git clone https://github.com/kneoio/kneox.git /home/keypractica/fe_server
             else
@@ -43,10 +42,10 @@ jobs:
           '
 
       - name: Run npm install on remote server
-        run: ssh -o StrictHostKeyChecking=no root@${{ secrets.HOST_NAME }} 'cd /home/keypractica/fe_server && npm install'
+        run: ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.USER_NAME }}@${{ secrets.HOST_NAME }} 'cd /home/keypractica/fe_server && npm install'
 
       - name: Build the Vue.js application on remote server
-        run: ssh -o StrictHostKeyChecking=no root@${{ secrets.HOST_NAME }} 'cd /home/keypractica/fe_server && npm run build'
+        run: ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.USER_NAME }}@${{ secrets.HOST_NAME }} 'cd /home/keypractica/fe_server && npm run build'
 
       - name: Start the service
-        run: ssh -o StrictHostKeyChecking=no root@${{ secrets.HOST_NAME }} 'sudo systemctl start keypracticafe'
+        run: ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.USER_NAME }}@${{ secrets.HOST_NAME }} 'sudo systemctl start keypracticafe'
