@@ -40,19 +40,18 @@ app.use((req, res, next) => {
             connectSrc: ["'self'"],
             fontSrc: ["'self'", "https:"],
             frameSrc: ["'self'", "https://auth.keypractica.com"],
-            frameAncestors: ["'self'", "https://auth.keypractica.com"], // Ensure this is set
+            frameAncestors: ["'self'", "https://auth.keypractica.com"],
             objectSrc: ["'none'"],
             upgradeInsecureRequests: [],
             baseUri: ["'self'"],
             formAction: ["'self'"],
         },
     })(req, res, next);
-    next(); // Ensure we move to the next middleware
 });
 
 // Middleware to add a custom header to verify changes
 app.use((req, res, next) => {
-    res.setHeader('X-Custom-Header', 'CSP-Updated777');
+    res.setHeader('X-Custom-Header', 'CSP-Updated');
     next();
 });
 
@@ -63,7 +62,7 @@ console.log(`Views directory set to: ${__dirname}`);
 
 // Serve static files from the 'dist' directory
 const staticPath = path.join(__dirname, 'dist');
-app.use(express.static(staticPath));
+app.use('/assets', express.static(staticPath)); // Ensure correct path
 console.log(`Static files served from: ${staticPath}`);
 
 // Serve the HTML file with injected nonce and dynamic title
