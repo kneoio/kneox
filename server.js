@@ -6,14 +6,18 @@ import {fileURLToPath} from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
 const app = express();
+
 const isDevelopment = process.env.NODE_ENV === 'development';
 
+// Middleware to generate a nonce and add it to res.locals
 app.use((req, res, next) => {
     res.locals.nonce = crypto.randomBytes(16).toString('base64');
     next();
 });
 
+// CSP configuration with nonce
 app.use((req, res, next) => {
     helmet.contentSecurityPolicy({
         directives: {
@@ -30,8 +34,10 @@ app.use((req, res, next) => {
     })(req, res, next);
 });
 
+// Set EJS as the view engine
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views')); // Assuming your views are in the 'views' folder
+app.set('views', path.join(__dirname, 'views'));
+
 app.use(express.static(path.join(__dirname, 'dist')));
 
 app.get('/config', (req, res) => {
