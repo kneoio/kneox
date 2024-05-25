@@ -10,8 +10,6 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-const isDevelopment = process.env.NODE_ENV === 'development';
-
 console.log('Starting server...');
 console.log(`Environment: ${process.env.NODE_ENV}`);
 console.log(`Serving static files from: ${path.join(__dirname, 'dist')}`);
@@ -49,11 +47,12 @@ app.use((req, res, next) => {
             formAction: ["'self'"],
         },
     })(req, res, next);
+    next(); // Ensure we move to the next middleware
 });
 
 // Middleware to add a custom header to verify changes
 app.use((req, res, next) => {
-    res.setHeader('X-Custom-Header', 'CSP-Updated');
+    res.setHeader('X-Custom-Header', 'CSP-Updated777');
     next();
 });
 
