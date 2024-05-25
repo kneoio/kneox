@@ -31,8 +31,9 @@ app.use((req, res, next) => {
 });
 
 // CSP configuration with helmet
-app.use(helmet({
-    contentSecurityPolicy: {
+app.use((req, res, next) => {
+    console.log('Setting CSP headers');
+    helmet.contentSecurityPolicy({
         directives: {
             defaultSrc: ["'self'"],
             scriptSrc: ["'self'", `'nonce-${res.locals.nonce}'`, 'https://www.keypractica.com'],
@@ -41,14 +42,14 @@ app.use(helmet({
             connectSrc: ["'self'"],
             fontSrc: ["'self'", "https:"],
             frameSrc: ["'self'", "https://auth.keypractica.com"],
-            frameAncestors: ["'self'", "http://localhost:8090", "https://auth.keypractica.com"],
+            frameAncestors: ["'self'", "https://auth.keypractica.com"], // Removed localhost
             objectSrc: ["'none'"],
             upgradeInsecureRequests: [],
             baseUri: ["'self'"],
             formAction: ["'self'"],
         },
-    },
-}));
+    })(req, res, next);
+});
 
 // Set EJS as the view engine and set the views directory to the current directory
 app.set('view engine', 'ejs');
