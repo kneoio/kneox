@@ -25,6 +25,13 @@ export default {
 </script>
 
 <style>
+
+/* In your global CSS file or within a style tag in App.vue */
+:root {
+  --n-primary-color: #ffa500; /* Orange color */
+}
+
+
 body {
   margin: 20px;
 }

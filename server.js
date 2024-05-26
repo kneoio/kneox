@@ -50,7 +50,7 @@ app.use(
 );
 
 const staticPath = path.join(__dirname, 'dist');
-app.use('/assets', express.static(staticPath));
+app.use(express.static(staticPath));
 
 app.get(['/', '/index.html'], (req, res) => {
     const title = 'kneox';
@@ -68,6 +68,7 @@ app.get(['/', '/index.html'], (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
+
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
