@@ -1,31 +1,31 @@
-// src/apiClient.ts
 import axios from 'axios';
-import {getCurrentInstance} from 'vue';
-import {KeycloakInstance} from 'keycloak-js';
-import {Project} from './types';
 
 const apiClient = axios.create({
-    baseURL: 'http://localhost:38707/kneox',
+    baseURL: 'http://localhost:38707/api/kneox',
+    withCredentials: false
 });
 
-apiClient.interceptors.request.use(async (config) => {
-    const instance = getCurrentInstance();
-    const kc = instance?.appContext.config.globalProperties.$keycloak as KeycloakInstance;
+export const setupApiClient = (token: string) => {
+    apiClient.interceptors.request.use(async (config) => {
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    });
+};
 
-    if (kc?.token) {
-        config.headers.Authorization = `Bearer ${kc.token}`;
+export const fetchProjects = async (page: number, pageSize: number): Promise<any> => {
+    try {
+        const response = await apiClient.get(`/projects?page=${page}&size=${pageSize}`);
+        console.log(response.data);
+        if (response.data) {
+            return response.data;
+        } else {
+            throw new Error('Invalid API response structure');
+        }
+    } catch (error) {
+        console.error('API error:', error);
+        throw error;
     }
-
-    return config;
-});
-
-export const fetchProjects = async (): Promise<Project[]> => {
-    const response = await apiClient.get<{ payload: { view_data: { entries: Project[] } } }>('/projects');
-    return response.data.payload.view_data.entries;
 };
-
-export const archiveProjects = async (projectIds: string[]) => {
-    return apiClient.post('/projects/archive', { ids: projectIds });
-};
-
 export default apiClient;

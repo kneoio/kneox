@@ -4,6 +4,7 @@ import keycloakInst from "./keycloakFactory";
 import router from "./router";
 import IconWrapper from "./components/IconWrapper.vue";
 import './assets/tailwind.css';
+import {createPinia} from 'pinia';
 
 interface UserProfile {
     id?: string;
@@ -50,6 +51,7 @@ function startApp() {
     app.component('IconWrapper', IconWrapper);
     app.provide('keycloak', keycloak);
     app.provide('userData', userData);
+    app.use(createPinia());
     app.use(router);
     app.mount('#app');
 }

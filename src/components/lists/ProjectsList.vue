@@ -9,180 +9,81 @@
     <n-gi span="24">
       <n-data-table
           :columns="columns"
-          :data="currentPageData"
-          :pagination="false"
+          :data="projectsStore.projectsPage?.viewData.entries"
+          :pagination="pagination"
           :bordered="false"
           row-class-name="cursor-pointer"
           :row-props="getRowProps"
-      />
-    </n-gi>
-    <n-gi span="24">
-      <n-pagination
-          v-model:page="pagination.page"
-          v-model:page-size="pagination.pageSize"
-          :item-count="projects.length"
-          show-size-picker
-          :page-sizes="[10, 20, 30, 50]"
-          :show-quick-jumper="true"
-          :show-total="true"
           @update:page="handlePageChange"
           @update:page-size="handlePageSizeChange"
       />
     </n-gi>
+
   </n-grid>
 </template>
 
 <script lang="ts">
-import {computed, defineComponent, h, inject, onMounted, ref} from "vue";
-import axios from 'axios';
-import {
-  DataTableColumns,
-  NButton,
-  NButtonGroup,
-  NCheckbox,
-  NDataTable,
-  NGi,
-  NGrid,
-  NMenu,
-  NPagination,
-  useLoadingBar,
-  useMessage
-} from "naive-ui";
+import {defineComponent, h, inject, onMounted, reactive, ref} from 'vue';
+import {NButton, NButtonGroup, NCheckbox, NDataTable, NGi, NGrid, NPagination, useMessage} from 'naive-ui';
 import {useRouter} from 'vue-router';
-import IconWrapper from "../IconWrapper.vue";
-import {KeycloakInstance} from "keycloak-js";
-
-interface Project {
-  id: string;
-  name: string;
-  status: string;
-  selected?: boolean;
-}
+import {useProjectsStore} from '../../store/projectsStore';
+import {KeycloakInstance} from 'keycloak-js';
+import {Project} from "../../types";
 
 export default defineComponent({
-  components: { NDataTable, NMenu, NPagination, NButtonGroup, NButton, IconWrapper, NGi, NGrid},
+  components: { NDataTable, NPagination, NButtonGroup, NButton, NGi, NGrid },
   setup() {
-    const kc = inject<KeycloakInstance>('keycloak');
     const msgPopup = useMessage();
-    const loadingBar = useLoadingBar()
     const router = useRouter();
-
-    const projects = ref<Project[]>([]);
-    const allSelected = ref(false);
+    const kc = inject<KeycloakInstance>('keycloak');
+    const projectsStore = useProjectsStore();
     const isMobile = ref(window.innerWidth < 768);
-
-
-    const apiClient = axios.create({
-      baseURL: 'http://localhost:38707/kneox'
-    });
-
-    apiClient.interceptors.request.use(async (config) => {
-      const token = kc?.token;
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-      return config;
-    });
-
-    window.addEventListener('resize', () => {
-      isMobile.value = window.innerWidth < 768;
+    const pagination = reactive({
+      page: 1,
+      pageSize: 10,
+      pageCount: 1,
+      itemCount: 0,
+      showSizePicker: true,
+      pageSizes: [10, 20, 50]
     });
 
     onMounted(() => {
-      if (kc) {
-        fetchProjects();
-        //fetchProjectsData();
-        window.addEventListener('resize', () => {
-          isMobile.value = window.innerWidth < 768;
-        });
+      if (kc && kc.token) {
+        projectsStore.setupApiClient(kc.token);
+        projectsStore.fetchProjects(1, 10, pagination);
       } else {
-        msgPopup.error('Keycloak instance is not available');
+        msgPopup.error('Keycloak instance is not available or token is missing');
       }
+
+      window.addEventListener('resize', () => {
+        isMobile.value = window.innerWidth < 768;
+      });
     });
 
-    const fetchProjects = async () => {
-      loadingBar.start();
-      try {
-        const response = await apiClient.get<{ payload: { view_data: { entries: Project[] } } }>('/projects');
-        projects.value = response.data.payload.view_data.entries.map((project: Project) => ({
-          ...project,
-          selected: false
-        }));
-      } catch (error: unknown) {
-        loadingBar.error();
-        if (error instanceof Error) {
-          msgPopup.error(error.message);
-        } else {
-          msgPopup.error('An unknown error occurred.');
-        }
-      } finally {
-        loadingBar.finish();
-      }
-    };
-
-    /*const fetchProjectsData = async () => {
-      loadingBar.start();
-      try {
-        projects.value = await fetchProjects();
-        projects.value.forEach((project: Project) => {
-          project.selected = false;
-        });
-      } catch (error: unknown) {
-        loadingBar.error();
-        if (error instanceof Error) {
-          msgPopup.error(error.message);
-        } else {
-          msgPopup.error('An unknown error occurred.');
-        }
-      } finally {
-        loadingBar.finish();
-      }
-    };*/
-
-    const toggleSelectAll = () => {
-      allSelected.value = !allSelected.value;
-      projects.value.forEach((project: Project) => {
-        project.selected = allSelected.value;
-      });
-    };
-
-    const columns: DataTableColumns<Project> = [
+    const columns = [
       {
         title: () => h(NCheckbox, {
-          checked: allSelected.value,
-          onUpdateChecked: toggleSelectAll
+
         }),
         key: 'select',
-        render(row: Project) {
-          return h(NCheckbox, {
-            checked: row.selected,
-            onUpdateChecked: (checked: boolean) => {
-              row.selected = checked;
-            }
-          });
-        }
+        render: (row: Project) => h(NCheckbox, {
+          checked: row.selected,
+          onUpdateChecked: (checked) => {
+            row.selected = checked;
+          }
+        })
       },
-      {title: 'Name', key: 'name'},
-      {title: 'Status', key: 'status'}
+      { title: 'Name', key: 'name' },
+      { title: 'Status', key: 'status' }
     ];
 
-    const pagination = ref({
-      page: 1,
-      pageSize: 10,
-    });
-
-    const currentPageData = computed(() => {
-      const start = (pagination.value.page - 1) * pagination.value.pageSize;
-      const end = start + pagination.value.pageSize;
-      return projects.value.slice(start, end);
-    });
-
     const handlePageChange = (page: number) => {
-      pagination.value.page = page;
+      projectsStore.fetchProjects(page, pagination.pageSize, pagination);
     };
 
     const handlePageSizeChange = (pageSize: number) => {
-      pagination.value.pageSize = pageSize;
+      projectsStore.fetchProjects(pagination.page, pageSize, pagination);
+
     };
 
     const handleNewClick = () => {
@@ -196,40 +97,32 @@ export default defineComponent({
     const getRowProps = (row: Project) => {
       return {
         onClick: () => {
-          const routeTo = {name: 'KneoProjectForm', params: {id: row.id}};
+          const routeTo = { name: 'KneoProjectForm', params: { id: row.id } };
           console.log('Navigating to:', routeTo);
-          router.push({name: 'KneoProjectForm', params: {id: row.id}})
-              .catch(err => {
-                console.error('Navigation error:', err);
-              });
+          router.push(routeTo).catch(err => {
+            console.error('Navigation error:', err);
+          });
         }
       };
     };
 
-
     return {
-      inverted: ref(false),
-      expandedKeys: ref(['projects']),
-      projects,
-      pagination,
+      projectsStore,
       columns,
-      currentPageData,
+      pagination,
       isMobile,
-      allSelected,
       handlePageChange,
       handlePageSizeChange,
       handleNewClick,
       handleArchiveClick,
-      getRowProps,
+      getRowProps
     };
   }
 });
 </script>
 
 <style scoped>
-
 .cursor-pointer:hover {
   cursor: pointer;
 }
-
 </style>

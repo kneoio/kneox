@@ -32,10 +32,6 @@ app.use(
     helmet.contentSecurityPolicy({
         directives: {
             defaultSrc: ["'self'"],
-            // Previous implementation
-            // scriptSrc: ["'self'", 'https://www.keypractica.com', (req, res) => `'nonce-${res.locals.nonce}'`],
-            // styleSrc: ["'self'", 'https://www.keypractica.com', (req, res) => `'nonce-${res.locals.nonce}'`],
-            // Updated implementation
             scriptSrc: ["'self'", (req, res) => `'nonce-${res.locals.nonce}'`, 'https://www.keypractica.com'],
             styleSrc: ["'self'", (req, res) => `'nonce-${res.locals.nonce}'`, 'https://www.keypractica.com'],
             imgSrc: ["'self'", 'data:'],
@@ -59,7 +55,7 @@ app.use(express.static(staticPath));
 app.get(['/', '/index.html'], (req, res) => {
     const title = 'kneox';
     const mainJs = manifest['src/main.ts']?.file;
-    const mainCss = manifest['src/main.ts']?.css[0]; // Always assume the CSS file is present
+    const mainCss = manifest['src/main.ts']?.css[0];
 
     if (mainJs && mainCss) {
         app.set('view engine', 'ejs');
