@@ -25,12 +25,12 @@ jobs:
 
       - name: Verify manifest
         run: |
-          if [ ! -f dist/manifest.json ]; then
+          if [ ! -f dist/.vite/manifest.json ]; then
             echo "Manifest not found!"
             exit 1
           else
             echo "Manifest found:"
-            cat dist/manifest.json
+            cat dist/.vite/manifest.json
           fi
 
       - name: Setup SSH Agent
