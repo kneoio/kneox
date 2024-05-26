@@ -32,8 +32,8 @@ app.use(
     helmet.contentSecurityPolicy({
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", 'https://www.keypractica.com'],
-            styleSrc: ["'self'", 'https://www.keypractica.com'],
+            scriptSrc: ["'self'", 'https://www.keypractica.com', (req, res) => `'nonce-${res.locals.nonce}'`],
+            styleSrc: ["'self'", 'https://www.keypractica.com', (req, res) => `'nonce-${res.locals.nonce}'`],
             imgSrc: ["'self'", 'data:'],
             connectSrc: ["'self'"],
             fontSrc: ["'self'", 'https:'],
@@ -50,21 +50,21 @@ app.use(
 );
 
 const staticPath = path.join(__dirname, 'dist');
-app.use('/', express.static(staticPath));
+app.use('/assets', express.static(staticPath));
 
-app.get('/index.html', (req, res) => {
+app.get(['/', '/index.html'], (req, res) => {
     const title = 'kneox';
     const mainJs = manifest['src/main.ts']?.file;
-    const mainCss = manifest['src/main.ts']?.css ? manifest['src/main.ts'].css[0] : null;
+    const mainCss = manifest['src/main.ts']?.css[0]; // Always assume the CSS file is present
 
-    if (mainJs) {
+    if (mainJs && mainCss) {
         app.set('view engine', 'ejs');
         app.set('views', __dirname);
         console.log(`Views directory set to: ${__dirname}`);
         console.log(`Rendering index.ejs with title: ${title}, nonce: ${res.locals.nonce}, script: ${mainJs}, and style: ${mainCss}`);
         res.render('index', { nonce: res.locals.nonce, title, mainJs, mainCss });
     } else {
-        console.error('Main script not found in manifest.');
+        console.error('Main script or CSS not found in manifest.');
         res.status(500).send('Internal Server Error');
     }
 });
