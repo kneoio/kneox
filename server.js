@@ -50,7 +50,7 @@ app.use(
 );
 
 const staticPath = path.join(__dirname, 'dist');
-app.use('/assets', express.static(staticPath));
+app.use('/', express.static(staticPath));
 
 app.get('*', (req, res) => {
     const title = 'kneox';
