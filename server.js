@@ -3,7 +3,7 @@ import path from 'path';
 import crypto from 'crypto';
 import {fileURLToPath} from 'url';
 import fs from 'fs';
-import helmet from "helmet";
+import helmet from 'helmet';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -54,11 +54,23 @@ console.log(`Views directory set to: ${__dirname}`);
 const staticPath = path.join(__dirname, 'dist');
 app.use('/assets', express.static(staticPath));
 
-app.get('*', (req, res) => {
-    const title = "kneox";
-    const mainJs = manifest['src/main.ts']?.file || 'fallback.html';
-    console.log(`Rendering index.ejs with title: ${title}, nonce: ${res.locals.nonce}, and script: ${mainJs}`);
-    res.render('index', {nonce: res.locals.nonce, title, mainJs});
+app.get('*', async (req, res) => {
+    const title = 'kneox';
+    const mainJs = manifest['src/main.ts']?.file;
+
+    if (mainJs) {
+        console.log(`Rendering index.ejs with title: ${title}, nonce: ${res.locals.nonce}, and script: ${mainJs}`);
+        res.render('index', { nonce: res.locals.nonce, title, mainJs });
+    } else {
+        try {
+            const fallbackHtmlPath = path.join(staticPath, 'fallback.html');
+            const fallbackHtml = await fs.promises.readFile(fallbackHtmlPath, 'utf8');
+            res.status(200).send(fallbackHtml);
+        } catch (error) {
+            console.error(`Failed to read fallback.html: ${error.message}`);
+            res.status(500).send('Internal Server Error');
+        }
+    }
 });
 
 const port = process.env.PORT || 3000;
