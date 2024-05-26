@@ -14,7 +14,7 @@ console.log(`Environment: ${process.env.NODE_ENV}`);
 console.log(`Serving static files from: ${path.join(__dirname, 'dist')}`);
 
 let manifest = {};
-const manifestPath = path.join(__dirname, 'dist', '.vite', 'manifest.json');
+const manifestPath = path.join(__dirname, 'dist', 'manifest.json');
 if (fs.existsSync(manifestPath)) {
     manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
     console.log('Manifest loaded:', manifest);
@@ -32,8 +32,12 @@ app.use(
     helmet.contentSecurityPolicy({
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", 'https://www.keypractica.com', (req, res) => `'nonce-${res.locals.nonce}'`],
-            styleSrc: ["'self'", 'https://www.keypractica.com', (req, res) => `'nonce-${res.locals.nonce}'`],
+            // Previous implementation
+            // scriptSrc: ["'self'", 'https://www.keypractica.com', (req, res) => `'nonce-${res.locals.nonce}'`],
+            // styleSrc: ["'self'", 'https://www.keypractica.com', (req, res) => `'nonce-${res.locals.nonce}'`],
+            // Updated implementation
+            scriptSrc: ["'self'", (req, res) => `'nonce-${res.locals.nonce}'`, 'https://www.keypractica.com'],
+            styleSrc: ["'self'", (req, res) => `'nonce-${res.locals.nonce}'`, 'https://www.keypractica.com'],
             imgSrc: ["'self'", 'data:'],
             connectSrc: ["'self'"],
             fontSrc: ["'self'", 'https:'],
@@ -68,7 +72,6 @@ app.get(['/', '/index.html'], (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
-
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
