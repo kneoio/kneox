@@ -14,6 +14,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     manifest: true,
+    sourcemap: true,
     rollupOptions: {
       input: {
         main: path.resolve(__dirname, 'src/main.ts'),
