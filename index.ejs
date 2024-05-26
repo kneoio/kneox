@@ -1,13 +1,15 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/kx.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title %></title>
+    <% if (mainCss) { %>
+        <link rel="stylesheet" href="/<%= mainCss %>" nonce="<%= nonce %>">
+    <% } %>
 </head>
 <body>
 <div id="app"></div>
-<script type="module" nonce="<%= nonce %>" src="<%= mainJs %>"></script>
+<script src="/<%= mainJs %>" nonce="<%= nonce %>"></script>
 </body>
 </html>

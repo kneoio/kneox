@@ -55,14 +55,14 @@ app.use('/', express.static(staticPath));
 app.get('*', (req, res) => {
     const title = 'kneox';
     const mainJs = manifest['src/main.ts']?.file;
+    const mainCss = manifest['src/main.ts']?.css ? manifest['src/main.ts'].css[0] : null;
 
     if (mainJs) {
         app.set('view engine', 'ejs');
         app.set('views', __dirname);
         console.log(`Views directory set to: ${__dirname}`);
-
-        console.log(`Rendering index.ejs with title: ${title}, nonce: ${res.locals.nonce}, and script: ${mainJs}`);
-        res.render('index', { nonce: res.locals.nonce, title, mainJs });
+        console.log(`Rendering index.ejs with title: ${title}, nonce: ${res.locals.nonce}, script: ${mainJs}, and style: ${mainCss}`);
+        res.render('index', { nonce: res.locals.nonce, title, mainJs, mainCss });
     } else {
         console.error('Main script not found in manifest.');
         res.status(500).send('Internal Server Error');
