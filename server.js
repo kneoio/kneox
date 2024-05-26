@@ -18,6 +18,8 @@ const manifestPath = path.join(__dirname, 'dist', 'manifest.json');
 if (fs.existsSync(manifestPath)) {
     manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
     console.log('Manifest loaded:', manifest);
+} else {
+    console.log('Manifest not found');
 }
 
 app.use((req, res, next) => {
@@ -47,10 +49,6 @@ app.use(
     })
 );
 
-app.set('view engine', 'ejs');
-app.set('views', __dirname);
-console.log(`Views directory set to: ${__dirname}`);
-
 const staticPath = path.join(__dirname, 'dist');
 app.use('/assets', express.static(staticPath));
 
@@ -59,6 +57,10 @@ app.get('*', async (req, res) => {
     const mainJs = manifest['src/main.ts']?.file;
 
     if (mainJs) {
+        app.set('view engine', 'ejs');
+        app.set('views', __dirname);
+        console.log(`Views directory set to: ${__dirname}`);
+
         console.log(`Rendering index.ejs with title: ${title}, nonce: ${res.locals.nonce}, and script: ${mainJs}`);
         res.render('index', { nonce: res.locals.nonce, title, mainJs });
     } else {
@@ -68,7 +70,8 @@ app.get('*', async (req, res) => {
             res.status(200).send(fallbackHtml);
         } catch (error) {
             console.error(`Failed to read fallback.html: ${error.message}`);
-            res.status(500).send('Internal Server Error');
+            const randomErrorCode = `ERR${Math.random().toString(36).substring(7).toUpperCase()}`;
+            res.status(500).send(`Internal Server Error - Code: ${randomErrorCode}`);
         }
     }
 });
