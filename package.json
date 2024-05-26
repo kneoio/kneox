@@ -1,7 +1,7 @@
 {
   "name": "kneox",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -24,6 +24,7 @@
   },
   "devDependencies": {
     "@types/keycloak-js": "^3.4.1",
+    "@types/node": "^20.12.12",
     "@vitejs/plugin-vue": "^5.0.4",
     "typescript": "^5.2.2",
     "vite": "^5.2.0",

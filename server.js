@@ -65,7 +65,7 @@ app.get('*', (req, res) => {
         res.render('index', { nonce: res.locals.nonce, title, mainJs });
     } else {
         console.error('Main script not found in manifest.');
-        res.status(500).send('Internal Server Error 8756413');
+        res.status(500).send('Internal Server Error');
     }
 });
 

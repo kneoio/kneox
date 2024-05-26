@@ -1,4 +1,4 @@
-name: Deploy Vue
+name: Deploy Fe
 
 on:
   push:
