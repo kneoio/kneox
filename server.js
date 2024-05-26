@@ -14,7 +14,7 @@ console.log(`Environment: ${process.env.NODE_ENV}`);
 console.log(`Serving static files from: ${path.join(__dirname, 'dist')}`);
 
 let manifest = {};
-const manifestPath = path.join(__dirname, 'dist', 'manifest.json');
+const manifestPath = path.join(__dirname, 'dist', '.vite', 'manifest.json');
 if (fs.existsSync(manifestPath)) {
     manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
     console.log('Manifest loaded:', manifest);
