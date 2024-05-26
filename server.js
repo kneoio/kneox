@@ -53,11 +53,10 @@ console.log(`Views directory set to: ${__dirname}`);
 
 const staticPath = path.join(__dirname, 'dist');
 app.use('/assets', express.static(staticPath));
-console.log(`Static files served from: ${staticPath}`);
 
 app.get('*', (req, res) => {
     const title = "kneox";
-    const mainJs = manifest['src/main.ts']?.file || 'fallback.js';
+    const mainJs = manifest['src/main.ts']?.file || 'fallback.html';
     console.log(`Rendering index.ejs with title: ${title}, nonce: ${res.locals.nonce}, and script: ${mainJs}`);
     res.render('index', {nonce: res.locals.nonce, title, mainJs});
 });
