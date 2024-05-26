@@ -52,7 +52,7 @@ app.use(
 const staticPath = path.join(__dirname, 'dist');
 app.use('/', express.static(staticPath));
 
-app.get('*', (req, res) => {
+app.get('/index.html', (req, res) => {
     const title = 'kneox';
     const mainJs = manifest['src/main.ts']?.file;
     const mainCss = manifest['src/main.ts']?.css ? manifest['src/main.ts'].css[0] : null;

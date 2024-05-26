@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title %></title>
     <% if (mainCss) { %>
-        <link rel="stylesheet" href="/assets/<%= mainCss %>" nonce="<%= nonce %>">
+        <link rel="stylesheet" href="/<%= mainCss %>" nonce="<%= nonce %>">
     <% } %>
 </head>
 <body>
 <div id="app"></div>
-<script src="/assets/<%= mainJs %>" nonce="<%= nonce %>"></script>
+<script src="/<%= mainJs %>" nonce="<%= nonce %>"></script>
 </body>
 </html>
