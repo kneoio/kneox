@@ -57,7 +57,7 @@ console.log(`Static files served from: ${staticPath}`);
 
 app.get('*', (req, res) => {
     const title = "kneox";
-    const mainJs = manifest['src/main.ts']?.file || 'assets/index-xxxxxx.js';
+    const mainJs = manifest['src/main.ts']?.file || 'fallback.js';
     console.log(`Rendering index.ejs with title: ${title}, nonce: ${res.locals.nonce}, and script: ${mainJs}`);
     res.render('index', {nonce: res.locals.nonce, title, mainJs});
 });
