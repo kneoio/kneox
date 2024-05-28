@@ -26,7 +26,7 @@
 import {defineComponent, h, inject, onMounted, reactive, ref} from 'vue';
 import {NButton, NButtonGroup, NCheckbox, NDataTable, NGi, NGrid, NPagination, useMessage} from 'naive-ui';
 import {useRouter} from 'vue-router';
-import {useProjectsStore} from '../../store/projectsStore';
+import {useProjectsStore} from '../../stores/projectsStore';
 import {KeycloakInstance} from 'keycloak-js';
 import {Project} from "../../types";
 

@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const apiClient = axios.create({
     baseURL: 'http://localhost:38707/api/kneox',
-    withCredentials: false
+    withCredentials: false,
 });
 
 export const setupApiClient = (token: string) => {
@@ -17,7 +17,6 @@ export const setupApiClient = (token: string) => {
 export const fetchProjects = async (page: number, pageSize: number): Promise<any> => {
     try {
         const response = await apiClient.get(`/projects?page=${page}&size=${pageSize}`);
-        console.log(response.data);
         if (response.data) {
             return response.data;
         } else {
@@ -28,4 +27,33 @@ export const fetchProjects = async (page: number, pageSize: number): Promise<any
         throw error;
     }
 };
+
+export const fetchProjectById = async (projectId: string): Promise<any> => {
+    try {
+        const response = await apiClient.get(`/projects/${projectId}`);
+        if (response.data) {
+            return response.data;
+        } else {
+            throw new Error('Invalid API response structure');
+        }
+    } catch (error) {
+        console.error('API error:', error);
+        throw error;
+    }
+};
+
+export const saveProject = async (projectId: string, projectData: any): Promise<any> => {
+    try {
+        const response = await apiClient.put(`/projects/${projectId}`, projectData);
+        if (response.data) {
+            return response.data;
+        } else {
+            throw new Error('Invalid API response structure');
+        }
+    } catch (error) {
+        console.error('API error:', error);
+        throw error;
+    }
+};
+
 export default apiClient;

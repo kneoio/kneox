@@ -5,7 +5,7 @@ import DashboardView from '../views/DashboardView.vue';
 import LicensePage from '../views/LicensePage.vue';
 import ProjectsAndTasks from '../components/lists/ProjectAndTasks.vue';
 import ProjectsList from '../components/lists/ProjectsList.vue';
-import KneoProjectForm from '../components/forms/KneoProjectForm.vue';
+import ProjectForm from '../components/forms/ProjectForm.vue';
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -32,8 +32,8 @@ const routes: Array<RouteRecordRaw> = [
                     },
                     {
                         path: 'projects/:id',
-                        name: 'KneoProjectForm',
-                        component: KneoProjectForm
+                        name: 'ProjectForm',
+                        component: ProjectForm
                     },
                     {
                         path: 'tasks',
