@@ -57,5 +57,5 @@ function startApp() {
 }
 
 function cleanUpUrl() {
-    router.replace(window.location.pathname); // Remove query parameters from the URL
+    router.replace(window.location.pathname);
 }

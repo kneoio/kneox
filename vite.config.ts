@@ -20,5 +20,12 @@ export default defineConfig({
         main: path.resolve(__dirname, 'src/main.ts'),
       },
     },
+    lib: {
+      entry: path.resolve(__dirname, 'src/main.ts'), // Entry point for your library
+      formats: ['umd'], // Output format
+      name: 'MyLibraryName', // Name of your library
+      fileName: '(name).js', // Filename pattern
+    },
+    target: 'es2015', // Target ECMAScript version
   },
 });
