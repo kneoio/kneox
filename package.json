@@ -24,6 +24,9 @@
     "vue-router": "^4.3.2"
   },
   "devDependencies": {
+    "@babel/core": "^7.24.6",
+    "@babel/preset-env": "^7.24.6",
+    "@rollup/plugin-babel": "^6.0.4",
     "@types/keycloak-js": "^3.4.1",
     "@types/node": "^20.12.12",
     "@vitejs/plugin-vue": "^5.0.4",
