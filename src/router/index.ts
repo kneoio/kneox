@@ -10,7 +10,7 @@ import ProjectForm from '../components/forms/ProjectForm.vue';
 const routes: Array<RouteRecordRaw> = [
     {
         path: '/',
-        redirect: '/dashboard'  // Redirect / to /dashboard
+        redirect: '/dashboard'
     },
     {
         path: '/',

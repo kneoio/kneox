@@ -19,7 +19,7 @@
 
 <script lang="ts">
 import {NButton, NGi, NGrid, NH1, NH6, NLayoutHeader, NSpace} from "naive-ui";
-import {defineComponent, inject, ref} from "vue";
+import {defineComponent, inject, onMounted, onUnmounted, ref} from "vue";
 import {KeycloakInstance} from "keycloak-js";
 
 export default defineComponent({
@@ -59,6 +59,36 @@ export default defineComponent({
         console.error('Keycloak instance is not available');
       }
     };
+
+    const refreshToken = async () => {
+      if (kc && kc.token) {
+        try {
+          const minValidity = 30; // Seconds
+          const refreshed = await kc.updateToken(minValidity);
+          if (refreshed) {
+            console.log('Token refreshed');
+          } else {
+            console.warn('Token not refreshed, login required');
+            await login();
+          }
+        } catch (error) {
+          console.error('Failed to refresh token', error);
+          await login();
+        }
+      }
+    };
+
+    onMounted(() => {
+      if (kc) {
+        // Periodically refresh the token
+        const intervalId = setInterval(refreshToken, 5 * 60 * 1000); // Every 5 minutes
+
+        // Clear interval on component unmount
+        onUnmounted(() => {
+          clearInterval(intervalId);
+        });
+      }
+    });
 
     return {
       login,

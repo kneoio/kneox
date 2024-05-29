@@ -7,6 +7,8 @@ import {
     setupApiClient
 } from '../apiClient';
 import {Pagination, ViewPage} from "../types";
+import {MessageApiInjection} from 'naive-ui/lib/message/src/MessageProvider';
+import {LoadingBarApiInjection} from 'naive-ui/lib/loading-bar/src/LoadingBarProvider';
 
 interface Rl {
     reader: string;
@@ -14,22 +16,42 @@ interface Rl {
 }
 
 interface Project {
-    id: string;
-    name: string;
-    status: string;
-    finishDate: string;
-    manager: string;
-    coder: string;
-    tester: string;
-    rls: Rl[];
+    docData: {
+        id: string;
+        name: string;
+        status: string;
+        finishDate: string;
+        manager: string;
+        coder: string;
+        tester: string;
+        rls: Rl[];
+    };
 }
 
-export const useProjectsStore = defineStore('projectsStore', () => {
+export const useProjectStore = defineStore('projectsStore', () => {
     const projectsPage = ref<ViewPage | null>(null);
     const project = ref<Project | null>(null);
 
-    const fetchProjects = async (page = 1, pageSize = 10, pagination: Pagination) => {
+    const projectFields = computed(() => project.value?.docData || {
+        id: '',
+        name: '',
+        status: '',
+        finishDate: null,
+        manager: '',
+        coder: '',
+        tester: '',
+        rls: []
+    });
+
+    const fetchProjects = async (
+        page = 1,
+        pageSize = 10,
+        pagination: Pagination,
+        msgPopup: MessageApiInjection,
+        loadingBar: LoadingBarApiInjection
+    ) => {
         try {
+            loadingBar.start();
             const response = await fetchProjectsApi(page, pageSize);
             if (response && response.payload) {
                 projectsPage.value = response.payload;
@@ -41,29 +63,38 @@ export const useProjectsStore = defineStore('projectsStore', () => {
                 throw new Error('Invalid API response structure');
             }
         } catch (error) {
-            console.error('Failed to fetch projects:', error);
+            loadingBar.error();
+            msgPopup.error('Failed to fetch projects:');
             throw error;
+        } finally {
+            loadingBar.finish();
         }
     };
 
-    const fetchProject = async (projectId: string) => {
+    const fetchProject = async (projectId: string,
+                                msgPopup: MessageApiInjection,
+                                loadingBar: LoadingBarApiInjection) => {
         try {
+            loadingBar.start();
             const response = await fetchProjectById(projectId);
             if (response) {
-                project.value = response.docData;
+                project.value = response.payload;
             } else {
                 throw new Error('Invalid API response structure');
             }
         } catch (error) {
-            console.error('Failed to fetch project:', error);
+            loadingBar.error();
+            msgPopup.error('Failed to fetch projects:');
             throw error;
+        } finally {
+            loadingBar.finish();
         }
     };
 
     const saveProject = async () => {
         try {
             if (project.value) {
-                await saveProjectApi(project.value.id, project.value);
+                await saveProjectApi(project.value.docData.id, project.value);
             } else {
                 throw new Error('No project data to save');
             }
@@ -72,17 +103,6 @@ export const useProjectsStore = defineStore('projectsStore', () => {
             throw error;
         }
     };
-
-    const projectFields = computed(() => project.value || {
-        id: '',
-        name: '',
-        status: '',
-        finishDate: '',
-        manager: '',
-        coder: '',
-        tester: '',
-        rls: []
-    });
 
     return {
         projectsPage,

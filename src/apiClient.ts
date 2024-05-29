@@ -15,44 +15,29 @@ export const setupApiClient = (token: string) => {
 };
 
 export const fetchProjects = async (page: number, pageSize: number): Promise<any> => {
-    try {
-        const response = await apiClient.get(`/projects?page=${page}&size=${pageSize}`);
-        if (response.data) {
-            return response.data;
-        } else {
-            throw new Error('Invalid API response structure');
-        }
-    } catch (error) {
-        console.error('API error:', error);
-        throw error;
+    const response = await apiClient.get(`/projects?page=${page}&size=${pageSize}`);
+    if (response.data) {
+        return response.data;
+    } else {
+        throw new Error('Invalid API response structure');
     }
 };
 
 export const fetchProjectById = async (projectId: string): Promise<any> => {
-    try {
-        const response = await apiClient.get(`/projects/${projectId}`);
-        if (response.data) {
-            return response.data;
-        } else {
-            throw new Error('Invalid API response structure');
-        }
-    } catch (error) {
-        console.error('API error:', error);
-        throw error;
+    const response = await apiClient.get(`/projects/${projectId}`);
+    if (response.data) {
+        return response.data;
+    } else {
+        throw new Error('Invalid API response structure');
     }
 };
 
 export const saveProject = async (projectId: string, projectData: any): Promise<any> => {
-    try {
-        const response = await apiClient.put(`/projects/${projectId}`, projectData);
-        if (response.data) {
-            return response.data;
-        } else {
-            throw new Error('Invalid API response structure');
-        }
-    } catch (error) {
-        console.error('API error:', error);
-        throw error;
+    const response = await apiClient.put(`/projects/${projectId}`, projectData);
+    if (response.data) {
+        return response.data;
+    } else {
+        throw new Error('Invalid API response structure');
     }
 };
 

@@ -2,8 +2,8 @@
   <n-grid cols="24" x-gap="12" y-gap="12" class="p-4">
     <n-gi span="24">
       <n-button-group>
-        <n-button @click="handleNewClick" class="mr-2">New</n-button>
-        <n-button @click="handleArchiveClick">Archive</n-button>
+        <n-button @click="handleNewClick" class="mr-2" size="large">New</n-button>
+        <n-button @click="handleArchiveClick" size="large">Archive</n-button>
       </n-button-group>
     </n-gi>
     <n-gi span="24">
@@ -24,19 +24,30 @@
 
 <script lang="ts">
 import {defineComponent, h, inject, onMounted, reactive, ref} from 'vue';
-import {NButton, NButtonGroup, NCheckbox, NDataTable, NGi, NGrid, NPagination, useMessage} from 'naive-ui';
+import {
+  NButton,
+  NButtonGroup,
+  NCheckbox,
+  NDataTable,
+  NGi,
+  NGrid,
+  NPagination,
+  useLoadingBar,
+  useMessage
+} from 'naive-ui';
 import {useRouter} from 'vue-router';
-import {useProjectsStore} from '../../stores/projectsStore';
+import {useProjectStore} from '../../stores/projectStore';
 import {KeycloakInstance} from 'keycloak-js';
 import {Project} from "../../types";
 
 export default defineComponent({
   components: { NDataTable, NPagination, NButtonGroup, NButton, NGi, NGrid },
   setup() {
-    const msgPopup = useMessage();
     const router = useRouter();
+    const msgPopup = useMessage();
+    const loadingBar = useLoadingBar();
     const kc = inject<KeycloakInstance>('keycloak');
-    const projectsStore = useProjectsStore();
+    const projectsStore = useProjectStore();
     const isMobile = ref(window.innerWidth < 768);
     const pagination = reactive({
       page: 1,
@@ -50,7 +61,7 @@ export default defineComponent({
     onMounted(() => {
       if (kc && kc.token) {
         projectsStore.setupApiClient(kc.token);
-        projectsStore.fetchProjects(1, 10, pagination);
+        projectsStore.fetchProjects(1, 10, pagination, msgPopup, loadingBar);
       } else {
         msgPopup.error('Keycloak instance is not available or token is missing');
       }
@@ -97,7 +108,7 @@ export default defineComponent({
     const getRowProps = (row: Project) => {
       return {
         onClick: () => {
-          const routeTo = { name: 'KneoProjectForm', params: { id: row.id } };
+          const routeTo = { name: 'ProjectForm', params: { id: row.id } };
           console.log('Navigating to:', routeTo);
           router.push(routeTo).catch(err => {
             console.error('Navigation error:', err);
