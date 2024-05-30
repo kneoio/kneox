@@ -2,49 +2,39 @@ import {defineStore} from 'pinia';
 import {computed, ref} from 'vue';
 import {setupApiClient} from '../apiClient';
 import {ViewPage} from "../types";
-import {MessageApiInjection} from 'naive-ui/lib/message/src/MessageProvider';
-import {LoadingBarApiInjection} from 'naive-ui/lib/loading-bar/src/LoadingBarProvider';
 import {fetchEmpl} from "../components/api/officeFrameApiClient";
+import {useLoadingBar, useMessage} from "naive-ui";
 
-interface Rl {
-    reader: string;
-    accessLevel: string;
-}
-
-interface Project {
+interface Employer {
     docData: {
         id: string;
+        author: string;
+        regDate: string;
+        lastModifier: string;
+        lastModifiedDate: string;
         name: string;
-        status: string;
-        finishDate: string;
-        manager: string;
-        coder: string;
-        tester: string;
-        rls: Rl[];
+        userId: number;
+        position: {};
+        rank: number;
+        phone: string;
     };
 }
 
 export const useOfficeFrameStore = defineStore('officeFrameStore', () => {
     const ofPage = ref<ViewPage | null>(null);
-    const ofDocument = ref<Project | null>(null);
+    const ofDocument = ref<Employer | null>(null);
 
-    const projectFields = computed(() => ofDocument.value?.docData || {
+    const fields = computed(() => ofDocument.value?.docData || {
         id: '',
-        name: '',
-        status: '',
-        finishDate: null,
-        manager: '',
-        coder: '',
-        tester: '',
-        rls: []
+        name: ''
     });
 
     const fetchEmployers = async (
         page = 1,
-        pageSize = 10,
-        msgPopup: MessageApiInjection,
-        loadingBar: LoadingBarApiInjection
+        pageSize = 10
     ) => {
+        const msgPopup = useMessage();
+        const loadingBar = useLoadingBar();
         try {
             loadingBar.start();
             const response = await fetchEmpl(page, pageSize);
@@ -55,19 +45,18 @@ export const useOfficeFrameStore = defineStore('officeFrameStore', () => {
             }
         } catch (error) {
             loadingBar.error();
-            msgPopup.error('Failed to fetch projects:');
+            msgPopup.error('Failed to fetch employers:');
             throw error;
         } finally {
             loadingBar.finish();
         }
     };
 
-
     return {
         ofPage,
         ofDocument,
         setupApiClient,
-        projectFields,
+        fields,
         fetchEmployers
     };
 });

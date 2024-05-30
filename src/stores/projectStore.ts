@@ -7,8 +7,7 @@ import {
     setupApiClient
 } from '../apiClient';
 import {Pagination, ViewPage} from "../types";
-import {MessageApiInjection} from 'naive-ui/lib/message/src/MessageProvider';
-import {LoadingBarApiInjection} from 'naive-ui/lib/loading-bar/src/LoadingBarProvider';
+import {useLoadingBar, useMessage} from 'naive-ui';
 
 interface Rl {
     reader: string;
@@ -31,6 +30,8 @@ interface Project {
 export const useProjectStore = defineStore('projectsStore', () => {
     const projectsPage = ref<ViewPage | null>(null);
     const project = ref<Project | null>(null);
+    const msgPopup = useMessage();
+    const loadingBar = useLoadingBar();
 
     const projectFields = computed(() => project.value?.docData || {
         id: '',
@@ -43,13 +44,10 @@ export const useProjectStore = defineStore('projectsStore', () => {
         rls: []
     });
 
-    const fetchProjects = async (
-        page = 1,
-        pageSize = 10,
-        pagination: Pagination,
-        msgPopup: MessageApiInjection,
-        loadingBar: LoadingBarApiInjection
-    ) => {
+    const fetchProjects = async (page = 1, pageSize = 10, pagination: Pagination) => {
+        const msgPopup = useMessage();
+        const loadingBar = useLoadingBar();
+
         try {
             loadingBar.start();
             const response = await fetchProjectsApi(page, pageSize);
@@ -62,18 +60,19 @@ export const useProjectStore = defineStore('projectsStore', () => {
             } else {
                 throw new Error('Invalid API response structure');
             }
-        } catch (error) {
+        } catch (error: any) {
             loadingBar.error();
-            msgPopup.error('Failed to fetch projects:');
+            msgPopup.error('Failed to fetch projects: ' + (error.message || 'Unknown error'));
             throw error;
         } finally {
             loadingBar.finish();
         }
     };
 
-    const fetchProject = async (projectId: string,
-                                msgPopup: MessageApiInjection,
-                                loadingBar: LoadingBarApiInjection) => {
+    const fetchProject = async (projectId: string) => {
+        const msgPopup = useMessage();
+        const loadingBar = useLoadingBar();
+
         try {
             loadingBar.start();
             const response = await fetchProjectById(projectId);
@@ -82,9 +81,9 @@ export const useProjectStore = defineStore('projectsStore', () => {
             } else {
                 throw new Error('Invalid API response structure');
             }
-        } catch (error) {
+        } catch (error: any) {
             loadingBar.error();
-            msgPopup.error('Failed to fetch projects:');
+            msgPopup.error('Failed to fetch project: ' + (error.message || 'Unknown error'));
             throw error;
         } finally {
             loadingBar.finish();
@@ -92,15 +91,25 @@ export const useProjectStore = defineStore('projectsStore', () => {
     };
 
     const saveProject = async () => {
+        loadingBar.start();
         try {
             if (project.value) {
-                await saveProjectApi(project.value.docData.id, project.value);
+                const response = await saveProjectApi(project.value.docData.id, project.value);
+                if (response) {
+                    project.value = response.payload;
+                    msgPopup.success('Project saved successfully');
+                } else {
+                    throw new Error('Invalid API response structure');
+                }
             } else {
                 throw new Error('No project data to save');
             }
-        } catch (error) {
-            console.error('Failed to save project:', error);
+        } catch (error: any) {
+            loadingBar.error();
+            msgPopup.error('Failed to save project: ' + (error.message || 'Unknown error'));
             throw error;
+        } finally {
+            loadingBar.finish();
         }
     };
 

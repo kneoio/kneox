@@ -4,7 +4,7 @@
       <n-button-group>
         <n-button type="default" @click="goBack" size="large">
           <n-icon>
-            <ArrowBigLeft />
+            <ArrowBigLeft/>
           </n-icon>
           &nbsp;Back
         </n-button>
@@ -25,7 +25,7 @@
       </n-timeline>
     </n-gi>
     <n-gi>
-      <n-h2>Project: {{ store.projectFields.name }}</n-h2>
+      <n-h2>Project: {{ projectStore.projectFields.name }}</n-h2>
     </n-gi>
     <n-gi>
       <n-tabs v-model:value="activeTab">
@@ -34,36 +34,40 @@
             <n-grid x-gap="12" y-gap="12">
               <n-gi span="24">
                 <n-form-item label="Name" class="short-field">
-                  <n-input v-model:value="store.projectFields.name" style="width: 100%; max-width: 600px;" />
+                  <n-input v-model:value="projectStore.projectFields.name" style="width: 100%; max-width: 600px;"/>
                 </n-form-item>
               </n-gi>
               <n-gi span="24">
                 <n-form-item label="Status" class="short-field">
-                  <n-select v-model:value="store.projectFields.status" :options="statusOptions" style="width: 100%; max-width: 600px;" />
+                  <n-select v-model:value="projectStore.projectFields.status" :options="statusOptions"
+                            style="width: 100%; max-width: 300px;"/>
                 </n-form-item>
               </n-gi>
               <n-gi span="24">
                 <n-form-item label="Finish Date" class="short-field">
                   <n-date-picker
-                      v-model:formatted-value="store.projectFields.finishDate"
+                      v-model:formatted-value="projectStore.projectFields.finishDate"
                       value-format="yyyy-MM-dd"
                       clearable
-                      style="width: 100%; max-width: 600px;" />
+                      style="width: 100%; max-width: 300px;"/>
                 </n-form-item>
               </n-gi>
               <n-gi span="24">
                 <n-form-item label="Manager" class="short-field">
-                  <n-input v-model:value="store.projectFields.manager" style="width: 100%; max-width: 600px;" />
+                  <n-select v-model:value="projectStore.projectFields.manager" :options="employerOptions"
+                            style="width: 100%; max-width: 600px;"/>
                 </n-form-item>
               </n-gi>
               <n-gi span="24">
                 <n-form-item label="Coder" class="short-field">
-                  <n-input v-model:value="store.projectFields.coder" style="width: 100%; max-width: 600px;" />
+                  <n-select v-model:value="projectStore.projectFields.coder" :options="employerOptions"
+                            style="width: 100%; max-width: 600px;"/>
                 </n-form-item>
               </n-gi>
               <n-gi span="24">
                 <n-form-item label="Tester" class="short-field">
-                  <n-input v-model:value="store.projectFields.tester" style="width: 100%; max-width: 600px;" />
+                  <n-select v-model:value="projectStore.projectFields.tester" :options="employerOptions"
+                            style="width: 100%; max-width: 600px;"/>
                 </n-form-item>
               </n-gi>
             </n-grid>
@@ -71,14 +75,15 @@
         </n-tab-pane>
         <n-tab-pane name="rls" tab="RLS">
           <n-dynamic-input
-              v-model:value="store.projectFields.rls"
+              v-model:value="projectStore.projectFields.rls"
               :key="item => item.reader"
               :on-remove="handleRemoveReader"
           >
             <template #default="{ value }">
               <n-space align="center" style="margin-bottom: 12px;">
-                <n-input v-model:value="value.reader" placeholder="Reader" />
-                <n-select v-model:value="value.accessLevel" :options="accessLevelOptions" placeholder="Access Level" style="width: 150px;" />
+                <n-input v-model:value="value.reader" placeholder="Reader"/>
+                <n-select v-model:value="value.accessLevel" :options="accessLevelOptions" placeholder="Access Level"
+                          style="width: 150px;"/>
               </n-space>
             </template>
           </n-dynamic-input>
@@ -89,7 +94,7 @@
 </template>
 
 <script lang="ts">
-import {defineComponent, onMounted, ref} from 'vue';
+import {computed, defineComponent, onMounted, ref} from 'vue';
 import {useRoute, useRouter} from 'vue-router';
 import {useProjectStore} from '../../stores/projectStore';
 import {
@@ -109,9 +114,7 @@ import {
   NTabPane,
   NTabs,
   NTimeline,
-  NTimelineItem,
-  useLoadingBar,
-  useMessage
+  NTimelineItem
 } from 'naive-ui';
 import {ArrowBigLeft} from '@vicons/tabler';
 import {useOfficeFrameStore} from "../../stores/officeFrameStore";
@@ -120,39 +123,47 @@ export default defineComponent({
   name: 'KneoProjectForm',
   components: {
     NButtonGroup,
-    NForm, NFormItem, NInput, NSelect, NButton, NDatePicker, NDynamicInput, NIcon, NTabs, NTabPane, NSpace, NGrid, NGi, NH2, NTimeline, NTimelineItem, ArrowBigLeft,
+    NForm,
+    NFormItem,
+    NInput,
+    NSelect,
+    NButton,
+    NDatePicker,
+    NDynamicInput,
+    NIcon,
+    NTabs,
+    NTabPane,
+    NSpace,
+    NGrid,
+    NGi,
+    NH2,
+    NTimeline,
+    NTimelineItem,
+    ArrowBigLeft,
   },
   setup() {
     const route = useRoute();
     const router = useRouter();
-    const msgPopup = useMessage();
-    const loadingBar = useLoadingBar();
     const projectStore = useProjectStore();
     const officeFrameStore = useOfficeFrameStore();
     const activeTab = ref('properties');
 
     const statusOptions = [
-      { label: 'Draft', value: 'DRAFT' },
-      { label: 'Completed', value: 'COMPLETED' },
-      { label: 'Active', value: 'ACTIVE' },
-      { label: 'Merged', value: 'MERGED' },
-      { label: 'Paused', value: 'PAUSED' }
+      {label: 'Draft', value: 'DRAFT'},
+      {label: 'Completed', value: 'COMPLETED'},
+      {label: 'Active', value: 'ACTIVE'},
+      {label: 'Merged', value: 'MERGED'},
+      {label: 'Paused', value: 'PAUSED'}
     ];
 
-
     const accessLevelOptions = [
-      { label: 'Read', value: 'read' },
-      { label: 'Full', value: 'full' },
+      {label: 'Read', value: 'read'},
+      {label: 'Full', value: 'full'},
     ];
 
     const handleSaveProject = async () => {
-      try {
-        await projectStore.saveProject();
-        alert('Project saved successfully');
-        router.push('/projects_and_tasks/projects');
-      } catch (error) {
-        alert('Failed to save project');
-      }
+      await projectStore.saveProject();
+      router.push('/projects_and_tasks/projects');
     };
 
     const goBack = () => {
@@ -165,18 +176,30 @@ export default defineComponent({
 
     onMounted(async () => {
       const projectId = route.params.id as string;
-      await projectStore.fetchProject(projectId, msgPopup, loadingBar);
-      await officeFrameStore.fetchEmployers(1, 20, msgPopup, loadingBar)
+      try {
+        await projectStore.fetchProject(projectId);
+        await officeFrameStore.fetchEmployers(1, 20);
+      } catch {
+        // Error handling is done in the store, no need for additional error handling here
+      }
+    });
+
+    const employerOptions = computed(() => {
+      return officeFrameStore.ofPage?.viewData.entries.map((entry) => ({
+        label: entry.name,
+        value: entry.id,
+      })) || [];
     });
 
     return {
-      store: projectStore,
+      projectStore,
       statusOptions,
       accessLevelOptions,
       handleSaveProject,
       activeTab,
       goBack,
       handleRemoveReader,
+      employerOptions,
     };
   },
 });
@@ -200,12 +223,11 @@ export default defineComponent({
 }
 
 .short-field .n-form-item-content {
-  max-width: 600px;
+  max-width: 300px;
   margin-right: 120px;
 }
 
 .form-field {
   margin-bottom: 16px;
 }
-
 </style>

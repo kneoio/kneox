@@ -33,12 +33,7 @@ export const fetchProjectById = async (projectId: string): Promise<any> => {
 };
 
 export const saveProject = async (projectId: string, projectData: any): Promise<any> => {
-    const response = await apiClient.put(`/projects/${projectId}`, projectData);
-    if (response.data) {
-        return response.data;
-    } else {
-        throw new Error('Invalid API response structure');
-    }
+    return await apiClient.put(`/projects/${projectId}`, projectData);
 };
 
 export default apiClient;
