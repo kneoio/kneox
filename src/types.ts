@@ -38,3 +38,11 @@ export interface Pagination {
     pageCount: number;
     pageSize: number;
 }
+
+export interface Rl {
+    reader: string;
+    accessLevel: string;
+    key: number;
+
+}
+

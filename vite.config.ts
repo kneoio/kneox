@@ -7,7 +7,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [
+    vue()
+  ],
   server: {
     port: 8090,
   },
@@ -15,17 +17,22 @@ export default defineConfig({
     outDir: 'dist',
     manifest: true,
     sourcemap: true,
+    minify: 'terser',
+    cssCodeSplit: true,
     rollupOptions: {
       input: {
         main: path.resolve(__dirname, 'src/main.ts'),
       },
+      output: {
+        entryFileNames: '[name].[hash].js',
+        chunkFileNames: '[name].[hash].js',
+        assetFileNames: '[name].[hash].[ext]',
+        format: 'umd',
+      },
     },
-    lib: {
-      entry: path.resolve(__dirname, 'src/main.ts'), // Entry point for your library
-      formats: ['umd'], // Output format
-      name: 'MyLibraryName', // Name of your library
-      fileName: '(name).js', // Filename pattern
-    },
-    target: 'es2015', // Target ECMAScript version
+    target: 'es2015',
   },
+  css: {
+    postcss: './postcss.config.cjs',
+  }
 });

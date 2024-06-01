@@ -76,7 +76,7 @@
         <n-tab-pane name="rls" tab="RLS">
           <n-dynamic-input
               v-model:value="projectStore.projectFields.rls"
-              :key="item => item.reader"
+
               :on-remove="handleRemoveReader"
           >
             <template #default="{ value }">

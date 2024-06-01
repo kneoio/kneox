@@ -6,13 +6,8 @@ import {
     saveProject as saveProjectApi,
     setupApiClient
 } from '../apiClient';
-import {Pagination, ViewPage} from "../types";
+import {Pagination, Rl, ViewPage} from "../types";
 import {useLoadingBar, useMessage} from 'naive-ui';
-
-interface Rl {
-    reader: string;
-    accessLevel: string;
-}
 
 interface Project {
     docData: {

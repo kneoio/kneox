@@ -15,6 +15,9 @@ declare module 'keycloak-js' {
         isAuthenticated(): boolean;
         authenticated?: boolean;
         token?: string;
+        async
+
+        updateToken(minValidity: number): boolean;
     }
 
     const Keycloak: (config?: KeycloakOptions) => KeycloakInstance;

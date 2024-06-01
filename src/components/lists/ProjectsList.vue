@@ -24,17 +24,7 @@
 
 <script lang="ts">
 import {defineComponent, h, inject, onMounted, reactive, ref} from 'vue';
-import {
-  NButton,
-  NButtonGroup,
-  NCheckbox,
-  NDataTable,
-  NGi,
-  NGrid,
-  NPagination,
-  useLoadingBar,
-  useMessage
-} from 'naive-ui';
+import {NButton, NButtonGroup, NCheckbox, NDataTable, NGi, NGrid, NPagination, useMessage} from 'naive-ui';
 import {useRouter} from 'vue-router';
 import {useProjectStore} from '../../stores/projectStore';
 import {KeycloakInstance} from 'keycloak-js';
@@ -45,7 +35,6 @@ export default defineComponent({
   setup() {
     const router = useRouter();
     const msgPopup = useMessage();
-    const loadingBar = useLoadingBar();
     const kc = inject<KeycloakInstance>('keycloak');
     const projectsStore = useProjectStore();
     const isMobile = ref(window.innerWidth < 768);
@@ -61,7 +50,7 @@ export default defineComponent({
     onMounted(() => {
       if (kc && kc.token) {
         projectsStore.setupApiClient(kc.token);
-        projectsStore.fetchProjects(1, 10, pagination, msgPopup, loadingBar);
+        projectsStore.fetchProjects(1, 10, pagination);
       } else {
         msgPopup.error('Keycloak instance is not available or token is missing');
       }
