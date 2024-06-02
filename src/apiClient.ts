@@ -1,7 +1,13 @@
 import axios from 'axios';
 
+const apiServer = import.meta.env.VITE_API_SERVER;
+
+if (!apiServer) {
+    throw new Error('VITE_API_SERVER environment variable is not set');
+}
+
 const apiClient = axios.create({
-    baseURL: 'http://localhost:38707/api/kneox',
+    baseURL: `${apiServer}/api/kneox`,
     withCredentials: false,
 });
 

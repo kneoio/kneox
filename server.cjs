@@ -9,6 +9,7 @@ const app = express();
 
 console.log('Starting server...');
 console.log(`Environment: ${process.env.NODE_ENV}`);
+console.log(`API server: ${process.env.VITE_API_SERVER}`);
 console.log(`Serving static files from: ${path.join(__dirname, 'dist')}`);
 
 let manifest = {};
@@ -56,7 +57,7 @@ const templateFunction = ejs.compile(templateString);
 app.get('*', (req, res) => {
     const html = templateFunction({
         nonce: res.locals.nonce,
-        title: 'kneox',
+        title: process.env.ORG_NAME,
         cssFile: manifest['src/main.ts']?.css[0] || '',
         scriptFilename: manifest['src/main.ts']?.file || ''
     });
