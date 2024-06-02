@@ -10,10 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4.1.4
+        uses: actions/checkout@v2
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v2
         with:
           node-version: '20.x'
 
@@ -25,12 +25,12 @@ jobs:
 
       - name: Verify manifest
         run: |
-          if [ ! -f dist/.vite/manifest.json ]; then
+          if [ ! -f dist/manifest.json ]; then
             echo "Manifest not found!"
             exit 1
           else
             echo "Manifest found:"
-            cat dist/.vite/manifest.json
+            cat dist/manifest.json
           fi
 
       - name: Setup SSH Agent
@@ -51,7 +51,7 @@ jobs:
             fi
           '
 
-      - name: Run npm install
+      - name: Run npm install on server
         run: ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.USER_NAME }}@${{ secrets.HOST_NAME }} 'cd /home/keypractica/fe_server && npm install'
 
       - name: Build application on server
