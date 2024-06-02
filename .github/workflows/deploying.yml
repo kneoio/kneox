@@ -23,16 +23,6 @@ jobs:
       - name: Build Vue.js app
         run: npm run build
 
-      - name: Verify manifest
-        run: |
-          if [ ! -f dist/.vite/manifest.json ]; then
-            echo "Manifest not found!"
-            exit 1
-          else
-            echo "Manifest found:"
-            cat dist/.vite/manifest.json
-          fi
-
       - name: Setup SSH Agent
         uses: webfactory/ssh-agent@v0.5.4
         with:
