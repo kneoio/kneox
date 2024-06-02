@@ -4,13 +4,14 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [
-    vue()
+    vue(),
   ],
   server: {
     port: 8090,
   },
   build: {
     outDir: 'dist',
+    manifest: true, // Ensure manifest file is generated
     sourcemap: true,
     cssCodeSplit: true,
     rollupOptions: {
