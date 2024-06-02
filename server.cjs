@@ -1,12 +1,10 @@
-import express from 'express';
-import path from 'path';
-import crypto from 'crypto';
-import { fileURLToPath } from 'url';
-import fs from 'fs';
-import helmet from 'helmet';
+const express = require('express');
+const path = require('path');
+const crypto = require('crypto');
+const ejs = require('ejs');
+const helmet = require('helmet');
+const fs = require('fs');
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 const app = express();
 
 console.log('Starting server...');
@@ -14,7 +12,7 @@ console.log(`Environment: ${process.env.NODE_ENV}`);
 console.log(`Serving static files from: ${path.join(__dirname, 'dist')}`);
 
 let manifest = {};
-const manifestPath = path.join(__dirname, 'dist', 'manifest.json');
+const manifestPath = path.join(__dirname, 'dist', '.vite', 'manifest.json');
 if (fs.existsSync(manifestPath)) {
     manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
     console.log('Manifest loaded:', manifest);
@@ -28,6 +26,7 @@ app.use((req, res, next) => {
     next();
 });
 
+/*
 app.use(
     helmet.contentSecurityPolicy({
         directives: {
@@ -46,30 +45,26 @@ app.use(
         },
         reportOnly: false,
     })
-);
+);*/
 
 const staticPath = path.join(__dirname, 'dist');
 app.use(express.static(staticPath));
 
+const templateString = fs.readFileSync(path.join(__dirname, 'template.ejs'), 'utf-8');
+const templateFunction = ejs.compile(templateString);
+
 app.get('*', (req, res) => {
-    const htmlPath = path.join(__dirname, 'dist', 'index.html');
-    fs.readFile(htmlPath, 'utf8', (err, data) => {
-        if (err) {
-            console.error('Error reading index.html:', err);
-            return res.status(500).send('Internal Server Error');
-        }
-
-        // Inject nonce into script and style tags
-        const nonce = res.locals.nonce;
-        const htmlWithNonce = data
-            .replace(/<script /g, `<script nonce="${nonce}" `)
-            .replace(/<style /g, `<style nonce="${nonce}" `);
-
-        res.send(htmlWithNonce);
+    const html = templateFunction({
+        nonce: res.locals.nonce,
+        title: 'kneox',
+        cssFile: manifest['src/main.ts']?.css[0] || '',
+        scriptFilename: manifest['src/main.ts']?.file || ''
     });
+
+    res.send(html);
 });
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8090;
 app.listen(port, () => {
     console.log(`Server is listening on port ${port}`);
 });

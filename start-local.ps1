@@ -6,4 +6,4 @@ $env:KEYPRACTICA_RESOURCE = "keypractica_projects"
 
 $nodePath = "node.exe"
 
-& $nodePath server.js
+& $nodePath server.cjs

@@ -31,25 +31,17 @@ jobs:
       - name: Stop the service
         run: ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.USER_NAME }}@${{ secrets.HOST_NAME }} 'sudo systemctl stop keypracticafe'
 
-      - name: Ensure repository on server
+      - name: Update the repository on server
         run: |
           ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.USER_NAME }}@${{ secrets.HOST_NAME }} '
-            if [ ! -d /home/keypractica/fe_server ]; then
+            if [ ! -d /home/keypractica/fe_server/.git ]; then
+              rm -rf /home/keypractica/fe_server &&
               git clone https://github.com/kneoio/kneox.git /home/keypractica/fe_server
-            fi
-          '
-
-      - name: Verify and Clean Git Repository
-        run: |
-          ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.USER_NAME }}@${{ secrets.HOST_NAME }} '
-            if [ -d /home/keypractica/fe_server/.git ]; then
+            else
               cd /home/keypractica/fe_server &&
               git fetch origin &&
               git reset --hard origin/master &&
               git clean -fd
-            else
-              rm -rf /home/keypractica/fe_server &&
-              git clone https://github.com/kneoio/kneox.git /home/keypractica/fe_server
             fi
           '
 
