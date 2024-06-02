@@ -10,6 +10,7 @@ const app = express();
 console.log('Starting server...');
 console.log(`Environment: ${process.env.NODE_ENV}`);
 console.log(`API server: ${process.env.VITE_API_SERVER}`);
+console.log(`Organization: ${process.env.ORG_NAME}`);
 console.log(`Serving static files from: ${path.join(__dirname, 'dist')}`);
 
 let manifest = {};

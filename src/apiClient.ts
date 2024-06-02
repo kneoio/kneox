@@ -1,5 +1,7 @@
 import axios from 'axios';
 
+console.log('VITE_API_SERVER:', import.meta.env.VITE_API_SERVER);
+
 const apiServer = import.meta.env.VITE_API_SERVER;
 
 if (!apiServer) {
