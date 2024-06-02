@@ -45,7 +45,6 @@ app.use(
             formAction: "'self'"
         },
         reportOnly: false,
-        reportUri: ''
     })
 );
 
@@ -55,17 +54,16 @@ app.use(express.static(staticPath));
 app.get(['/', '/index.html'], (req, res) => {
     const title = 'kneox';
     const mainJs = manifest['src/main.ts']?.file;
-    //const mainCss = manifest['src/main.ts']?.css[0];
+    // const mainCss = manifest['src/main.ts']?.css[0];
 
-    //if (mainJs && mainCss) {
     if (mainJs) {
         app.set('view engine', 'ejs');
         app.set('views', __dirname);
         console.log(`Views directory set to: ${__dirname}`);
         console.log(`Rendering index.ejs with title: ${title}, nonce: ${res.locals.nonce}, script: ${mainJs}`);
-        //console.log(`Rendering index.ejs with title: ${title}, nonce: ${res.locals.nonce}, script: ${mainJs}, and style: ${mainCss}`);
+        // console.log(`Rendering index.ejs with title: ${title}, nonce: ${res.locals.nonce}, script: ${mainJs}, and style: ${mainCss}`);
         res.render('index', { nonce: res.locals.nonce, title, mainJs });
-        //res.render('index', { nonce: res.locals.nonce, title, mainJs, mainCss });
+        // res.render('index', { nonce: res.locals.nonce, title, mainJs, mainCss });
     } else {
         console.error('Main script or CSS not found in manifest.');
         res.status(500).send('Internal Server Error');

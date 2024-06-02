@@ -29,10 +29,6 @@
     "@rollup/plugin-babel": "^6.0.4",
     "@types/keycloak-js": "^3.4.1",
     "@types/node": "^20.12.12",
-    "@vitejs/plugin-vue": "^5.0.4",
-    "cssnano": "^7.0.1",
-    "postcss": "^8.4.38",
-    "terser": "^5.31.0",
     "typescript": "^5.2.2",
     "vite": "^5.2.0",
     "vue-tsc": "^2.0.6"
