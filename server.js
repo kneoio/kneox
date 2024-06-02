@@ -1,7 +1,7 @@
 import express from 'express';
 import path from 'path';
 import crypto from 'crypto';
-import {fileURLToPath} from 'url';
+import { fileURLToPath } from 'url';
 import fs from 'fs';
 import helmet from 'helmet';
 
@@ -14,7 +14,7 @@ console.log(`Environment: ${process.env.NODE_ENV}`);
 console.log(`Serving static files from: ${path.join(__dirname, 'dist')}`);
 
 let manifest = {};
-const manifestPath = path.join(__dirname, 'dist', '.vite', 'manifest.json');
+const manifestPath = path.join(__dirname, 'dist', 'manifest.json');
 if (fs.existsSync(manifestPath)) {
     manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
     console.log('Manifest loaded:', manifest);
@@ -51,23 +51,22 @@ app.use(
 const staticPath = path.join(__dirname, 'dist');
 app.use(express.static(staticPath));
 
-app.get(['/', '/index.html'], (req, res) => {
-    const title = 'kneox';
-    const mainJs = manifest['src/main.ts']?.file;
-    // const mainCss = manifest['src/main.ts']?.css[0];
+app.get('*', (req, res) => {
+    const htmlPath = path.join(__dirname, 'dist', 'index.html');
+    fs.readFile(htmlPath, 'utf8', (err, data) => {
+        if (err) {
+            console.error('Error reading index.html:', err);
+            return res.status(500).send('Internal Server Error');
+        }
 
-    if (mainJs) {
-        app.set('view engine', 'ejs');
-        app.set('views', __dirname);
-        console.log(`Views directory set to: ${__dirname}`);
-        console.log(`Rendering index.ejs with title: ${title}, nonce: ${res.locals.nonce}, script: ${mainJs}`);
-        // console.log(`Rendering index.ejs with title: ${title}, nonce: ${res.locals.nonce}, script: ${mainJs}, and style: ${mainCss}`);
-        res.render('index', { nonce: res.locals.nonce, title, mainJs });
-        // res.render('index', { nonce: res.locals.nonce, title, mainJs, mainCss });
-    } else {
-        console.error('Main script or CSS not found in manifest.');
-        res.status(500).send('Internal Server Error');
-    }
+        // Inject nonce into script and style tags
+        const nonce = res.locals.nonce;
+        const htmlWithNonce = data
+            .replace(/<script /g, `<script nonce="${nonce}" `)
+            .replace(/<style /g, `<style nonce="${nonce}" `);
+
+        res.send(htmlWithNonce);
+    });
 });
 
 const port = process.env.PORT || 3000;
