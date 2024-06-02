@@ -39,13 +39,18 @@ jobs:
             fi
           '
 
-      - name: Clean and update the project from GitHub
+      - name: Verify and Clean Git Repository
         run: |
           ssh -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.USER_NAME }}@${{ secrets.HOST_NAME }} '
-            cd /home/keypractica/fe_server &&
-            git fetch origin &&
-            git reset --hard origin/master &&
-            git clean -fd
+            if [ -d /home/keypractica/fe_server/.git ]; then
+              cd /home/keypractica/fe_server &&
+              git fetch origin &&
+              git reset --hard origin/master &&
+              git clean -fd
+            else
+              rm -rf /home/keypractica/fe_server &&
+              git clone https://github.com/kneoio/kneox.git /home/keypractica/fe_server
+            fi
           '
 
       - name: Run npm install on server
