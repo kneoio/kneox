@@ -9,6 +9,7 @@ const app = express();
 
 console.log('Starting server...');
 console.log(`Environment: ${process.env.NODE_ENV}`);
+console.log(`API server: ${process.env.VITE_API_SERVER}`);
 console.log(`Organization: ${process.env.ORG_NAME}`);
 console.log(`Serving static files from: ${path.join(__dirname, 'dist')}`);
 
@@ -27,27 +28,6 @@ app.use((req, res, next) => {
     next();
 });
 
-/*
-app.use(
-    helmet.contentSecurityPolicy({
-        directives: {
-            defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", (req, res) => `'nonce-${res.locals.nonce}'`, 'https://www.keypractica.com'],
-            styleSrc: ["'self'", (req, res) => `'nonce-${res.locals.nonce}'`, 'https://www.keypractica.com'],
-            imgSrc: ["'self'", 'data:'],
-            connectSrc: ["'self'"],
-            fontSrc: ["'self'", 'https:'],
-            frameSrc: ["'self'", 'https://auth.keypractica.com'],
-            frameAncestors: ["'self'", 'https://auth.keypractica.com'],
-            objectSrc: ["'none'"],
-            upgradeInsecureRequests: [],
-            baseUri: "'self'",
-            formAction: "'self'"
-        },
-        reportOnly: false,
-    })
-);*/
-
 const staticPath = path.join(__dirname, 'dist');
 app.use(express.static(staticPath));
 
@@ -59,7 +39,8 @@ app.get('*', (req, res) => {
         nonce: res.locals.nonce,
         title: process.env.ORG_NAME,
         cssFile: manifest['src/main.ts']?.css[0] || '',
-        scriptFilename: manifest['src/main.ts']?.file || ''
+        scriptFilename: manifest['src/main.ts']?.file || '',
+        apiServer: process.env.VITE_API_SERVER
     });
 
     res.send(html);
