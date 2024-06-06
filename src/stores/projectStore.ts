@@ -1,13 +1,12 @@
-import {defineStore} from 'pinia';
-import {computed, ref} from 'vue';
+import { defineStore } from 'pinia';
+import { computed, ref } from 'vue';
 import {
     fetchProjectById,
     fetchProjects as fetchProjectsApi,
-    saveProject as saveProjectApi,
-    setupApiClient
+    saveProject as saveProjectApi
 } from '../apiClient';
-import {Pagination, Rl, ViewPage} from "../types";
-import {useLoadingBar, useMessage} from 'naive-ui';
+import { Pagination, Rl, ViewPage } from "../types";
+import { useLoadingBar, useMessage } from 'naive-ui';
 
 interface Project {
     docData: {
@@ -15,10 +14,23 @@ interface Project {
         name: string;
         status: string;
         finishDate: string;
-        manager: string;
-        coder: string;
-        tester: string;
+        manager: {
+            id: number;
+            name: string;
+        };
+        coder: {
+            id: number;
+            name: string;
+        };
+        tester: {
+            id: number;
+            name: string;
+        };
         rls: Rl[];
+        primaryLang: string;
+    };
+    actions: {
+        actions: any[];
     };
 }
 
@@ -33,16 +45,14 @@ export const useProjectStore = defineStore('projectsStore', () => {
         name: '',
         status: '',
         finishDate: null,
-        manager: '',
-        coder: '',
-        tester: '',
-        rls: []
+        manager: { id: 0, name: '' },
+        coder: { id: 0, name: '' },
+        tester: { id: 0, name: '' },
+        rls: [],
+        primaryLang: ''
     });
 
     const fetchProjects = async (page = 1, pageSize = 10, pagination: Pagination) => {
-        const msgPopup = useMessage();
-        const loadingBar = useLoadingBar();
-
         try {
             loadingBar.start();
             const response = await fetchProjectsApi(page, pageSize);
@@ -65,13 +75,11 @@ export const useProjectStore = defineStore('projectsStore', () => {
     };
 
     const fetchProject = async (projectId: string) => {
-        const msgPopup = useMessage();
-        const loadingBar = useLoadingBar();
-
         try {
             loadingBar.start();
             const response = await fetchProjectById(projectId);
-            if (response) {
+            if (response && response.payload) {
+                console.log(response.payload);
                 project.value = response.payload;
             } else {
                 throw new Error('Invalid API response structure');
@@ -86,11 +94,11 @@ export const useProjectStore = defineStore('projectsStore', () => {
     };
 
     const saveProject = async () => {
-        loadingBar.start();
         try {
+            loadingBar.start();
             if (project.value) {
                 const response = await saveProjectApi(project.value.docData.id, project.value);
-                if (response) {
+                if (response && response.payload) {
                     project.value = response.payload;
                     msgPopup.success('Project saved successfully');
                 } else {
@@ -114,7 +122,6 @@ export const useProjectStore = defineStore('projectsStore', () => {
         fetchProjects,
         fetchProject,
         saveProject,
-        setupApiClient,
         projectFields
     };
 });

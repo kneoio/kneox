@@ -54,20 +54,20 @@
               </n-gi>
               <n-gi span="24">
                 <n-form-item label="Manager" class="short-field">
-                  <n-select v-model:value="projectStore.projectFields.manager" :options="employerOptions"
-                            style="width: 100%; max-width: 600px;"/>
+<!--                  <n-select v-model:value="projectStore.projectFields.manager" :options="employerOptions"
+                            style="width: 100%; max-width: 600px;"/>-->
                 </n-form-item>
               </n-gi>
               <n-gi span="24">
                 <n-form-item label="Coder" class="short-field">
-                  <n-select v-model:value="projectStore.projectFields.coder" :options="employerOptions"
-                            style="width: 100%; max-width: 600px;"/>
+<!--                  <n-select v-model:value="projectStore.projectFields.coder" :options="employerOptions"
+                            style="width: 100%; max-width: 600px;"/>-->
                 </n-form-item>
               </n-gi>
               <n-gi span="24">
                 <n-form-item label="Tester" class="short-field">
-                  <n-select v-model:value="projectStore.projectFields.tester" :options="employerOptions"
-                            style="width: 100%; max-width: 600px;"/>
+<!--                  <n-select v-model:value="projectStore.projectFields.tester" :options="employerOptions"
+                            style="width: 100%; max-width: 600px;"/>-->
                 </n-form-item>
               </n-gi>
             </n-grid>
@@ -118,6 +118,7 @@ import {
 } from 'naive-ui';
 import {ArrowBigLeft} from '@vicons/tabler';
 import {useOfficeFrameStore} from "../../stores/officeFrameStore";
+
 
 export default defineComponent({
   name: 'KneoProjectForm',
@@ -176,12 +177,8 @@ export default defineComponent({
 
     onMounted(async () => {
       const projectId = route.params.id as string;
-      try {
-        await projectStore.fetchProject(projectId);
-        await officeFrameStore.fetchEmployers(1, 20);
-      } catch {
-        // Error handling is done in the store, no need for additional error handling here
-      }
+      await projectStore.fetchProject(projectId);
+      await officeFrameStore.fetchEmployers(1, 20 );
     });
 
     const employerOptions = computed(() => {
@@ -203,6 +200,7 @@ export default defineComponent({
     };
   },
 });
+
 </script>
 
 <style scoped>

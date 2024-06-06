@@ -1,10 +1,11 @@
-import {createApp, reactive} from 'vue';
+import { createApp, reactive } from 'vue';
 import App from "./App.vue";
 import keycloakInst from "./keycloakFactory";
 import router from "./router";
 import IconWrapper from "./components/IconWrapper.vue";
 import './assets/tailwind.css';
-import {createPinia} from 'pinia';
+import { createPinia } from 'pinia';
+import {setupApiClient} from "./apiClient";
 
 interface UserProfile {
     id?: string;
@@ -24,27 +25,26 @@ keycloak.init({
     onLoad: 'check-sso',
     pkceMethod: 'S256',
     scope: 'openid offline_access'
-}).then((authenticated: boolean) => {
+}).then(async (authenticated: boolean) => {
     if (authenticated) {
-        console.log('User authenticated');
-        keycloak.loadUserProfile().then((profile: any) => {
+        try {
+            const profile = await keycloak.loadUserProfile();
             userData.profile = profile;
             console.log('User profile loaded', profile);
+            setupApiClient(keycloak.token);
             startApp();
             cleanUpUrl();
-            setupTokenRefresh(); // Setup token refresh after loading profile
-        }).catch((error: any) => {
+        } catch (error) {
             console.error('Failed to load user profile', error);
-            startApp();
-            cleanUpUrl();
-        });
+            handleSessionInvalid();
+        }
     } else {
-        console.warn('Authentication failed - proceeding without authentication');
-        startApp();
+        console.warn('Not authenticated - redirecting to login');
+        handleSessionInvalid();
     }
 }).catch((error: any) => {
-    console.error('Failed to initialize Keycloak - proceeding without authentication', error);
-    startApp();
+    console.error('Failed to initialize Keycloak - redirecting to login', error);
+    handleSessionInvalid();
 });
 
 function startApp() {
@@ -58,20 +58,15 @@ function startApp() {
 }
 
 function cleanUpUrl() {
-    router.replace(window.location.pathname);
+    // router.replace(window.location.pathname);
 }
 
-function setupTokenRefresh() {
-    setInterval(() => {
-        keycloak.updateToken(30).then((refreshed: boolean) => {
-            if (refreshed) {
-                console.log('Token successfully refreshed');
-            } else {
-                console.warn('Token not refreshed, need to re-login');
-            }
-        }).catch(() => {
-            console.error('Failed to refresh token, redirecting to login');
-            keycloak.login();
-        });
-    }, 5 * 60 * 1000); // Refresh token every 5 minutes
+function handleSessionInvalid() {
+    // Clear cookies (if needed) and redirect to login
+    document.cookie.split(";").forEach((c) => {
+        document.cookie = c
+            .replace(/^ +/, "")
+            .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+    });
+    keycloak.login();
 }

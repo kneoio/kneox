@@ -18,24 +18,21 @@
           @update:page-size="handlePageSizeChange"
       />
     </n-gi>
-
   </n-grid>
 </template>
 
 <script lang="ts">
-import {defineComponent, h, inject, onMounted, reactive, ref} from 'vue';
+import {defineComponent, h, onMounted, reactive, ref} from 'vue';
 import {NButton, NButtonGroup, NCheckbox, NDataTable, NGi, NGrid, NPagination, useMessage} from 'naive-ui';
 import {useRouter} from 'vue-router';
 import {useProjectStore} from '../../stores/projectStore';
-import {KeycloakInstance} from 'keycloak-js';
 import {Project} from "../../types";
 
 export default defineComponent({
-  components: { NDataTable, NPagination, NButtonGroup, NButton, NGi, NGrid },
+  components: {NDataTable, NPagination, NButtonGroup, NButton, NGi, NGrid},
   setup() {
     const router = useRouter();
     const msgPopup = useMessage();
-    const kc = inject<KeycloakInstance>('keycloak');
     const projectsStore = useProjectStore();
     const isMobile = ref(window.innerWidth < 768);
     const pagination = reactive({
@@ -47,14 +44,8 @@ export default defineComponent({
       pageSizes: [10, 20, 50]
     });
 
-    onMounted(() => {
-      if (kc && kc.token) {
-        projectsStore.setupApiClient(kc.token);
-        projectsStore.fetchProjects(1, 10, pagination);
-      } else {
-        msgPopup.error('Keycloak instance is not available or token is missing');
-      }
-
+    onMounted(async () => {
+      await projectsStore.fetchProjects(1, 10, pagination);
       window.addEventListener('resize', () => {
         isMobile.value = window.innerWidth < 768;
       });
@@ -62,9 +53,7 @@ export default defineComponent({
 
     const columns = [
       {
-        title: () => h(NCheckbox, {
-
-        }),
+        title: () => h(NCheckbox, {}),
         key: 'select',
         render: (row: Project) => h(NCheckbox, {
           checked: row.selected,
@@ -73,8 +62,8 @@ export default defineComponent({
           }
         })
       },
-      { title: 'Name', key: 'name' },
-      { title: 'Status', key: 'status' }
+      {title: 'Name', key: 'name'},
+      {title: 'Status', key: 'status'}
     ];
 
     const handlePageChange = (page: number) => {
@@ -83,7 +72,6 @@ export default defineComponent({
 
     const handlePageSizeChange = (pageSize: number) => {
       projectsStore.fetchProjects(pagination.page, pageSize, pagination);
-
     };
 
     const handleNewClick = () => {
@@ -97,7 +85,7 @@ export default defineComponent({
     const getRowProps = (row: Project) => {
       return {
         onClick: () => {
-          const routeTo = { name: 'ProjectForm', params: { id: row.id } };
+          const routeTo = {name: 'ProjectForm', params: {id: row.id}};
           console.log('Navigating to:', routeTo);
           router.push(routeTo).catch(err => {
             console.error('Navigation error:', err);
