@@ -87,6 +87,13 @@
             </template>
           </n-dynamic-input>
         </n-tab-pane>
+        <n-tab-pane name="additional" tab="Additional">
+          <n-form label-placement="left" label-width="auto">
+            <n-grid x-gap="12" y-gap="12">
+
+            </n-grid>
+          </n-form>
+        </n-tab-pane>
       </n-tabs>
     </n-gi>
   </n-grid>
@@ -176,7 +183,7 @@ export default defineComponent({
     onMounted(async () => {
       const projectId = route.params.id as string;
       await projectStore.fetchProject(projectId);
-      await officeFrameStore.fetchEmployers(1, 20);
+      await officeFrameStore.fetchEmployers(1, 100);
     });
 
     return {

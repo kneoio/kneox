@@ -3,9 +3,11 @@ import AboutView from '../views/AboutPage.vue';
 import HomeView from '../views/HomeView.vue';
 import DashboardView from '../views/DashboardView.vue';
 import LicensePage from '../views/LicensePage.vue';
-import ProjectsAndTasks from '../components/lists/ProjectAndTasks.vue';
+import ProjectsAndTasks from '../components/outlines/ProjectAndTasks.vue';
 import ProjectsList from '../components/lists/ProjectsList.vue';
 import ProjectForm from '../components/forms/ProjectForm.vue';
+import AiAssistant from "../components/outlines/AiAssistant.vue";
+import ChatAssistant from "../components/forms/Chat.vue";
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -57,21 +59,21 @@ const routes: Array<RouteRecordRaw> = [
             },
             {
                 path: 'ai',
-                component: ProjectsList,
+                component: AiAssistant,
                 children: [
                     {
-                        path: 'kickneo',
-                        component: ProjectsList
-                    },
-                    {
-                        path: 'gpt',
-                        component: ProjectsList
+                        path: 'chat',
+                        component: ChatAssistant
                     }
                 ]
             },
             {
                 path: 'projects',
-                redirect: '/projects_and_tasks/projects'  // Redirect /projects to /projects_and_tasks/projects
+                redirect: '/projects_and_tasks/projects'
+            },
+            {
+                path: 'ai',
+                redirect: '/ai/chat'
             }
         ]
     },
