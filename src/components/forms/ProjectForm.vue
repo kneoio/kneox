@@ -54,20 +54,20 @@
               </n-gi>
               <n-gi span="24">
                 <n-form-item label="Manager" class="short-field">
-<!--                  <n-select v-model:value="projectStore.projectFields.manager" :options="employerOptions"
-                            style="width: 100%; max-width: 600px;"/>-->
+                  <n-select v-model:value="projectStore.projectFields.manager.id" :options="officeFrameStore.employeeOptions"
+                            style="width: 100%; max-width: 600px;"/>
                 </n-form-item>
               </n-gi>
               <n-gi span="24">
                 <n-form-item label="Coder" class="short-field">
-<!--                  <n-select v-model:value="projectStore.projectFields.coder" :options="employerOptions"
-                            style="width: 100%; max-width: 600px;"/>-->
+                  <n-select v-model:value="projectStore.projectFields.coder.id" :options="officeFrameStore.employeeOptions"
+                            style="width: 100%; max-width: 600px;"/>
                 </n-form-item>
               </n-gi>
               <n-gi span="24">
                 <n-form-item label="Tester" class="short-field">
-<!--                  <n-select v-model:value="projectStore.projectFields.tester" :options="employerOptions"
-                            style="width: 100%; max-width: 600px;"/>-->
+                  <n-select v-model:value="projectStore.projectFields.tester.id" :options="officeFrameStore.employeeOptions"
+                            style="width: 100%; max-width: 600px;"/>
                 </n-form-item>
               </n-gi>
             </n-grid>
@@ -76,7 +76,6 @@
         <n-tab-pane name="rls" tab="RLS">
           <n-dynamic-input
               v-model:value="projectStore.projectFields.rls"
-
               :on-remove="handleRemoveReader"
           >
             <template #default="{ value }">
@@ -94,9 +93,9 @@
 </template>
 
 <script lang="ts">
-import {computed, defineComponent, onMounted, ref} from 'vue';
-import {useRoute, useRouter} from 'vue-router';
-import {useProjectStore} from '../../stores/projectStore';
+import { defineComponent, ref, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useProjectStore } from '../../stores/projectStore';
 import {
   NButton,
   NButtonGroup,
@@ -116,9 +115,8 @@ import {
   NTimeline,
   NTimelineItem
 } from 'naive-ui';
-import {ArrowBigLeft} from '@vicons/tabler';
-import {useOfficeFrameStore} from "../../stores/officeFrameStore";
-
+import { ArrowBigLeft } from '@vicons/tabler';
+import { useOfficeFrameStore } from "../../stores/officeFrameStore";
 
 export default defineComponent({
   name: 'KneoProjectForm',
@@ -150,16 +148,16 @@ export default defineComponent({
     const activeTab = ref('properties');
 
     const statusOptions = [
-      {label: 'Draft', value: 'DRAFT'},
-      {label: 'Completed', value: 'COMPLETED'},
-      {label: 'Active', value: 'ACTIVE'},
-      {label: 'Merged', value: 'MERGED'},
-      {label: 'Paused', value: 'PAUSED'}
+      { label: 'Draft', value: 'DRAFT' },
+      { label: 'Completed', value: 'COMPLETED' },
+      { label: 'Active', value: 'ACTIVE' },
+      { label: 'Merged', value: 'MERGED' },
+      { label: 'Paused', value: 'PAUSED' }
     ];
 
     const accessLevelOptions = [
-      {label: 'Read', value: 'read'},
-      {label: 'Full', value: 'full'},
+      { label: 'Read', value: 'read' },
+      { label: 'Full', value: 'full' },
     ];
 
     const handleSaveProject = async () => {
@@ -178,14 +176,7 @@ export default defineComponent({
     onMounted(async () => {
       const projectId = route.params.id as string;
       await projectStore.fetchProject(projectId);
-      await officeFrameStore.fetchEmployers(1, 20 );
-    });
-
-    const employerOptions = computed(() => {
-      return officeFrameStore.ofPage?.viewData.entries.map((entry) => ({
-        label: entry.name,
-        value: entry.id,
-      })) || [];
+      await officeFrameStore.fetchEmployers(1, 20);
     });
 
     return {
@@ -196,11 +187,10 @@ export default defineComponent({
       activeTab,
       goBack,
       handleRemoveReader,
-      employerOptions,
+      officeFrameStore, // Include the store directly for options
     };
   },
 });
-
 </script>
 
 <style scoped>

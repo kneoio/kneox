@@ -1,10 +1,9 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 import { setupApiClient } from '../apiClient';
-import { ViewPage } from "../types";
 import { fetchEmpl } from "../components/api/officeFrameApiClient";
 import { useLoadingBar, useMessage } from "naive-ui";
-import {Employer} from "../types/ofTypes";
+import {Employer, ViewPage} from "../types/ofTypes";
 
 export const useOfficeFrameStore = defineStore('officeFrameStore', () => {
     const ofPage = ref<ViewPage | null>(null);
@@ -36,11 +35,20 @@ export const useOfficeFrameStore = defineStore('officeFrameStore', () => {
         }
     };
 
+    // New getter to return employee options
+    const employeeOptions = computed(() => {
+        return ofPage.value?.viewData?.entries.map(entry => ({
+            label: entry.name,
+            value: entry.userId
+        })) || [];
+    });
+
     return {
         ofPage,
         ofDocument,
         setupApiClient,
         fields,
-        fetchEmployers
+        fetchEmployers,
+        employeeOptions  // Returning the new getter
     };
 });

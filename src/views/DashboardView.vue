@@ -1,35 +1,43 @@
 <template>
   <div class="home">
-    <div class="top-middle-section">
-      <div class="top-section">
-        <n-h1 class="title">Kneox</n-h1>
+    <n-grid x-gap="12" y-gap="12" cols="24" class="grid-layout">
+      <n-gi span="2" class="spacer-section"></n-gi>
+      <n-gi span="10" class="left-section">
         <p v-if="userData.profile && userData.profile.username">Hello, {{ userData.profile.username }}</p>
-        <n-button v-if="userData.profile" @click="logout">Logout</n-button>
-      </div>
-    </div>
-    <div class="bottom-section">
-      <div class="language-select">
+        <n-text class="marketing-text">
+          <strong>Simplify Your Tasks with Our Intuitive AI-Powered Manager</strong><br/><br/>
+          Effortlessly organize your life with our simple, intuitive task manager. Our AI assistant helps prioritize and remind you, ensuring you stay on track.<br/><br/>
+          <strong>User-Friendly:</strong> Manage tasks with ease.<br/>
+          <strong>AI Assistance:</strong> Smart reminders and suggestions.<br/>
+          <strong>Always Accessible:</strong> Cross-platform compatibility.<br/><br/>
+          Experience simplicity and efficiency. Get started now!
+        </n-text>
+      </n-gi>
+      <n-gi span="12" class="right-section"></n-gi>
+    </n-grid>
+    <n-grid x-gap="12" y-gap="12" cols="24" class="bottom-section">
+      <n-gi span="12" class="language-select">
         <n-select v-model:value="selectedLanguage" :options="languageOptions" />
-      </div>
-      <div class="links">
+      </n-gi>
+      <n-gi span="12" class="links">
         <n-button text>license</n-button>&nbsp;&nbsp;&nbsp;
         <n-button text>about</n-button>
-      </div>
-    </div>
+      </n-gi>
+    </n-grid>
   </div>
 </template>
 
-
 <script lang="ts">
 import { defineComponent, ref, inject } from 'vue';
-import { NButton, NSelect, NH1 } from 'naive-ui';
-import { KeycloakInstance } from 'keycloak-js';
+import { NButton, NSelect, NText, NGrid, NGi } from 'naive-ui';
 
 export default defineComponent({
   components: {
     NButton,
     NSelect,
-    NH1
+    NText,
+    NGrid,
+    NGi
   },
   setup() {
     const selectedLanguage = ref('en');
@@ -37,32 +45,16 @@ export default defineComponent({
       { label: 'English', value: 'en' },
       { label: 'Portuguese', value: 'pt' },
     ];
-
-    const kc = inject<KeycloakInstance>('keycloak');
     const userData = inject<any>('userData');
-
-    const logout = async () => {
-      if (kc) {
-        try {
-          await kc.logout();
-        } catch (error) {
-          console.error('Logout failed', error);
-        }
-      } else {
-        console.error('Keycloak instance is not available');
-      }
-    };
 
     return {
       selectedLanguage,
       languageOptions,
-      logout,
       userData
     };
   },
 });
 </script>
-
 
 <style scoped>
 .home {
@@ -74,63 +66,61 @@ export default defineComponent({
   min-height: 100vh;
 }
 
-.top-middle-section {
+.grid-layout {
+  width: 80%;
+  margin: auto;
+}
+
+.left-section {
   display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   justify-content: center;
+  text-align: left;
+  padding: 20px;
+  margin-left: 20px; /* Added margin for left section */
+}
+
+.right-section {
+  display: flex;
   align-items: center;
-  width: 100%;
-  flex-grow: 1;
-}
-
-.top-section {
-  text-align: center;
-  margin-right: 40px;
-}
-
-.title {
-  font-size: 48px;
-  font-weight: bold;
-}
-
-.middle-section {
-  display: flex;
   justify-content: center;
+  text-align: right;
+  padding: 20px;
 }
 
-.login-card {
-  width: 300px;
+.marketing-text {
+  font-size: 16px;
+  margin-top: 20px;
+  text-align: left;
 }
 
 .bottom-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  width: 80%;
+  margin: auto;
   margin-top: 20px;
 }
 
 .language-select {
+  display: flex;
+  justify-content: flex-start;
   width: 150px;
   margin-bottom: 10px;
 }
 
 .links {
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
 }
 
 @media (max-width: 600px) {
-  .top-middle-section {
+  .grid-layout {
     flex-direction: column;
-    align-items: center;
   }
 
-  .top-section {
+  .left-section {
     margin-right: 0;
     margin-bottom: 20px;
-  }
-
-  .login-card {
-    width: 100%;
   }
 }
 </style>
