@@ -1,18 +1,17 @@
 <template>
   <n-grid cols="24" x-gap="12" y-gap="12" class="p-4">
     <n-gi>
-      <n-h2>Projects</n-h2>
+      <n-h2>Organizations</n-h2>
     </n-gi>
     <n-gi span="24">
       <n-button-group>
         <n-button @click="handleNewClick" class="mr-2" size="large">New</n-button>
-        <n-button @click="handleArchiveClick" size="large">Archive</n-button>
       </n-button-group>
     </n-gi>
     <n-gi span="24">
       <n-data-table
           :columns="columns"
-          :data="projectsStore.projectsPage?.viewData.entries"
+          :data="store.organizationPage?.viewData.entries"
           :pagination="pagination"
           :bordered="false"
           row-class-name="cursor-pointer"
@@ -28,15 +27,15 @@
 import {defineComponent, h, onMounted, reactive, ref} from 'vue';
 import {NButton, NButtonGroup, NCheckbox, NDataTable, NGi, NGrid, NH2, NPagination, useMessage} from 'naive-ui';
 import {useRouter} from 'vue-router';
-import {useProjectStore} from '../../stores/projectStore';
 import {Project} from "../../types";
+import {useOrganizationStore} from "../../stores/of/organizationStore";
 
 export default defineComponent({
   components: {NH2, NDataTable, NPagination, NButtonGroup, NButton, NGi, NGrid},
   setup() {
     const router = useRouter();
     const msgPopup = useMessage();
-    const projectsStore = useProjectStore();
+    const store = useOrganizationStore();
     const isMobile = ref(window.innerWidth < 768);
     const pagination = reactive({
       page: 1,
@@ -48,7 +47,7 @@ export default defineComponent({
     });
 
     onMounted(async () => {
-      await projectsStore.fetchProjects(1, 10, pagination);
+      await store.fetchOrganizations(1, 10);
       window.addEventListener('resize', () => {
         isMobile.value = window.innerWidth < 768;
       });
@@ -65,30 +64,26 @@ export default defineComponent({
           }
         })
       },
-      {title: 'Name', key: 'name'},
-      {title: 'Status', key: 'status'}
+      {title: 'Name', key: 'identifier'},
+      {title: 'Registered', key: 'regDate'}
     ];
 
     const handlePageChange = (page: number) => {
-      projectsStore.fetchProjects(page, pagination.pageSize, pagination);
+      store.fetchOrganizations(page, pagination.pageSize);
     };
 
     const handlePageSizeChange = (pageSize: number) => {
-      projectsStore.fetchProjects(pagination.page, pageSize, pagination);
+      store.fetchOrganizations(pagination.page, pageSize);
     };
 
     const handleNewClick = () => {
       msgPopup.info('New button clicked');
     };
 
-    const handleArchiveClick = () => {
-      msgPopup.info('Archive button clicked');
-    };
-
     const getRowProps = (row: Project) => {
       return {
         onClick: () => {
-          const routeTo = {name: 'ProjectForm', params: {id: row.id}};
+          const routeTo = {name: 'OrganizationForm', params: {id: row.id}};
           console.log('Navigating to:', routeTo);
           router.push(routeTo).catch(err => {
             console.error('Navigation error:', err);
@@ -98,14 +93,13 @@ export default defineComponent({
     };
 
     return {
-      projectsStore,
+      store,
       columns,
       pagination,
       isMobile,
       handlePageChange,
       handlePageSizeChange,
       handleNewClick,
-      handleArchiveClick,
       getRowProps
     };
   }

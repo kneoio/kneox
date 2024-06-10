@@ -26,7 +26,7 @@
 <script lang="ts">
 import {computed, defineComponent, h, ref} from 'vue';
 import {useRoute} from 'vue-router';
-import {ProjectOutlined} from '@vicons/antd';
+import {ProjectOutlined, UserOutlined} from '@vicons/antd';
 import IconWrapper from "../helpers/IconWrapper.vue";
 import {NLayout, NLayoutSider, NMenu,} from "naive-ui";
 
@@ -45,13 +45,43 @@ export default defineComponent({
     });
 
     const projectMenuOptions = [
-      { label: 'Assistant', key: '/ai/chat', icon: () => h('IconWrapper', { icon: ProjectOutlined }) }
-
+      { label: 'Organizations', key: '/organizations', icon: () => h('IconWrapper', { icon: ProjectOutlined }) },
+      { label: 'Employees', key: '/employees', icon: () => h('IconWrapper', { icon: ProjectOutlined }) },
+      {
+        label: 'Lookups', key: '/references', icon: () => h('IconWrapper', { icon: ProjectOutlined }),
+        children: [
+          {
+            label: 'Languages',
+            key: '/references/languages',
+            icon: () => h('IconWrapper', { icon: UserOutlined })
+          },
+          {
+            label: 'Labels',
+            key: '/references/labels',
+            icon: () => h('IconWrapper', { icon: ProjectOutlined })
+          },
+          {
+            label: 'Organization categories',
+            key: '/references/org_cat',
+            icon: () => h('IconWrapper', { icon: ProjectOutlined })
+          },
+          {
+            label: 'Positions',
+            key: '/references/positions',
+            icon: () => h('IconWrapper', { icon: ProjectOutlined })
+          },
+          {
+            label: 'Task types',
+            key: '/references/task_types',
+            icon: () => h('IconWrapper', { icon: ProjectOutlined })
+          }
+        ]
+      }
     ];
 
     const selectedMenuKey = computed(() => {
-      if (route.path.startsWith('/projects_and_tasks/projects')) {
-        return '/projects_and_tasks/projects';
+      if (route.path.startsWith('/references/organizations')) {
+        return '/references/organizations';
       }
       return '';
     });

@@ -25,7 +25,7 @@
 <script lang="ts">
 import { defineComponent, ref } from "vue";
 import { NButton, NH1, NInput, NLayout, NLayoutSider, NLayoutHeader, NLayoutContent, NMenu } from "naive-ui";
-import IconWrapper from "./IconWrapper.vue";
+import IconWrapper from "./helpers/IconWrapper.vue";
 
 interface Message {
   text: string;

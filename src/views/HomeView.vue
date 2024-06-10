@@ -31,10 +31,10 @@ import {
   NSelect,
   NSpace
 } from 'naive-ui'
-import KneoHeader from "../components/KneoHeader.vue";
+import KneoHeader from "../components/common/KneoHeader.vue";
 import KneoTopMenu from "../components/KneoTopMenu.vue";
 import KneoProjectsOutline from "../components/outlines/ProjectAndTasks.vue";
-import KneoFooter from "../components/KneoFooter.vue";
+import KneoFooter from "../components/common/KneoFooter.vue";
 
 const selectedLanguage = ref('en');
 

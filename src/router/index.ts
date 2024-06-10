@@ -8,6 +8,10 @@ import ProjectsList from '../components/lists/ProjectsList.vue';
 import ProjectForm from '../components/forms/ProjectForm.vue';
 import AiAssistant from "../components/outlines/AiAssistant.vue";
 import ChatAssistant from "../components/forms/Chat.vue";
+import References from "../components/outlines/References.vue";
+import OrganizationsList from "../components/lists/OrganizationsList.vue";
+import EmployeeList from "../components/lists/EmployeeList.vue";
+import EmployeeForm from "../components/forms/EmployeeForm.vue";
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -22,7 +26,7 @@ const routes: Array<RouteRecordRaw> = [
                 path: 'dashboard',
                 name: 'Dashboard',
                 component: DashboardView,
-                meta: { requiresAuth: true }
+                meta: {requiresAuth: true}
             },
             {
                 path: 'projects_and_tasks',
@@ -54,8 +58,27 @@ const routes: Array<RouteRecordRaw> = [
                 ]
             },
             {
-                path: 'money',
-                component: ProjectsList
+                path: 'references',
+                component: References,
+                children: [
+                    {
+                        path: 'organizations',
+                        component: OrganizationsList
+                    },
+                    {
+                        path: 'employees',
+                        component: EmployeeList
+                    },
+                    {
+                        path: 'employees/:id',
+                        name: 'EmployeeForm',
+                        component: EmployeeForm
+                    },
+                    {
+                        path: 'lookups',
+                        component: EmployeeList
+                    }
+                ]
             },
             {
                 path: 'ai',
@@ -70,6 +93,10 @@ const routes: Array<RouteRecordRaw> = [
             {
                 path: 'projects',
                 redirect: '/projects_and_tasks/projects'
+            },
+            {
+                path: 'references',
+                redirect: '/references/organizations'
             },
             {
                 path: 'ai',

@@ -15,6 +15,7 @@
         :collapsed-icon-size="22"
         :options="projectMenuOptions"
         :value="selectedMenuKey"
+        :expanded-keys="defaultOpenKeys"
     />
   </n-layout-sider>
   <button class="sidebar-toggle" @click="toggleSidebar" v-show="isMobile">&#9776;</button>
@@ -27,12 +28,13 @@
 import {computed, defineComponent, h, ref} from 'vue';
 import {useRoute} from 'vue-router';
 import {ProjectOutlined, UserOutlined} from '@vicons/antd';
-import IconWrapper from "../IconWrapper.vue";
+import IconWrapper from "../helpers/IconWrapper.vue";
 import {NLayout, NLayoutSider, NMenu,} from "naive-ui";
 
 export default defineComponent({
   components: { IconWrapper, NMenu, NLayout, NLayoutSider },
   setup() {
+    const defaultOpenKeys = ref(['/tasks']);
     const route = useRoute();
     const sidebarOpen = ref(false);
     const isMobile = ref(window.innerWidth < 768);
@@ -77,6 +79,7 @@ export default defineComponent({
       toggleSidebar,
       isMobile,
       selectedMenuKey,
+      defaultOpenKeys
     };
   }
 });

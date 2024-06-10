@@ -1,7 +1,6 @@
 <template>
   <n-layout-header :inverted="inverted" bordered>
     <div class="mobile-menu-button" @click="toggleMenu" v-show="isMobile">
-      <!-- Simple hamburger icon -->
       <n-icon>
         <menu-outlined/>
       </n-icon>
@@ -46,14 +45,15 @@ export default defineComponent({
         icon: renderIcon(ProjectOutlined),
         action: () => router.push('/projects_and_tasks/projects')
       },
+      {label: 'Assistant bot', key: '/ai', icon: renderIcon(RobotOutlined), action: () => router.push('/ai')},
       {
-        label: 'Debts',
-        key: '/money',
+        label: 'References',
+        key: '/references',
         icon: renderIcon(EuroOutlined),
-        action: () => router.push('/money'),
-        disabled: true
+        action: () => router.push('/'),
+        disabled: false
       },
-      {label: 'Assistant bot', key: '/ai', icon: renderIcon(RobotOutlined), action: () => router.push('/ai')}
+
     ];
     const menuOpen = ref(false);
     const isMobile = ref(window.innerWidth < 768);
@@ -109,7 +109,7 @@ export default defineComponent({
 
 <style scoped>
 .mobile-menu-button {
-  display: none; /* Hide by default */
+  display: none;
   cursor: pointer;
   font-size: 24px;
   padding: 10px;
@@ -117,11 +117,11 @@ export default defineComponent({
 
 @media (max-width: 768px) {
   .mobile-menu-button {
-    display: block; /* Show hamburger menu on small screens */
+    display: block;
   }
 
   n-menu {
-    display: none; /* Initially hide menu */
+    display: none;
   }
 }
 </style>

@@ -17,7 +17,7 @@
 <script lang="ts">
 import {defineComponent, ref} from "vue";
 import {NButton, NH1, NInput, NLayout, NLayoutSider, NMenu} from "naive-ui";
-import IconWrapper from "./IconWrapper.vue";
+import IconWrapper from "./helpers/IconWrapper.vue";
 
 export default defineComponent({
   components: {NLayoutSider, NLayout, NMenu, NButton, NInput, NH1, IconWrapper},
