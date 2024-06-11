@@ -12,6 +12,7 @@ import References from "../components/outlines/References.vue";
 import OrganizationsList from "../components/lists/OrganizationsList.vue";
 import EmployeeList from "../components/lists/EmployeeList.vue";
 import EmployeeForm from "../components/forms/EmployeeForm.vue";
+import OrganizationForm from "../components/forms/OrganizationForm.vue";
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -64,6 +65,11 @@ const routes: Array<RouteRecordRaw> = [
                     {
                         path: 'organizations',
                         component: OrganizationsList
+                    },
+                    {
+                        path: 'organizations/:id',
+                        name: 'OrganizationForm',
+                        component: OrganizationForm
                     },
                     {
                         path: 'employees',

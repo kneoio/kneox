@@ -11,8 +11,8 @@
     <n-gi span="24">
       <n-data-table
           :columns="columns"
-          :data="store.organizationPage?.viewData.entries"
-          :pagination="pagination"
+          :data="store.getEntries"
+          :pagination="store.getPagination"
           :bordered="false"
           row-class-name="cursor-pointer"
           :row-props="getRowProps"
@@ -24,7 +24,7 @@
 </template>
 
 <script lang="ts">
-import {defineComponent, h, onMounted, reactive, ref} from 'vue';
+import {defineComponent, h, onMounted, ref} from 'vue';
 import {NButton, NButtonGroup, NCheckbox, NDataTable, NGi, NGrid, NH2, NPagination, useMessage} from 'naive-ui';
 import {useRouter} from 'vue-router';
 import {Project} from "../../types";
@@ -37,14 +37,6 @@ export default defineComponent({
     const msgPopup = useMessage();
     const store = useOrganizationStore();
     const isMobile = ref(window.innerWidth < 768);
-    const pagination = reactive({
-      page: 1,
-      pageSize: 10,
-      pageCount: 1,
-      itemCount: 0,
-      showSizePicker: true,
-      pageSizes: [10, 20, 50]
-    });
 
     onMounted(async () => {
       await store.fetchOrganizations(1, 10);
@@ -69,11 +61,11 @@ export default defineComponent({
     ];
 
     const handlePageChange = (page: number) => {
-      store.fetchOrganizations(page, pagination.pageSize);
+      store.fetchOrganizations(page, store.getPagination.pageSize);
     };
 
     const handlePageSizeChange = (pageSize: number) => {
-      store.fetchOrganizations(pagination.page, pageSize);
+      store.fetchOrganizations(store.getPagination.page, pageSize);
     };
 
     const handleNewClick = () => {
@@ -95,7 +87,6 @@ export default defineComponent({
     return {
       store,
       columns,
-      pagination,
       isMobile,
       handlePageChange,
       handlePageSizeChange,

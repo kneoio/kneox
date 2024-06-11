@@ -25,7 +25,7 @@
       </n-timeline>
     </n-gi>
     <n-gi>
-      <n-h2>Project: {{ projectStore.projectFields.name }}</n-h2>
+      <n-h2>Project: {{ projectStore.projectFields }}</n-h2>
     </n-gi>
     <n-gi>
       <n-tabs v-model:value="activeTab">
@@ -54,20 +54,20 @@
               </n-gi>
               <n-gi span="24">
                 <n-form-item label="Manager" class="short-field">
-                  <n-select v-model:value="projectStore.projectFields.manager.id" :options="officeFrameStore.employeeOptions"
-                            style="width: 100%; max-width: 600px;"/>
+<!--                  <n-select v-model:value="projectStore.projectFields.manager.id" :options="officeFrameStore.employeeOptions"
+                            style="width: 100%; max-width: 600px;"/>-->
                 </n-form-item>
               </n-gi>
               <n-gi span="24">
                 <n-form-item label="Coder" class="short-field">
-                  <n-select v-model:value="projectStore.projectFields.coder.id" :options="officeFrameStore.employeeOptions"
-                            style="width: 100%; max-width: 600px;"/>
+<!--                  <n-select v-model:value="projectStore.projectFields.coder.id" :options="officeFrameStore.employeeOptions"
+                            style="width: 100%; max-width: 600px;"/>-->
                 </n-form-item>
               </n-gi>
               <n-gi span="24">
                 <n-form-item label="Tester" class="short-field">
-                  <n-select v-model:value="projectStore.projectFields.tester.id" :options="officeFrameStore.employeeOptions"
-                            style="width: 100%; max-width: 600px;"/>
+<!--                  <n-select v-model:value="projectStore.projectFields.tester.id" :options="employeeStore.employeeOptions"
+                            style="width: 100%; max-width: 600px;"/>-->
                 </n-form-item>
               </n-gi>
             </n-grid>
@@ -123,7 +123,7 @@ import {
   NTimelineItem
 } from 'naive-ui';
 import { ArrowBigLeft } from '@vicons/tabler';
-import { useOfficeFrameStore } from "../../stores/officeFrameStore";
+import {useEmployeeStore} from "../../stores/of/employeeStore";
 
 export default defineComponent({
   name: 'KneoProjectForm',
@@ -151,7 +151,7 @@ export default defineComponent({
     const route = useRoute();
     const router = useRouter();
     const projectStore = useProjectStore();
-    const officeFrameStore = useOfficeFrameStore();
+    const employeeStore = useEmployeeStore();
     const activeTab = ref('properties');
 
     const statusOptions = [
@@ -183,18 +183,18 @@ export default defineComponent({
     onMounted(async () => {
       const projectId = route.params.id as string;
       await projectStore.fetchProject(projectId);
-      await officeFrameStore.fetchEmployers(1, 100);
+
     });
 
     return {
       projectStore,
+      employeeStore,
       statusOptions,
       accessLevelOptions,
       handleSaveProject,
       activeTab,
       goBack,
-      handleRemoveReader,
-      officeFrameStore, // Include the store directly for options
+      handleRemoveReader
     };
   },
 });

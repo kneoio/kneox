@@ -5,7 +5,7 @@ import router from "./router";
 import IconWrapper from "./components/helpers/IconWrapper.vue";
 import './assets/tailwind.css';
 import { createPinia } from 'pinia';
-import {setupApiClient} from "./apiClient";
+import {setupApiClient} from "./api/apiClient";
 
 interface UserProfile {
     id?: string;

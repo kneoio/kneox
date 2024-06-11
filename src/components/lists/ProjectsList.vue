@@ -12,7 +12,7 @@
     <n-gi span="24">
       <n-data-table
           :columns="columns"
-          :data="projectsStore.projectsPage?.viewData.entries"
+          :data="projectsStore.getEntries"
           :pagination="pagination"
           :bordered="false"
           row-class-name="cursor-pointer"
@@ -48,7 +48,7 @@ export default defineComponent({
     });
 
     onMounted(async () => {
-      await projectsStore.fetchProjects(1, 10, pagination);
+      await projectsStore.fetchProjects(1, 10);
       window.addEventListener('resize', () => {
         isMobile.value = window.innerWidth < 768;
       });
@@ -70,11 +70,11 @@ export default defineComponent({
     ];
 
     const handlePageChange = (page: number) => {
-      projectsStore.fetchProjects(page, pagination.pageSize, pagination);
+      projectsStore.fetchProjects(page, pagination.pageSize);
     };
 
     const handlePageSizeChange = (pageSize: number) => {
-      projectsStore.fetchProjects(pagination.page, pageSize, pagination);
+      projectsStore.fetchProjects(pagination.page, pageSize);
     };
 
     const handleNewClick = () => {

@@ -1,110 +1,76 @@
-import {defineStore} from 'pinia';
-import {computed, ref} from 'vue';
-import {fetchProjectById, saveProject as saveProjectApi, setupApiClient} from '../../apiClient';
-import {fetchEmpl} from "../../api/of/employeeApiClient";
-import {ViewPage} from "../../types/ofTypes";
-import {useLoadingBar, useMessage} from "naive-ui";
-import {Rl} from "../../types";
+import { defineStore } from 'pinia';
+import { ref} from 'vue';
+import apiClient, { setupApiClient } from '../../api/apiClient';
+import { useLoadingBar, useMessage } from "naive-ui";
+import {ApiFormResponse, ApiViewPageResponse} from "../../types";
 
-interface Project {
-    docData: {
-        id: string;
-        name: string;
-        status: string;
-        finishDate: string;
-        manager: {
-            id: number;
-            name: string;
-        };
-        coder: {
-            id: number;
-            name: string;
-        };
-        tester: {
-            id: number;
-            name: string;
-        };
-        rls: Rl[];
-        primaryLang: string;
-    };
-    actions: {
-        actions: any[];
-    };
-}
-
-export const useEmployeeStore = defineStore('store', () => {
-    const organizationPage = ref<ViewPage | null>(null);
-    const project = ref<Project | null>(null);
+export const useEmployeeStore = defineStore('employeeStore', () => {
+    const apiViewResponse = ref<ApiViewPageResponse | null>(null);
+    const apiFormResponse = ref<ApiFormResponse | null>(null);
     const msgPopup = useMessage();
     const loadingBar = useLoadingBar();
 
-    const projectFields = computed(() => project.value?.docData || {
-        id: '',
-        name: '',
-        status: '',
-        finishDate: null,
-        manager: {id: 0, name: ''},
-        coder: {id: 0, name: ''},
-        tester: {id: 0, name: ''},
-        rls: [],
-        primaryLang: ''
-    });
+   /* const employeeOptions = computed(() => {
+        return employeePage.value?.data?.entries.map(entry => ({
+            label: entry.name,
+            value: entry.userId
+        })) || [];
+    });*/
 
     const fetchEmployees = async (page = 1, pageSize = 10) => {
         try {
             loadingBar.start();
-            const response = await fetchEmpl(page, pageSize);
-            if (response && response.payload) {
-                console.log(response.payload);
-                organizationPage.value = response.payload;
+            const response = await apiClient.get(`/employees?page=${page}&size=${pageSize}`);
+            if (response && response.data) {
+                console.log(response.data);
+                apiViewResponse.value = response.data.payload;
             } else {
                 throw new Error('Invalid API response structure');
             }
         } catch (error: any) {
             loadingBar.error();
-            msgPopup.error('Failed to fetch employers: ' + (error.message || 'Unknown error'));
+            msgPopup.error('Failed to fetch employees: ' + (error.message || 'Unknown error'));
             throw error;
         } finally {
             loadingBar.finish();
         }
     };
 
-    const fetchProject = async (projectId: string) => {
+    const fetchEmployee = async (employeeId: string) => {
         try {
             loadingBar.start();
-            const response = await fetchProjectById(projectId);
-            if (response && response.payload) {
-                console.log(response.payload);
-                project.value = response.payload;
+            const response = await apiClient.get(`/employees/${employeeId}`);
+            if (response && response.data) {
+                apiFormResponse.value = response.data.payload;
             } else {
                 throw new Error('Invalid API response structure');
             }
         } catch (error: any) {
             loadingBar.error();
-            msgPopup.error('Failed to fetch project: ' + (error.message || 'Unknown error'));
+            msgPopup.error('Failed to fetch employee: ' + (error.message || 'Unknown error'));
             throw error;
         } finally {
             loadingBar.finish();
         }
     };
 
-    const saveProject = async () => {
+    const save = async () => {
         try {
-            loadingBar.start();
-            if (project.value) {
-                const response = await saveProjectApi(project.value.docData.id, project.value);
+            /*loadingBar.start();
+            if (doc.value) {
+                const response = await apiClient.put<ApiResponse>(`/employees/${doc.value.docData.id}`, doc.value.docData);
                 if (response && response.payload) {
-                    project.value = response.payload;
-                    msgPopup.success('Project saved successfully');
+                    doc.value = response.payload;
+                    msgPopup.success('Employee saved successfully');
                 } else {
                     throw new Error('Invalid API response structure');
                 }
             } else {
-                throw new Error('No project data to save');
-            }
+                throw new Error('No employee data to save');
+            }*/
         } catch (error: any) {
             loadingBar.error();
-            msgPopup.error('Failed to save project: ' + (error.message || 'Unknown error'));
+            msgPopup.error('Failed to save employee: ' + (error.message || 'Unknown error'));
             throw error;
         } finally {
             loadingBar.finish();
@@ -112,11 +78,10 @@ export const useEmployeeStore = defineStore('store', () => {
     };
 
     return {
-        organizationPage,
-        projectFields,
-        fetchProject,
-        saveProject,
+        apiViewResponse,
+        fetchEmployees,
+        fetchEmployee,
+        save,
         setupApiClient,
-        fetchEmployees
     };
 });

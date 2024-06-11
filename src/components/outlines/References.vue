@@ -13,8 +13,10 @@
         :inverted="inverted"
         :collapsed-width="64"
         :collapsed-icon-size="22"
-        :options="projectMenuOptions"
+        :options="menuOptions"
         :value="selectedMenuKey"
+        :expanded-keys="defaultOpenKeys"
+        @update:value="handleMenuSelect"
     />
   </n-layout-sider>
   <button class="sidebar-toggle" @click="toggleSidebar" v-show="isMobile">&#9776;</button>
@@ -25,17 +27,20 @@
 
 <script lang="ts">
 import {computed, defineComponent, h, ref} from 'vue';
-import {useRoute} from 'vue-router';
+import {useRoute, useRouter} from 'vue-router';
 import {ProjectOutlined, UserOutlined} from '@vicons/antd';
 import IconWrapper from "../helpers/IconWrapper.vue";
-import {NLayout, NLayoutSider, NMenu,} from "naive-ui";
+import {NLayout, NLayoutSider, NMenu} from "naive-ui";
 
 export default defineComponent({
   components: { IconWrapper, NMenu, NLayout, NLayoutSider },
   setup() {
+    const defaultOpenKeys = ref(['/references/lookups']);
     const route = useRoute();
+    const router = useRouter();
     const sidebarOpen = ref(false);
     const isMobile = ref(window.innerWidth < 768);
+
     const toggleSidebar = () => {
       sidebarOpen.value = !sidebarOpen.value;
     };
@@ -44,55 +49,56 @@ export default defineComponent({
       isMobile.value = window.innerWidth < 768;
     });
 
-    const projectMenuOptions = [
-      { label: 'Organizations', key: '/organizations', icon: () => h('IconWrapper', { icon: ProjectOutlined }) },
-      { label: 'Employees', key: '/employees', icon: () => h('IconWrapper', { icon: ProjectOutlined }) },
+    const menuOptions = [
+      { label: 'Organizations', key: '/references/organizations', icon: () => h('IconWrapper', { icon: ProjectOutlined }) },
+      { label: 'Employees', key: '/references/employees', icon: () => h('IconWrapper', { icon: ProjectOutlined }) },
       {
-        label: 'Lookups', key: '/references', icon: () => h('IconWrapper', { icon: ProjectOutlined }),
+        label: 'Lookups', key: '/references/lookups', icon: () => h('IconWrapper', { icon: ProjectOutlined }),
         children: [
           {
             label: 'Languages',
-            key: '/references/languages',
+            key: '/references/lookups/languages',
             icon: () => h('IconWrapper', { icon: UserOutlined })
           },
           {
             label: 'Labels',
-            key: '/references/labels',
+            key: '/references/lookups/labels',
             icon: () => h('IconWrapper', { icon: ProjectOutlined })
           },
           {
             label: 'Organization categories',
-            key: '/references/org_cat',
+            key: '/references/lookups/org_cat',
             icon: () => h('IconWrapper', { icon: ProjectOutlined })
           },
           {
             label: 'Positions',
-            key: '/references/positions',
+            key: '/references/lookups/positions',
             icon: () => h('IconWrapper', { icon: ProjectOutlined })
           },
           {
             label: 'Task types',
-            key: '/references/task_types',
+            key: '/references/lookups/task_types',
             icon: () => h('IconWrapper', { icon: ProjectOutlined })
           }
         ]
       }
     ];
 
-    const selectedMenuKey = computed(() => {
-      if (route.path.startsWith('/references/organizations')) {
-        return '/references/organizations';
-      }
-      return '';
-    });
+    const selectedMenuKey = computed(() => route.path);
+
+    const handleMenuSelect = (key: string) => {
+      router.push(key);
+    };
 
     return {
-      projectMenuOptions,
+      menuOptions,
+      defaultOpenKeys,
       inverted: ref(false),
       sidebarOpen,
       toggleSidebar,
       isMobile,
       selectedMenuKey,
+      handleMenuSelect
     };
   }
 });

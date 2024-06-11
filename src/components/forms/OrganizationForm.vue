@@ -12,7 +12,7 @@
       </n-button-group>
     </n-gi>
     <n-gi>
-      <n-h2>Employee: {{  }}</n-h2>
+      <n-h2>Organization: {{  }}</n-h2>
     </n-gi>
     <n-gi>
       <n-tabs v-model:value="activeTab">
@@ -41,7 +41,6 @@
 <script lang="ts">
 import { defineComponent, ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useEmployeeStore } from '../../stores/of/employeeStore';
 import {
   NButton,
   NButtonGroup,
@@ -62,9 +61,10 @@ import {
   NTimelineItem
 } from 'naive-ui';
 import { ArrowBigLeft } from '@vicons/tabler';
+import {useOrganizationStore} from "../../stores/of/organizationStore";
 
 export default defineComponent({
-  name: 'KneoProjectForm',
+  name: 'OrganizationForm',
   components: {
     NButtonGroup,
     NForm,
@@ -88,21 +88,21 @@ export default defineComponent({
   setup() {
     const route = useRoute();
     const router = useRouter();
-    const store = useEmployeeStore();
+    const store = useOrganizationStore();
     const activeTab = ref('properties');
 
     const handleSaveProject = async () => {
       await store.save();
-      router.push('/references/employees');
+      router.push('/references/organizations');
     };
 
     const goBack = () => {
-      router.push('/references/employees');
+      router.push('/references/organizations');
     };
 
     onMounted(async () => {
       const id = route.params.id as string;
-      await store.fetchEmployee(id);
+      await store.fetch(id);
     });
 
     return {

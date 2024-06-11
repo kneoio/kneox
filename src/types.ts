@@ -1,3 +1,23 @@
+export interface ApiFormResponse {
+    payload: {
+        docData: Record<string, any>;
+        actions: any[];
+    };
+}
+
+export interface ApiViewPageResponse<T = any> {
+    actions: { caption: string }[];
+    viewData: ViewData<T>;
+}
+
+export interface ViewData<T = any> {
+    count: number;
+    pageNum: number;
+    maxPage: number;
+    pageSize: number;
+    entries: T[];
+}
+
 export interface Project {
     id: string;
     author: string | undefined;
@@ -11,26 +31,10 @@ export interface Project {
     selected?: boolean;
 }
 
-export interface ViewData {
-    count: number;
-    pageNum: number;
-    maxPage: number;
-    pageSize: number;
-    entries: Project[];
-}
-
-export interface Actions {
-    actions: { caption: string }[];
-}
-
-export interface ViewPage {
-    actions: Actions;
-    viewData: ViewData;
-}
-
-
-export interface ProjectApiResponse {
-    viewPage: ViewPage;
+export interface KneoGeneric {
+    id: string;
+    author: string | undefined;
+    lastModifier: string | undefined;
 }
 
 export interface Pagination {
@@ -44,6 +48,4 @@ export interface Rl {
     reader: string;
     accessLevel: string;
     key: number;
-
 }
-

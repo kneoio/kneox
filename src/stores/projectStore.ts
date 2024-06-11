@@ -1,67 +1,38 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import {
-    fetchProjectById,
-    fetchProjects as fetchProjectsApi,
-    saveProject as saveProjectApi
-} from '../apiClient';
-import { Pagination, Rl, ViewPage } from "../types";
+import apiClient from '../api/apiClient';
+import {ApiFormResponse, ApiViewPageResponse, Project} from "../types";
 import { useLoadingBar, useMessage } from 'naive-ui';
 
-interface Project {
-    docData: {
-        id: string;
-        name: string;
-        status: string;
-        finishDate: string;
-        manager: {
-            id: number;
-            name: string;
-        };
-        coder: {
-            id: number;
-            name: string;
-        };
-        tester: {
-            id: number;
-            name: string;
-        };
-        rls: Rl[];
-        primaryLang: string;
-    };
-    actions: {
-        actions: any[];
-    };
-}
-
 export const useProjectStore = defineStore('projectsStore', () => {
-    const projectsPage = ref<ViewPage | null>(null);
+    const apiViewResponse = ref<ApiViewPageResponse<Project> | null>(null);
+    const apiFormResponse = ref<ApiFormResponse | null>(null);
     const project = ref<Project | null>(null);
     const msgPopup = useMessage();
     const loadingBar = useLoadingBar();
 
-    const projectFields = computed(() => project.value?.docData || {
+    const getCurrentProject = computed(() => apiFormResponse.value?.payload.docData || {
         id: '',
         name: '',
         status: '',
-        finishDate: null,
-        manager: { id: 0, name: '' },
-        coder: { id: 0, name: '' },
-        tester: { id: 0, name: '' },
+        finishDate: '',
+        manager: '',
+        coder: '',
+        tester: '',
         rls: [],
         primaryLang: ''
     });
 
-    const fetchProjects = async (page = 1, pageSize = 10, pagination: Pagination) => {
+    const getEntries = computed(() => {
+        return apiViewResponse.value?.viewData.entries || [];
+    });
+
+    const fetchProjects = async (page = 1, pageSize = 10 ) => {
         try {
             loadingBar.start();
-            const response = await fetchProjectsApi(page, pageSize);
-            if (response && response.payload) {
-                projectsPage.value = response.payload;
-                pagination.pageSize = response.payload.viewData.pageSize;
-                pagination.itemCount = response.payload.viewData.count;
-                pagination.pageCount = response.payload.viewData.pageCount;
-                pagination.page = response.payload.viewData.pageNum;
+            const response = await apiClient.get(`/projects?page=${page}&size=${pageSize}`);
+            if (response && response.data) {
+                apiViewResponse.value = response.data.payload;
             } else {
                 throw new Error('Invalid API response structure');
             }
@@ -77,10 +48,10 @@ export const useProjectStore = defineStore('projectsStore', () => {
     const fetchProject = async (projectId: string) => {
         try {
             loadingBar.start();
-            const response = await fetchProjectById(projectId);
-            if (response && response.payload) {
-                console.log(response.payload);
-                project.value = response.payload;
+            const response = await apiClient.get(`/projects/${projectId}`);
+            if (response && response.data) {
+                console.log(response.data);
+                apiFormResponse.value = response.data.payload;
             } else {
                 throw new Error('Invalid API response structure');
             }
@@ -96,10 +67,10 @@ export const useProjectStore = defineStore('projectsStore', () => {
     const saveProject = async () => {
         try {
             loadingBar.start();
-            if (project.value) {
-                const response = await saveProjectApi(project.value.docData.id, project.value);
-                if (response && response.payload) {
-                    project.value = response.payload;
+            if (apiFormResponse.value) {
+                const response = await apiClient.put(`/projects/${project.value?.id}`, apiFormResponse.value);
+                if (response && response.data.payload) {
+                    apiFormResponse.value = response.data.payload.docData;
                     msgPopup.success('Project saved successfully');
                 } else {
                     throw new Error('Invalid API response structure');
@@ -117,11 +88,12 @@ export const useProjectStore = defineStore('projectsStore', () => {
     };
 
     return {
-        projectsPage,
-        project,
+        apiViewResponse,
+        apiFormResponse,
+        getEntries,
         fetchProjects,
         fetchProject,
         saveProject,
-        projectFields
+        projectFields: getCurrentProject
     };
 });
