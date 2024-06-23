@@ -1,5 +1,5 @@
 <template>
-    <n-layout class="layout-full-height">
+    <n-layout>
       <kneo-header/>
       <kneo-top-menu/>
       <n-layout has-sider class="layout-content-expand">

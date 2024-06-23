@@ -84,8 +84,7 @@ const routes: Array<RouteRecordRaw> = [
                         path: 'lookups',
                         component: EmployeeList
                     }
-                ]
-            },
+                ]},
             {
                 path: 'ai',
                 component: AiAssistant,

@@ -15,22 +15,41 @@ export const useOrganizationStore = defineStore('organizationStore', () => {
         return apiViewResponse.value?.viewData.entries || [];
     });
 
+    const getCurrent = computed(() => apiFormResponse.value?.docData || {
+        id: '',
+        author: '',
+        identifier: '',
+        localizedName: {},
+        rank: 0
+    });
+
     const getPagination = computed(() => {
+        if (!apiViewResponse.value) {
+            return {
+                page: 1,
+                pageSize: 10,
+                itemCount: 0,
+                pageCount: 1,
+                showSizePicker: true,
+                pageSizes: [10, 20, 50]
+            };
+        }
+
         return {
-            page: apiViewResponse.value?.viewData.pageNum,
-            pageSize: apiViewResponse.value?.viewData.pageSize,
-            pageCount: apiViewResponse.value?.viewData.maxPage,
-            itemCount: apiViewResponse.value?.viewData.count,
+            page: apiViewResponse.value.viewData.pageNum,
+            pageSize: apiViewResponse.value.viewData.pageSize,
+            itemCount: apiViewResponse.value.viewData.count,
+            pageCount: Math.ceil(apiViewResponse.value.viewData.count / apiViewResponse.value.viewData.pageSize),
             showSizePicker: true,
             pageSizes: [10, 20, 50]
-        }
+        };
     });
 
     const fetchOrganizations = async (page = 1, pageSize = 10) => {
         try {
             loadingBar.start();
             const response = await apiClient.get(`/orgs?page=${page}&size=${pageSize}`);
-            if (response && response.data) {
+            if (response && response.data && response.data.payload) {
                 apiViewResponse.value = response.data.payload;
             } else {
                 throw new Error('Invalid API response structure');
@@ -38,7 +57,6 @@ export const useOrganizationStore = defineStore('organizationStore', () => {
         } catch (error: any) {
             loadingBar.error();
             msgPopup.error('Failed to fetch organizations: ' + (error.message || 'Unknown error'));
-            throw error;
         } finally {
             loadingBar.finish();
         }
@@ -47,7 +65,7 @@ export const useOrganizationStore = defineStore('organizationStore', () => {
     const fetch = async (id: string) => {
         try {
             loadingBar.start();
-            const response = await apiClient.get(`/organizations/${id}`);
+            const response = await apiClient.get(`/orgs/${id}`);
             if (response && response.data) {
                 console.log(response.data);
                 apiFormResponse.value = response.data.payload;
@@ -68,7 +86,7 @@ export const useOrganizationStore = defineStore('organizationStore', () => {
             loadingBar.start();
             if (apiFormResponse.value) {
                 const id = null;
-                const response = await apiClient.put(`/organizations/${id}`, apiFormResponse.value);
+                const response = await apiClient.put(`/orgs/${id}`, apiFormResponse.value);
                 if (response && response.data.payload) {
                     apiFormResponse.value = response.data.payload.docData;
                     msgPopup.success('Project saved successfully');
@@ -81,7 +99,6 @@ export const useOrganizationStore = defineStore('organizationStore', () => {
         } catch (error: any) {
             loadingBar.error();
             msgPopup.error('Failed to save project: ' + (error.message || 'Unknown error'));
-            throw error;
         } finally {
             loadingBar.finish();
         }
@@ -89,11 +106,13 @@ export const useOrganizationStore = defineStore('organizationStore', () => {
 
     return {
         apiViewResponse,
+        apiFormResponse,
         setupApiClient,
         fetchOrganizations,
         fetch,
         save,
         getEntries,
-        getPagination
+        getPagination,
+        getCurrent
     };
 });

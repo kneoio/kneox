@@ -1,8 +1,6 @@
 export interface ApiFormResponse {
-    payload: {
-        docData: Record<string, any>;
-        actions: any[];
-    };
+    docData: Record<string, any>;
+    actions: any[];
 }
 
 export interface ApiViewPageResponse<T = any> {

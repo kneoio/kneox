@@ -11,6 +11,7 @@
     <n-gi span="24">
       <n-data-table
           :columns="columns"
+          :row-key="rowKey"
           :data="store.getEntries"
           :pagination="store.getPagination"
           :bordered="false"
@@ -38,8 +39,17 @@ export default defineComponent({
     const store = useOrganizationStore();
     const isMobile = ref(window.innerWidth < 768);
 
+    async function preFetch() {
+      try {
+        await store.fetchOrganizations();
+      } catch (error) {
+        console.error('Failed to fetch initial data:', error);
+      }
+    }
+
+    preFetch();
+
     onMounted(async () => {
-      await store.fetchOrganizations(1, 10);
       window.addEventListener('resize', () => {
         isMobile.value = window.innerWidth < 768;
       });
@@ -65,7 +75,7 @@ export default defineComponent({
     };
 
     const handlePageSizeChange = (pageSize: number) => {
-      store.fetchOrganizations(store.getPagination.page, pageSize);
+      store.fetchOrganizations(1, pageSize);
     };
 
     const handleNewClick = () => {
@@ -87,11 +97,12 @@ export default defineComponent({
     return {
       store,
       columns,
+      rowKey: (row: any) => row.key,
       isMobile,
+      handleNewClick,
+      getRowProps,
       handlePageChange,
       handlePageSizeChange,
-      handleNewClick,
-      getRowProps
     };
   }
 });

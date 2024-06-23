@@ -13,7 +13,6 @@
 <script>
 import {NConfigProvider, NLoadingBarProvider, NMessageProvider} from 'naive-ui';
 
-// Define the theme overrides with the palette colors
 const themeOverrides = {
   common: {
     primaryColor: '#003f5c',
