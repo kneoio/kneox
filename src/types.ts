@@ -35,11 +35,13 @@ export interface KneoGeneric {
     lastModifier: string | undefined;
 }
 
-export interface Pagination {
-    itemCount: number;
-    page: number;
-    pageCount: number;
-    pageSize: number;
+export  interface PaginationInfo {
+    startIndex: number
+    endIndex: number
+    page: number
+    pageSize: number
+    pageCount: number
+    itemCount: number | undefined
 }
 
 export interface Rl {
