@@ -25,7 +25,7 @@
       </n-timeline>
     </n-gi>
     <n-gi>
-      <n-h2>Project: {{ projectStore.projectFields }}</n-h2>
+      <n-h2>Project: {{ localData.name }}</n-h2>
     </n-gi>
     <n-gi>
       <n-tabs v-model:value="activeTab">
@@ -34,19 +34,19 @@
             <n-grid x-gap="12" y-gap="12">
               <n-gi span="24">
                 <n-form-item label="Name" class="short-field">
-                  <n-input v-model:value="projectStore.projectFields.name" style="width: 100%; max-width: 600px;"/>
+                  <n-input v-model:value="localData.name" style="width: 100%; max-width: 600px;"/>
                 </n-form-item>
               </n-gi>
               <n-gi span="24">
                 <n-form-item label="Status" class="short-field">
-                  <n-select v-model:value="projectStore.projectFields.status" :options="statusOptions"
+                  <n-select v-model:value="localData.status" :options="statusOptions"
                             style="width: 100%; max-width: 300px;"/>
                 </n-form-item>
               </n-gi>
               <n-gi span="24">
                 <n-form-item label="Finish Date" class="short-field">
                   <n-date-picker
-                      v-model:formatted-value="projectStore.projectFields.finishDate"
+                      v-model:formatted-value="localData.finishDate"
                       value-format="yyyy-MM-dd"
                       clearable
                       style="width: 100%; max-width: 300px;"/>
@@ -54,7 +54,7 @@
               </n-gi>
               <n-gi span="24">
                 <n-form-item label="Manager" class="short-field">
-<!--                  <n-select v-model:value="projectStore.projectFields.manager.id" :options="officeFrameStore.employeeOptions"
+<!--                  <n-select v-model:value="localData.manager.name" :options="officeFrameStore.employeeOptions"
                             style="width: 100%; max-width: 600px;"/>-->
                 </n-form-item>
               </n-gi>
@@ -75,7 +75,7 @@
         </n-tab-pane>
         <n-tab-pane name="rls" tab="RLS">
           <n-dynamic-input
-              v-model:value="projectStore.projectFields.rls"
+              v-model:value="localData.rls"
               :on-remove="handleRemoveReader"
           >
             <template #default="{ value }">
@@ -100,7 +100,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted } from 'vue';
+import {defineComponent, ref, onMounted, reactive} from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useProjectStore } from '../../stores/projectStore';
 import {
@@ -124,9 +124,10 @@ import {
 } from 'naive-ui';
 import { ArrowBigLeft } from '@vicons/tabler';
 import {useEmployeeStore} from "../../stores/of/employeeStore";
+import {Project} from "../../types/projectTypes";
 
 export default defineComponent({
-  name: 'KneoProjectForm',
+  name: 'ProjectForm',
   components: {
     NButtonGroup,
     NForm,
@@ -153,6 +154,17 @@ export default defineComponent({
     const projectStore = useProjectStore();
     const employeeStore = useEmployeeStore();
     const activeTab = ref('properties');
+    const localData = reactive<Project>({
+      author: undefined, lastModifier: undefined,
+      id: '',
+      status: '',
+      name: '',
+      finishDate: undefined,
+      manager: '',
+      coder: '',
+      tester: '',
+      rls:[]
+    });
 
     const statusOptions = [
       { label: 'Draft', value: 'DRAFT' },
@@ -177,17 +189,19 @@ export default defineComponent({
     };
 
     const handleRemoveReader = (index: number) => {
-      projectStore.projectFields.rls.splice(index, 1);
+
     };
 
     onMounted(async () => {
       const projectId = route.params.id as string;
       await projectStore.fetchProject(projectId);
+      Object.assign(localData, projectStore.getCurrent);
 
     });
 
     return {
       projectStore,
+      localData,
       employeeStore,
       statusOptions,
       accessLevelOptions,

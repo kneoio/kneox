@@ -1,11 +1,15 @@
+
 export interface Organization {
-    docData: {
-        id: string;
-        author: string;
-        regDate: string;
-        lastModifier: string;
-        lastModifiedDate: string;
+    id?: string;  // Optional for new organizations
+    identifier: string;
+    bizID: string;
+    localizedName: Record<string, string>;
+    orgCategory: {
+        localizedName: string;
     };
+    status: string;
+    rank: number;
+    // Other properties...
 }
 
 export interface Employer {

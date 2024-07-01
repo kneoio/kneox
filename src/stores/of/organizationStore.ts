@@ -76,53 +76,45 @@ export const useOrganizationStore = defineStore('organizationStore', () => {
             loadingBar.start();
             const response = await apiClient.get(`/orgs/${id}`);
 
-            if (response && response.data) {
-                console.log('API Response:', response.data);
-
-                if (response.data.payload) {
-                    apiFormResponse.value = response.data.payload;
-                    console.log('apiFormResponse.value set to:', apiFormResponse.value);
-                } else {
-                    throw new Error('Missing payload in API response');
-                }
+            if (response && response.data && response.data.payload) {
+                apiFormResponse.value = response.data.payload;
             } else {
                 throw new Error('Invalid API response structure');
             }
         } catch (error: any) {
             loadingBar.error();
-
-            if (error instanceof Error) {
-                console.error('Fetch error:', error.message);
-                msgPopup.error(`Failed to fetch: ${error.message}`);
-            } else {
-                console.error('Unknown fetch error:', error);
-                msgPopup.error('Failed to fetch: Unknown error');
-            }
-
+            console.error('Fetch error:', error);
+            msgPopup.error(`Failed to fetch: ${error.message || 'Unknown error'}`);
             throw error;
         } finally {
             loadingBar.finish();
         }
     };
 
-    const save = async () => {
+    const updateCurrent = (data: Organization, actions: any = {}) => {
+        apiFormResponse.value = {
+            docData: data,
+            actions: actions
+        };
+    };
+
+    const save = async (data: Organization) => {
         try {
             loadingBar.start();
-            if (apiFormResponse.value) {
-                const id = null;
-                const response = await apiClient.put(`/orgs/${id}`, apiFormResponse.value);
-                if (response && response.data.payload) {
-                    apiFormResponse.value = response.data.payload.docData;
-                    msgPopup.success('Project saved successfully');
-                } else {
-                    throw new Error('Invalid API response structure');
-                }
+            const response = await apiClient.post('/orgs', data);
+
+            if (response && response.data && response.data.payload) {
+                const { docData, actions } = response.data.payload;
+                updateCurrent(docData, actions);
+                msgPopup.success('Organization saved successfully');
+                return docData;
             } else {
-                throw new Error('No project data to save');
+                throw new Error('Invalid API response structure');
             }
         } catch (error: any) {
             loadingBar.error();
-            msgPopup.error('Failed to save project: ' + (error.message || 'Unknown error'));
+            msgPopup.error('Failed to save organization: ' + (error.message || 'Unknown error'));
+            throw error;
         } finally {
             loadingBar.finish();
         }

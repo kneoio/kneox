@@ -1,8 +1,9 @@
-import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
+import {defineStore} from 'pinia';
+import {ref, computed} from 'vue';
 import apiClient from '../api/apiClient';
-import {ApiFormResponse, ApiViewPageResponse, Project} from "../types";
-import { useLoadingBar, useMessage } from 'naive-ui';
+import {ApiFormResponse, ApiViewPageResponse} from "../types";
+import {useLoadingBar, useMessage} from 'naive-ui';
+import {Project} from "../types/projectTypes";
 
 export const useProjectStore = defineStore('projectsStore', () => {
     const apiViewResponse = ref<ApiViewPageResponse<Project> | null>(null);
@@ -11,23 +12,28 @@ export const useProjectStore = defineStore('projectsStore', () => {
     const msgPopup = useMessage();
     const loadingBar = useLoadingBar();
 
-    const getCurrentProject = computed(() => apiFormResponse.value?.payload.docData || {
-        id: '',
-        name: '',
-        status: '',
-        finishDate: '',
-        manager: '',
-        coder: '',
-        tester: '',
-        rls: [],
-        primaryLang: ''
+    const getCurrent = computed(() => {
+        const defaultData = {
+            regDate: '',
+            lastModifiedDate: '',
+            id: '',
+            name: '',
+            status: '',
+            finishDate: '',
+            manager: '',
+            coder: '',
+            tester: '',
+            rls: [],
+            primaryLang: ''
+        };
+        return apiFormResponse.value?.docData || defaultData;
     });
 
     const getEntries = computed(() => {
         return apiViewResponse.value?.viewData.entries || [];
     });
 
-    const fetchProjects = async (page = 1, pageSize = 10 ) => {
+    const fetchProjects = async (page = 1, pageSize = 10) => {
         try {
             loadingBar.start();
             const response = await apiClient.get(`/projects?page=${page}&size=${pageSize}`);
@@ -94,6 +100,6 @@ export const useProjectStore = defineStore('projectsStore', () => {
         fetchProjects,
         fetchProject,
         saveProject,
-        projectFields: getCurrentProject
+        getCurrent
     };
 });
