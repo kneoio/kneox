@@ -29,7 +29,8 @@ import {defineComponent, h, onMounted, reactive, ref} from 'vue';
 import {NButton, NButtonGroup, NCheckbox, NDataTable, NGi, NGrid, NH2, NPagination, useMessage} from 'naive-ui';
 import {useRouter} from 'vue-router';
 import {useProjectStore} from '../../stores/projectStore';
-import {Project} from "../../types";
+import {Project} from "../../types/projectTypes";
+
 
 export default defineComponent({
   components: {NH2, NDataTable, NPagination, NButtonGroup, NButton, NGi, NGrid},

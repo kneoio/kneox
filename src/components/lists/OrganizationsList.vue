@@ -4,9 +4,10 @@
       <n-h2>Organizations</n-h2>
     </n-gi>
     <n-gi span="24">
-      <n-button-group>
-        <n-button @click="handleNewClick" class="mr-2" size="large">New</n-button>
-      </n-button-group>
+      <n-space>
+        <n-button @click="handleNewClick"  size="large">New</n-button>
+        <n-button type="default"  disabled @click="handleArchive" size="large">Archive</n-button>
+      </n-space>
     </n-gi>
     <n-gi span="24">
       <n-data-table
@@ -26,13 +27,13 @@
 
 <script lang="ts">
 import {defineComponent, h, onMounted, ref} from 'vue';
-import {NButton, NButtonGroup, NCheckbox, NDataTable, NGi, NGrid, NH2, NPagination, useMessage} from 'naive-ui';
+import {NButton, NButtonGroup, NCheckbox, NDataTable, NGi, NGrid, NH2, NPagination, NSpace, useMessage} from 'naive-ui';
 import {useRouter} from 'vue-router';
-import {Project} from "../../types";
 import {useOrganizationStore} from "../../stores/of/organizationStore";
+import {Project} from "../../types/projectTypes";
 
 export default defineComponent({
-  components: {NH2, NDataTable, NPagination, NButtonGroup, NButton, NGi, NGrid},
+  components: {NSpace, NH2, NDataTable, NPagination, NButtonGroup, NButton, NGi, NGrid},
   setup() {
     const router = useRouter();
     const msgPopup = useMessage();
@@ -82,6 +83,10 @@ export default defineComponent({
       msgPopup.info('New button clicked');
     };
 
+    const handleArchive = async () => {
+      msgPopup.info('Archive functionality not implemented yet');
+    }
+
     const getRowProps = (row: Project) => {
       return {
         onClick: () => {
@@ -100,6 +105,7 @@ export default defineComponent({
       rowKey: (row: any) => row.key,
       isMobile,
       handleNewClick,
+      handleArchive,
       getRowProps,
       handlePageChange,
       handlePageSizeChange,

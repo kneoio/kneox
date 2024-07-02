@@ -1,15 +1,26 @@
 
 export interface Organization {
-    id?: string;  // Optional for new organizations
+    id?: string;
     identifier: string;
     bizID: string;
     localizedName: Record<string, string>;
     orgCategory: {
+        id: string;
+        identifier: string;
         localizedName: string;
     };
     status: string;
     rank: number;
-    // Other properties...
+}
+
+export interface OrganizationSave {
+    identifier: string;
+    bizID: string;
+    localizedName: Record<string, string>;
+    orgCategory: {
+        id: string;
+    };
+    rank: number;
 }
 
 export interface Employer {
