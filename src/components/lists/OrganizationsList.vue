@@ -1,7 +1,12 @@
 <template>
   <n-grid cols="24" x-gap="12" y-gap="12" class="p-4">
     <n-gi>
-      <n-h2>Organizations</n-h2>
+      <n-page-header>
+        <template #title>Organizations</template>
+        <template #footer>
+          Total: {{ store.getPagination.itemCount }}
+        </template>
+      </n-page-header>
     </n-gi>
     <n-gi span="24">
       <n-space>
@@ -11,6 +16,7 @@
     </n-gi>
     <n-gi span="24">
       <n-data-table
+          remote
           :columns="columns"
           :row-key="rowKey"
           :data="store.getEntries"
@@ -27,13 +33,25 @@
 
 <script lang="ts">
 import {defineComponent, h, onMounted, ref} from 'vue';
-import {NButton, NButtonGroup, NCheckbox, NDataTable, NGi, NGrid, NH2, NPagination, NSpace, useMessage} from 'naive-ui';
+import {
+  NButton,
+  NButtonGroup,
+  NCheckbox,
+  NDataTable,
+  NGi,
+  NGrid,
+  NH2,
+  NPageHeader,
+  NPagination,
+  NSpace,
+  useMessage
+} from 'naive-ui';
 import {useRouter} from 'vue-router';
 import {useOrganizationStore} from "../../stores/of/organizationStore";
 import {Project} from "../../types/projectTypes";
 
 export default defineComponent({
-  components: {NSpace, NH2, NDataTable, NPagination, NButtonGroup, NButton, NGi, NGrid},
+  components: {NPageHeader, NSpace, NH2, NDataTable, NPagination, NButtonGroup, NButton, NGi, NGrid},
   setup() {
     const router = useRouter();
     const msgPopup = useMessage();
@@ -67,8 +85,10 @@ export default defineComponent({
           }
         })
       },
-      {title: 'Name', key: 'identifier'},
-      {title: 'Registered', key: 'regDate'}
+      {title: 'Name', key: 'localizedName["ENG"]'},
+      {title: 'Identifier', key: 'identifier'},
+      {title: 'Registered', key: 'regDate'},
+      {title: 'Author', key: 'author'}
     ];
 
     const handlePageChange = (page: number) => {
@@ -80,7 +100,9 @@ export default defineComponent({
     };
 
     const handleNewClick = () => {
-      msgPopup.info('New button clicked');
+      router.push({ name: 'NewOrganizationForm' }).catch(err => {
+        console.error('Navigation error:', err);
+      });
     };
 
     const handleArchive = async () => {

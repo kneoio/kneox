@@ -21,8 +21,11 @@
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
               <n-gi>
                 <n-form-item label="Category">
-                  <n-input v-model:value="localFormData.orgCategory.localizedName"
-                           style="width: 50%; max-width: 600px;"/>
+                  <n-select
+                      v-model:value="localFormData.orgCategory.id"
+                      :options="categoryOptions"
+                      style="width: 50%; max-width: 600px;"
+                  />
                 </n-form-item>
               </n-gi>
               <n-gi v-for="(_, key) in localFormData.localizedName" :key="key">
@@ -71,17 +74,18 @@ import { defineComponent, ref, onMounted, computed, reactive } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
   NPageHeader, NButton, NButtonGroup, NForm, NFormItem, NInput, NInputNumber, NIcon, NTabs, NTabPane, NGrid,
-  NGi, NH2, NDatePicker, NSpace, useLoadingBar, useMessage
+  NGi, NH2, NDatePicker, NSpace, useLoadingBar, useMessage, NSelect
 } from 'naive-ui';
 import { ArrowBigLeft } from '@vicons/tabler';
 import { useOrganizationStore } from "../../stores/of/organizationStore";
 import {Organization, OrganizationSave} from "../../types/officeFrameTypes";
+import {useOrgCategoryStore} from "../../stores/of/orgCategoryStore";
 
 export default defineComponent({
   name: 'OrganizationForm',
   components: {
     NPageHeader, NButtonGroup, NForm, NDatePicker, NFormItem, NInput, NInputNumber, NButton, NIcon,
-    NTabs, NTabPane, NGrid, NGi, NH2, NSpace, ArrowBigLeft,
+    NTabs, NTabPane, NGrid, NGi, NH2, NSpace, ArrowBigLeft, NSelect
   },
   setup() {
     const loadingBar = useLoadingBar();
@@ -104,6 +108,13 @@ export default defineComponent({
       status: '',
       rank: 0,
     });
+    const categoryOptions = computed(() =>
+        orgCategoryStore.getEntries.map(category => ({
+          label: category.identifier,
+          value: category.id
+        }))
+    );
+    const orgCategoryStore = useOrgCategoryStore();
 
     const handleSaveProject = async () => {
       loadingBar.start();
@@ -139,16 +150,27 @@ export default defineComponent({
 
     onMounted(async () => {
       const id = route.params.id as string;
-      loadingBar.start();
-      try {
-        await store.fetch(id);
-        Object.assign(localFormData, store.getCurrent);
-        loadingBar.finish();
-      } catch (error) {
-        console.error('Failed to fetch organization:', error);
-        message.error('Failed to fetch organization details');
-        loadingBar.error();
+      if (id) {
+        loadingBar.start();
+        try {
+          await store.fetch(id);
+          Object.assign(localFormData, store.getCurrent);
+          loadingBar.finish();
+        } catch (error) {
+          console.error('Failed to fetch organization:', error);
+          message.error('Failed to fetch organization details');
+          loadingBar.error();
+        }
+      } else {
+        localFormData.id = '';
+        localFormData.identifier = '';
+        localFormData.bizID = '';
+        localFormData.localizedName = {};
+        localFormData.orgCategory = { id: '', identifier: '', localizedName: '' };
+        localFormData.status = '';
+        localFormData.rank = 0;
       }
+      await orgCategoryStore.fetchOrgCategories();
     });
 
     return {
@@ -159,6 +181,7 @@ export default defineComponent({
       handleArchive,
       activeTab,
       goBack,
+      categoryOptions
     };
   },
 });

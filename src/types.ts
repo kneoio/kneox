@@ -22,14 +22,6 @@ export interface KneoGeneric {
     lastModifier: string | undefined;
 }
 
-export  interface PaginationInfo {
-    startIndex: number
-    endIndex: number
-    page: number
-    pageSize: number
-    pageCount: number
-    itemCount: number | undefined
-}
 
 export interface Rl {
     reader: string;

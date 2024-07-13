@@ -2,11 +2,10 @@ import {defineStore} from 'pinia';
 import {ref, computed} from 'vue';
 import apiClient, {setupApiClient} from '../../api/apiClient';
 import {ApiFormResponse, ApiViewPageResponse} from "../../types";
-import {Organization, OrganizationSave} from "../../types/officeFrameTypes";
-import {PaginationInfo} from "naive-ui";
+import {Organization, OrganizationSave, OrgCategory} from "../../types/officeFrameTypes";
 
-export const useOrganizationStore = defineStore('organizationStore', () => {
-    const apiViewResponse = ref<ApiViewPageResponse<Organization> | null>(null);
+export const useOrgCategoryStore = defineStore('orgCategoryStore', () => {
+    const apiViewResponse = ref<ApiViewPageResponse<OrgCategory> | null>(null);
     const apiFormResponse = ref<ApiFormResponse | null>(null);
 
     const getEntries = computed(() => {
@@ -17,36 +16,36 @@ export const useOrganizationStore = defineStore('organizationStore', () => {
         const defaultData = {
             regDate: '',
             lastModifiedDate: '',
-            identifier: '',
-            bizID: '',
-            localizedName: {},
-            orgCategory: {
-                localizedName: ''
-            },
-            status: '',
-            rank: 0
+            identifier: ''
         };
         return apiFormResponse.value?.docData || defaultData;
     });
 
-    const getPagination = computed<PaginationInfo>(() => {
-        const page = apiViewResponse.value?.viewData.pageNum ?? 1;
-        const pageSize = apiViewResponse.value?.viewData.pageSize ?? 10;
-        const itemCount = apiViewResponse.value?.viewData.count;
-        const pageCount = apiViewResponse.value?.viewData.maxPage ?? 1;
+    const getPagination = computed(() => {
+        if (!apiViewResponse.value) {
+            return {
+                page: 1,
+                pageSize: 10,
+                itemCount: 0,
+                pageCount: 1,
+                showSizePicker: true,
+                pageSizes: [10, 20, 30, 40]
+            };
+        }
 
+        const { viewData } = apiViewResponse.value;
         return {
-            startIndex: 0,
-            endIndex: 0,
-            page,
-            pageSize,
-            pageCount,
-            itemCount,
+            page: viewData.pageNum,
+            pageSize: viewData.pageSize,
+            itemCount: viewData.count,
+            pageCount: viewData.maxPage,
+            showSizePicker: true,
+            pageSizes: [10, 20, 30, 40]
         };
     });
 
-    const fetchOrganizations = async (page = 1, pageSize = 10) => {
-        const response = await apiClient.get(`/orgs?page=${page}&size=${pageSize}`);
+    const fetchOrgCategories = async (page = 1, pageSize = 10) => {
+        const response = await apiClient.get(`/orgcategories?page=${page}&size=${pageSize}`);
         if (response && response.data && response.data.payload) {
             apiViewResponse.value = response.data.payload;
         } else {
@@ -54,8 +53,8 @@ export const useOrganizationStore = defineStore('organizationStore', () => {
         }
     };
 
-    const fetchOrg = async (id: string) => {
-        const response = await apiClient.get(`/orgs/${id}`);
+    const fetchOrgCategory = async (id: string) => {
+        const response = await apiClient.get(`/orgcategories/${id}`);
         if (response && response.data && response.data.payload) {
             apiFormResponse.value = response.data.payload;
         } else {
@@ -71,9 +70,9 @@ export const useOrganizationStore = defineStore('organizationStore', () => {
     };
 
     const save = async (data: OrganizationSave, id?: string) => {
-        const response = await apiClient.post(`/orgs/${id}`, data);
+        const response = await apiClient.post(`/orgcategories/${id}`, data);
         if (response && response.data) {
-            const {docData} = response.data;
+            const { docData } = response.data;
             updateCurrent(docData, {});
             return docData;
         } else {
@@ -85,8 +84,8 @@ export const useOrganizationStore = defineStore('organizationStore', () => {
         apiViewResponse,
         apiFormResponse,
         setupApiClient,
-        fetchOrganizations,
-        fetch: fetchOrg,
+        fetchOrgCategories,
+        fetch: fetchOrgCategory,
         save,
         getEntries,
         getPagination,

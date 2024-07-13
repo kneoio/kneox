@@ -5,7 +5,7 @@ import router from "./router";
 import IconWrapper from "./components/helpers/IconWrapper.vue";
 import './assets/tailwind.css';
 import { createPinia } from 'pinia';
-import {setupApiClient} from "./api/apiClient";
+import { setupApiClient } from "./api/apiClient";
 
 interface UserProfile {
     id?: string;
@@ -58,11 +58,10 @@ function startApp() {
 }
 
 function cleanUpUrl() {
-    // router.replace(window.location.pathname);
+    router.replace(window.location.pathname); // Uncommented to clean up the URL
 }
 
 function handleSessionInvalid() {
-    // Clear cookies (if needed) and redirect to login
     document.cookie.split(";").forEach((c) => {
         document.cookie = c
             .replace(/^ +/, "")

@@ -67,6 +67,11 @@ const routes: Array<RouteRecordRaw> = [
                         component: OrganizationsList
                     },
                     {
+                        path: 'organizations/new',
+                        name: 'NewOrganizationForm',
+                        component: OrganizationForm
+                    },
+                    {
                         path: 'organizations/:id',
                         name: 'OrganizationForm',
                         component: OrganizationForm

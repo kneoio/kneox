@@ -38,3 +38,8 @@ export interface Employer {
     };
 }
 
+export interface OrgCategory {
+    id?: string;
+    identifier: string;
+    localizedName: Record<string, string>;
+}

@@ -1,7 +1,12 @@
 <template>
   <n-grid cols="24" x-gap="12" y-gap="12" class="p-4">
     <n-gi>
-      <n-h2>Projects</n-h2>
+      <n-page-header>
+        <template #title>Projects</template>
+        <template #footer>
+          Total: {{ pagination.itemCount }}
+        </template>
+      </n-page-header>
     </n-gi>
     <n-gi span="24">
       <n-button-group>
@@ -11,6 +16,7 @@
     </n-gi>
     <n-gi span="24">
       <n-data-table
+          remote
           :columns="columns"
           :data="projectsStore.getEntries"
           :pagination="pagination"
@@ -26,14 +32,25 @@
 
 <script lang="ts">
 import {defineComponent, h, onMounted, reactive, ref} from 'vue';
-import {NButton, NButtonGroup, NCheckbox, NDataTable, NGi, NGrid, NH2, NPagination, useMessage} from 'naive-ui';
+import {
+  NButton,
+  NButtonGroup,
+  NCheckbox,
+  NDataTable,
+  NGi,
+  NGrid,
+  NH2,
+  NPageHeader,
+  NPagination,
+  useMessage
+} from 'naive-ui';
 import {useRouter} from 'vue-router';
 import {useProjectStore} from '../../stores/projectStore';
 import {Project} from "../../types/projectTypes";
 
 
 export default defineComponent({
-  components: {NH2, NDataTable, NPagination, NButtonGroup, NButton, NGi, NGrid},
+  components: {NPageHeader, NH2, NDataTable, NPagination, NButtonGroup, NButton, NGi, NGrid},
   setup() {
     const router = useRouter();
     const msgPopup = useMessage();
