@@ -1,18 +1,17 @@
 <template>
-  <n-grid cols="1" x-gap="12" y-gap="12" class="project-details">
+  <n-grid cols="1" x-gap="12" y-gap="12" class="m-5">
     <n-gi>
-      <n-button-group>
-        <n-button type="default" @click="goBack" size="large">
-          <n-icon>
-            <ArrowBigLeft/>
-          </n-icon>
-          &nbsp;Back
-        </n-button>
-        <n-button type="primary" @click="handleSaveProject" size="large">Save</n-button>
-      </n-button-group>
+      <n-page-header subtitle="Employee" @back="goBack">
+        <template #title>{{ store.getCurrent.identifier }}</template>
+        <template #footer>
+          Registered: {{ store.getCurrent.regDate }}, Last Modified: {{ store.getCurrent.lastModifiedDate }}
+        </template>
+      </n-page-header>
     </n-gi>
     <n-gi>
-      <n-h2>Employee: {{  }}</n-h2>
+      <n-button-group>
+        <n-button type="primary" @click="handleSave" size="large">Save</n-button>
+      </n-button-group>
     </n-gi>
     <n-gi>
       <n-tabs v-model:value="activeTab">
@@ -53,7 +52,7 @@ import {
   NGrid,
   NH2,
   NIcon,
-  NInput,
+  NInput, NPageHeader,
   NSelect,
   NSpace,
   NTabPane,
@@ -66,6 +65,7 @@ import { ArrowBigLeft } from '@vicons/tabler';
 export default defineComponent({
   name: 'KneoProjectForm',
   components: {
+    NPageHeader,
     NButtonGroup,
     NForm,
     NFormItem,
@@ -107,7 +107,7 @@ export default defineComponent({
 
     return {
       store,
-      handleSaveProject,
+      handleSave: handleSaveProject,
       activeTab,
       goBack,
       store,
@@ -117,28 +117,5 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.project-details {
-  padding: 20px;
-}
 
-.project-details h2 {
-  margin-bottom: 20px;
-}
-
-.n-button {
-  margin-bottom: 20px;
-}
-
-.form-section {
-  margin-bottom: 20px;
-}
-
-.short-field .n-form-item-content {
-  max-width: 300px;
-  margin-right: 120px;
-}
-
-.form-field {
-  margin-bottom: 16px;
-}
 </style>

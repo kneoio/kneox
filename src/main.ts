@@ -26,6 +26,7 @@ keycloak.init({
     pkceMethod: 'S256',
     scope: 'openid offline_access'
 }).then(async (authenticated: boolean) => {
+    console.log('authenticated: ', authenticated)
     if (authenticated) {
         try {
             const profile = await keycloak.loadUserProfile();
@@ -36,15 +37,18 @@ keycloak.init({
             cleanUpUrl();
         } catch (error) {
             console.error('Failed to load user profile', error);
-            handleSessionInvalid();
+         //   handleSessionInvalid();
         }
     } else {
         console.warn('Not authenticated - redirecting to login');
-        handleSessionInvalid();
+        startApp();
+       // keycloak.updateToken(0);
+       // await keycloak.login();
+       // handleSessionInvalid();
     }
 }).catch((error: any) => {
     console.error('Failed to initialize Keycloak - redirecting to login', error);
-    handleSessionInvalid();
+   // handleSessionInvalid();
 });
 
 function startApp() {
@@ -58,14 +62,7 @@ function startApp() {
 }
 
 function cleanUpUrl() {
-    router.replace(window.location.pathname); // Uncommented to clean up the URL
+   // router.replace(window.location.pathname); // Uncommented to clean up the URL
 }
 
-function handleSessionInvalid() {
-    document.cookie.split(";").forEach((c) => {
-        document.cookie = c
-            .replace(/^ +/, "")
-            .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-    });
-    keycloak.login();
-}
+

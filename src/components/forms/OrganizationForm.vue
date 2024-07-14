@@ -9,10 +9,10 @@
       </n-page-header>
     </n-gi>
     <n-gi class="mt-2">
-      <n-space>
+      <n-button-group>
         <n-button type="primary" @click="handleSaveProject" size="large">Save</n-button>
         <n-button type="default"  disabled @click="handleArchive" size="large">Archive</n-button>
-      </n-space>
+      </n-button-group>
     </n-gi>
     <n-gi>
       <n-tabs v-model:value="activeTab">

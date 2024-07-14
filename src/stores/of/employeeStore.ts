@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
-import { ref} from 'vue';
+import {computed, ref} from 'vue';
 import apiClient, { setupApiClient } from '../../api/apiClient';
-import { useLoadingBar, useMessage } from "naive-ui";
+import {PaginationInfo, useLoadingBar, useMessage} from "naive-ui";
 import {ApiFormResponse, ApiViewPageResponse} from "../../types";
 
 export const useEmployeeStore = defineStore('employeeStore', () => {
@@ -10,12 +10,41 @@ export const useEmployeeStore = defineStore('employeeStore', () => {
     const msgPopup = useMessage();
     const loadingBar = useLoadingBar();
 
-   /* const employeeOptions = computed(() => {
-        return employeePage.value?.data?.entries.map(entry => ({
-            label: entry.name,
-            value: entry.userId
-        })) || [];
-    });*/
+    const getEntries = computed(() => {
+        return apiViewResponse.value?.viewData.entries || [];
+    });
+
+    const getCurrent = computed(() => {
+        const defaultData = {
+            regDate: '',
+            lastModifiedDate: '',
+            identifier: '',
+            bizID: '',
+            localizedName: {},
+            orgCategory: {
+                localizedName: ''
+            },
+            status: '',
+            rank: 0
+        };
+        return apiFormResponse.value?.docData || defaultData;
+    });
+
+    const getPagination = computed<PaginationInfo>(() => {
+        const page = apiViewResponse.value?.viewData.pageNum ?? 1;
+        const pageSize = apiViewResponse.value?.viewData.pageSize ?? 10;
+        const itemCount = apiViewResponse.value?.viewData.count;
+        const pageCount = apiViewResponse.value?.viewData.maxPage ?? 1;
+
+        return {
+            startIndex: 0,
+            endIndex: 0,
+            page,
+            pageSize,
+            pageCount,
+            itemCount,
+        };
+    });
 
     const fetchEmployees = async (page = 1, pageSize = 10) => {
         try {
@@ -78,6 +107,9 @@ export const useEmployeeStore = defineStore('employeeStore', () => {
     };
 
     return {
+        getEntries,
+        getCurrent,
+        getPagination,
         apiViewResponse,
         fetchEmployees,
         fetchEmployee,

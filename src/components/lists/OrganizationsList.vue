@@ -9,10 +9,10 @@
       </n-page-header>
     </n-gi>
     <n-gi span="24">
-      <n-space>
-        <n-button @click="handleNewClick"  size="large">New</n-button>
-        <n-button type="default"  disabled @click="handleArchive" size="large">Archive</n-button>
-      </n-space>
+      <n-button-group>
+        <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
+        <n-button @click="handleArchive" size="large" :disabled="!selectedRows.length">Archive</n-button>
+      </n-button-group>
     </n-gi>
     <n-gi span="24">
       <n-data-table
@@ -22,21 +22,21 @@
           :data="store.getEntries"
           :pagination="store.getPagination"
           :bordered="false"
-          row-class-name="cursor-pointer"
           :row-props="getRowProps"
           @update:page="handlePageChange"
           @update:page-size="handlePageSizeChange"
+          @update:checked-row-keys="handleCheckedRowKeysChange"
       />
     </n-gi>
   </n-grid>
 </template>
 
 <script lang="ts">
-import {defineComponent, h, onMounted, ref} from 'vue';
+import {computed, defineComponent, onMounted, ref} from 'vue';
 import {
+  DataTableColumns,
   NButton,
   NButtonGroup,
-  NCheckbox,
   NDataTable,
   NGi,
   NGrid,
@@ -49,6 +49,7 @@ import {
 import {useRouter} from 'vue-router';
 import {useOrganizationStore} from "../../stores/of/organizationStore";
 import {Project} from "../../types/projectTypes";
+import {Organization} from "../../types/officeFrameTypes";
 
 export default defineComponent({
   components: {NPageHeader, NSpace, NH2, NDataTable, NPagination, NButtonGroup, NButton, NGi, NGrid},
@@ -57,6 +58,7 @@ export default defineComponent({
     const msgPopup = useMessage();
     const store = useOrganizationStore();
     const isMobile = ref(window.innerWidth < 768);
+    const selectedRows = ref<string[]>([]);
 
     async function preFetch() {
       try {
@@ -74,22 +76,29 @@ export default defineComponent({
       });
     });
 
-    const columns = [
+    const columns = computed<DataTableColumns<Organization>>(() => [
       {
-        title: () => h(NCheckbox, {}),
-        key: 'select',
-        render: (row: Project) => h(NCheckbox, {
-          checked: row.selected,
-          onUpdateChecked: (checked) => {
-            row.selected = checked;
+        type: 'selection',
+        disabled: (row: Organization) => !row.id,
+        options: ['none', 'all'],
+        onSelect: (value: string | number | boolean, row: Organization) => {
+          const checked = !!value;
+          if (row.id) {
+            const index = selectedRows.value.indexOf(row.id);
+            if (checked && index === -1) {
+              selectedRows.value.push(row.id);
+            } else if (!checked && index > -1) {
+              selectedRows.value.splice(index, 1);
+            }
           }
-        })
+          return false;
+        }
       },
       {title: 'Name', key: 'localizedName["ENG"]'},
       {title: 'Identifier', key: 'identifier'},
       {title: 'Registered', key: 'regDate'},
       {title: 'Author', key: 'author'}
-    ];
+    ]);
 
     const handlePageChange = (page: number) => {
       store.fetchOrganizations(page, store.getPagination.pageSize);
@@ -100,37 +109,45 @@ export default defineComponent({
     };
 
     const handleNewClick = () => {
-      router.push({ name: 'NewOrganizationForm' }).catch(err => {
+      router.push({name: 'NewOrganizationForm'}).catch(err => {
         console.error('Navigation error:', err);
       });
     };
 
     const handleArchive = async () => {
-      msgPopup.info('Archive functionality not implemented yet');
+      msgPopup.info(`Mock archive action for rows: ${selectedRows.value.join(', ')}`);
+      selectedRows.value = [];
     }
 
     const getRowProps = (row: Project) => {
       return {
-        onClick: () => {
-          const routeTo = {name: 'OrganizationForm', params: {id: row.id}};
-          console.log('Navigating to:', routeTo);
-          router.push(routeTo).catch(err => {
-            console.error('Navigation error:', err);
-          });
+        onClick: (e: MouseEvent) => {
+          if (!(e.target as HTMLElement).closest('.n-checkbox')) {
+            const routeTo = {name: 'OrganizationForm', params: {id: row.id}};
+            router.push(routeTo).catch(err => {
+              console.error('Navigation error:', err);
+            });
+          }
         }
       };
+    };
+
+    const handleCheckedRowKeysChange = (keys: string[]) => {
+      selectedRows.value = keys;
     };
 
     return {
       store,
       columns,
-      rowKey: (row: any) => row.key,
+      rowKey: (row: any) => row.id,
       isMobile,
       handleNewClick,
       handleArchive,
       getRowProps,
       handlePageChange,
       handlePageSizeChange,
+      handleCheckedRowKeysChange,
+      selectedRows,
     };
   }
 });

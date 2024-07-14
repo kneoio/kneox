@@ -1,4 +1,3 @@
-
 export interface Organization {
     id?: string;
     identifier: string;
@@ -23,19 +22,18 @@ export interface OrganizationSave {
     rank: number;
 }
 
-export interface Employer {
-    docData: {
-        id: string;
-        author: string;
-        regDate: string;
-        lastModifier: string;
-        lastModifiedDate: string;
-        name: string;
-        userId: number;
-        position: {};
-        rank: number;
-        phone: string;
-    };
+export interface Employee {
+    id: string;
+    author: string;
+    regDate: string;
+    lastModifier: string;
+    lastModifiedDate: string;
+    name: string;
+    userId: number;
+    position: {};
+    rank: number;
+    phone: string;
+    selected?: boolean;
 }
 
 export interface OrgCategory {
