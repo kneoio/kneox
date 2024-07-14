@@ -1,11 +1,11 @@
 import {defineStore} from 'pinia';
 import {ref, computed} from 'vue';
-import apiClient from '../api/apiClient';
-import {ApiFormResponse, ApiViewPageResponse} from "../types";
-import {useLoadingBar, useMessage} from 'naive-ui';
-import {Project} from "../types/projectTypes";
+import apiClient from '../../api/apiClient';
+import {ApiFormResponse, ApiViewPageResponse} from "../../types";
+import {PaginationInfo, useLoadingBar, useMessage} from 'naive-ui';
+import {Project} from "../../types/projectTypes";
 
-export const useProjectStore = defineStore('projectsStore', () => {
+export const useProjectStore = defineStore('projectStore', () => {
     const apiViewResponse = ref<ApiViewPageResponse<Project> | null>(null);
     const apiFormResponse = ref<ApiFormResponse | null>(null);
     const project = ref<Project | null>(null);
@@ -31,6 +31,22 @@ export const useProjectStore = defineStore('projectsStore', () => {
 
     const getEntries = computed(() => {
         return apiViewResponse.value?.viewData.entries || [];
+    });
+
+    const getPagination = computed<PaginationInfo>(() => {
+        const page = apiViewResponse.value?.viewData.pageNum ?? 1;
+        const pageSize = apiViewResponse.value?.viewData.pageSize ?? 10;
+        const itemCount = apiViewResponse.value?.viewData.count;
+        const pageCount = apiViewResponse.value?.viewData.maxPage ?? 1;
+
+        return {
+            startIndex: 0,
+            endIndex: 0,
+            page,
+            pageSize,
+            pageCount,
+            itemCount,
+        };
     });
 
     const fetchProjects = async (page = 1, pageSize = 10) => {
@@ -97,9 +113,10 @@ export const useProjectStore = defineStore('projectsStore', () => {
         apiViewResponse,
         apiFormResponse,
         getEntries,
+        getPagination,
+        getCurrent,
         fetchProjects,
         fetchProject,
-        saveProject,
-        getCurrent
+        saveProject
     };
 });

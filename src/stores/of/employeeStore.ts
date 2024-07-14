@@ -3,6 +3,7 @@ import {computed, ref} from 'vue';
 import apiClient, { setupApiClient } from '../../api/apiClient';
 import {PaginationInfo, useLoadingBar, useMessage} from "naive-ui";
 import {ApiFormResponse, ApiViewPageResponse} from "../../types";
+import {EmployeeSave, Organization} from "../../types/officeFrameTypes";
 
 export const useEmployeeStore = defineStore('employeeStore', () => {
     const apiViewResponse = ref<ApiViewPageResponse | null>(null);
@@ -16,16 +17,16 @@ export const useEmployeeStore = defineStore('employeeStore', () => {
 
     const getCurrent = computed(() => {
         const defaultData = {
+            id: '',
+            author: 0,
             regDate: '',
+            lastModifier: '',
             lastModifiedDate: '',
-            identifier: '',
-            bizID: '',
-            localizedName: {},
-            orgCategory: {
-                localizedName: ''
-            },
-            status: '',
-            rank: 0
+            name: '',
+            userId: '',
+            position: {},
+            rank: 0,
+            phone: ''
         };
         return apiFormResponse.value?.docData || defaultData;
     });
@@ -83,27 +84,22 @@ export const useEmployeeStore = defineStore('employeeStore', () => {
         }
     };
 
-    const save = async () => {
-        try {
-            /*loadingBar.start();
-            if (doc.value) {
-                const response = await apiClient.put<ApiResponse>(`/employees/${doc.value.docData.id}`, doc.value.docData);
-                if (response && response.payload) {
-                    doc.value = response.payload;
-                    msgPopup.success('Employee saved successfully');
-                } else {
-                    throw new Error('Invalid API response structure');
-                }
-            } else {
-                throw new Error('No employee data to save');
-            }*/
-        } catch (error: any) {
-            loadingBar.error();
-            msgPopup.error('Failed to save employee: ' + (error.message || 'Unknown error'));
-            throw error;
-        } finally {
-            loadingBar.finish();
+    const save = async (data: EmployeeSave, id?: string) => {
+        const response = await apiClient.post(`/employees/${id}`, data);
+        if (response && response.data) {
+            const {docData} = response.data;
+            updateCurrent(docData, {});
+            return docData;
+        } else {
+            throw new Error('Invalid API response structure');
         }
+    };
+
+    const updateCurrent = (data: Organization, actions: any = {}) => {
+        apiFormResponse.value = {
+            docData: data,
+            actions: actions
+        };
     };
 
     return {

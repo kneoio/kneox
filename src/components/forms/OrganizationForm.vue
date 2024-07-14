@@ -10,7 +10,7 @@
     </n-gi>
     <n-gi class="mt-2">
       <n-button-group>
-        <n-button type="primary" @click="handleSaveProject" size="large">Save</n-button>
+        <n-button type="primary" @click="handleSave" size="large">Save</n-button>
         <n-button type="default"  disabled @click="handleArchive" size="large">Archive</n-button>
       </n-button-group>
     </n-gi>
@@ -116,7 +116,7 @@ export default defineComponent({
     );
     const orgCategoryStore = useOrgCategoryStore();
 
-    const handleSaveProject = async () => {
+    const handleSave = async () => {
       loadingBar.start();
       try {
         const saveDTO: OrganizationSave = {
@@ -177,7 +177,7 @@ export default defineComponent({
       store,
       localFormData,
       localizedNames,
-      handleSaveProject,
+      handleSave,
       handleArchive,
       activeTab,
       goBack,

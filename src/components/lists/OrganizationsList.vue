@@ -121,6 +121,7 @@ export default defineComponent({
 
     const getRowProps = (row: Project) => {
       return {
+        style: 'cursor: pointer;',
         onClick: (e: MouseEvent) => {
           if (!(e.target as HTMLElement).closest('.n-checkbox')) {
             const routeTo = {name: 'OrganizationForm', params: {id: row.id}};

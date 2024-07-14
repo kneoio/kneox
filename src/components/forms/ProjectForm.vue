@@ -1,31 +1,20 @@
 <template>
-  <n-grid cols="1" x-gap="12" y-gap="12" class="project-details">
+  <n-grid cols="1" x-gap="12" y-gap="12" class="m-5">
+    <n-gi>
+      <n-page-header subtitle="Project" @back="goBack">
+        <template #title>{{ store.getCurrent.name }}</template>
+        <template #footer>
+          Registered: {{ store.getCurrent.regDate }}, Last Modified: {{ store.getCurrent.lastModifiedDate }}
+        </template>
+      </n-page-header>
+    </n-gi>
     <n-gi>
       <n-button-group>
-        <n-button type="default" @click="goBack" size="large">
-          <n-icon>
-            <ArrowBigLeft/>
-          </n-icon>
-          &nbsp;Back
-        </n-button>
         <n-button type="primary" @click="handleSaveProject" size="large">Save</n-button>
       </n-button-group>
     </n-gi>
     <n-gi>
-      <n-timeline horizontal>
-        <n-timeline-item color="#98FB98"> <!-- Pale Green -->
-          <span>Started</span>
-        </n-timeline-item>
-        <n-timeline-item color="#FFB6C1"> <!-- Pale Red -->
-          <span>Current point</span>
-        </n-timeline-item>
-        <n-timeline-item color="#ADD8E6"> <!-- Pale Blue -->
-          <span>Finished</span>
-        </n-timeline-item>
-      </n-timeline>
-    </n-gi>
-    <n-gi>
-      <n-h2>Project: {{ localData.name }}</n-h2>
+
     </n-gi>
     <n-gi>
       <n-tabs v-model:value="activeTab">
@@ -33,18 +22,18 @@
           <n-form label-placement="left" label-width="auto">
             <n-grid x-gap="12" y-gap="12">
               <n-gi span="24">
-                <n-form-item label="Name" class="short-field">
+                <n-form-item label="Name">
                   <n-input v-model:value="localData.name" style="width: 100%; max-width: 600px;"/>
                 </n-form-item>
               </n-gi>
               <n-gi span="24">
-                <n-form-item label="Status" class="short-field">
+                <n-form-item label="Status">
                   <n-select v-model:value="localData.status" :options="statusOptions"
                             style="width: 100%; max-width: 300px;"/>
                 </n-form-item>
               </n-gi>
               <n-gi span="24">
-                <n-form-item label="Finish Date" class="short-field">
+                <n-form-item label="Finish Date">
                   <n-date-picker
                       v-model:formatted-value="localData.finishDate"
                       value-format="yyyy-MM-dd"
@@ -53,21 +42,21 @@
                 </n-form-item>
               </n-gi>
               <n-gi span="24">
-                <n-form-item label="Manager" class="short-field">
-<!--                  <n-select v-model:value="localData.manager.name" :options="officeFrameStore.employeeOptions"
-                            style="width: 100%; max-width: 600px;"/>-->
+                <n-form-item label="Manager">
+                  <!--                  <n-select v-model:value="localData.manager.name" :options="officeFrameStore.employeeOptions"
+                                              style="width: 100%; max-width: 600px;"/>-->
                 </n-form-item>
               </n-gi>
               <n-gi span="24">
-                <n-form-item label="Coder" class="short-field">
-<!--                  <n-select v-model:value="projectStore.projectFields.coder.id" :options="officeFrameStore.employeeOptions"
-                            style="width: 100%; max-width: 600px;"/>-->
+                <n-form-item label="Coder">
+                  <!--                  <n-select v-model:value="projectStore.projectFields.coder.id" :options="officeFrameStore.employeeOptions"
+                                              style="width: 100%; max-width: 600px;"/>-->
                 </n-form-item>
               </n-gi>
               <n-gi span="24">
-                <n-form-item label="Tester" class="short-field">
-<!--                  <n-select v-model:value="projectStore.projectFields.tester.id" :options="employeeStore.employeeOptions"
-                            style="width: 100%; max-width: 600px;"/>-->
+                <n-form-item label="Tester">
+                  <!--                  <n-select v-model:value="projectStore.projectFields.tester.id" :options="employeeStore.employeeOptions"
+                                              style="width: 100%; max-width: 600px;"/>-->
                 </n-form-item>
               </n-gi>
             </n-grid>
@@ -101,8 +90,8 @@
 
 <script lang="ts">
 import {defineComponent, ref, onMounted, reactive} from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { useProjectStore } from '../../stores/projectStore';
+import {useRoute, useRouter} from 'vue-router';
+import {useProjectStore} from '../../stores/project/projectStore';
 import {
   NButton,
   NButtonGroup,
@@ -114,7 +103,7 @@ import {
   NGrid,
   NH2,
   NIcon,
-  NInput,
+  NInput, NPageHeader,
   NSelect,
   NSpace,
   NTabPane,
@@ -122,13 +111,14 @@ import {
   NTimeline,
   NTimelineItem
 } from 'naive-ui';
-import { ArrowBigLeft } from '@vicons/tabler';
+import {ArrowBigLeft} from '@vicons/tabler';
 import {useEmployeeStore} from "../../stores/of/employeeStore";
 import {Project} from "../../types/projectTypes";
 
 export default defineComponent({
   name: 'ProjectForm',
   components: {
+    NPageHeader,
     NButtonGroup,
     NForm,
     NFormItem,
@@ -151,7 +141,7 @@ export default defineComponent({
   setup() {
     const route = useRoute();
     const router = useRouter();
-    const projectStore = useProjectStore();
+    const store = useProjectStore();
     const employeeStore = useEmployeeStore();
     const activeTab = ref('properties');
     const localData = reactive<Project>({
@@ -163,24 +153,24 @@ export default defineComponent({
       manager: '',
       coder: '',
       tester: '',
-      rls:[]
+      rls: []
     });
 
     const statusOptions = [
-      { label: 'Draft', value: 'DRAFT' },
-      { label: 'Completed', value: 'COMPLETED' },
-      { label: 'Active', value: 'ACTIVE' },
-      { label: 'Merged', value: 'MERGED' },
-      { label: 'Paused', value: 'PAUSED' }
+      {label: 'Draft', value: 'DRAFT'},
+      {label: 'Completed', value: 'COMPLETED'},
+      {label: 'Active', value: 'ACTIVE'},
+      {label: 'Merged', value: 'MERGED'},
+      {label: 'Paused', value: 'PAUSED'}
     ];
 
     const accessLevelOptions = [
-      { label: 'Read', value: 'read' },
-      { label: 'Full', value: 'full' },
+      {label: 'Read', value: 'read'},
+      {label: 'Full', value: 'full'},
     ];
 
     const handleSaveProject = async () => {
-      await projectStore.saveProject();
+      await store.saveProject();
       router.push('/projects_and_tasks/projects');
     };
 
@@ -194,13 +184,13 @@ export default defineComponent({
 
     onMounted(async () => {
       const projectId = route.params.id as string;
-      await projectStore.fetchProject(projectId);
-      Object.assign(localData, projectStore.getCurrent);
+      await store.fetchProject(projectId);
+      Object.assign(localData, store.getCurrent);
 
     });
 
     return {
-      projectStore,
+      store,
       localData,
       employeeStore,
       statusOptions,
@@ -210,33 +200,10 @@ export default defineComponent({
       goBack,
       handleRemoveReader
     };
-  },
+  }
 });
 </script>
 
 <style scoped>
-.project-details {
-  padding: 20px;
-}
 
-.project-details h2 {
-  margin-bottom: 20px;
-}
-
-.n-button {
-  margin-bottom: 20px;
-}
-
-.form-section {
-  margin-bottom: 20px;
-}
-
-.short-field .n-form-item-content {
-  max-width: 300px;
-  margin-right: 120px;
-}
-
-.form-field {
-  margin-bottom: 16px;
-}
 </style>

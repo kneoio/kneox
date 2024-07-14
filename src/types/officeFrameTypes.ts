@@ -23,17 +23,33 @@ export interface OrganizationSave {
 }
 
 export interface Employee {
-    id: string;
+    id?: string;
     author: string;
     regDate: string;
     lastModifier: string;
     lastModifiedDate: string;
     name: string;
+    localizedName: Record<string, string>;
     userId: number;
-    position: {};
+    position: {
+        id: string;
+        identifier: string;
+        localizedName: string;
+    };
     rank: number;
     phone: string;
     selected?: boolean;
+}
+
+export interface EmployeeSave {
+    id?: string;
+    name: string;
+    localizedName: Record<string, string>;
+    position: {
+        id: string;
+    };
+    rank: number;
+    phone: string;
 }
 
 export interface OrgCategory {
@@ -41,3 +57,4 @@ export interface OrgCategory {
     identifier: string;
     localizedName: Record<string, string>;
 }
+

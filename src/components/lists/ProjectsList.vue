@@ -4,13 +4,13 @@
       <n-page-header>
         <template #title>Projects</template>
         <template #footer>
-          Total: {{ pagination.itemCount }}
+          Total: {{ store.getPagination.itemCount }}
         </template>
       </n-page-header>
     </n-gi>
     <n-gi span="24">
       <n-button-group>
-        <n-button @click="handleNewClick" class="mr-2" size="large">New</n-button>
+        <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
         <n-button @click="handleArchiveClick" size="large">Archive</n-button>
       </n-button-group>
     </n-gi>
@@ -18,10 +18,9 @@
       <n-data-table
           remote
           :columns="columns"
-          :data="projectsStore.getEntries"
-          :pagination="pagination"
+          :data="store.getEntries"
+          :pagination="store.getPagination"
           :bordered="false"
-          row-class-name="cursor-pointer"
           :row-props="getRowProps"
           @update:page="handlePageChange"
           @update:page-size="handlePageSizeChange"
@@ -31,7 +30,7 @@
 </template>
 
 <script lang="ts">
-import {defineComponent, h, onMounted, reactive, ref} from 'vue';
+import {defineComponent, h, onMounted, ref} from 'vue';
 import {
   NButton,
   NButtonGroup,
@@ -45,28 +44,19 @@ import {
   useMessage
 } from 'naive-ui';
 import {useRouter} from 'vue-router';
-import {useProjectStore} from '../../stores/projectStore';
+import {useProjectStore} from '../../stores/project/projectStore';
 import {Project} from "../../types/projectTypes";
-
 
 export default defineComponent({
   components: {NPageHeader, NH2, NDataTable, NPagination, NButtonGroup, NButton, NGi, NGrid},
   setup() {
     const router = useRouter();
     const msgPopup = useMessage();
-    const projectsStore = useProjectStore();
+    const store = useProjectStore();
     const isMobile = ref(window.innerWidth < 768);
-    const pagination = reactive({
-      page: 1,
-      pageSize: 10,
-      pageCount: 1,
-      itemCount: 0,
-      showSizePicker: true,
-      pageSizes: [10, 20, 50]
-    });
 
     onMounted(async () => {
-      await projectsStore.fetchProjects(1, 10);
+      await store.fetchProjects(1, 10);
       window.addEventListener('resize', () => {
         isMobile.value = window.innerWidth < 768;
       });
@@ -84,15 +74,19 @@ export default defineComponent({
         })
       },
       {title: 'Name', key: 'name'},
-      {title: 'Status', key: 'status'}
+      {title: 'Status', key: 'status'},
+      {title: 'Manager', key: 'manager.name'},
+      {title: 'Coder', key: 'coder.name'},
+      {title: 'Tester', key: 'tester.name'},
+      {title: 'Finish date', key: 'finishDate'}
     ];
 
     const handlePageChange = (page: number) => {
-      projectsStore.fetchProjects(page, pagination.pageSize);
+      store.fetchProjects(page, store.getPagination.pageSize);
     };
 
     const handlePageSizeChange = (pageSize: number) => {
-      projectsStore.fetchProjects(pagination.page, pageSize);
+      store.fetchProjects(store.getPagination.page, pageSize);
     };
 
     const handleNewClick = () => {
@@ -105,6 +99,7 @@ export default defineComponent({
 
     const getRowProps = (row: Project) => {
       return {
+        style: 'cursor: pointer;',
         onClick: () => {
           const routeTo = {name: 'ProjectForm', params: {id: row.id}};
           console.log('Navigating to:', routeTo);
@@ -116,9 +111,8 @@ export default defineComponent({
     };
 
     return {
-      projectsStore,
+      store,
       columns,
-      pagination,
       isMobile,
       handlePageChange,
       handlePageSizeChange,
@@ -131,7 +125,5 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.cursor-pointer:hover {
-  cursor: pointer;
-}
+
 </style>

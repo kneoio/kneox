@@ -118,6 +118,7 @@ export default defineComponent({
 
     const getRowProps = (row: Employee) => {
       return {
+        style: 'cursor: pointer;',
         onClick: (e: MouseEvent) => {
           if (!(e.target as HTMLElement).closest('.n-checkbox')) {
             const routeTo = { name: 'EmployeeForm', params: { id: row.id } };
@@ -151,7 +152,5 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.cursor-pointer:hover {
-  cursor: pointer;
-}
+
 </style>
