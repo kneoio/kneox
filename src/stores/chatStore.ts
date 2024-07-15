@@ -1,43 +1,44 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
-interface Prompt {
+interface Message {
     id: number;
+    sender: string;
     text: string;
 }
 
 interface Chat {
     id: number;
-    content: string;
-    prompts: Prompt[];
+    messages: Message[];
 }
 
 export const useChatStore = defineStore('chatStore', () => {
     const chats = ref<Chat[]>([]);
     const currentChat = ref<Chat>({
         id: Date.now(),
-        content: '',
-        prompts: [],
+        messages: [],
     });
 
-    const addPrompt = (prompt: string) => {
-        currentChat.value.prompts.push({ id: Date.now(), text: prompt });
-    };
-
-    const addContent = (content: string) => {
-        currentChat.value.content += content;
+    const addMessage = (sender: string, text: string) => {
+        currentChat.value.messages.push({
+            id: Date.now(),
+            sender,
+            text,
+        });
     };
 
     const saveChat = () => {
-        chats.value.push({ ...currentChat.value, id: Date.now() });
-        currentChat.value.content = '';
-        currentChat.value.prompts = [];
+        chats.value.push({ ...currentChat.value });
+        currentChat.value = {
+            id: Date.now(),
+            messages: [],
+        };
     };
 
     const dummyApiRequest = (prompt: string): Promise<string> => {
         return new Promise((resolve) => {
             setTimeout(() => {
-                resolve(`Bot: Response to "${prompt}"`);
+                resolve(`Response to "${prompt}"`);
             }, 1000);
         });
     };
@@ -45,8 +46,7 @@ export const useChatStore = defineStore('chatStore', () => {
     return {
         chats,
         currentChat,
-        addPrompt,
-        addContent,
+        addMessage,
         saveChat,
         dummyApiRequest,
     };

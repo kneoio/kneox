@@ -17,12 +17,13 @@
     <n-gi span="24" class="chat-section">
       <n-grid x-gap="12" y-gap="12" class="chat-grid">
         <n-gi span="24" class="chat-messages">
-          <div v-for="msg in chatStore.currentChat.prompts" :key="msg.id" class="message">
-            {{ msg.text }}
-          </div>
-          <div v-if="chatStore.currentChat.content" class="message">
-            {{ chatStore.currentChat.content }}
-          </div>
+          <n-scrollbar style="max-height: 300px;">
+            <n-space vertical>
+              <n-card v-for="msg in chatStore.currentChat.messages" :key="msg.id" size="small" :title="msg.sender">
+                {{ msg.text }}
+              </n-card>
+            </n-space>
+          </n-scrollbar>
         </n-gi>
         <n-gi span="24" class="chat-input">
           <n-input v-model="message" placeholder="Type your message" style="width: 100%; max-width: 600px;"/>
@@ -38,7 +39,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
+import { defineComponent, ref, onMounted, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   NButton,
@@ -48,12 +49,15 @@ import {
   NGrid,
   NGi,
   NH2,
+  NCard,
+  NSpace,
+  NScrollbar
 } from 'naive-ui';
 import { ArrowBigLeft } from '@vicons/tabler';
-import { useChatStore } from '../../stores/chatStore';  // adjust the import path as needed
+import { useChatStore } from '../../stores/chatStore';
 
 export default defineComponent({
-  name: 'KneoProjectForm',
+  name: 'ChatAssistant',
   components: {
     NButtonGroup,
     NInput,
@@ -62,6 +66,9 @@ export default defineComponent({
     NGrid,
     NGi,
     NH2,
+    NCard,
+    NSpace,
+    NScrollbar,
     ArrowBigLeft,
   },
   setup() {
@@ -71,21 +78,36 @@ export default defineComponent({
 
     const handleSaveChat = () => {
       chatStore.saveChat();
-      router.push('/ai/chat');
     };
 
     const goBack = () => {
-      router.push('/ai/chat');
+      router.push('/dashboard');
     };
 
     const sendMessage = async () => {
       if (message.value.trim()) {
-        chatStore.addPrompt(`You: ${message.value}`);
+        chatStore.addMessage('You', message.value);
         const response = await chatStore.dummyApiRequest(message.value);
-        chatStore.addPrompt(response);  // Add bot response as a new prompt
+        chatStore.addMessage('Assistant', response);
         message.value = '';
+
+        // Scroll to the bottom after adding new messages
+        await nextTick(() => {
+          const chatMessages = document.querySelector('.chat-messages');
+          if (chatMessages) {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+          }
+        });
       }
     };
+
+    onMounted(() => {
+      // Scroll to the bottom when component is mounted
+      const chatMessages = document.querySelector('.chat-messages');
+      if (chatMessages) {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+    });
 
     return {
       handleSaveChat,
@@ -114,7 +136,7 @@ export default defineComponent({
 .chat-grid {
   display: flex;
   flex-direction: column;
-  height: 300px;
+  height: 400px;
 }
 
 .chat-messages {
@@ -129,9 +151,5 @@ export default defineComponent({
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.message {
-  margin-bottom: 8px;
 }
 </style>

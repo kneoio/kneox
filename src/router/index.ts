@@ -7,7 +7,7 @@ import ProjectsAndTasks from '../components/outlines/ProjectAndTasks.vue';
 import ProjectsList from '../components/lists/ProjectsList.vue';
 import ProjectForm from '../components/forms/ProjectForm.vue';
 import AiAssistant from "../components/outlines/AiAssistant.vue";
-import ChatAssistant from "../components/forms/Chat.vue";
+import ChatAssistant from "../components/forms/ChatAssistant.vue";
 import References from "../components/outlines/References.vue";
 import OrganizationsList from "../components/lists/OrganizationsList.vue";
 import EmployeeList from "../components/lists/EmployeeList.vue";

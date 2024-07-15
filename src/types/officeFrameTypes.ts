@@ -58,3 +58,9 @@ export interface OrgCategory {
     localizedName: Record<string, string>;
 }
 
+export interface Position {
+    id?: string;
+    identifier: string;
+    localizedName: Record<string, string>;
+}
+

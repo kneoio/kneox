@@ -88,7 +88,7 @@ import {
 } from 'naive-ui';
 import {ArrowBigLeft} from '@vicons/tabler';
 import {Employee, EmployeeSave} from "../../types/officeFrameTypes";
-import {useOrgCategoryStore} from "../../stores/of/orgCategoryStore";
+import {usePositionStore} from "../../stores/of/positionStore";
 import {useEmployeeStore} from "../../stores/of/employeeStore";
 
 export default defineComponent({
@@ -103,6 +103,7 @@ export default defineComponent({
     const route = useRoute();
     const router = useRouter();
     const store = useEmployeeStore();
+    const positionStore = usePositionStore();
     const activeTab = ref('properties');
     const localFormData = reactive<Employee>({
       name: "", userId: 0,
@@ -121,12 +122,11 @@ export default defineComponent({
       rank: 0
     });
     const categoryOptions = computed(() =>
-        orgCategoryStore.getEntries.map(category => ({
-          label: category.identifier,
-          value: category.id
+        positionStore.getEntries.map(d => ({
+          label: d.identifier,
+          value: d.id
         }))
     );
-    const orgCategoryStore = useOrgCategoryStore();
 
     const handleSave = async () => {
       loadingBar.start();
@@ -181,7 +181,7 @@ export default defineComponent({
         localFormData.position = {id: '', identifier: '', localizedName: ''};
         localFormData.rank = 0;
       }
-      await orgCategoryStore.fetchOrgCategories();
+      await positionStore.fetchAll();
     });
 
     return {
