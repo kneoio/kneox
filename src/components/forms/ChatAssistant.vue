@@ -17,19 +17,20 @@
     <n-gi span="24" class="chat-section">
       <n-grid x-gap="12" y-gap="12" class="chat-grid">
         <n-gi span="24" class="chat-messages">
-          <n-scrollbar style="max-height: 300px;">
-            <n-space vertical>
-              <n-card v-for="msg in chatStore.currentChat.messages" :key="msg.id" size="small" :title="msg.sender">
-                {{ msg.text }}
-              </n-card>
-            </n-space>
-          </n-scrollbar>
+          <n-space vertical>
+            <n-card v-for="msg in chatStore.currentChat.messages" :key="msg.id" size="small" :title="msg.sender">
+              {{ msg.text }}
+            </n-card>
+            <n-card v-if="isTyping" size="small" title="Assistant">
+              <span class="typing-animation">{{ typingText }}</span>
+            </n-card>
+          </n-space>
         </n-gi>
         <n-gi span="24" class="chat-input">
-          <n-input v-model="message" placeholder="Type your message" style="width: 100%; max-width: 600px;"/>
-          <n-button @click="sendMessage" type="primary" size="large">
+          <n-input v-model:value="message" placeholder="Type your message" style="width: 100%; max-width: 600px;"/>
+          <n-button @click="sendMessage" type="primary" size="large" :disabled="isTyping">
             <n-icon>
-              <ArrowBigLeft />
+              <ArrowBigLeft/>
             </n-icon>
           </n-button>
         </n-gi>
@@ -39,8 +40,8 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, nextTick } from 'vue';
-import { useRouter } from 'vue-router';
+import {defineComponent, ref, onMounted, nextTick} from 'vue';
+import {useRouter} from 'vue-router';
 import {
   NButton,
   NButtonGroup,
@@ -53,8 +54,8 @@ import {
   NSpace,
   NScrollbar
 } from 'naive-ui';
-import { ArrowBigLeft } from '@vicons/tabler';
-import { useChatStore } from '../../stores/chatStore';
+import {ArrowBigLeft} from '@vicons/tabler';
+import {useChatStore} from '../../stores/chatStore';
 
 export default defineComponent({
   name: 'ChatAssistant',
@@ -75,6 +76,8 @@ export default defineComponent({
     const router = useRouter();
     const message = ref('');
     const chatStore = useChatStore();
+    const isTyping = ref(false);
+    const typingText = ref('');
 
     const handleSaveChat = () => {
       chatStore.saveChat();
@@ -84,11 +87,25 @@ export default defineComponent({
       router.push('/dashboard');
     };
 
+    const simulateTyping = async (text: string) => {
+      isTyping.value = true;
+      typingText.value = '';
+      for (let i = 0; i < text.length; i++) {
+        typingText.value += text[i];
+        await new Promise(resolve => setTimeout(resolve, 30)); // Adjust typing speed here
+      }
+      isTyping.value = false;
+    };
+
     const sendMessage = async () => {
-      if (message.value.trim()) {
-        chatStore.addMessage('You', message.value);
-        const response = await chatStore.dummyApiRequest(message.value);
+      if (message.value.trim() && !isTyping.value) {
+        const userMessage = message.value;
+        chatStore.addMessage('You', userMessage);
+
+        const response = await chatStore.sendChatRequest(userMessage);
+        await simulateTyping(response);
         chatStore.addMessage('Assistant', response);
+
         message.value = '';
 
         // Scroll to the bottom after adding new messages
@@ -115,6 +132,8 @@ export default defineComponent({
       sendMessage,
       message,
       chatStore,
+      isTyping,
+      typingText,
     };
   },
 });
@@ -151,5 +170,22 @@ export default defineComponent({
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.typing-animation::after {
+  content: '|';
+  animation: blink 0.7s infinite;
+}
+
+@keyframes blink {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 </style>

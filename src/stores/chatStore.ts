@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import apiClient from '../api/apiClient'; // Assuming you have this set up similarly to the organizationStore example
 
 interface Message {
     id: number;
@@ -35,12 +36,21 @@ export const useChatStore = defineStore('chatStore', () => {
         };
     };
 
-    const dummyApiRequest = (prompt: string): Promise<string> => {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve(`Response to "${prompt}"`);
-            }, 1000);
-        });
+    const sendChatRequest = async (prompt: string): Promise<string> => {
+        try {
+            const response = await apiClient.post('/ai/chat', {
+                promptText: prompt
+            });
+
+            if (response && response.data) {
+                return response.data; // Assuming the API returns the response text directly
+            } else {
+                throw new Error('Invalid API response structure');
+            }
+        } catch (error) {
+            console.error('Error sending chat request:', error);
+            throw error;
+        }
     };
 
     return {
@@ -48,6 +58,6 @@ export const useChatStore = defineStore('chatStore', () => {
         currentChat,
         addMessage,
         saveChat,
-        dummyApiRequest,
+        sendChatRequest,
     };
 });
