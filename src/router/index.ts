@@ -13,6 +13,7 @@ import OrganizationsList from "../components/lists/OrganizationsList.vue";
 import EmployeeList from "../components/lists/EmployeeList.vue";
 import EmployeeForm from "../components/forms/EmployeeForm.vue";
 import OrganizationForm from "../components/forms/OrganizationForm.vue";
+import PositionList from "../components/lists/PositionList.vue";
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -87,9 +88,31 @@ const routes: Array<RouteRecordRaw> = [
                     },
                     {
                         path: 'lookups',
-                        component: EmployeeList
+                        children: [
+                            {
+                                path: 'languages',
+                                component: PositionList
+                            },
+                            {
+                                path: 'labels',
+                                component: PositionList
+                            },
+                            {
+                                path: 'org_categories',
+                                component: PositionList
+                            },
+                            {
+                                path: 'positions',
+                                component: PositionList
+                            },
+                            {
+                                path: 'task_types',
+                                component: PositionList
+                            }
+                        ]
                     }
-                ]},
+                ]
+            },
             {
                 path: 'ai',
                 component: AiAssistant,

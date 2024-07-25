@@ -2,7 +2,7 @@
   <n-grid cols="24" x-gap="12" y-gap="12" class="p-4">
     <n-gi>
       <n-page-header>
-        <template #title>Employees</template>
+        <template #title>Positions</template>
         <template #footer>
           Total: {{ store.getPagination.itemCount }}
         </template>
@@ -11,7 +11,7 @@
     <n-gi span="24">
       <n-button-group>
         <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
-        <n-button @click="handleDelete" size="large" :disabled="!selectedRows.length">Delete</n-button>
+        <n-button @click="handleArchive" size="large" :disabled="!selectedRows.length">Archive</n-button>
       </n-button-group>
     </n-gi>
     <n-gi span="24">
@@ -32,7 +32,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref } from 'vue';
+import {computed, defineComponent, onMounted, ref} from 'vue';
 import {
   DataTableColumns,
   NButton,
@@ -46,22 +46,22 @@ import {
   NSpace,
   useMessage
 } from 'naive-ui';
-import { useRouter } from 'vue-router';
-import { useEmployeeStore } from "../../stores/of/employeeStore";
-import { Employee } from "../../types/officeFrameTypes";
+import {useRouter} from 'vue-router';
+import {usePositionStore} from "../../stores/of/positionStore";
+import {Position} from "../../types/officeFrameTypes";
 
 export default defineComponent({
-  components: { NPageHeader, NSpace, NH2, NDataTable, NPagination, NButtonGroup, NButton, NGi, NGrid },
+  components: {NPageHeader, NSpace, NH2, NDataTable, NPagination, NButtonGroup, NButton, NGi, NGrid},
   setup() {
     const router = useRouter();
     const msgPopup = useMessage();
-    const store = useEmployeeStore();
+    const store = usePositionStore();
     const isMobile = ref(window.innerWidth < 768);
     const selectedRows = ref<string[]>([]);
 
     async function preFetch() {
       try {
-        await store.fetchEmployees();
+        await store.fetchAll();
       } catch (error) {
         console.error('Failed to fetch initial data:', error);
       }
@@ -69,18 +69,18 @@ export default defineComponent({
 
     preFetch();
 
-    onMounted(() => {
+    onMounted(async () => {
       window.addEventListener('resize', () => {
         isMobile.value = window.innerWidth < 768;
       });
     });
 
-    const columns = computed<DataTableColumns<Employee>>(() => [
+    const columns = computed<DataTableColumns<Position>>(() => [
       {
         type: 'selection',
-        disabled: (row: Employee) => !row.id,
+        disabled: (row: Position) => !row.id,
         options: ['none', 'all'],
-        onSelect: (value: string | number | boolean, row: Employee) => {
+        onSelect: (value: string | number | boolean, row: Position) => {
           const checked = !!value;
           if (row.id) {
             const index = selectedRows.value.indexOf(row.id);
@@ -93,37 +93,37 @@ export default defineComponent({
           return false;
         }
       },
-      { title: 'Name', key: 'localizedName.ENG' },
-      { title: 'Identifier', key: 'identifier' },
-      { title: 'Position', key: 'position.localizedName.ENG' },
-      { title: 'Registered', key: 'regDate' }
+      {title: 'Name', key: 'localizedName["ENG"]'},
+      {title: 'Identifier', key: 'identifier'},
+      {title: 'Registered', key: 'regDate'},
+      {title: 'Author', key: 'author'}
     ]);
 
     const handlePageChange = (page: number) => {
-      store.fetchEmployees(page, store.getPagination.pageSize);
+      store.fetchAll(page, store.getPagination.pageSize);
     };
 
     const handlePageSizeChange = (pageSize: number) => {
-      store.fetchEmployees(1, pageSize);
+      store.fetchAll(1, pageSize);
     };
 
     const handleNewClick = () => {
-      router.push({ name: 'NewEmployeeForm' }).catch(err => {
+      router.push({name: 'NewPositionForm'}).catch(err => {
         console.error('Navigation error:', err);
       });
     };
 
-    const handleDelete = async () => {
-      msgPopup.info(`Mock delete action for employees: ${selectedRows.value.join(', ')}`);
+    const handleArchive = async () => {
+      msgPopup.info(`Mock archive action for rows: ${selectedRows.value.join(', ')}`);
       selectedRows.value = [];
     }
 
-    const getRowProps = (row: Employee) => {
+    const getRowProps = (row: Position) => {
       return {
         style: 'cursor: pointer;',
         onClick: (e: MouseEvent) => {
           if (!(e.target as HTMLElement).closest('.n-checkbox')) {
-            const routeTo = { name: 'EmployeeForm', params: { id: row.id } };
+            const routeTo = {name: 'PositionForm', params: {id: row.id}};
             router.push(routeTo).catch(err => {
               console.error('Navigation error:', err);
             });
@@ -142,7 +142,7 @@ export default defineComponent({
       rowKey: (row: any) => row.id,
       isMobile,
       handleNewClick,
-      handleDelete,
+      handleArchive,
       getRowProps,
       handlePageChange,
       handlePageSizeChange,
@@ -154,5 +154,7 @@ export default defineComponent({
 </script>
 
 <style scoped>
-
+.cursor-pointer:hover {
+  cursor: pointer;
+}
 </style>

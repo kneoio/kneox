@@ -35,7 +35,7 @@
                 <n-form-item label="Position">
                   <n-select
                       v-model:value="localFormData.position.id"
-                      :options="categoryOptions"
+                      :options="positionStore.getOptions"
                       style="width: 50%; max-width: 600px;"
                   />
                 </n-form-item>
@@ -121,12 +121,6 @@ export default defineComponent({
       phone: '',
       rank: 0
     });
-    const categoryOptions = computed(() =>
-        positionStore.getEntries.map(d => ({
-          label: d.identifier,
-          value: d.id
-        }))
-    );
 
     const handleSave = async () => {
       loadingBar.start();
@@ -186,12 +180,12 @@ export default defineComponent({
 
     return {
       store,
+      positionStore,
       localFormData,
       handleSave,
       handleArchive,
       activeTab,
       goBack,
-      categoryOptions
     };
   },
 });

@@ -44,7 +44,14 @@ export const usePositionStore = defineStore('positionStore', () => {
         };
     });
 
-    const fetchOrgCategories = async (page = 1, pageSize = 10) => {
+    const getOptions = computed(() => {
+        return getEntries.value.map(position => ({
+            label: position.localizedName.ENG,
+            value: position.id
+        }));
+    });
+
+    const fetchPositions = async (page = 1, pageSize = 10) => {
         const response = await apiClient.get(`/positions?page=${page}&size=${pageSize}`);
         if (response && response.data && response.data.payload) {
             apiViewResponse.value = response.data.payload;
@@ -53,7 +60,7 @@ export const usePositionStore = defineStore('positionStore', () => {
         }
     };
 
-    const fetchOrgCategory = async (id: string) => {
+    const fetchPosition = async (id: string) => {
         const response = await apiClient.get(`/positions/${id}`);
         if (response && response.data && response.data.payload) {
             apiFormResponse.value = response.data.payload;
@@ -84,8 +91,9 @@ export const usePositionStore = defineStore('positionStore', () => {
         apiViewResponse,
         apiFormResponse,
         setupApiClient,
-        fetchAll: fetchOrgCategories,
-        fetch: fetchOrgCategory,
+        getOptions,
+        fetchAll: fetchPositions,
+        fetch: fetchPosition,
         save,
         getEntries,
         getPagination,
