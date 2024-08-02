@@ -32,6 +32,24 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
+                <n-form-item label="Organization">
+                  <n-select
+                      v-model:value="localFormData.organization.id"
+                      :options="organizationStore.getOptionsOfPrimaries"
+                      style="width: 50%; max-width: 600px;"
+                  />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="Department">
+                  <n-select
+                      v-model:value="localFormData.department.id"
+                      :options="departmentStore.getOptions"
+                      style="width: 50%; max-width: 600px;"
+                  />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
                 <n-form-item label="Position">
                   <n-select
                       v-model:value="localFormData.position.id"
@@ -64,7 +82,7 @@
 </template>
 
 <script lang="ts">
-import {computed, defineComponent, onMounted, reactive, ref} from 'vue';
+import {defineComponent, onMounted, reactive, ref} from 'vue';
 import {useRoute, useRouter} from 'vue-router';
 import {
   NButton,
@@ -90,6 +108,8 @@ import {ArrowBigLeft} from '@vicons/tabler';
 import {Employee, EmployeeSave} from "../../types/officeFrameTypes";
 import {usePositionStore} from "../../stores/of/positionStore";
 import {useEmployeeStore} from "../../stores/of/employeeStore";
+import {useOrganizationStore} from "../../stores/of/organizationStore";
+import {useDepartmentStore} from "../../stores/of/departmentStore";
 
 export default defineComponent({
   name: 'EmployeeForm',
@@ -103,6 +123,8 @@ export default defineComponent({
     const route = useRoute();
     const router = useRouter();
     const store = useEmployeeStore();
+    const organizationStore = useOrganizationStore();
+    const departmentStore = useDepartmentStore();
     const positionStore = usePositionStore();
     const activeTab = ref('properties');
     const localFormData = reactive<Employee>({
@@ -113,6 +135,16 @@ export default defineComponent({
       lastModifier: '',
       lastModifiedDate: '',
       localizedName: {},
+      organization: {
+        id: '',
+        identifier: '',
+        localizedName: '',
+      },
+      department: {
+        id: '',
+        identifier: '',
+        localizedName: '',
+      },
       position: {
         id: '',
         identifier: '',
@@ -159,7 +191,11 @@ export default defineComponent({
       if (id) {
         loadingBar.start();
         try {
-          await store.fetchEmployee(id);
+          await Promise.all([
+            store.fetchEmployee(id),
+            organizationStore.fetchPrimaryOrganizations(),
+            departmentStore.fetchAll()
+          ]);
           Object.assign(localFormData, store.getCurrent);
           loadingBar.finish();
         } catch (error) {
@@ -181,6 +217,8 @@ export default defineComponent({
     return {
       store,
       positionStore,
+      organizationStore,
+      departmentStore,
       localFormData,
       handleSave,
       handleArchive,

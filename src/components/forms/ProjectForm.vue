@@ -43,13 +43,13 @@
               </n-gi>
               <n-gi span="24">
                 <n-form-item label="Manager">
-                  <!--                  <n-select v-model:value="localData.manager.name" :options="officeFrameStore.employeeOptions"
+                  <!--                  <n-select v-model:value="localData.manager.name" :options="officeFrameStore.ts.employeeOptions"
                                               style="width: 100%; max-width: 600px;"/>-->
                 </n-form-item>
               </n-gi>
               <n-gi span="24">
                 <n-form-item label="Coder">
-                  <!--                  <n-select v-model:value="projectStore.projectFields.coder.id" :options="officeFrameStore.employeeOptions"
+                  <!--                  <n-select v-model:value="projectStore.projectFields.coder.id" :options="officeFrameStore.ts.employeeOptions"
                                               style="width: 100%; max-width: 600px;"/>-->
                 </n-form-item>
               </n-gi>

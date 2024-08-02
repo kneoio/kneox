@@ -1,7 +1,9 @@
+// Organization related types
 export interface Organization {
     id?: string;
     identifier: string;
     bizID: string;
+    primary: boolean;
     localizedName: Record<string, string>;
     orgCategory: {
         id: string;
@@ -22,6 +24,7 @@ export interface OrganizationSave {
     rank: number;
 }
 
+// Employee related types
 export interface Employee {
     id?: string;
     author: string;
@@ -31,6 +34,16 @@ export interface Employee {
     name: string;
     localizedName: Record<string, string>;
     userId: number;
+    organization: {
+        id: string;
+        identifier: string;
+        localizedName: string;
+    };
+    department: {
+        id: string;
+        identifier: string;
+        localizedName: string;
+    };
     position: {
         id: string;
         identifier: string;
@@ -52,15 +65,16 @@ export interface EmployeeSave {
     phone: string;
 }
 
+// Organization Category related type
 export interface OrgCategory {
     id?: string;
     identifier: string;
     localizedName: Record<string, string>;
 }
 
+// Position related type
 export interface Position {
     id?: string;
     identifier: string;
     localizedName: Record<string, string>;
 }
-

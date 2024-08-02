@@ -62,7 +62,7 @@ export default defineComponent({
 
     async function preFetch() {
       try {
-        await store.fetchOrganizations();
+        await store.fetchAll();
       } catch (error) {
         console.error('Failed to fetch initial data:', error);
       }
@@ -101,11 +101,11 @@ export default defineComponent({
     ]);
 
     const handlePageChange = (page: number) => {
-      store.fetchOrganizations(page, store.getPagination.pageSize);
+      store.fetchAll(page, store.getPagination.pageSize);
     };
 
     const handlePageSizeChange = (pageSize: number) => {
-      store.fetchOrganizations(1, pageSize);
+      store.fetchAll(1, pageSize);
     };
 
     const handleNewClick = () => {

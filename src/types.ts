@@ -1,3 +1,4 @@
+// API Response related types
 export interface ApiFormResponse {
     docData: Record<string, any>;
     actions: any[];
@@ -16,12 +17,20 @@ export interface ViewData<T = any> {
     entries: T[];
 }
 
+// Actions and other types
+export interface Actions {
+    actions: {
+        caption: string;
+        hint: string;
+        actions: string[];
+    }
+}
+
 export interface KneoGeneric {
     id: string;
     author: string | undefined;
     lastModifier: string | undefined;
 }
-
 
 export interface Rl {
     reader: string;

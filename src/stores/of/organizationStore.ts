@@ -7,6 +7,7 @@ import {PaginationInfo} from "naive-ui";
 
 export const useOrganizationStore = defineStore('organizationStore', () => {
     const apiViewResponse = ref<ApiViewPageResponse<Organization> | null>(null);
+    const apiViewResponsePrimary = ref<ApiViewPageResponse<Organization> | null>(null);
     const apiFormResponse = ref<ApiFormResponse | null>(null);
 
     const getEntries = computed(() => {
@@ -45,7 +46,25 @@ export const useOrganizationStore = defineStore('organizationStore', () => {
         };
     });
 
-    const fetchOrganizations = async (page = 1, pageSize = 10) => {
+    const getOptions = computed(() => {
+        return getEntries.value.map(doc => ({
+            label: doc.localizedName.ENG,
+            value: doc.id
+        }));
+    });
+
+    const getOptionsOfPrimaries = computed(() => {
+        // Accessing `viewData` to get `entries`
+        const entries = apiViewResponsePrimary.value?.viewData.entries || [];
+        console.log('Entries from apiViewResponsePrimary:', entries); // Check the actual entries
+        return Array.isArray(entries) ? entries.map(doc => ({
+            label: doc.localizedName.ENG,
+            value: doc.id
+        })) : [];
+    });
+
+
+    const fetchOrgs = async (page = 1, pageSize = 10) => {
         const response = await apiClient.get(`/orgs?page=${page}&size=${pageSize}`);
         if (response && response.data && response.data.payload) {
             apiViewResponse.value = response.data.payload;
@@ -53,6 +72,21 @@ export const useOrganizationStore = defineStore('organizationStore', () => {
             throw new Error('Invalid API response structure');
         }
     };
+
+    const fetchPrimaryOrgs = async () => {
+        try {
+            const response = await apiClient.get('/orgs/only/primary');
+            if (response && response.data && response.data.payload) {
+                apiViewResponsePrimary.value = response.data.payload as ApiViewPageResponse<Organization>;
+                console.log('Fetched Primary Organizations:', apiViewResponsePrimary.value); // Log updated structure
+            } else {
+                throw new Error('Invalid API response structure');
+            }
+        } catch (error) {
+            console.error('Fetch Primary Orgs Error:', error);
+        }
+    };
+
 
     const fetchOrg = async (id: string) => {
         const response = await apiClient.get(`/orgs/${id}`);
@@ -85,8 +119,11 @@ export const useOrganizationStore = defineStore('organizationStore', () => {
         apiViewResponse,
         apiFormResponse,
         setupApiClient,
-        fetchOrganizations,
+        fetchAll: fetchOrgs,
         fetch: fetchOrg,
+        fetchPrimaryOrganizations: fetchPrimaryOrgs,
+        getOptions,
+        getOptionsOfPrimaries,
         save,
         getEntries,
         getPagination,

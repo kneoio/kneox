@@ -5,7 +5,7 @@ import {PaginationInfo, useLoadingBar, useMessage} from "naive-ui";
 import {ApiFormResponse, ApiViewPageResponse} from "../../types";
 import {EmployeeSave, Organization} from "../../types/officeFrameTypes";
 
-export const useEmployeeStore = defineStore('employeeStore', () => {
+export const useDepartmentStore = defineStore('departmentStore', () => {
     const apiViewResponse = ref<ApiViewPageResponse | null>(null);
     const apiFormResponse = ref<ApiFormResponse | null>(null);
     const msgPopup = useMessage();
@@ -47,11 +47,19 @@ export const useEmployeeStore = defineStore('employeeStore', () => {
         };
     });
 
-    const fetchEmployees = async (page = 1, pageSize = 10) => {
+    const getOptions = computed(() => {
+        return getEntries.value.map(position => ({
+            label: position.localizedName.ENG,
+            value: position.id
+        }));
+    });
+
+    const fetchDepartments = async (page = 1, pageSize = 10) => {
         try {
             loadingBar.start();
-            const response = await apiClient.get(`/employees?page=${page}&size=${pageSize}`);
+            const response = await apiClient.get(`/departments?page=${page}&size=${pageSize}`);
             if (response && response.data) {
+                console.log(response.data);
                 apiViewResponse.value = response.data.payload;
             } else {
                 throw new Error('Invalid API response structure');
@@ -65,10 +73,10 @@ export const useEmployeeStore = defineStore('employeeStore', () => {
         }
     };
 
-    const fetchEmployee = async (employeeId: string) => {
+    const fetchDepartment = async (employeeId: string) => {
         try {
             loadingBar.start();
-            const response = await apiClient.get(`/employees/${employeeId}`);
+            const response = await apiClient.get(`/departments/${employeeId}`);
             if (response && response.data) {
                 apiFormResponse.value = response.data.payload;
             } else {
@@ -84,7 +92,7 @@ export const useEmployeeStore = defineStore('employeeStore', () => {
     };
 
     const save = async (data: EmployeeSave, id?: string) => {
-        const response = await apiClient.post(`/employees/${id}`, data);
+        const response = await apiClient.post(`/departments/${id}`, data);
         if (response && response.data) {
             const {docData} = response.data;
             updateCurrent(docData, {});
@@ -106,8 +114,9 @@ export const useEmployeeStore = defineStore('employeeStore', () => {
         getCurrent,
         getPagination,
         apiViewResponse,
-        fetchEmployees,
-        fetchEmployee,
+        fetchAll: fetchDepartments,
+        fetch: fetchDepartment,
+        getOptions,
         save,
         setupApiClient,
     };
