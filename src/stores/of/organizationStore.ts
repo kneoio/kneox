@@ -56,7 +56,7 @@ export const useOrganizationStore = defineStore('organizationStore', () => {
     const getOptionsOfPrimaries = computed(() => {
         // Accessing `viewData` to get `entries`
         const entries = apiViewResponsePrimary.value?.viewData.entries || [];
-        console.log('Entries from apiViewResponsePrimary:', entries); // Check the actual entries
+        console.log('Entries from apiViewResponsePrimary:', entries);
         return Array.isArray(entries) ? entries.map(doc => ({
             label: doc.localizedName.ENG,
             value: doc.id
@@ -78,7 +78,7 @@ export const useOrganizationStore = defineStore('organizationStore', () => {
             const response = await apiClient.get('/orgs/only/primary');
             if (response && response.data && response.data.payload) {
                 apiViewResponsePrimary.value = response.data.payload as ApiViewPageResponse<Organization>;
-                console.log('Fetched Primary Organizations:', apiViewResponsePrimary.value); // Log updated structure
+                console.log('Fetched Primary Organizations:', apiViewResponsePrimary.value);
             } else {
                 throw new Error('Invalid API response structure');
             }

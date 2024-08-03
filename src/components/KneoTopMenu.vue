@@ -39,12 +39,12 @@ export default defineComponent({
   setup() {
     const router = useRouter();
     const route = useRoute();
-    const selectedKey = ref(route.path === '/projects' ? '/projects_and_tasks/projects' : route.path);
+    const selectedKey = ref(route.path === '/projects' ? '/projects-and-tasks/projects' : route.path);
 
     const menuOptions = [
       {
         label: 'Projects and tasks',
-        key: '/projects_and_tasks/projects',
+        key: '/projects-and-tasks/projects',
         icon: renderIcon(ProjectOutlined),
       },
       {
@@ -69,8 +69,8 @@ export default defineComponent({
     onMounted(() => {
       window.addEventListener('resize', updateIsMobile);
       if (route.path === '/projects') {
-        router.push('/projects_and_tasks/projects');
-        selectedKey.value = '/projects_and_tasks/projects';
+        router.push('/projects-and-tasks/projects');
+        selectedKey.value = '/projects-and-tasks/projects';
       } else {
         selectedKey.value = route.path;
       }

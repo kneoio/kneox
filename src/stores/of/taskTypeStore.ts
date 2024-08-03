@@ -2,12 +2,11 @@ import {defineStore} from 'pinia';
 import {computed, ref} from 'vue';
 import apiClient, {setupApiClient} from '../../api/apiClient';
 import {ApiFormResponse, ApiViewPageResponse} from "../../types";
-import {OrgCategory, OrgCategorySave} from "../../types/officeFrameTypes";
+import {TaskType, TaskTypeSave} from "../../types/officeFrameTypes";
 
-export const useOrgCategoryStore = defineStore('orgCategoryStore', () => {
-    const apiViewResponse = ref<ApiViewPageResponse<OrgCategory> | null>(null);
+export const useTaskTypeStore = defineStore('taskTypeStore', () => {
+    const apiViewResponse = ref<ApiViewPageResponse<TaskType> | null>(null);
     const apiFormResponse = ref<ApiFormResponse | null>(null);
-
     const getEntries = computed(() => {
         return apiViewResponse.value?.viewData.entries || [];
     });
@@ -44,8 +43,8 @@ export const useOrgCategoryStore = defineStore('orgCategoryStore', () => {
         };
     });
 
-    const fetchOrgCategories = async (page = 1, pageSize = 10) => {
-        const response = await apiClient.get(`/orgcategories?page=${page}&size=${pageSize}`);
+    const fetchTaskTypes = async (page = 1, pageSize = 10) => {
+        const response = await apiClient.get(`/tasktypes?page=${page}&size=${pageSize}`);
         if (response && response.data && response.data.payload) {
             apiViewResponse.value = response.data.payload;
         } else {
@@ -53,8 +52,8 @@ export const useOrgCategoryStore = defineStore('orgCategoryStore', () => {
         }
     };
 
-    const fetchOrgCategory = async (id: string) => {
-        const response = await apiClient.get(`/orgcategories/${id}`);
+    const fetchTaskType = async (id: string) => {
+        const response = await apiClient.get(`/tasktypes/${id}`);
         if (response && response.data && response.data.payload) {
             apiFormResponse.value = response.data.payload;
         } else {
@@ -62,15 +61,15 @@ export const useOrgCategoryStore = defineStore('orgCategoryStore', () => {
         }
     };
 
-    const updateCurrent = (data: OrgCategory, actions: any = {}) => {
+    const updateCurrent = (data: TaskType, actions: any = {}) => {
         apiFormResponse.value = {
             docData: data,
             actions: actions
         };
     };
 
-    const save = async (data: OrgCategorySave, id?: string) => {
-        const response = await apiClient.post(`/orgcategories/${id}`, data);
+    const save = async (data: TaskTypeSave, id?: string) => {
+        const response = await apiClient.post(`/tasktypes/${id}`, data);
         if (response && response.data) {
             const { docData } = response.data;
             updateCurrent(docData, {});
@@ -84,8 +83,8 @@ export const useOrgCategoryStore = defineStore('orgCategoryStore', () => {
         apiViewResponse,
         apiFormResponse,
         setupApiClient,
-        fetchAll: fetchOrgCategories,
-        fetch: fetchOrgCategory,
+        fetchAll: fetchTaskTypes,
+        fetch: fetchTaskType,
         save,
         getEntries,
         getPagination,

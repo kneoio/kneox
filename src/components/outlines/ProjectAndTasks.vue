@@ -47,18 +47,18 @@ export default defineComponent({
     });
 
     const projectMenuOptions = [
-      { label: 'Projects', key: '/projects_and_tasks/projects', icon: () => h('IconWrapper', { icon: ProjectOutlined }) },
+      { label: 'Projects', key: '/projects-and-tasks/projects', icon: () => h('IconWrapper', { icon: ProjectOutlined }) },
       {
         label: 'Tasks', key: '/tasks', icon: () => h('IconWrapper', { icon: ProjectOutlined }),
         children: [
           {
             label: 'By Author',
-            key: '/projects_and_tasks/projects/by-author',
+            key: '/projects-and-tasks/tasks/by-author',
             icon: () => h('IconWrapper', { icon: UserOutlined })
           },
           {
             label: 'By project',
-            key: '/projects_and_tasks/projects/by-project',
+            key: '/projects-and-tasks/tasks/by-project',
             icon: () => h('IconWrapper', { icon: ProjectOutlined })
           }
         ]
@@ -66,8 +66,8 @@ export default defineComponent({
     ];
 
     const selectedMenuKey = computed(() => {
-      if (route.path.startsWith('/projects_and_tasks/projects')) {
-        return '/projects_and_tasks/projects';
+      if (route.path.startsWith('/projects-and-tasks/projects')) {
+        return '/projects-and-tasks/projects';
       }
       return '';
     });

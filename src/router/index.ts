@@ -14,6 +14,17 @@ import EmployeeList from "../components/lists/EmployeeList.vue";
 import EmployeeForm from "../components/forms/EmployeeForm.vue";
 import OrganizationForm from "../components/forms/OrganizationForm.vue";
 import PositionList from "../components/lists/PositionList.vue";
+import LanguageList from "../components/lists/LanguageList.vue";
+import LanguageForm from "../components/forms/LanguageForm.vue";
+import LabelList from "../components/lists/LabelList.vue";
+import LabelForm from "../components/forms/LabelForm.vue";
+import OrgCategoryList from "../components/lists/OrgCategoryList.vue";
+import OrgCategoryForm from "../components/forms/OrgCategoryForm.vue";
+import TaskTypeList from "../components/lists/TaskTypeList.vue";
+import TaskTypeForm from "../components/forms/TaskTypeForm.vue";
+import PositionForm from "../components/forms/PositionForm.vue";
+import TaskList from "../components/lists/TaskList.vue";
+import TaskForm from "../components/forms/TaskForm.vue";
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -31,7 +42,7 @@ const routes: Array<RouteRecordRaw> = [
                 meta: {requiresAuth: true}
             },
             {
-                path: 'projects_and_tasks',
+                path: 'projects-and-tasks',
                 component: ProjectsAndTasks,
                 children: [
                     {
@@ -45,16 +56,25 @@ const routes: Array<RouteRecordRaw> = [
                     },
                     {
                         path: 'tasks',
-                        component: ProjectsList,
                         children: [
                             {
                                 path: 'by-author',
-                                component: ProjectsList
+                                component: TaskList
+                            },
+                            {
+                                path: 'by-author/:id',
+                                name: 'TaskForm',
+                                component: TaskForm
                             },
                             {
                                 path: 'by-project',
-                                component: ProjectsList
-                            }
+                                component: TaskList
+                            },
+                            {
+                                path: 'by-project/:id',
+                                name: 'TaskForm',
+                                component: TaskForm
+                            },
                         ]
                     }
                 ]
@@ -91,23 +111,48 @@ const routes: Array<RouteRecordRaw> = [
                         children: [
                             {
                                 path: 'languages',
-                                component: PositionList
+                                component: LanguageList
+                            },
+                            {
+                                path: 'languages/:id',
+                                name: 'LanguageForm',
+                                component: LanguageForm
                             },
                             {
                                 path: 'labels',
-                                component: PositionList
+                                component: LabelList
                             },
                             {
-                                path: 'org_categories',
-                                component: PositionList
+                                path: 'labels/:id',
+                                name: 'LabelForm',
+                                component: LabelForm
+                            },
+                            {
+                                path: 'org-category',
+                                component: OrgCategoryList
+                            },
+                            {
+                                path: 'org-category/:id',
+                                name: 'OrgCategoryForm',
+                                component: OrgCategoryForm
                             },
                             {
                                 path: 'positions',
                                 component: PositionList
                             },
                             {
-                                path: 'task_types',
-                                component: PositionList
+                                path: 'positions/:id',
+                                name: 'PositionForm',
+                                component: PositionForm
+                            },
+                            {
+                                path: 'task-types',
+                                component: TaskTypeList
+                            },
+                            {
+                                path: 'task-types/:id',
+                                name: 'TaskTypeForm',
+                                component: TaskTypeForm
                             }
                         ]
                     }
@@ -125,7 +170,7 @@ const routes: Array<RouteRecordRaw> = [
             },
             {
                 path: 'projects',
-                redirect: '/projects_and_tasks/projects'
+                redirect: '/projects-and-tasks/projects'
             },
             {
                 path: 'references',

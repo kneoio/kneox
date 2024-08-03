@@ -1,9 +1,9 @@
 import { defineStore } from 'pinia';
-import {computed, ref} from 'vue';
+import { computed, ref } from 'vue';
 import apiClient, { setupApiClient } from '../../api/apiClient';
-import {PaginationInfo, useLoadingBar, useMessage} from "naive-ui";
-import {ApiFormResponse, ApiViewPageResponse} from "../../types";
-import {EmployeeSave, Organization} from "../../types/officeFrameTypes";
+import { PaginationInfo, useLoadingBar, useMessage } from "naive-ui";
+import { ApiFormResponse, ApiViewPageResponse } from "../../types";
+import { EmployeeSave, Organization } from "../../types/officeFrameTypes";
 
 export const useEmployeeStore = defineStore('employeeStore', () => {
     const apiViewResponse = ref<ApiViewPageResponse | null>(null);
@@ -14,6 +14,8 @@ export const useEmployeeStore = defineStore('employeeStore', () => {
     const getEntries = computed(() => {
         return apiViewResponse.value?.viewData.entries || [];
     });
+
+
 
     const getCurrent = computed(() => {
         const defaultData = {
@@ -83,10 +85,10 @@ export const useEmployeeStore = defineStore('employeeStore', () => {
         }
     };
 
-    const save = async (data: EmployeeSave, id?: string) => {
+   const save = async (data: EmployeeSave, id?: string) => {
         const response = await apiClient.post(`/employees/${id}`, data);
         if (response && response.data) {
-            const {docData} = response.data;
+            const { docData } = response.data;
             updateCurrent(docData, {});
             return docData;
         } else {

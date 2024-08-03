@@ -1,8 +1,8 @@
 <template>
   <n-grid cols="1" x-gap="12" y-gap="12" class="m-5">
     <n-gi>
-      <n-page-header subtitle="Projects" @back="goBack">
-        <template #title>{{ store.getCurrent.name }}</template>
+      <n-page-header subtitle="Position" @back="goBack">
+        <template #title>{{ store.getCurrent.identifier }}</template>
         <template #footer>
           Registered: {{ store.getCurrent.regDate }}, Last Modified: {{ store.getCurrent.lastModifiedDate }}
         </template>
@@ -26,45 +26,11 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
-                <n-form-item label="Organization">
-                  <n-select
-                      v-model:value="localFormData.org.id"
-                      :options="organizationStore.getOptionsOfPrimaries"
-                      style="width: 50%; max-width: 600px;"
-                      @update:value="handleOrganizationChange"
-                  />
-                </n-form-item>
-              </n-gi>
-              <n-gi>
-                <n-form-item label="Department">
-                  <n-select
-                      v-model:value="localFormData.dep.id"
-                      :options="departmentStore.getDepOptionsOf"
-                      style="width: 50%; max-width: 600px;"
-                  />
-                </n-form-item>
-              </n-gi>
-              <n-gi>
-                <n-form-item label="Position">
-                  <n-select
-                      v-model:value="localFormData.position.id"
-                      :options="positionStore.getOptions"
-                      style="width: 50%; max-width: 600px;"
-                  />
-                </n-form-item>
-              </n-gi>
-              <n-gi>
-                <n-form-item label="Rank">
-                  <n-input-number v-model:value="localFormData.rank"
-                                  style="width: 10%"/>
-                </n-form-item>
-              </n-gi>
-              <n-gi>
                 <n-form-item label="Identifier">
-                  <n-input v-model:value="localFormData.name"
-                           style="width: 30%; max-width: 600px;"/>
+
                 </n-form-item>
               </n-gi>
+
             </n-grid>
           </n-form>
         </n-tab-pane>
@@ -106,14 +72,11 @@ import {
   useMessage
 } from 'naive-ui';
 import {ArrowBigLeft} from '@vicons/tabler';
-import {Employee, EmployeeSave} from "../../types/officeFrameTypes";
+import {Position, PositionSave} from "../../types/officeFrameTypes";
 import {usePositionStore} from "../../stores/of/positionStore";
-import {useEmployeeStore} from "../../stores/of/employeeStore";
-import {useOrganizationStore} from "../../stores/of/organizationStore";
-import {useDepartmentStore} from "../../stores/of/departmentStore";
 
 export default defineComponent({
-  name: 'EmployeeForm',
+  name: 'LanguageForm',
   components: {
     NPageHeader, NButtonGroup, NForm, NDatePicker, NFormItem, NInput, NInputNumber, NButton, NIcon,
     NTabs, NTabPane, NGrid, NGi, NH2, NSpace, ArrowBigLeft, NSelect
@@ -123,59 +86,29 @@ export default defineComponent({
     const message = useMessage();
     const route = useRoute();
     const router = useRouter();
-    const store = useEmployeeStore();
-    const organizationStore = useOrganizationStore();
-    const departmentStore = useDepartmentStore();
-    const positionStore = usePositionStore();
+    const store = usePositionStore();
     const activeTab = ref('properties');
     const departmentOptions = ref([]);
-    const localFormData = reactive<Employee>({
-      name: "", userId: 0,
+    const localFormData = reactive<Position>({
       id: '',
       author: '',
       regDate: '',
       lastModifier: '',
       lastModifiedDate: '',
+      identifier: '',
       localizedName: {},
-      org: {
-        id: '',
-        identifier: '',
-        localizedName: '',
-      },
-      dep: {
-        id: '',
-        identifier: '',
-        localizedName: '',
-      },
-      position: {
-        id: '',
-        identifier: '',
-        localizedName: '',
-      },
-      phone: '',
-      rank: 0
     });
 
     const handleSave = async () => {
       loadingBar.start();
       try {
-        const saveDTO: EmployeeSave = {
-          phone: localFormData.phone,
+        const saveDTO: PositionSave = {
+          identifier: localFormData.identifier,
           localizedName: localFormData.localizedName,
-          org: {
-            id: localFormData.org.id
-          },
-          dep: {
-            id: localFormData.dep.id
-          },
-          position: {
-            id: localFormData.position.id
-          },
-          rank: localFormData.rank
         };
         await store.save(saveDTO, localFormData.id);
-        message.success('Organization saved successfully');
-        router.push('/references/employees');
+        message.success('Saved successfully');
+        router.push('/references/lookups/positions');
       } catch (error) {
         console.error('Failed to save: ', error);
         message.error('Failed to save');
@@ -190,17 +123,10 @@ export default defineComponent({
     }
 
     const goBack = () => {
-      router.push('/references/employees');
+      router.push('/references/lookups/languages');
     };
 
-    const handleOrganizationChange = async (organizationId: string) => {
-      try {
-        await departmentStore.fetchDepartmentsOf(organizationId);
-      } catch (error) {
-        console.error('Failed to fetch departments:', error);
-        message.error('Failed to fetch departments');
-      }
-    };
+
 
     onMounted(async () => {
       const id = route.params.id as string;
@@ -208,14 +134,9 @@ export default defineComponent({
         loadingBar.start();
         try {
           await Promise.all([
-            store.fetchEmployee(id),
-            organizationStore.fetchPrimaryOrganizations(),
-            positionStore.fetchAll()
+            store.fetch(id),
           ]);
           Object.assign(localFormData, store.getCurrent);
-          if (localFormData.org.id) {
-            await handleOrganizationChange(localFormData.org.id);
-          }
           loadingBar.finish();
         } catch (error) {
           console.error('Failed to fetch employee:', error);
@@ -227,15 +148,11 @@ export default defineComponent({
 
     return {
       store,
-      positionStore,
-      organizationStore,
-      departmentStore,
       localFormData,
       handleSave,
       handleArchive,
       activeTab,
       goBack,
-      handleOrganizationChange,
       departmentOptions,
     };
   },

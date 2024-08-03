@@ -48,6 +48,7 @@ keycloak.init({
     }
 }).catch((error: any) => {
     console.error('Failed to initialize Keycloak - redirecting to login', error);
+    keycloak.login();
    // handleSessionInvalid();
 });
 

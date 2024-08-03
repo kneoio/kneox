@@ -1,12 +1,39 @@
 import {defineStore} from 'pinia';
-import {computed, ref} from 'vue';
+import {ref, computed} from 'vue';
 import apiClient, {setupApiClient} from '../../api/apiClient';
 import {ApiFormResponse, ApiViewPageResponse} from "../../types";
-import {OrgCategory, OrgCategorySave} from "../../types/officeFrameTypes";
+import {Language, LanguageSave} from "../../types/officeFrameTypes";
 
-export const useOrgCategoryStore = defineStore('orgCategoryStore', () => {
-    const apiViewResponse = ref<ApiViewPageResponse<OrgCategory> | null>(null);
+export const useLanguageStore = defineStore('languageStore', () => {
+    const apiViewResponse = ref<ApiViewPageResponse<Language> | null>(null);
     const apiFormResponse = ref<ApiFormResponse | null>(null);
+
+    const mostUsedLanguages = [
+        { label: 'Mandarin', value: 'CHN' },
+        { label: 'Spanish', value: 'SPA' },
+        { label: 'English', value: 'ENG' },
+        { label: 'Hindi', value: 'HIN' },
+        { label: 'Bengali', value: 'BEN' },
+        { label: 'Portuguese', value: 'POR' },
+        { label: 'Russian', value: 'RUS' },
+        { label: 'Japanese', value: 'JPN' },
+        { label: 'Western Punjabi', value: 'PUN' },
+        { label: 'Marathi', value: 'MAR' },
+        { label: 'Telugu', value: 'TEL' },
+        { label: 'Wu Chinese', value: 'WUU' },
+        { label: 'Turkish', value: 'TUR' },
+        { label: 'Korean', value: 'KOR' },
+        { label: 'French', value: 'FRE' },
+        { label: 'German', value: 'GER' },
+        { label: 'Vietnamese', value: 'VIE' },
+        { label: 'Tamil', value: 'TAM' },
+        { label: 'Yue Chinese', value: 'YUE' },
+        { label: 'Urdu', value: 'URD' },
+        { label: 'Javanese', value: 'JAV' },
+        { label: 'Italian', value: 'ITA' },
+        { label: 'Egyptian Arabic', value: 'ARA' },
+        { label: 'Gujarati', value: 'GUJ' }
+    ];
 
     const getEntries = computed(() => {
         return apiViewResponse.value?.viewData.entries || [];
@@ -44,8 +71,15 @@ export const useOrgCategoryStore = defineStore('orgCategoryStore', () => {
         };
     });
 
-    const fetchOrgCategories = async (page = 1, pageSize = 10) => {
-        const response = await apiClient.get(`/orgcategories?page=${page}&size=${pageSize}`);
+    const getOptions = computed(() => {
+        return mostUsedLanguages.map(lang => ({
+            label: lang.value,
+            value: lang.value
+        }));
+    });
+
+    const fetchPositions = async (page = 1, pageSize = 10) => {
+        const response = await apiClient.get(`/languages?page=${page}&size=${pageSize}`);
         if (response && response.data && response.data.payload) {
             apiViewResponse.value = response.data.payload;
         } else {
@@ -53,8 +87,8 @@ export const useOrgCategoryStore = defineStore('orgCategoryStore', () => {
         }
     };
 
-    const fetchOrgCategory = async (id: string) => {
-        const response = await apiClient.get(`/orgcategories/${id}`);
+    const fetchPosition = async (id: string) => {
+        const response = await apiClient.get(`/languages/${id}`);
         if (response && response.data && response.data.payload) {
             apiFormResponse.value = response.data.payload;
         } else {
@@ -62,15 +96,15 @@ export const useOrgCategoryStore = defineStore('orgCategoryStore', () => {
         }
     };
 
-    const updateCurrent = (data: OrgCategory, actions: any = {}) => {
+    const updateCurrent = (data: Language, actions: any = {}) => {
         apiFormResponse.value = {
             docData: data,
             actions: actions
         };
     };
 
-    const save = async (data: OrgCategorySave, id?: string) => {
-        const response = await apiClient.post(`/orgcategories/${id}`, data);
+    const save = async (data: LanguageSave, id?: string) => {
+        const response = await apiClient.post(`/languages/${id}`, data);
         if (response && response.data) {
             const { docData } = response.data;
             updateCurrent(docData, {});
@@ -84,8 +118,9 @@ export const useOrgCategoryStore = defineStore('orgCategoryStore', () => {
         apiViewResponse,
         apiFormResponse,
         setupApiClient,
-        fetchAll: fetchOrgCategories,
-        fetch: fetchOrgCategory,
+        getOptions,
+        fetchAll: fetchPositions,
+        fetch: fetchPosition,
         save,
         getEntries,
         getPagination,

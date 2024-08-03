@@ -1,8 +1,8 @@
 import {defineStore} from 'pinia';
-import {ref, computed} from 'vue';
+import {computed, ref} from 'vue';
 import apiClient, {setupApiClient} from '../../api/apiClient';
 import {ApiFormResponse, ApiViewPageResponse} from "../../types";
-import {Organization, OrganizationSave, Position} from "../../types/officeFrameTypes";
+import {Organization, Position, PositionSave} from "../../types/officeFrameTypes";
 
 export const usePositionStore = defineStore('positionStore', () => {
     const apiViewResponse = ref<ApiViewPageResponse<Position> | null>(null);
@@ -76,7 +76,7 @@ export const usePositionStore = defineStore('positionStore', () => {
         };
     };
 
-    const save = async (data: OrganizationSave, id?: string) => {
+    const save = async (data: PositionSave, id?: string) => {
         const response = await apiClient.post(`/positions/${id}`, data);
         if (response && response.data) {
             const { docData } = response.data;

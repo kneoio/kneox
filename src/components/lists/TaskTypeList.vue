@@ -1,20 +1,20 @@
 <template>
-  <n-grid cols="24" x-gap="12" y-gap="12" class="p-4">
+  <n-grid cols="6" x-gap="12" y-gap="12" class="p-4">
     <n-gi>
       <n-page-header>
-        <template #title>Employees</template>
+        <template #title>Task type</template>
         <template #footer>
           Total: {{ store.getPagination.itemCount }}
         </template>
       </n-page-header>
     </n-gi>
-    <n-gi span="24">
+    <n-gi span="6">
       <n-button-group>
         <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
-        <n-button @click="handleDelete" size="large" :disabled="!selectedRows.length">Delete</n-button>
+        <n-button @click="handleArchive" size="large" :disabled="!selectedRows.length">Archive</n-button>
       </n-button-group>
     </n-gi>
-    <n-gi span="24">
+    <n-gi span="6">
       <n-data-table
           remote
           :columns="columns"
@@ -23,7 +23,6 @@
           :pagination="store.getPagination"
           :bordered="false"
           :row-props="getRowProps"
-          :loading="loading"
           @update:page="handlePageChange"
           @update:page-size="handlePageSizeChange"
           @update:checked-row-keys="handleCheckedRowKeysChange"
@@ -33,7 +32,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref } from 'vue';
+import {computed, defineComponent, onMounted, ref} from 'vue';
 import {
   DataTableColumns,
   NButton,
@@ -47,45 +46,41 @@ import {
   NSpace,
   useMessage
 } from 'naive-ui';
-import { useRouter } from 'vue-router';
-import { useEmployeeStore } from "../../stores/of/employeeStore";
-import { Employee } from "../../types/officeFrameTypes";
+import {useRouter} from 'vue-router';
+import {TaskType} from "../../types/officeFrameTypes";
+import {useTaskTypeStore} from "../../stores/of/taskTypeStore";
 
 export default defineComponent({
-  components: { NPageHeader, NSpace, NH2, NDataTable, NPagination, NButtonGroup, NButton, NGi, NGrid },
+  components: {NPageHeader, NSpace, NH2, NDataTable, NPagination, NButtonGroup, NButton, NGi, NGrid},
   setup() {
     const router = useRouter();
     const msgPopup = useMessage();
-    const store = useEmployeeStore();
+    const store = useTaskTypeStore();
     const isMobile = ref(window.innerWidth < 768);
     const selectedRows = ref<string[]>([]);
-    const loading = ref(false);
 
     async function preFetch() {
       try {
-        loading.value = true;
-        await store.fetchEmployees();
+        await store.fetchAll();
       } catch (error) {
         console.error('Failed to fetch initial data:', error);
-      } finally {
-        loading.value = false;
       }
     }
 
     preFetch();
 
-    onMounted(() => {
+    onMounted(async () => {
       window.addEventListener('resize', () => {
         isMobile.value = window.innerWidth < 768;
       });
     });
 
-    const columns = computed<DataTableColumns<Employee>>(() => [
+    const columns = computed<DataTableColumns<TaskType>>(() => [
       {
         type: 'selection',
-        disabled: (row: Employee) => !row.id,
+        disabled: (row: TaskType) => !row.id,
         options: ['none', 'all'],
-        onSelect: (value: string | number | boolean, row: Employee) => {
+        onSelect: (value: string | number | boolean, row: TaskType) => {
           const checked = !!value;
           if (row.id) {
             const index = selectedRows.value.indexOf(row.id);
@@ -98,47 +93,36 @@ export default defineComponent({
           return false;
         }
       },
-      { title: 'Name', key: 'localizedName.ENG' },
-      { title: 'Identifier', key: 'identifier' },
-      { title: 'Position', key: 'position.localizedName.ENG' },
-      { title: 'Registered', key: 'regDate' }
+      {title: 'Name', key: 'localizedName["ENG"]'},
+      {title: 'Registered', key: 'regDate'},
+      {title: 'Author', key: 'author'}
     ]);
 
-    const handlePageChange = async (page: number) => {
-      try {
-        loading.value = true;
-        await store.fetchEmployees(page, store.getPagination.pageSize);
-      } finally {
-        loading.value = false;
-      }
+    const handlePageChange = (page: number) => {
+      store.fetchAll(page, store.getPagination.pageSize);
     };
 
-    const handlePageSizeChange = async (pageSize: number) => {
-      try {
-        loading.value = true;
-        await store.fetchEmployees(1, pageSize);
-      } finally {
-        loading.value = false;
-      }
+    const handlePageSizeChange = (pageSize: number) => {
+      store.fetchAll(1, pageSize);
     };
 
     const handleNewClick = () => {
-      router.push({ name: 'NewEmployeeForm' }).catch(err => {
+      router.push({name: 'NewTaskTypeForm'}).catch(err => {
         console.error('Navigation error:', err);
       });
     };
 
-    const handleDelete = async () => {
-      msgPopup.info(`Mock delete action for employees: ${selectedRows.value.join(', ')}`);
+    const handleArchive = async () => {
+      msgPopup.info(`Mock archive action for rows: ${selectedRows.value.join(', ')}`);
       selectedRows.value = [];
     }
 
-    const getRowProps = (row: Employee) => {
+    const getRowProps = (row: TaskType) => {
       return {
         style: 'cursor: pointer;',
         onClick: (e: MouseEvent) => {
           if (!(e.target as HTMLElement).closest('.n-checkbox')) {
-            const routeTo = { name: 'EmployeeForm', params: { id: row.id } };
+            const routeTo = {name: 'TaskTypeForm', params: {id: row.id}};
             router.push(routeTo).catch(err => {
               console.error('Navigation error:', err);
             });
@@ -157,18 +141,19 @@ export default defineComponent({
       rowKey: (row: any) => row.id,
       isMobile,
       handleNewClick,
-      handleDelete,
+      handleArchive,
       getRowProps,
       handlePageChange,
       handlePageSizeChange,
       handleCheckedRowKeysChange,
       selectedRows,
-      loading
     };
   }
 });
 </script>
 
 <style scoped>
-
+.cursor-pointer:hover {
+  cursor: pointer;
+}
 </style>

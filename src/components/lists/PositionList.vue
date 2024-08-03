@@ -1,5 +1,5 @@
 <template>
-  <n-grid cols="24" x-gap="12" y-gap="12" class="p-4">
+  <n-grid cols="6" x-gap="12" y-gap="12" class="p-4">
     <n-gi>
       <n-page-header>
         <template #title>Positions</template>
@@ -8,13 +8,13 @@
         </template>
       </n-page-header>
     </n-gi>
-    <n-gi span="24">
+    <n-gi span="6">
       <n-button-group>
         <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
         <n-button @click="handleArchive" size="large" :disabled="!selectedRows.length">Archive</n-button>
       </n-button-group>
     </n-gi>
-    <n-gi span="24">
+    <n-gi span="6">
       <n-data-table
           remote
           :columns="columns"

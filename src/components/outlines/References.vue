@@ -67,7 +67,7 @@ export default defineComponent({
           },
           {
             label: 'Organization categories',
-            key: '/references/lookups/org_cat',
+            key: '/references/lookups/org-category',
             icon: () => h('IconWrapper', { icon: ProjectOutlined })
           },
           {
@@ -77,7 +77,7 @@ export default defineComponent({
           },
           {
             label: 'Task types',
-            key: '/references/lookups/task_types',
+            key: '/references/lookups/task-types',
             icon: () => h('IconWrapper', { icon: ProjectOutlined })
           }
         ]

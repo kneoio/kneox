@@ -1,33 +1,24 @@
 <template>
-  <n-grid cols="6" x-gap="12" y-gap="12" class="m-5">
-    <n-gi span="6">
-      <n-page-header subtitle="Organization" @back="goBack">
+  <n-grid cols="1" x-gap="12" y-gap="12" class="m-5">
+    <n-gi>
+      <n-page-header subtitle="Label" @back="goBack">
         <template #title>{{ store.getCurrent.identifier }}</template>
         <template #footer>
           Registered: {{ store.getCurrent.regDate }}, Last Modified: {{ store.getCurrent.lastModifiedDate }}
         </template>
       </n-page-header>
     </n-gi>
-    <n-gi class="mt-2" span="6">
+    <n-gi class="mt-2">
       <n-button-group>
         <n-button type="primary" @click="handleSave" size="large">Save</n-button>
-        <n-button type="default"  disabled @click="handleArchive" size="large">Archive</n-button>
+        <n-button type="default" disabled @click="handleArchive" size="large">Archive</n-button>
       </n-button-group>
     </n-gi>
-    <n-gi span="6">
+    <n-gi>
       <n-tabs v-model:value="activeTab">
         <n-tab-pane name="properties" tab="Properties">
           <n-form label-placement="left" label-width="auto">
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
-              <n-gi>
-                <n-form-item label="Category">
-                  <n-select
-                      v-model:value="localFormData.orgCategory.id"
-                      :options="categoryOptions"
-                      style="width: 50%; max-width: 600px;"
-                  />
-                </n-form-item>
-              </n-gi>
               <n-gi v-for="(_, key) in localFormData.localizedName" :key="key">
                 <n-form-item :label="`Name (${key})`">
                   <n-input v-model:value="localFormData.localizedName[key]"
@@ -35,9 +26,10 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
-                <n-form-item label="Business ID">
-                  <n-input v-model:value="localFormData.bizID"
-                           style="width: 50%; max-width: 600px;"/>
+                <n-form-item label="Color">
+                  <n-color-picker v-model:value="localFormData.color"
+                                  :modes="['hex']"
+                                  style="width: 10%;" />
                 </n-form-item>
               </n-gi>
               <n-gi>
@@ -47,9 +39,17 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
-                <n-form-item label="Rank">
-                  <n-input-number v-model:value="localFormData.rank"
-                                  style="width: 10%"/>
+                <n-form-item label="Category">
+                  <n-select
+                      v-model:value="localFormData.category"
+                      :options="store.categories"
+                      style="width: 30%; max-width: 600px;"
+                  />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="Is hidden">
+                  <n-checkbox :checked="localFormData.hidden"/>
                 </n-form-item>
               </n-gi>
             </n-grid>
@@ -70,70 +70,78 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, computed, reactive } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import {defineComponent, onMounted, reactive, ref} from 'vue';
+import {useRoute, useRouter} from 'vue-router';
 import {
-  NPageHeader, NButton, NButtonGroup, NForm, NFormItem, NInput, NInputNumber, NIcon, NTabs, NTabPane, NGrid,
-  NGi, NH2, NDatePicker, NSpace, useLoadingBar, useMessage, NSelect
+  NButton,
+  NButtonGroup,
+  NDatePicker,
+  NForm,
+  NFormItem,
+  NGi,
+  NGrid,
+  NH2,
+  NIcon,
+  NInput,
+  NInputNumber,
+  NPageHeader,
+  NSelect,
+  NSpace,
+  NTabPane,
+  NTabs,
+  NCheckbox,
+  NColorPicker,
+  useLoadingBar,
+  useMessage
 } from 'naive-ui';
-import { ArrowBigLeft } from '@vicons/tabler';
-import { useOrganizationStore } from "../../stores/of/organizationStore";
-import {Organization, OrganizationSave} from "../../types/officeFrameTypes";
-import {useOrgCategoryStore} from "../../stores/of/orgCategoryStore";
+import {ArrowBigLeft} from '@vicons/tabler';
+import {Label, LabelSave} from "../../types/officeFrameTypes";
+import {useLabelStore} from "../../stores/of/labelStore";
 
 export default defineComponent({
-  name: 'OrganizationForm',
+  name: 'LabelForm',
   components: {
     NPageHeader, NButtonGroup, NForm, NDatePicker, NFormItem, NInput, NInputNumber, NButton, NIcon,
-    NTabs, NTabPane, NGrid, NGi, NH2, NSpace, ArrowBigLeft, NSelect
+    NTabs, NTabPane, NGrid, NGi, NH2, NSpace, ArrowBigLeft, NSelect, NCheckbox, NColorPicker
   },
   setup() {
     const loadingBar = useLoadingBar();
     const message = useMessage();
     const route = useRoute();
     const router = useRouter();
-    const store = useOrganizationStore();
+    const store = useLabelStore();
     const activeTab = ref('properties');
-    const localizedNames = computed(() => store.getCurrent.localizedName || {});
-    const localFormData = reactive<Organization>({
+    const localFormData = reactive<Label>({
       id: '',
-      identifier: '',
-      bizID: '',
+      author: '',
+      regDate: '',
+      lastModifier: '',
+      lastModifiedDate: '',
       localizedName: {},
-      orgCategory: {
-        id: '',
-        identifier: '',
-        localizedName: ''
-      },
-      status: '',
-      rank: 0,
+      color: '',
+      category: '',
+      identifier: '',
+      parent: '',
+      hidden: false
     });
-    const categoryOptions = computed(() =>
-        orgCategoryStore.getEntries.map(category => ({
-          label: category.identifier,
-          value: category.id
-        }))
-    );
-    const orgCategoryStore = useOrgCategoryStore();
 
     const handleSave = async () => {
       loadingBar.start();
       try {
-        const saveDTO: OrganizationSave = {
+        const saveDTO: LabelSave = {
           identifier: localFormData.identifier,
-          bizID: localFormData.bizID,
+          color: localFormData.color,
+          parent: localFormData.parent,
+          category: localFormData.category,
+          hidden: localFormData.hidden,
           localizedName: localFormData.localizedName,
-          orgCategory: {
-            id: localFormData.orgCategory.id
-          },
-          rank: localFormData.rank
         };
         await store.save(saveDTO, localFormData.id);
-        message.success('Organization saved successfully');
-        router.push('/references/organizations');
+        message.success('Saved successfully');
+        router.push('/references/lookups/labels');
       } catch (error) {
-        console.error('Failed to save organization:', error);
-        message.error('Failed to save organization');
+        console.error('Failed to save: ', error);
+        message.error('Failed to save');
         loadingBar.error();
       } finally {
         loadingBar.finish();
@@ -145,48 +153,39 @@ export default defineComponent({
     }
 
     const goBack = () => {
-      router.push('/references/organizations');
+      router.push('/references/lookups/labels');
     };
+
 
     onMounted(async () => {
       const id = route.params.id as string;
       if (id) {
         loadingBar.start();
         try {
-          await store.fetch(id);
+          await Promise.all([
+            store.fetch(id),
+          ]);
           Object.assign(localFormData, store.getCurrent);
           loadingBar.finish();
         } catch (error) {
-          console.error('Failed to fetch organization:', error);
-          message.error('Failed to fetch organization details');
+          console.error('Failed to fetch label:', error);
+          message.error('Failed to fetch');
           loadingBar.error();
         }
-      } else {
-        localFormData.id = '';
-        localFormData.identifier = '';
-        localFormData.bizID = '';
-        localFormData.localizedName = {};
-        localFormData.orgCategory = { id: '', identifier: '', localizedName: '' };
-        localFormData.status = '';
-        localFormData.rank = 0;
       }
-      await orgCategoryStore.fetchOrgCategories();
     });
 
     return {
       store,
       localFormData,
-      localizedNames,
       handleSave,
       handleArchive,
       activeTab,
       goBack,
-      categoryOptions
     };
   },
 });
 </script>
 
 <style scoped>
-
 </style>

@@ -1,8 +1,8 @@
 <template>
   <n-grid cols="1" x-gap="12" y-gap="12" class="m-5">
     <n-gi>
-      <n-page-header subtitle="Projects" @back="goBack">
-        <template #title>{{ store.getCurrent.name }}</template>
+      <n-page-header subtitle="Language" @back="goBack">
+        <template #title>{{ store.getCurrent.code }}</template>
         <template #footer>
           Registered: {{ store.getCurrent.regDate }}, Last Modified: {{ store.getCurrent.lastModifiedDate }}
         </template>
@@ -26,43 +26,20 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
-                <n-form-item label="Organization">
+                <n-form-item label="Code">
                   <n-select
-                      v-model:value="localFormData.org.id"
-                      :options="organizationStore.getOptionsOfPrimaries"
-                      style="width: 50%; max-width: 600px;"
+                      v-model:value="localFormData.code"
+                      :options="store.getOptions"
+                      style="width: 10%; max-width: 600px;"
                       @update:value="handleOrganizationChange"
                   />
                 </n-form-item>
               </n-gi>
-              <n-gi>
-                <n-form-item label="Department">
-                  <n-select
-                      v-model:value="localFormData.dep.id"
-                      :options="departmentStore.getDepOptionsOf"
-                      style="width: 50%; max-width: 600px;"
-                  />
-                </n-form-item>
-              </n-gi>
-              <n-gi>
-                <n-form-item label="Position">
-                  <n-select
-                      v-model:value="localFormData.position.id"
-                      :options="positionStore.getOptions"
-                      style="width: 50%; max-width: 600px;"
-                  />
-                </n-form-item>
-              </n-gi>
+
               <n-gi>
                 <n-form-item label="Rank">
-                  <n-input-number v-model:value="localFormData.rank"
+                  <n-input-number v-model:value="localFormData.position"
                                   style="width: 10%"/>
-                </n-form-item>
-              </n-gi>
-              <n-gi>
-                <n-form-item label="Identifier">
-                  <n-input v-model:value="localFormData.name"
-                           style="width: 30%; max-width: 600px;"/>
                 </n-form-item>
               </n-gi>
             </n-grid>
@@ -106,14 +83,14 @@ import {
   useMessage
 } from 'naive-ui';
 import {ArrowBigLeft} from '@vicons/tabler';
-import {Employee, EmployeeSave} from "../../types/officeFrameTypes";
+import {Language, LanguageSave} from "../../types/officeFrameTypes";
 import {usePositionStore} from "../../stores/of/positionStore";
-import {useEmployeeStore} from "../../stores/of/employeeStore";
 import {useOrganizationStore} from "../../stores/of/organizationStore";
 import {useDepartmentStore} from "../../stores/of/departmentStore";
+import {useLanguageStore} from "../../stores/of/languageStore";
 
 export default defineComponent({
-  name: 'EmployeeForm',
+  name: 'LanguageForm',
   components: {
     NPageHeader, NButtonGroup, NForm, NDatePicker, NFormItem, NInput, NInputNumber, NButton, NIcon,
     NTabs, NTabPane, NGrid, NGi, NH2, NSpace, ArrowBigLeft, NSelect
@@ -123,55 +100,29 @@ export default defineComponent({
     const message = useMessage();
     const route = useRoute();
     const router = useRouter();
-    const store = useEmployeeStore();
+    const store = useLanguageStore();
     const organizationStore = useOrganizationStore();
     const departmentStore = useDepartmentStore();
     const positionStore = usePositionStore();
     const activeTab = ref('properties');
     const departmentOptions = ref([]);
-    const localFormData = reactive<Employee>({
-      name: "", userId: 0,
+    const localFormData = reactive<Language>({
       id: '',
       author: '',
       regDate: '',
       lastModifier: '',
       lastModifiedDate: '',
       localizedName: {},
-      org: {
-        id: '',
-        identifier: '',
-        localizedName: '',
-      },
-      dep: {
-        id: '',
-        identifier: '',
-        localizedName: '',
-      },
-      position: {
-        id: '',
-        identifier: '',
-        localizedName: '',
-      },
-      phone: '',
-      rank: 0
+      code: '',
+      position: 0,
     });
 
     const handleSave = async () => {
       loadingBar.start();
       try {
-        const saveDTO: EmployeeSave = {
-          phone: localFormData.phone,
+        const saveDTO: LanguageSave = {
+          code: localFormData.code,
           localizedName: localFormData.localizedName,
-          org: {
-            id: localFormData.org.id
-          },
-          dep: {
-            id: localFormData.dep.id
-          },
-          position: {
-            id: localFormData.position.id
-          },
-          rank: localFormData.rank
         };
         await store.save(saveDTO, localFormData.id);
         message.success('Organization saved successfully');
@@ -190,7 +141,7 @@ export default defineComponent({
     }
 
     const goBack = () => {
-      router.push('/references/employees');
+      router.push('/references/lookups/languages');
     };
 
     const handleOrganizationChange = async (organizationId: string) => {
@@ -208,14 +159,11 @@ export default defineComponent({
         loadingBar.start();
         try {
           await Promise.all([
-            store.fetchEmployee(id),
+            store.fetch(id),
             organizationStore.fetchPrimaryOrganizations(),
             positionStore.fetchAll()
           ]);
           Object.assign(localFormData, store.getCurrent);
-          if (localFormData.org.id) {
-            await handleOrganizationChange(localFormData.org.id);
-          }
           loadingBar.finish();
         } catch (error) {
           console.error('Failed to fetch employee:', error);

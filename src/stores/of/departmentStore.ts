@@ -8,11 +8,19 @@ import {EmployeeSave, Organization} from "../../types/officeFrameTypes";
 export const useDepartmentStore = defineStore('departmentStore', () => {
     const apiViewResponse = ref<ApiViewPageResponse | null>(null);
     const apiFormResponse = ref<ApiFormResponse | null>(null);
+    const organizationViewResponse = ref<ApiViewPageResponse | null>(null);
     const msgPopup = useMessage();
     const loadingBar = useLoadingBar();
 
     const getEntries = computed(() => {
         return apiViewResponse.value?.viewData.entries || [];
+    });
+
+    const getDepOptionsOf = computed(() => {
+        return organizationViewResponse.value?.viewData.entries.map(position => ({
+            label: position.localizedName.ENG,
+            value: position.id
+        }));
     });
 
     const getCurrent = computed(() => {
@@ -59,7 +67,6 @@ export const useDepartmentStore = defineStore('departmentStore', () => {
             loadingBar.start();
             const response = await apiClient.get(`/departments?page=${page}&size=${pageSize}`);
             if (response && response.data) {
-                console.log(response.data);
                 apiViewResponse.value = response.data.payload;
             } else {
                 throw new Error('Invalid API response structure');
@@ -67,6 +74,25 @@ export const useDepartmentStore = defineStore('departmentStore', () => {
         } catch (error: any) {
             loadingBar.error();
             msgPopup.error('Failed to fetch employees: ' + (error.message || 'Unknown error'));
+            throw error;
+        } finally {
+            loadingBar.finish();
+        }
+    };
+
+    const fetchDepartmentsOf = async (organizationId: string) => {
+        try {
+            loadingBar.start();
+            const response = await apiClient.get(`/departments/only/member_of/${organizationId}`);
+            console.log(response.data);
+            if (response && response.data) {
+                organizationViewResponse.value = response.data.payload;
+            } else {
+                throw new Error('Invalid API response structure');
+            }
+        } catch (error: any) {
+            loadingBar.error();
+            msgPopup.error('Failed to fetch departments: ' + (error.message || 'Unknown error'));
             throw error;
         } finally {
             loadingBar.finish();
@@ -114,9 +140,12 @@ export const useDepartmentStore = defineStore('departmentStore', () => {
         getCurrent,
         getPagination,
         apiViewResponse,
+        organizationViewResponse,
         fetchAll: fetchDepartments,
         fetch: fetchDepartment,
+        fetchDepartmentsOf,
         getOptions,
+        getDepOptionsOf,
         save,
         setupApiClient,
     };

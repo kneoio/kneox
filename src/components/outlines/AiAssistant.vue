@@ -50,8 +50,8 @@ export default defineComponent({
     ];
 
     const selectedMenuKey = computed(() => {
-      if (route.path.startsWith('/projects_and_tasks/projects')) {
-        return '/projects_and_tasks/projects';
+      if (route.path.startsWith('/projects-and-tasks/projects')) {
+        return '/projects-and-tasks/projects';
       }
       return '';
     });

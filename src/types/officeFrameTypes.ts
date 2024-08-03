@@ -1,4 +1,3 @@
-// Organization related types
 export interface Organization {
     id?: string;
     identifier: string;
@@ -24,7 +23,6 @@ export interface OrganizationSave {
     rank: number;
 }
 
-// Employee related types
 export interface Employee {
     id?: string;
     author: string;
@@ -34,12 +32,12 @@ export interface Employee {
     name: string;
     localizedName: Record<string, string>;
     userId: number;
-    organization: {
+    org: {
         id: string;
         identifier: string;
         localizedName: string;
     };
-    department: {
+    dep: {
         id: string;
         identifier: string;
         localizedName: string;
@@ -56,8 +54,13 @@ export interface Employee {
 
 export interface EmployeeSave {
     id?: string;
-    name: string;
     localizedName: Record<string, string>;
+    org: {
+        id: string;
+    };
+    dep: {
+        id: string;
+    };
     position: {
         id: string;
     };
@@ -65,15 +68,96 @@ export interface EmployeeSave {
     phone: string;
 }
 
-// Organization Category related type
+
+export interface Language {
+    id?: string;
+    author: string;
+    regDate: string;
+    lastModifier: string;
+    lastModifiedDate: string;
+    code: string;
+    position: number;
+    localizedName: Record<string, string>;
+    selected?: boolean;
+}
+
+export interface LanguageSave {
+    id?: string;
+    code: string;
+    localizedName: Record<string, string>;
+}
+
+export interface Label {
+    id?: string;
+    author: string;
+    regDate: string;
+    lastModifier: string;
+    lastModifiedDate: string;
+    identifier: string;
+    color: string;
+    category: string;
+    parent: string;
+    localizedName: Record<string, string>;
+    hidden: boolean;
+    selected?: boolean;
+}
+
+export interface LabelSave {
+    id?: string;
+    identifier: string;
+    color: string;
+    parent: string;
+    category: string;
+    hidden: boolean;
+    localizedName: Record<string, string>;
+}
+
+
 export interface OrgCategory {
+    id?: string;
+    author: string;
+    regDate: string;
+    lastModifier: string;
+    lastModifiedDate: string;
+    identifier: string;
+    localizedName: Record<string, string>;
+    selected?: boolean;
+}
+export interface OrgCategorySave {
     id?: string;
     identifier: string;
     localizedName: Record<string, string>;
 }
 
-// Position related type
+
+export interface TaskType {
+    id?: string;
+    author: string;
+    regDate: string;
+    lastModifier: string;
+    lastModifiedDate: string;
+    identifier: string;
+    localizedName: Record<string, string>;
+    selected?: boolean;
+}
+export interface TaskTypeSave {
+    id?: string;
+    identifier: string;
+    localizedName: Record<string, string>;
+}
+
+
 export interface Position {
+    id?: string;
+    author: string;
+    regDate: string;
+    lastModifier: string;
+    lastModifiedDate: string;
+    identifier: string;
+    localizedName: Record<string, string>;
+}
+
+export interface PositionSave {
     id?: string;
     identifier: string;
     localizedName: Record<string, string>;

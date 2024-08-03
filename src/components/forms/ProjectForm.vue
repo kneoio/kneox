@@ -171,11 +171,11 @@ export default defineComponent({
 
     const handleSaveProject = async () => {
       await store.saveProject();
-      router.push('/projects_and_tasks/projects');
+      router.push('/projects-and-tasks/projects');
     };
 
     const goBack = () => {
-      router.push('/projects_and_tasks/projects');
+      router.push('/projects-and-tasks/projects');
     };
 
     const handleRemoveReader = (index: number) => {
