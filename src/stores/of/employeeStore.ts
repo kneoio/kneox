@@ -49,6 +49,13 @@ export const useEmployeeStore = defineStore('employeeStore', () => {
         };
     });
 
+    const getOptions = computed(() => {
+        return getEntries.value.map(doc => ({
+            label: doc.localizedName.ENG,
+            value: doc.id
+        }));
+    });
+
     const fetchEmployees = async (page = 1, pageSize = 10) => {
         try {
             loadingBar.start();
@@ -107,6 +114,7 @@ export const useEmployeeStore = defineStore('employeeStore', () => {
         getEntries,
         getCurrent,
         getPagination,
+        getOptions,
         apiViewResponse,
         fetchEmployees,
         fetchEmployee,

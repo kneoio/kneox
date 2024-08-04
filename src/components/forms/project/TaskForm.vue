@@ -2,7 +2,7 @@
   <n-grid cols="1" x-gap="12" y-gap="12" class="m-5">
     <n-gi>
       <n-page-header subtitle="Task" @back="goBack">
-        <template #title>{{ store.getCurrent.id }}</template>
+        <template #title> {{ store.getCurrent.regNumber }}</template>
         <template #footer>
           Registered: {{ store.getCurrent.regDate }}, Last Modified: {{ store.getCurrent.lastModifiedDate }}
         </template>
@@ -22,34 +22,33 @@
               <n-gi>
                 <n-form-item label="Project">
                   <n-select
-                      v-model:value="localFormData.id"
-                      :options="organizationStore.getOptionsOfPrimaries"
+                      v-model:value="localFormData.project.id"
+                      :options="projectStore.getOptions"
                       style="width: 50%; max-width: 600px;"
-                      @update:value="handleOrganizationChange"
                   />
                 </n-form-item>
               </n-gi>
               <n-gi>
                 <n-form-item label="Assignee">
                   <n-select
-                      v-model:value="localFormData.id"
-                      :options="departmentStore.getDepOptionsOf"
+                      v-model:value="localFormData.assignee.id"
+                      :options="employeeStore.getOptions"
                       style="width: 50%; max-width: 600px;"
                   />
                 </n-form-item>
               </n-gi>
               <n-gi>
-                <n-form-item label="Tester">
+                <n-form-item label="Task type">
                   <n-select
-                      v-model:value="localFormData.id"
-                      :options="positionStore.getOptions"
+                      v-model:value="localFormData.taskType.identifier"
+                      :options="taskTypeStore.getOptions"
                       style="width: 50%; max-width: 600px;"
                   />
                 </n-form-item>
               </n-gi>
 
               <n-gi>
-                <n-form-item label="Identifier">
+                <n-form-item label="Labels">
                   <n-input v-model:value="localFormData.body"
                            style="width: 30%; max-width: 600px;"/>
                 </n-form-item>
@@ -95,11 +94,12 @@ import {
   useMessage
 } from 'naive-ui';
 import {ArrowBigLeft} from '@vicons/tabler';
-import {usePositionStore} from "../../../stores/of/positionStore";
-import {useOrganizationStore} from "../../../stores/of/organizationStore";
-import {useDepartmentStore} from "../../../stores/of/departmentStore";
 import {Task, TaskSave} from "../../../types/projectTypes";
 import {useTaskStore} from "../../../stores/project/taskStore";
+import {useProjectStore} from "../../../stores/project/projectStore";
+import {useEmployeeStore} from "../../../stores/of/employeeStore";
+import {useTaskTypeStore} from "../../../stores/of/taskTypeStore";
+import {useLabelStore} from "../../../stores/of/labelStore";
 
 export default defineComponent({
   name: 'TaskForm',
@@ -113,17 +113,27 @@ export default defineComponent({
     const route = useRoute();
     const router = useRouter();
     const store = useTaskStore();
-    const organizationStore = useOrganizationStore();
-    const departmentStore = useDepartmentStore();
-    const positionStore = usePositionStore();
+    const projectStore = useProjectStore();
+    const employeeStore = useEmployeeStore();
+    const taskTypeStore = useTaskTypeStore();
+    const labelStore = useLabelStore();
     const activeTab = ref('properties');
     const departmentOptions = ref([]);
     const localFormData = reactive<Task>({
+      labels: [],
+      assignee: {id: "", name: ""},
       id: '',
       author: '',
       regDate: '',
       lastModifier: '',
       lastModifiedDate: '',
+      regNumber: '',
+      project: {
+        id: '',
+        name: ''
+      },
+      status: 0, taskType: {identifier: "", name: ""},
+      priority: 0,
       body: ''
     });
 
@@ -131,6 +141,9 @@ export default defineComponent({
       loadingBar.start();
       try {
         const saveDTO: TaskSave = {
+          labels: [],
+          assignee: {id: ""}, taskType: {identifier: ""},
+          body: "", priority: 0, project: {id: ""}, status: 0
         };
         await store.save(saveDTO, localFormData.id);
         message.success('Task saved successfully');
@@ -152,14 +165,6 @@ export default defineComponent({
       router.push('/projects-and-tasks/tasks/by-author');
     };
 
-    const handleOrganizationChange = async (organizationId: string) => {
-      try {
-        await departmentStore.fetchDepartmentsOf(organizationId);
-      } catch (error) {
-        console.error('Failed to fetch departments:', error);
-        message.error('Failed to fetch departments');
-      }
-    };
 
     onMounted(async () => {
       const id = route.params.id as string;
@@ -167,8 +172,13 @@ export default defineComponent({
         loadingBar.start();
         try {
           await Promise.all([
-            store.fetch(id)
+            store.fetch(id),
+            projectStore.fetchProjects(),
+            employeeStore.fetchEmployees(),
+            taskTypeStore.fetchAll(),
+            labelStore.fetchAll()
           ]);
+          Object.assign(localFormData, store.getCurrent);
           loadingBar.finish();
         } catch (error) {
           console.error('Failed to fetch employee:', error);
@@ -180,15 +190,15 @@ export default defineComponent({
 
     return {
       store,
-      positionStore,
-      organizationStore,
-      departmentStore,
+      projectStore,
+      employeeStore,
+      taskTypeStore,
+      labelStore,
       localFormData,
       handleSave,
       handleArchive,
       activeTab,
       goBack,
-      handleOrganizationChange,
       departmentOptions,
     };
   },

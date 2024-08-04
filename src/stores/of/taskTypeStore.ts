@@ -43,6 +43,13 @@ export const useTaskTypeStore = defineStore('taskTypeStore', () => {
         };
     });
 
+    const getOptions = computed(() => {
+        return getEntries.value.map(doc => ({
+            label: doc.localizedName.ENG,
+            value: doc.identifier
+        }));
+    });
+
     const fetchTaskTypes = async (page = 1, pageSize = 10) => {
         const response = await apiClient.get(`/tasktypes?page=${page}&size=${pageSize}`);
         if (response && response.data && response.data.payload) {
@@ -87,6 +94,7 @@ export const useTaskTypeStore = defineStore('taskTypeStore', () => {
         fetch: fetchTaskType,
         save,
         getEntries,
+        getOptions,
         getPagination,
         getCurrent
     };

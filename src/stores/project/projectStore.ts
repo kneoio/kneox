@@ -49,6 +49,13 @@ export const useProjectStore = defineStore('projectStore', () => {
         };
     });
 
+    const getOptions = computed(() => {
+        return getEntries.value.map(doc => ({
+            label: doc.name,
+            value: doc.id
+        }));
+    });
+
     const fetchProjects = async (page = 1, pageSize = 10) => {
         try {
             loadingBar.start();
@@ -113,6 +120,7 @@ export const useProjectStore = defineStore('projectStore', () => {
         apiViewResponse,
         apiFormResponse,
         getEntries,
+        getOptions,
         getPagination,
         getCurrent,
         fetchProjects,

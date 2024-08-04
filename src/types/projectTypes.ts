@@ -18,6 +18,20 @@ export interface Task {
     regDate: string;
     lastModifier: string;
     lastModifiedDate: string;
+    regNumber: string;
+    project: {
+        id: string;
+        name: string;
+    };
+    assignee: {
+        id: string;
+        name: string;
+    };
+    taskType: {
+        identifier: string,
+        name: string
+    },
+    labels: [],
     body: string;
     status: number;
     priority: number;
@@ -28,5 +42,15 @@ export interface TaskSave {
     id?: string;
     status: number;
     priority: number;
+    project: {
+        id: string;
+    };
+    assignee: {
+        id: string;
+    };
+    taskType: {
+        identifier: string,
+    },
+    labels: [],
     body: string;
 }
