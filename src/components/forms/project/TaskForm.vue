@@ -134,7 +134,7 @@ export default defineComponent({
         };
         await store.save(saveDTO, localFormData.id);
         message.success('Task saved successfully');
-        router.push('/projects-and-tasks/projects/tasks');
+        router.push('/projects-and-tasks/tasks/by-author');
       } catch (error) {
         console.error('Failed to save: ', error);
         message.error('Failed to save');
@@ -149,7 +149,7 @@ export default defineComponent({
     }
 
     const goBack = () => {
-      router.push('/projects-and-tasks/projects/tasks');
+      router.push('/projects-and-tasks/tasks/by-author');
     };
 
     const handleOrganizationChange = async (organizationId: string) => {

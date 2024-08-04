@@ -20,10 +20,8 @@ export default defineComponent({
     }
   },
   setup(props) {
-    // This lifecycle hook is called after the component has been mounted,
-    // which is a good time to log the props as the component has been initialized.
     onMounted(() => {
-      console.log('Icon loaded:', props.icon); // Logging the icon to see what is received
+      console.log('Icon loaded:', props.icon);
     });
   }
 });

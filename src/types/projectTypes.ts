@@ -19,9 +19,14 @@ export interface Task {
     lastModifier: string;
     lastModifiedDate: string;
     body: string;
+    status: number;
+    priority: number;
     selected?: boolean;
 }
 
 export interface TaskSave {
     id?: string;
+    status: number;
+    priority: number;
+    body: string;
 }

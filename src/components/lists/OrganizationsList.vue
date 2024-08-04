@@ -27,7 +27,11 @@
           @update:page="handlePageChange"
           @update:page-size="handlePageSizeChange"
           @update:checked-row-keys="handleCheckedRowKeysChange"
-      />
+      >
+        <template #loading>
+          <MyLoaderIcon />
+        </template>
+      </n-data-table>
     </n-gi>
   </n-grid>
 </template>
@@ -41,19 +45,17 @@ import {
   NDataTable,
   NGi,
   NGrid,
-  NH2,
   NPageHeader,
   NPagination,
-  NSpace,
   useMessage
 } from 'naive-ui';
 import {useRouter} from 'vue-router';
 import {useOrganizationStore} from "../../stores/of/organizationStore";
-import {Project} from "../../types/projectTypes";
 import {Organization} from "../../types/officeFrameTypes";
+import MyLoaderIcon from '../helpers/LoaderWrapper.vue';
 
 export default defineComponent({
-  components: {NPageHeader, NSpace, NH2, NDataTable, NPagination, NButtonGroup, NButton, NGi, NGrid},
+  components: {NPageHeader, NDataTable, NPagination, NButtonGroup, NButton, NGi, NGrid, MyLoaderIcon},
   setup() {
     const router = useRouter();
     const msgPopup = useMessage();
@@ -75,7 +77,7 @@ export default defineComponent({
 
     preFetch();
 
-    onMounted(async () => {
+    onMounted(() => {
       window.addEventListener('resize', () => {
         isMobile.value = window.innerWidth < 768;
       });
@@ -134,7 +136,7 @@ export default defineComponent({
       selectedRows.value = [];
     }
 
-    const getRowProps = (row: Project) => {
+    const getRowProps = (row: Organization) => {
       return {
         style: 'cursor: pointer;',
         onClick: (e: MouseEvent) => {

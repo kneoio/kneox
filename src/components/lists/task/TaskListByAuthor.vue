@@ -46,7 +46,6 @@ import {
   useMessage
 } from 'naive-ui';
 import {useRouter} from 'vue-router';
-import {Label} from '../../../types/officeFrameTypes';
 import {useTaskStore} from "../../../stores/project/taskStore";
 import {Task} from "../../../types/projectTypes";
 
@@ -59,6 +58,42 @@ export default defineComponent({
     const isMobile = ref(window.innerWidth < 768);
     const selectedRows = ref<string[]>([]);
 
+    const statusMap: Record<number, string> = {
+      0: 'UNKNOWN',
+      100: 'DRAFT',
+      101: 'WAITING_FOR_START',
+      102: 'ACTIVE',
+      103: 'COMPLETED',
+      104: 'MERGED',
+      105: 'PAUSED'
+    };
+    const priorityMap: Record<number, string> = {
+      0: 'Low',
+      1: 'Below Normal',
+      2: 'Normal',
+      3: 'Above Normal',
+      4: 'High',
+      5: 'Critical'
+    };
+
+    const statusTypeMap: Record<number, string> = {
+      0: 'default',
+      100: 'info',
+      101: 'warning',
+      102: 'success',
+      103: 'success',
+      104: 'default',
+      105: 'error'
+    };
+    const priorityTypeMap: Record<number, string> = {
+      0: 'default',
+      1: 'info',
+      2: 'success',
+      3: 'warning',
+      4: 'error',
+      5: 'error'
+    };
+
     async function preFetch() {
       try {
         await store.fetchAll();
@@ -69,7 +104,7 @@ export default defineComponent({
 
     preFetch();
 
-    onMounted(async () => {
+    onMounted(() => {
       window.addEventListener('resize', () => {
         isMobile.value = window.innerWidth < 768;
       });
@@ -80,7 +115,7 @@ export default defineComponent({
         type: 'selection',
         disabled: (row: Task) => !row.id,
         options: ['none', 'all'],
-        onSelect: (value: string | number | boolean, row: Label) => {
+        onSelect: (value: string | number | boolean, row: Task) => {
           const checked = !!value;
           if (row.id) {
             const index = selectedRows.value.indexOf(row.id);
@@ -93,8 +128,21 @@ export default defineComponent({
           return false;
         }
       },
-      { title: 'Assignee', key: 'assignee' },
-      { title: 'Body', key: 'body' },
+      { title: 'Assignee', key: 'assignee.localizedName.ENG' },
+      {
+        title: 'Status',
+        key: 'status',
+        render(row: Task) {
+          return h(NTag, { type: statusTypeMap[row.status] }, { default: () => statusMap[row.status] });
+        }
+      },
+      {
+        title: 'Priority',
+        key: 'priority',
+        render(row: Task) {
+          return h(NTag, { type: priorityTypeMap[row.priority] }, { default: () => priorityMap[row.priority] });
+        }
+      },
       { title: 'Registered', key: 'regDate' },
       { title: 'Author', key: 'author' }
     ]);
@@ -118,7 +166,7 @@ export default defineComponent({
       selectedRows.value = [];
     };
 
-    const getRowProps = (row: Label) => {
+    const getRowProps = (row: Task) => {
       return {
         style: 'cursor: pointer;',
         onClick: (e: MouseEvent) => {
