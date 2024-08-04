@@ -22,8 +22,8 @@
 </template>
 
 <script lang="ts">
-import { EuroOutlined, MenuOutlined, ProjectOutlined, RobotOutlined } from "@vicons/antd";
-import { Component, defineComponent, h, onMounted, onUnmounted, ref } from "vue";
+import { EuroOutlined, MenuOutlined, ProjectOutlined, RobotOutlined, LockOutlined } from "@vicons/antd";
+import { defineComponent, h, ref, computed } from "vue";
 import { NGi, NGrid, NIcon, NLayoutHeader, NMenu } from "naive-ui";
 import { useRoute, useRouter } from "vue-router";
 
@@ -34,30 +34,40 @@ export default defineComponent({
     NGi,
     NIcon,
     NMenu,
-    MenuOutlined
+    MenuOutlined,
+    LockOutlined,
   },
-  setup() {
+  props: {
+    isAuthenticated: {
+      type: Boolean,
+      required: true,
+    },
+  },
+  setup(props) {
     const router = useRouter();
     const route = useRoute();
     const selectedKey = ref(route.path === '/projects' ? '/projects-and-tasks/projects' : route.path);
 
-    const menuOptions = [
+    const menuOptions = computed(() => [
       {
         label: 'Projects and tasks',
         key: '/projects-and-tasks/projects',
-        icon: renderIcon(ProjectOutlined),
+        icon: props.isAuthenticated ? renderIcon(ProjectOutlined) : renderDisabledIcon(),
+        disabled: !props.isAuthenticated,
       },
       {
         label: 'Assistant bot',
         key: '/ai',
-        icon: renderIcon(RobotOutlined)
+        icon: props.isAuthenticated ? renderIcon(RobotOutlined) : renderDisabledIcon(),
+        disabled: !props.isAuthenticated,
       },
       {
         label: 'References',
         key: '/references/organizations',
-        icon: renderIcon(EuroOutlined),
+        icon: props.isAuthenticated ? renderIcon(EuroOutlined) : renderDisabledIcon(),
+        disabled: !props.isAuthenticated,
       }
-    ];
+    ]);
 
     const menuOpen = ref(false);
     const isMobile = ref(window.innerWidth < 768);
@@ -66,33 +76,21 @@ export default defineComponent({
       menuOpen.value = !menuOpen.value;
     };
 
-    onMounted(() => {
-      window.addEventListener('resize', updateIsMobile);
-      if (route.path === '/projects') {
-        router.push('/projects-and-tasks/projects');
-        selectedKey.value = '/projects-and-tasks/projects';
-      } else {
-        selectedKey.value = route.path;
-      }
-    });
-
-    onUnmounted(() => window.removeEventListener('resize', updateIsMobile));
-
-    function renderIcon(icon: Component) {
+    function renderIcon(icon: any) {
       return () => h(NIcon, null, { default: () => h(icon) });
     }
 
-    function updateIsMobile() {
-      isMobile.value = window.innerWidth < 768;
+    function renderDisabledIcon() {
+      return () => h(NIcon, null, { default: () => h(LockOutlined) });
     }
 
-    window.addEventListener('resize', updateIsMobile);
-
-    function handleNavigate(key: string): void {
-      router.push(key);
-      selectedKey.value = key;
-      if (isMobile.value) {
-        menuOpen.value = false;
+    function handleNavigate(key: string) {
+      if (props.isAuthenticated) {
+        router.push(key);
+        selectedKey.value = key;
+        if (isMobile.value) {
+          menuOpen.value = false;
+        }
       }
     }
 
@@ -105,8 +103,8 @@ export default defineComponent({
       toggleMenu,
       isMobile,
       selectedKey,
-      MenuOutlined
-    }
+      MenuOutlined,
+    };
   }
 });
 </script>

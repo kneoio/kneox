@@ -5,10 +5,10 @@
         <n-h1 class="title">&nbsp;&nbsp;Kneox</n-h1>
       </n-gi>
       <n-gi :offset="2">
-        <div class="user-info" v-if="userData.profile">
+        <div class="user-info" v-if="isAuthenticated">
           <n-space justify="end" class="mt-4 mr-4">
             <n-h6 class="mt-2 mr-2">Hello, {{ userData.profile.username }}</n-h6>
-            <n-button @click="logout" class="mt-2 mr-2">Logout</n-button>
+            <n-button @click="handleLogout" class="mt-2 mr-2">Logout</n-button>
           </n-space>
         </div>
         <n-button v-else @click="login" class="mt-4 mr-4">Login</n-button>
@@ -18,8 +18,8 @@
 </template>
 
 <script lang="ts">
-import { NButton, NGi, NGrid, NH1, NH6, NLayoutHeader, NSpace } from "naive-ui";
 import { defineComponent, inject, ref } from "vue";
+import { NButton, NGi, NGrid, NH1, NH6, NLayoutHeader, NSpace } from "naive-ui";
 import { KeycloakInstance } from "keycloak-js";
 
 export default defineComponent({
@@ -31,6 +31,12 @@ export default defineComponent({
     NGrid,
     NButton,
     NSpace,
+  },
+  props: {
+    isAuthenticated: {
+      type: Boolean,
+      required: true,
+    },
   },
   setup() {
     const kc = inject<KeycloakInstance>("keycloak");
@@ -48,10 +54,11 @@ export default defineComponent({
       }
     };
 
-    const logout = async () => {
+    const handleLogout = async () => {
       if (kc) {
         try {
           await kc.logout();
+          window.location.href = 'http://localhost:8090/dashboard';
         } catch (error) {
           console.error("Logout failed", error);
         }
@@ -62,7 +69,7 @@ export default defineComponent({
 
     return {
       login,
-      logout,
+      handleLogout,
       userData,
       inverted: ref(false),
     };
