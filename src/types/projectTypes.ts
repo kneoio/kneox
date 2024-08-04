@@ -11,3 +11,17 @@ export interface Project {
     selected?: boolean;
     rls:[];
 }
+
+export interface Task {
+    id?: string;
+    author: string;
+    regDate: string;
+    lastModifier: string;
+    lastModifiedDate: string;
+    body: string;
+    selected?: boolean;
+}
+
+export interface TaskSave {
+    id?: string;
+}

@@ -91,7 +91,7 @@
 <script lang="ts">
 import {defineComponent, ref, onMounted, reactive} from 'vue';
 import {useRoute, useRouter} from 'vue-router';
-import {useProjectStore} from '../../stores/project/projectStore';
+import {useProjectStore} from '../../../stores/project/projectStore';
 import {
   NButton,
   NButtonGroup,
@@ -112,8 +112,8 @@ import {
   NTimelineItem
 } from 'naive-ui';
 import {ArrowBigLeft} from '@vicons/tabler';
-import {useEmployeeStore} from "../../stores/of/employeeStore";
-import {Project} from "../../types/projectTypes";
+import {useEmployeeStore} from "../../../stores/of/employeeStore";
+import {Project} from "../../../types/projectTypes";
 
 export default defineComponent({
   name: 'ProjectForm',

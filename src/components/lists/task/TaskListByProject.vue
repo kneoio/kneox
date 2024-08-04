@@ -1,20 +1,20 @@
 <template>
-  <n-grid cols="24" x-gap="12" y-gap="12" class="p-4">
+  <n-grid cols="6" x-gap="12" y-gap="12" class="p-4">
     <n-gi>
       <n-page-header>
-        <template #title>Tasks</template>
+        <template #title>Tasks by Project</template>
         <template #footer>
           Total: {{ store.getPagination.itemCount }}
         </template>
       </n-page-header>
     </n-gi>
-    <n-gi span="24">
+    <n-gi span="6">
       <n-button-group>
         <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
         <n-button @click="handleArchive" size="large" :disabled="!selectedRows.length">Archive</n-button>
       </n-button-group>
     </n-gi>
-    <n-gi span="24">
+    <n-gi span="6">
       <n-data-table
           remote
           :columns="columns"
@@ -46,8 +46,8 @@ import {
   useMessage
 } from 'naive-ui';
 import { useRouter } from 'vue-router';
-import { useLabelStore } from '../../stores/of/labelStore';
-import { Label } from '../../types/officeFrameTypes';
+import { useLabelStore } from '../../../stores/of/labelStore';
+import { Label } from '../../../types/officeFrameTypes';
 
 export default defineComponent({
   components: { NPageHeader, NDataTable, NPagination, NButtonGroup, NButton, NGi, NGrid, NTag },

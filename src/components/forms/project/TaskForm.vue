@@ -1,8 +1,8 @@
 <template>
   <n-grid cols="1" x-gap="12" y-gap="12" class="m-5">
     <n-gi>
-      <n-page-header subtitle="Projects" @back="goBack">
-        <template #title>{{ store.getCurrent.name }}</template>
+      <n-page-header subtitle="Task" @back="goBack">
+        <template #title>{{ store.getCurrent.id }}</template>
         <template #footer>
           Registered: {{ store.getCurrent.regDate }}, Last Modified: {{ store.getCurrent.lastModifiedDate }}
         </template>
@@ -19,16 +19,10 @@
         <n-tab-pane name="properties" tab="Properties">
           <n-form label-placement="left" label-width="auto">
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
-              <n-gi v-for="(_, key) in localFormData.localizedName" :key="key">
-                <n-form-item :label="`Name (${key})`">
-                  <n-input v-model:value="localFormData.localizedName[key]"
-                           style="width: 50%; max-width: 600px;"/>
-                </n-form-item>
-              </n-gi>
               <n-gi>
-                <n-form-item label="Organization">
+                <n-form-item label="Project">
                   <n-select
-                      v-model:value="localFormData.org.id"
+                      v-model:value="localFormData.id"
                       :options="organizationStore.getOptionsOfPrimaries"
                       style="width: 50%; max-width: 600px;"
                       @update:value="handleOrganizationChange"
@@ -36,32 +30,27 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
-                <n-form-item label="Department">
+                <n-form-item label="Assignee">
                   <n-select
-                      v-model:value="localFormData.dep.id"
+                      v-model:value="localFormData.id"
                       :options="departmentStore.getDepOptionsOf"
                       style="width: 50%; max-width: 600px;"
                   />
                 </n-form-item>
               </n-gi>
               <n-gi>
-                <n-form-item label="Position">
+                <n-form-item label="Tester">
                   <n-select
-                      v-model:value="localFormData.position.id"
+                      v-model:value="localFormData.id"
                       :options="positionStore.getOptions"
                       style="width: 50%; max-width: 600px;"
                   />
                 </n-form-item>
               </n-gi>
-              <n-gi>
-                <n-form-item label="Rank">
-                  <n-input-number v-model:value="localFormData.rank"
-                                  style="width: 10%"/>
-                </n-form-item>
-              </n-gi>
+
               <n-gi>
                 <n-form-item label="Identifier">
-                  <n-input v-model:value="localFormData.name"
+                  <n-input v-model:value="localFormData.body"
                            style="width: 30%; max-width: 600px;"/>
                 </n-form-item>
               </n-gi>
@@ -106,14 +95,14 @@ import {
   useMessage
 } from 'naive-ui';
 import {ArrowBigLeft} from '@vicons/tabler';
-import {Employee, EmployeeSave} from "../../types/officeFrameTypes";
-import {usePositionStore} from "../../stores/of/positionStore";
-import {useEmployeeStore} from "../../stores/of/employeeStore";
-import {useOrganizationStore} from "../../stores/of/organizationStore";
-import {useDepartmentStore} from "../../stores/of/departmentStore";
+import {usePositionStore} from "../../../stores/of/positionStore";
+import {useOrganizationStore} from "../../../stores/of/organizationStore";
+import {useDepartmentStore} from "../../../stores/of/departmentStore";
+import {Task, TaskSave} from "../../../types/projectTypes";
+import {useTaskStore} from "../../../stores/project/taskStore";
 
 export default defineComponent({
-  name: 'EmployeeForm',
+  name: 'TaskForm',
   components: {
     NPageHeader, NButtonGroup, NForm, NDatePicker, NFormItem, NInput, NInputNumber, NButton, NIcon,
     NTabs, NTabPane, NGrid, NGi, NH2, NSpace, ArrowBigLeft, NSelect
@@ -123,59 +112,29 @@ export default defineComponent({
     const message = useMessage();
     const route = useRoute();
     const router = useRouter();
-    const store = useEmployeeStore();
+    const store = useTaskStore();
     const organizationStore = useOrganizationStore();
     const departmentStore = useDepartmentStore();
     const positionStore = usePositionStore();
     const activeTab = ref('properties');
     const departmentOptions = ref([]);
-    const localFormData = reactive<Employee>({
-      name: "", userId: 0,
+    const localFormData = reactive<Task>({
       id: '',
       author: '',
       regDate: '',
       lastModifier: '',
       lastModifiedDate: '',
-      localizedName: {},
-      org: {
-        id: '',
-        identifier: '',
-        localizedName: '',
-      },
-      dep: {
-        id: '',
-        identifier: '',
-        localizedName: '',
-      },
-      position: {
-        id: '',
-        identifier: '',
-        localizedName: '',
-      },
-      phone: '',
-      rank: 0
+      body: ''
     });
 
     const handleSave = async () => {
       loadingBar.start();
       try {
-        const saveDTO: EmployeeSave = {
-          phone: localFormData.phone,
-          localizedName: localFormData.localizedName,
-          org: {
-            id: localFormData.org.id
-          },
-          dep: {
-            id: localFormData.dep.id
-          },
-          position: {
-            id: localFormData.position.id
-          },
-          rank: localFormData.rank
+        const saveDTO: TaskSave = {
         };
         await store.save(saveDTO, localFormData.id);
-        message.success('Organization saved successfully');
-        router.push('/references/employees');
+        message.success('Task saved successfully');
+        router.push('/projects-and-tasks/projects/tasks');
       } catch (error) {
         console.error('Failed to save: ', error);
         message.error('Failed to save');
@@ -190,7 +149,7 @@ export default defineComponent({
     }
 
     const goBack = () => {
-      router.push('/references/employees');
+      router.push('/projects-and-tasks/projects/tasks');
     };
 
     const handleOrganizationChange = async (organizationId: string) => {
@@ -208,14 +167,8 @@ export default defineComponent({
         loadingBar.start();
         try {
           await Promise.all([
-            store.fetchEmployee(id),
-            organizationStore.fetchPrimaryOrganizations(),
-            positionStore.fetchAll()
+            store.fetch(id)
           ]);
-          Object.assign(localFormData, store.getCurrent);
-          if (localFormData.org.id) {
-            await handleOrganizationChange(localFormData.org.id);
-          }
           loadingBar.finish();
         } catch (error) {
           console.error('Failed to fetch employee:', error);

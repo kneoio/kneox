@@ -11,7 +11,7 @@
     <n-gi class="mt-2" span="6">
       <n-button-group>
         <n-button type="primary" @click="handleSave" size="large">Save</n-button>
-        <n-button type="default"  disabled @click="handleArchive" size="large">Archive</n-button>
+        <n-button type="default" disabled @click="handleArchive" size="large">Archive</n-button>
       </n-button-group>
     </n-gi>
     <n-gi span="6">
@@ -70,16 +70,16 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, computed, reactive } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import {defineComponent, ref, onMounted, computed, reactive} from 'vue';
+import {useRoute, useRouter} from 'vue-router';
 import {
   NPageHeader, NButton, NButtonGroup, NForm, NFormItem, NInput, NInputNumber, NIcon, NTabs, NTabPane, NGrid,
   NGi, NH2, NDatePicker, NSpace, useLoadingBar, useMessage, NSelect
 } from 'naive-ui';
-import { ArrowBigLeft } from '@vicons/tabler';
-import { useOrganizationStore } from "../../stores/of/organizationStore";
-import {Organization, OrganizationSave} from "../../types/officeFrameTypes";
-import {useOrgCategoryStore} from "../../stores/of/orgCategoryStore";
+import {ArrowBigLeft} from '@vicons/tabler';
+import {useOrganizationStore} from "../../../stores/of/organizationStore";
+import {Organization, OrganizationSave} from "../../../types/officeFrameTypes";
+import {useOrgCategoryStore} from "../../../stores/of/orgCategoryStore";
 
 export default defineComponent({
   name: 'OrganizationForm',
@@ -93,6 +93,7 @@ export default defineComponent({
     const route = useRoute();
     const router = useRouter();
     const store = useOrganizationStore();
+    const orgCategoryStore = useOrgCategoryStore();
     const activeTab = ref('properties');
     const localizedNames = computed(() => store.getCurrent.localizedName || {});
     const localFormData = reactive<Organization>({
@@ -100,13 +101,14 @@ export default defineComponent({
       identifier: '',
       bizID: '',
       localizedName: {},
+      primary: false,
       orgCategory: {
         id: '',
         identifier: '',
         localizedName: ''
       },
       status: '',
-      rank: 0,
+      rank: 0
     });
     const categoryOptions = computed(() =>
         orgCategoryStore.getEntries.map(category => ({
@@ -114,7 +116,6 @@ export default defineComponent({
           value: category.id
         }))
     );
-    const orgCategoryStore = useOrgCategoryStore();
 
     const handleSave = async () => {
       loadingBar.start();
@@ -166,11 +167,11 @@ export default defineComponent({
         localFormData.identifier = '';
         localFormData.bizID = '';
         localFormData.localizedName = {};
-        localFormData.orgCategory = { id: '', identifier: '', localizedName: '' };
+        localFormData.orgCategory = {id: '', identifier: '', localizedName: ''};
         localFormData.status = '';
         localFormData.rank = 0;
       }
-      await orgCategoryStore.fetchOrgCategories();
+      await orgCategoryStore.fetchAll();
     });
 
     return {

@@ -16,6 +16,7 @@
         :options="projectMenuOptions"
         :value="selectedMenuKey"
         :expanded-keys="defaultOpenKeys"
+        @update:value="handleMenuSelect"
     />
   </n-layout-sider>
   <button class="sidebar-toggle" @click="toggleSidebar" v-show="isMobile">&#9776;</button>
@@ -29,7 +30,8 @@ import {computed, defineComponent, h, ref} from 'vue';
 import {useRoute} from 'vue-router';
 import {ProjectOutlined, UserOutlined} from '@vicons/antd';
 import IconWrapper from "../helpers/IconWrapper.vue";
-import {NLayout, NLayoutSider, NMenu,} from "naive-ui";
+import {NLayout, NLayoutSider, NMenu} from "naive-ui";
+import router from "../../router";
 
 export default defineComponent({
   components: { IconWrapper, NMenu, NLayout, NLayoutSider },
@@ -65,12 +67,11 @@ export default defineComponent({
       }
     ];
 
-    const selectedMenuKey = computed(() => {
-      if (route.path.startsWith('/projects-and-tasks/projects')) {
-        return '/projects-and-tasks/projects';
-      }
-      return '';
-    });
+    const selectedMenuKey = computed(() => route.path);
+
+    const handleMenuSelect = (key: string) => {
+      router.push(key);
+    };
 
     return {
       projectMenuOptions,
@@ -79,32 +80,9 @@ export default defineComponent({
       toggleSidebar,
       isMobile,
       selectedMenuKey,
-      defaultOpenKeys
+      defaultOpenKeys,
+      handleMenuSelect
     };
   }
 });
 </script>
-
-<style scoped>
-.sidebar-toggle {
-  display: none;
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 10;
-  font-size: 24px;
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-
-@media (max-width: 768px) {
-  .sidebar-toggle {
-    display: block;
-  }
-
-  n-layout-sider {
-    display: none;
-  }
-}
-</style>

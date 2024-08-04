@@ -5,14 +5,14 @@ import DashboardView from '../views/DashboardView.vue';
 import LicensePage from '../views/LicensePage.vue';
 import ProjectsAndTasks from '../components/outlines/ProjectAndTasks.vue';
 import ProjectsList from '../components/lists/ProjectsList.vue';
-import ProjectForm from '../components/forms/ProjectForm.vue';
+import ProjectForm from '../components/forms/project/ProjectForm.vue';
 import AiAssistant from "../components/outlines/AiAssistant.vue";
 import ChatAssistant from "../components/forms/ChatAssistant.vue";
 import References from "../components/outlines/References.vue";
 import OrganizationsList from "../components/lists/OrganizationsList.vue";
 import EmployeeList from "../components/lists/EmployeeList.vue";
-import EmployeeForm from "../components/forms/EmployeeForm.vue";
-import OrganizationForm from "../components/forms/OrganizationForm.vue";
+import EmployeeForm from "../components/forms/of/EmployeeForm.vue";
+import OrganizationForm from "../components/forms/of/OrganizationForm.vue";
 import PositionList from "../components/lists/PositionList.vue";
 import LanguageList from "../components/lists/LanguageList.vue";
 import LanguageForm from "../components/forms/LanguageForm.vue";
@@ -23,8 +23,9 @@ import OrgCategoryForm from "../components/forms/OrgCategoryForm.vue";
 import TaskTypeList from "../components/lists/TaskTypeList.vue";
 import TaskTypeForm from "../components/forms/TaskTypeForm.vue";
 import PositionForm from "../components/forms/PositionForm.vue";
-import TaskList from "../components/lists/TaskList.vue";
-import TaskForm from "../components/forms/TaskForm.vue";
+import TaskForm from "../components/forms/project/TaskForm.vue";
+import TaskListByProject from "../components/lists/task/TaskListByProject.vue";
+import TaskListByAuthor from "../components/lists/task/TaskListByAuthor.vue";
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -59,7 +60,7 @@ const routes: Array<RouteRecordRaw> = [
                         children: [
                             {
                                 path: 'by-author',
-                                component: TaskList
+                                component: TaskListByAuthor
                             },
                             {
                                 path: 'by-author/:id',
@@ -68,7 +69,7 @@ const routes: Array<RouteRecordRaw> = [
                             },
                             {
                                 path: 'by-project',
-                                component: TaskList
+                                component: TaskListByProject
                             },
                             {
                                 path: 'by-project/:id',

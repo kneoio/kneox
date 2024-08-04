@@ -106,11 +106,11 @@ import {
   useMessage
 } from 'naive-ui';
 import {ArrowBigLeft} from '@vicons/tabler';
-import {Employee, EmployeeSave} from "../../types/officeFrameTypes";
-import {usePositionStore} from "../../stores/of/positionStore";
-import {useEmployeeStore} from "../../stores/of/employeeStore";
-import {useOrganizationStore} from "../../stores/of/organizationStore";
-import {useDepartmentStore} from "../../stores/of/departmentStore";
+import {Employee, EmployeeSave} from "../../../types/officeFrameTypes";
+import {usePositionStore} from "../../../stores/of/positionStore";
+import {useEmployeeStore} from "../../../stores/of/employeeStore";
+import {useOrganizationStore} from "../../../stores/of/organizationStore";
+import {useDepartmentStore} from "../../../stores/of/departmentStore";
 
 export default defineComponent({
   name: 'EmployeeForm',
