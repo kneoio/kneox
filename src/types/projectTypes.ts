@@ -1,3 +1,5 @@
+import {Label} from "../types";
+
 export interface Project {
     id: string;
     author: string | undefined;
@@ -31,7 +33,7 @@ export interface Task {
         identifier: string,
         name: string
     },
-    labels: [],
+    labels: Label[];
     body: string;
     status: number;
     priority: number;
@@ -50,7 +52,7 @@ export interface TaskSave {
     };
     taskType: {
         identifier: string,
-    },
-    labels: [],
+    };
+    labels: string[];
     body: string;
 }

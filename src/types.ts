@@ -17,7 +17,14 @@ export interface ViewData<T = any> {
     entries: T[];
 }
 
-// Actions and other types
+export interface Label {
+    id: string;
+    identifier: string;
+    hidden: boolean;
+    color: string;
+}
+
+
 export interface Actions {
     actions: {
         caption: string;

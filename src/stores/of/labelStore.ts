@@ -6,6 +6,7 @@ import {Label, LabelSave} from "../../types/officeFrameTypes";
 
 export const useLabelStore = defineStore('labelStore', () => {
         const apiViewResponse = ref<ApiViewPageResponse<Label> | null>(null);
+        const apiViewResponseCategory = ref<ApiViewPageResponse<Label> | null>(null);
         const apiFormResponse = ref<ApiFormResponse | null>(null);
         const categories = [
             {label: 'Mandarin', value: 'CHN'},
@@ -17,6 +18,18 @@ export const useLabelStore = defineStore('labelStore', () => {
 
         const getEntries = computed(() => {
             return apiViewResponse.value?.viewData.entries || [];
+        });
+
+        const getCategoryEntries = computed(() => {
+            return apiViewResponseCategory.value?.viewData.entries || [];
+        });
+
+        const getOptions = computed(() => {
+            return getCategoryEntries.value.map(doc => ({
+                label: doc.localizedName.ENG,
+                value: doc.id,
+                color: doc.color
+            }));
         });
 
         const getCurrent = computed(() => {
@@ -60,6 +73,15 @@ export const useLabelStore = defineStore('labelStore', () => {
             }
         };
 
+        const fetchCategoryLabels = async (group: string) => {
+            const response = await apiClient.get(`/labels/only/category/${group}`);
+            if (response && response.data && response.data.payload) {
+                apiViewResponseCategory.value = response.data.payload;
+            } else {
+                throw new Error('Invalid API response structure');
+            }
+        };
+
         const fetchLabel = async (id: string) => {
             const response = await apiClient.get(`/labels/${id}`);
             if (response && response.data && response.data.payload) {
@@ -90,12 +112,15 @@ export const useLabelStore = defineStore('labelStore', () => {
         return {
             apiViewResponse,
             apiFormResponse,
+            apiViewResponseCategory,
             setupApiClient,
+            getEntries,
             categories,
             fetchAll: fetchLabels,
             fetch: fetchLabel,
+            fetchCategoryLabels,
             save,
-            getEntries,
+            getOptions,
             getPagination,
             getCurrent
         };

@@ -16,7 +16,9 @@ export const useTaskStore = defineStore('taskStore', () => {
             const defaultData = {
                 regDate: '',
                 lastModifiedDate: '',
-                identifier: ''
+                regNumber: '',
+                identifier: '',
+                status: 1
             };
             return apiFormResponse.value?.docData || defaultData;
         });
@@ -44,8 +46,18 @@ export const useTaskStore = defineStore('taskStore', () => {
             };
         });
 
+    const statusTypeMap: Record<number, string> = {
+        0: 'default',
+        100: 'info',
+        101: 'warning',
+        102: 'success',
+        103: 'success',
+        104: 'default',
+        105: 'error'
+    };
+
         const fetchTasks = async (page = 1, pageSize = 10) => {
-            const response = await apiClient.get(`/tasks?page=${page}&size=${pageSize}`);
+            const response = await apiClient.post(`/tasks?page=${page}&size=${pageSize}`, {});
             if (response && response.data && response.data.payload) {
                 apiViewResponse.value = response.data.payload;
             } else {
@@ -89,7 +101,8 @@ export const useTaskStore = defineStore('taskStore', () => {
             save,
             getEntries,
             getPagination,
-            getCurrent
+            getCurrent,
+            statusTypeMap
         };
     })
 ;
