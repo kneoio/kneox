@@ -2,7 +2,7 @@
   <n-grid cols="6" x-gap="12" y-gap="12" class="p-4">
     <n-gi>
       <n-page-header>
-        <template #title>Organizations</template>
+        <template #title>Tasks by Author</template>
         <template #footer>
           Total: {{ store.getPagination.itemCount }}
         </template>
@@ -29,7 +29,7 @@
           @update:checked-row-keys="handleCheckedRowKeysChange"
       >
         <template #loading>
-          <MyLoaderIcon />
+          <loader-icon />
         </template>
       </n-data-table>
     </n-gi>
@@ -37,7 +37,7 @@
 </template>
 
 <script lang="ts">
-import {computed, defineComponent, onMounted, ref} from 'vue';
+import {computed, defineComponent, h, onMounted, ref} from 'vue';
 import {
   DataTableColumns,
   NButton,
@@ -46,23 +46,59 @@ import {
   NGi,
   NGrid,
   NPageHeader,
-  NPagination,
+  NTag,
   useMessage
 } from 'naive-ui';
 import {useRouter} from 'vue-router';
-import {useOrganizationStore} from "../../stores/of/organizationStore";
-import {Organization} from "../../types/officeFrameTypes";
-import MyLoaderIcon from '../helpers/LoaderWrapper.vue';
+import {useTaskStore} from "../../../stores/project/taskStore";
+import {Task} from "../../../types/projectTypes";
+import LoaderIcon from '../../helpers/LoaderWrapper.vue';
 
 export default defineComponent({
-  components: {NPageHeader, NDataTable, NPagination, NButtonGroup, NButton, NGi, NGrid, MyLoaderIcon},
+  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, NTag, LoaderIcon },
   setup() {
     const router = useRouter();
     const msgPopup = useMessage();
-    const store = useOrganizationStore();
+    const store = useTaskStore();
     const isMobile = ref(window.innerWidth < 768);
     const selectedRows = ref<string[]>([]);
     const loading = ref(false);
+
+    const statusMap: Record<number, string> = {
+      0: 'UNKNOWN',
+      100: 'DRAFT',
+      101: 'WAITING_FOR_START',
+      102: 'ACTIVE',
+      103: 'COMPLETED',
+      104: 'MERGED',
+      105: 'PAUSED'
+    };
+    const priorityMap: Record<number, string> = {
+      0: 'Low',
+      1: 'Below Normal',
+      2: 'Normal',
+      3: 'Above Normal',
+      4: 'High',
+      5: 'Critical'
+    };
+
+    const statusTypeMap: Record<number, string> = {
+      0: 'default',
+      100: 'info',
+      101: 'warning',
+      102: 'success',
+      103: 'success',
+      104: 'default',
+      105: 'error'
+    };
+    const priorityTypeMap: Record<number, string> = {
+      0: 'default',
+      1: 'info',
+      2: 'success',
+      3: 'warning',
+      4: 'error',
+      5: 'error'
+    };
 
     async function preFetch() {
       try {
@@ -83,12 +119,12 @@ export default defineComponent({
       });
     });
 
-    const columns = computed<DataTableColumns<Organization>>(() => [
+    const columns = computed<DataTableColumns<Task>>(() => [
       {
         type: 'selection',
-        disabled: (row: Organization) => !row.id,
+        disabled: (row: Task) => !row.id,
         options: ['none', 'all'],
-        onSelect: (value: string | number | boolean, row: Organization) => {
+        onSelect: (value: string | number | boolean, row: Task) => {
           const checked = !!value;
           if (row.id) {
             const index = selectedRows.value.indexOf(row.id);
@@ -101,10 +137,23 @@ export default defineComponent({
           return false;
         }
       },
-      {title: 'Name', key: 'localizedName["ENG"]'},
-      {title: 'Identifier', key: 'identifier'},
-      {title: 'Registered', key: 'regDate'},
-      {title: 'Author', key: 'author'}
+      { title: 'Assignee', key: 'assignee.localizedName.ENG' },
+      {
+        title: 'Status',
+        key: 'status',
+        render(row: Task) {
+          return h(NTag, { type: statusTypeMap[row.status] }, { default: () => statusMap[row.status] });
+        }
+      },
+      {
+        title: 'Priority',
+        key: 'priority',
+        render(row: Task) {
+          return h(NTag, { type: priorityTypeMap[row.priority] }, { default: () => priorityMap[row.priority] });
+        }
+      },
+      { title: 'Registered', key: 'regDate' },
+      { title: 'Author', key: 'author' }
     ]);
 
     const handlePageChange = async (page: number) => {
@@ -126,7 +175,7 @@ export default defineComponent({
     };
 
     const handleNewClick = () => {
-      router.push({name: 'NewOrganizationForm'}).catch(err => {
+      router.push({ name: 'NewTaskForm' }).catch(err => {
         console.error('Navigation error:', err);
       });
     };
@@ -134,14 +183,14 @@ export default defineComponent({
     const handleArchive = async () => {
       msgPopup.info(`Mock archive action for rows: ${selectedRows.value.join(', ')}`);
       selectedRows.value = [];
-    }
+    };
 
-    const getRowProps = (row: Organization) => {
+    const getRowProps = (row: Task) => {
       return {
         style: 'cursor: pointer;',
         onClick: (e: MouseEvent) => {
           if (!(e.target as HTMLElement).closest('.n-checkbox')) {
-            const routeTo = {name: 'OrganizationForm', params: {id: row.id}};
+            const routeTo = { name: 'TaskForm', params: { id: row.id } };
             router.push(routeTo).catch(err => {
               console.error('Navigation error:', err);
             });
@@ -171,6 +220,7 @@ export default defineComponent({
   }
 });
 </script>
+
 
 <style scoped>
 .cursor-pointer:hover {

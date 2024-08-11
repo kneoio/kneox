@@ -1,20 +1,20 @@
 <template>
-  <n-grid cols="24" x-gap="12" y-gap="12" class="p-4">
+  <n-grid cols="6" x-gap="12" y-gap="12" class="p-4">
     <n-gi>
       <n-page-header>
-        <template #title>Languages</template>
+        <template #title>Positions</template>
         <template #footer>
           Total: {{ store.getPagination.itemCount }}
         </template>
       </n-page-header>
     </n-gi>
-    <n-gi span="24">
+    <n-gi span="6">
       <n-button-group>
         <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
         <n-button @click="handleArchive" size="large" :disabled="!selectedRows.length">Archive</n-button>
       </n-button-group>
     </n-gi>
-    <n-gi span="24">
+    <n-gi span="6">
       <n-data-table
           remote
           :columns="columns"
@@ -47,16 +47,15 @@ import {
   useMessage
 } from 'naive-ui';
 import {useRouter} from 'vue-router';
-import {usePositionStore} from "../../stores/of/positionStore";
-import {Position} from "../../types/officeFrameTypes";
-import {useLanguageStore} from "../../stores/of/languageStore";
+import {usePositionStore} from "../../../stores/of/positionStore";
+import {Position} from "../../../types/officeFrameTypes";
 
 export default defineComponent({
   components: {NPageHeader, NSpace, NH2, NDataTable, NPagination, NButtonGroup, NButton, NGi, NGrid},
   setup() {
     const router = useRouter();
     const msgPopup = useMessage();
-    const store = useLanguageStore();
+    const store = usePositionStore();
     const isMobile = ref(window.innerWidth < 768);
     const selectedRows = ref<string[]>([]);
 
@@ -95,7 +94,7 @@ export default defineComponent({
         }
       },
       {title: 'Name', key: 'localizedName["ENG"]'},
-      {title: 'Code', key: 'code'},
+      {title: 'Identifier', key: 'identifier'},
       {title: 'Registered', key: 'regDate'},
       {title: 'Author', key: 'author'}
     ]);
@@ -109,7 +108,7 @@ export default defineComponent({
     };
 
     const handleNewClick = () => {
-      router.push({name: 'NewLanguageForm'}).catch(err => {
+      router.push({name: 'NewPositionForm'}).catch(err => {
         console.error('Navigation error:', err);
       });
     };
@@ -124,7 +123,7 @@ export default defineComponent({
         style: 'cursor: pointer;',
         onClick: (e: MouseEvent) => {
           if (!(e.target as HTMLElement).closest('.n-checkbox')) {
-            const routeTo = {name: 'LanguageForm', params: {id: row.id}};
+            const routeTo = {name: 'PositionForm', params: {id: row.id}};
             router.push(routeTo).catch(err => {
               console.error('Navigation error:', err);
             });

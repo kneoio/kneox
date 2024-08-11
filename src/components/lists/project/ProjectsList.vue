@@ -44,8 +44,8 @@ import {
   useMessage
 } from 'naive-ui';
 import {useRouter} from 'vue-router';
-import {useProjectStore} from '../../stores/project/projectStore';
-import {Project} from "../../types/projectTypes";
+import {useProjectStore} from '../../../stores/project/projectStore';
+import {Project} from "../../../types/projectTypes";
 
 export default defineComponent({
   components: {NPageHeader, NH2, NDataTable, NPagination, NButtonGroup, NButton, NGi, NGrid},

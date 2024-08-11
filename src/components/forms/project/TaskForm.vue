@@ -64,6 +64,8 @@
                 </n-form-item>
               </n-gi>
               <n-gi span="6">
+                {{labelStore.getOptions}}
+                {{localFormData.labels}}
                 <n-form-item label="Labels">
                   <n-select
                       v-model="localFormData.labels"
@@ -215,9 +217,6 @@ export default defineComponent({
             style: {
               backgroundColor: backgroundColor,
               color: textColor
-            },
-            onMousedown: (e) => {
-              e.preventDefault();
             },
             onClose: (e) => {
               e.stopPropagation();

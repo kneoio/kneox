@@ -9,11 +9,8 @@ export const useLabelStore = defineStore('labelStore', () => {
         const apiViewResponseCategory = ref<ApiViewPageResponse<Label> | null>(null);
         const apiFormResponse = ref<ApiFormResponse | null>(null);
         const categories = [
-            {label: 'Mandarin', value: 'CHN'},
-            {label: 'Spanish', value: 'SPA'},
-            {label: 'English', value: 'ENG'},
-            {label: 'Hindi', value: 'HIN'},
-            {label: 'Bengali', value: 'BEN'},
+            {label: 'Common', value: 'common'},
+            {label: 'Programming task', value: 'software_developing_task'},
         ];
 
         const getEntries = computed(() => {
@@ -34,6 +31,7 @@ export const useLabelStore = defineStore('labelStore', () => {
 
         const getCurrent = computed(() => {
             const defaultData = {
+                id: '',
                 regDate: '',
                 lastModifiedDate: '',
                 identifier: ''

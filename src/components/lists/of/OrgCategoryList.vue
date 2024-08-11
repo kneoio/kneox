@@ -2,7 +2,7 @@
   <n-grid cols="6" x-gap="12" y-gap="12" class="p-4">
     <n-gi>
       <n-page-header>
-        <template #title>Tasks by Author</template>
+        <template #title>Organization categories</template>
         <template #footer>
           Total: {{ store.getPagination.itemCount }}
         </template>
@@ -16,6 +16,7 @@
     </n-gi>
     <n-gi span="6">
       <n-data-table
+          v-if="!loading"
           remote
           :columns="columns"
           :row-key="rowKey"
@@ -27,12 +28,13 @@
           @update:page-size="handlePageSizeChange"
           @update:checked-row-keys="handleCheckedRowKeysChange"
       />
+      <loader-icon v-else /> <!-- Show loader when loading -->
     </n-gi>
   </n-grid>
 </template>
 
 <script lang="ts">
-import {computed, defineComponent, h, onMounted, ref} from 'vue';
+import { computed, defineComponent, onMounted, ref } from 'vue';
 import {
   DataTableColumns,
   NButton,
@@ -41,64 +43,32 @@ import {
   NGi,
   NGrid,
   NPageHeader,
-  NPagination,
   NTag,
-  useMessage
+  useMessage,
 } from 'naive-ui';
-import {useRouter} from 'vue-router';
-import {useTaskStore} from "../../../stores/project/taskStore";
-import {Task} from "../../../types/projectTypes";
+import { useRouter } from 'vue-router';
+import { OrgCategory } from '../../../types/officeFrameTypes';
+import { useOrgCategoryStore } from '../../../stores/of/orgCategoryStore';
+import LoaderIcon from '../../helpers/LoaderWrapper.vue'; // Import the LoaderIcon component
 
 export default defineComponent({
-  components: { NPageHeader, NDataTable, NPagination, NButtonGroup, NButton, NGi, NGrid, NTag },
+  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, NTag, LoaderIcon }, // Add LoaderIcon to components
   setup() {
     const router = useRouter();
     const msgPopup = useMessage();
-    const store = useTaskStore();
+    const store = useOrgCategoryStore();
     const isMobile = ref(window.innerWidth < 768);
     const selectedRows = ref<string[]>([]);
-
-    const statusMap: Record<number, string> = {
-      0: 'UNKNOWN',
-      100: 'DRAFT',
-      101: 'WAITING_FOR_START',
-      102: 'ACTIVE',
-      103: 'COMPLETED',
-      104: 'MERGED',
-      105: 'PAUSED'
-    };
-    const priorityMap: Record<number, string> = {
-      0: 'Low',
-      1: 'Below Normal',
-      2: 'Normal',
-      3: 'Above Normal',
-      4: 'High',
-      5: 'Critical'
-    };
-
-    const statusTypeMap: Record<number, string> = {
-      0: 'default',
-      100: 'info',
-      101: 'warning',
-      102: 'success',
-      103: 'success',
-      104: 'default',
-      105: 'error'
-    };
-    const priorityTypeMap: Record<number, string> = {
-      0: 'default',
-      1: 'info',
-      2: 'success',
-      3: 'warning',
-      4: 'error',
-      5: 'error'
-    };
+    const loading = ref(false); // Add loading state
 
     async function preFetch() {
       try {
+        loading.value = true;
         await store.fetchAll();
       } catch (error) {
         console.error('Failed to fetch initial data:', error);
+      } finally {
+        loading.value = false;
       }
     }
 
@@ -110,12 +80,12 @@ export default defineComponent({
       });
     });
 
-    const columns = computed<DataTableColumns<Task>>(() => [
+    const columns = computed<DataTableColumns<OrgCategory>>(() => [
       {
         type: 'selection',
-        disabled: (row: Task) => !row.id,
+        disabled: (row: OrgCategory) => !row.id,
         options: ['none', 'all'],
-        onSelect: (value: string | number | boolean, row: Task) => {
+        onSelect: (value: string | number | boolean, row: OrgCategory) => {
           const checked = !!value;
           if (row.id) {
             const index = selectedRows.value.indexOf(row.id);
@@ -126,37 +96,34 @@ export default defineComponent({
             }
           }
           return false;
-        }
+        },
       },
-      { title: 'Assignee', key: 'assignee.localizedName.ENG' },
-      {
-        title: 'Status',
-        key: 'status',
-        render(row: Task) {
-          return h(NTag, { type: statusTypeMap[row.status] }, { default: () => statusMap[row.status] });
-        }
-      },
-      {
-        title: 'Priority',
-        key: 'priority',
-        render(row: Task) {
-          return h(NTag, { type: priorityTypeMap[row.priority] }, { default: () => priorityMap[row.priority] });
-        }
-      },
+      { title: 'Name', key: 'localizedName["ENG"]' },
+      { title: 'Identifier', key: 'identifier' },
       { title: 'Registered', key: 'regDate' },
-      { title: 'Author', key: 'author' }
+      { title: 'Author', key: 'author' },
     ]);
 
-    const handlePageChange = (page: number) => {
-      store.fetchAll(page, store.getPagination.pageSize);
+    const handlePageChange = async (page: number) => {
+      loading.value = true;
+      try {
+        await store.fetchAll(page, store.getPagination.pageSize);
+      } finally {
+        loading.value = false;
+      }
     };
 
-    const handlePageSizeChange = (pageSize: number) => {
-      store.fetchAll(1, pageSize);
+    const handlePageSizeChange = async (pageSize: number) => {
+      loading.value = true;
+      try {
+        await store.fetchAll(1, pageSize);
+      } finally {
+        loading.value = false;
+      }
     };
 
     const handleNewClick = () => {
-      router.push({ name: 'NewTaskForm' }).catch(err => {
+      router.push({ name: 'NewOrgCategoryForm' }).catch((err) => {
         console.error('Navigation error:', err);
       });
     };
@@ -166,17 +133,17 @@ export default defineComponent({
       selectedRows.value = [];
     };
 
-    const getRowProps = (row: Task) => {
+    const getRowProps = (row: OrgCategory) => {
       return {
         style: 'cursor: pointer;',
         onClick: (e: MouseEvent) => {
           if (!(e.target as HTMLElement).closest('.n-checkbox')) {
-            const routeTo = { name: 'TaskForm', params: { id: row.id } };
-            router.push(routeTo).catch(err => {
+            const routeTo = { name: 'OrgCategoryForm', params: { id: row.id } };
+            router.push(routeTo).catch((err) => {
               console.error('Navigation error:', err);
             });
           }
-        }
+        },
       };
     };
 
@@ -196,8 +163,9 @@ export default defineComponent({
       handlePageSizeChange,
       handleCheckedRowKeysChange,
       selectedRows,
+      loading, // Return loading state
     };
-  }
+  },
 });
 </script>
 

@@ -1,20 +1,20 @@
 <template>
-  <n-grid cols="24" x-gap="12" y-gap="12" class="p-4">
+  <n-grid cols="6" x-gap="12" y-gap="12" class="p-4">
     <n-gi>
       <n-page-header>
-        <template #title>Labels</template>
+        <template #title>Languages</template>
         <template #footer>
           Total: {{ store.getPagination.itemCount }}
         </template>
       </n-page-header>
     </n-gi>
-    <n-gi span="24">
+    <n-gi span="6">
       <n-button-group>
         <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
         <n-button @click="handleArchive" size="large" :disabled="!selectedRows.length">Archive</n-button>
       </n-button-group>
     </n-gi>
-    <n-gi span="24">
+    <n-gi span="6">
       <n-data-table
           remote
           :columns="columns"
@@ -32,7 +32,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, h, onMounted, ref } from 'vue';
+import {computed, defineComponent, onMounted, ref} from 'vue';
 import {
   DataTableColumns,
   NButton,
@@ -40,21 +40,22 @@ import {
   NDataTable,
   NGi,
   NGrid,
+  NH2,
   NPageHeader,
   NPagination,
-  NTag,
+  NSpace,
   useMessage
 } from 'naive-ui';
-import { useRouter } from 'vue-router';
-import { useLabelStore } from '../../stores/of/labelStore';
-import { Label } from '../../types/officeFrameTypes';
+import {useRouter} from 'vue-router';
+import {Position} from "../../../types/officeFrameTypes";
+import {useLanguageStore} from "../../../stores/of/languageStore";
 
 export default defineComponent({
-  components: { NPageHeader, NDataTable, NPagination, NButtonGroup, NButton, NGi, NGrid, NTag },
+  components: {NPageHeader, NSpace, NH2, NDataTable, NPagination, NButtonGroup, NButton, NGi, NGrid},
   setup() {
     const router = useRouter();
     const msgPopup = useMessage();
-    const store = useLabelStore();
+    const store = useLanguageStore();
     const isMobile = ref(window.innerWidth < 768);
     const selectedRows = ref<string[]>([]);
 
@@ -74,12 +75,12 @@ export default defineComponent({
       });
     });
 
-    const columns = computed<DataTableColumns<Label>>(() => [
+    const columns = computed<DataTableColumns<Position>>(() => [
       {
         type: 'selection',
-        disabled: (row: Label) => !row.id,
+        disabled: (row: Position) => !row.id,
         options: ['none', 'all'],
-        onSelect: (value: string | number | boolean, row: Label) => {
+        onSelect: (value: string | number | boolean, row: Position) => {
           const checked = !!value;
           if (row.id) {
             const index = selectedRows.value.indexOf(row.id);
@@ -92,17 +93,10 @@ export default defineComponent({
           return false;
         }
       },
-      { title: 'Name', key: 'localizedName["ENG"]' },
-      { title: 'Identifier', key: 'identifier' },
-      {
-        title: 'Color',
-        key: 'color',
-        render(row: Label) {
-          return h(NTag, { style: { backgroundColor: row.color, color: '#fff' } }, () => row.color);
-        }
-      },
-      { title: 'Registered', key: 'regDate' },
-      { title: 'Author', key: 'author' }
+      {title: 'Name', key: 'localizedName["ENG"]'},
+      {title: 'Code', key: 'code'},
+      {title: 'Registered', key: 'regDate'},
+      {title: 'Author', key: 'author'}
     ]);
 
     const handlePageChange = (page: number) => {
@@ -114,7 +108,7 @@ export default defineComponent({
     };
 
     const handleNewClick = () => {
-      router.push({ name: 'NewLabelForm' }).catch(err => {
+      router.push({name: 'NewLanguageForm'}).catch(err => {
         console.error('Navigation error:', err);
       });
     };
@@ -122,14 +116,14 @@ export default defineComponent({
     const handleArchive = async () => {
       msgPopup.info(`Mock archive action for rows: ${selectedRows.value.join(', ')}`);
       selectedRows.value = [];
-    };
+    }
 
-    const getRowProps = (row: Label) => {
+    const getRowProps = (row: Position) => {
       return {
         style: 'cursor: pointer;',
         onClick: (e: MouseEvent) => {
           if (!(e.target as HTMLElement).closest('.n-checkbox')) {
-            const routeTo = { name: 'LabelForm', params: { id: row.id } };
+            const routeTo = {name: 'LanguageForm', params: {id: row.id}};
             router.push(routeTo).catch(err => {
               console.error('Navigation error:', err);
             });

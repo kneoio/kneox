@@ -1,4 +1,5 @@
 import axios from 'axios';
+import keycloak from '../keycloakFactory'; // Adjust the path according to your project structure
 
 const apiServer = import.meta.env.VITE_API_SERVER;
 
@@ -20,6 +21,20 @@ export const setupApiClient = (token: string) => {
             },
             (error) => {
                 console.error("Error in request interceptor:", error);
+                return Promise.reject(error);
+            }
+        );
+
+        apiClient.interceptors.response.use(
+            (response) => response,
+            async (error) => {
+                if (error.response && error.response.status === 401) {
+                    try {
+                        await keycloak.login(); // Redirect to login on session expiration
+                    } catch (e) {
+                        console.error("Failed to re-authenticate after 401", e);
+                    }
+                }
                 return Promise.reject(error);
             }
         );

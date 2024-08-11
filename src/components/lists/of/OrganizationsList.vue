@@ -2,7 +2,7 @@
   <n-grid cols="6" x-gap="12" y-gap="12" class="p-4">
     <n-gi>
       <n-page-header>
-        <template #title>Organization categories</template>
+        <template #title>Organizations</template>
         <template #footer>
           Total: {{ store.getPagination.itemCount }}
         </template>
@@ -23,10 +23,15 @@
           :pagination="store.getPagination"
           :bordered="false"
           :row-props="getRowProps"
+          :loading="loading"
           @update:page="handlePageChange"
           @update:page-size="handlePageSizeChange"
           @update:checked-row-keys="handleCheckedRowKeysChange"
-      />
+      >
+        <template #loading>
+          <loader-icon />
+        </template>
+      </n-data-table>
     </n-gi>
   </n-grid>
 </template>
@@ -42,44 +47,48 @@ import {
   NGrid,
   NPageHeader,
   NPagination,
-  NTag,
   useMessage
 } from 'naive-ui';
 import {useRouter} from 'vue-router';
-import {OrgCategory} from '../../types/officeFrameTypes';
-import {useOrgCategoryStore} from "../../stores/of/orgCategoryStore";
+import {useOrganizationStore} from "../../../stores/of/organizationStore";
+import {Organization} from "../../../types/officeFrameTypes";
+import LoaderIcon from '../../helpers/LoaderWrapper.vue';
 
 export default defineComponent({
-  components: {NPageHeader, NDataTable, NPagination, NButtonGroup, NButton, NGi, NGrid, NTag},
+  components: {NPageHeader, NDataTable, NPagination, NButtonGroup, NButton, NGi, NGrid, LoaderIcon},
   setup() {
     const router = useRouter();
     const msgPopup = useMessage();
-    const store = useOrgCategoryStore();
+    const store = useOrganizationStore();
     const isMobile = ref(window.innerWidth < 768);
     const selectedRows = ref<string[]>([]);
+    const loading = ref(false);
 
     async function preFetch() {
       try {
+        loading.value = true;
         await store.fetchAll();
       } catch (error) {
         console.error('Failed to fetch initial data:', error);
+      } finally {
+        loading.value = false;
       }
     }
 
     preFetch();
 
-    onMounted(async () => {
+    onMounted(() => {
       window.addEventListener('resize', () => {
         isMobile.value = window.innerWidth < 768;
       });
     });
 
-    const columns = computed<DataTableColumns<OrgCategory>>(() => [
+    const columns = computed<DataTableColumns<Organization>>(() => [
       {
         type: 'selection',
-        disabled: (row: OrgCategory) => !row.id,
+        disabled: (row: Organization) => !row.id,
         options: ['none', 'all'],
-        onSelect: (value: string | number | boolean, row: OrgCategory) => {
+        onSelect: (value: string | number | boolean, row: Organization) => {
           const checked = !!value;
           if (row.id) {
             const index = selectedRows.value.indexOf(row.id);
@@ -98,16 +107,26 @@ export default defineComponent({
       {title: 'Author', key: 'author'}
     ]);
 
-    const handlePageChange = (page: number) => {
-      store.fetchAll(page, store.getPagination.pageSize);
+    const handlePageChange = async (page: number) => {
+      try {
+        loading.value = true;
+        await store.fetchAll(page, store.getPagination.pageSize);
+      } finally {
+        loading.value = false;
+      }
     };
 
-    const handlePageSizeChange = (pageSize: number) => {
-      store.fetchAll(1, pageSize);
+    const handlePageSizeChange = async (pageSize: number) => {
+      try {
+        loading.value = true;
+        await store.fetchAll(1, pageSize);
+      } finally {
+        loading.value = false;
+      }
     };
 
     const handleNewClick = () => {
-      router.push({name: 'NewOrgCategoryForm'}).catch(err => {
+      router.push({name: 'NewOrganizationForm'}).catch(err => {
         console.error('Navigation error:', err);
       });
     };
@@ -115,14 +134,14 @@ export default defineComponent({
     const handleArchive = async () => {
       msgPopup.info(`Mock archive action for rows: ${selectedRows.value.join(', ')}`);
       selectedRows.value = [];
-    };
+    }
 
-    const getRowProps = (row: OrgCategory) => {
+    const getRowProps = (row: Organization) => {
       return {
         style: 'cursor: pointer;',
         onClick: (e: MouseEvent) => {
           if (!(e.target as HTMLElement).closest('.n-checkbox')) {
-            const routeTo = {name: 'OrgCategoryForm', params: {id: row.id}};
+            const routeTo = {name: 'OrganizationForm', params: {id: row.id}};
             router.push(routeTo).catch(err => {
               console.error('Navigation error:', err);
             });
@@ -147,6 +166,7 @@ export default defineComponent({
       handlePageSizeChange,
       handleCheckedRowKeysChange,
       selectedRows,
+      loading
     };
   }
 });

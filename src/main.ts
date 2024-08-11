@@ -34,22 +34,33 @@ keycloak.init({
             console.log('User profile loaded', profile);
             setupApiClient(keycloak.token);
             startApp();
-            cleanUpUrl();
+
+            // Set up token refresh
+            setInterval(async () => {
+                try {
+                    const refreshed = await keycloak.updateToken(70);
+                    if (refreshed) {
+                        setupApiClient(keycloak.token); // Update API client with the new token
+                    } else {
+                        console.log('Token is still valid');
+                    }
+                } catch (error) {
+                    console.error('Failed to refresh token, logging out', error);
+                    keycloak.logout(); // Redirect to login on failure
+                }
+            }, 60000); // Check every 60 seconds
+
         } catch (error) {
             console.error('Failed to load user profile', error);
-         //   handleSessionInvalid();
+            keycloak.logout(); // Redirect to login on failure
         }
     } else {
         console.warn('Not authenticated - redirecting to login');
-        startApp();
-       // keycloak.updateToken(0);
-       // await keycloak.login();
-       // handleSessionInvalid();
+        keycloak.login();
     }
 }).catch((error: any) => {
     console.error('Failed to initialize Keycloak - redirecting to login', error);
     keycloak.login();
-   // handleSessionInvalid();
 });
 
 function startApp() {
@@ -61,9 +72,3 @@ function startApp() {
     app.use(router);
     app.mount('#app');
 }
-
-function cleanUpUrl() {
-   // router.replace(window.location.pathname); // Uncommented to clean up the URL
-}
-
-

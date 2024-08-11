@@ -49,7 +49,7 @@
               </n-gi>
               <n-gi>
                 <n-form-item label="Is hidden">
-                  <n-checkbox :checked="localFormData.hidden"/>
+                  <n-checkbox v-model:checked="localFormData.hidden"/>
                 </n-form-item>
               </n-gi>
             </n-grid>
@@ -95,8 +95,8 @@ import {
   useMessage
 } from 'naive-ui';
 import {ArrowBigLeft} from '@vicons/tabler';
-import {Label, LabelSave} from "../../types/officeFrameTypes";
-import {useLabelStore} from "../../stores/of/labelStore";
+import {Label, LabelSave} from "../../../types/officeFrameTypes";
+import {useLabelStore} from "../../../stores/of/labelStore";
 
 export default defineComponent({
   name: 'LabelForm',
@@ -129,6 +129,7 @@ export default defineComponent({
       loadingBar.start();
       try {
         const saveDTO: LabelSave = {
+          id: localFormData.id,
           identifier: localFormData.identifier,
           color: localFormData.color,
           parent: localFormData.parent,
@@ -153,7 +154,7 @@ export default defineComponent({
     }
 
     const goBack = () => {
-      router.push('/references/lookups/labels');
+      router.back();
     };
 
 
