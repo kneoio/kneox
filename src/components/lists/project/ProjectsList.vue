@@ -75,10 +75,8 @@ export default defineComponent({
       },
       {title: 'Name', key: 'name'},
       {title: 'Status', key: 'status'},
-      {title: 'Manager', key: 'manager.name'},
-      {title: 'Coder', key: 'coder.name'},
-      {title: 'Tester', key: 'tester.name'},
-      {title: 'Finish date', key: 'finishDate'}
+      {title: 'Finish date', key: 'finishDate'},
+      {title: 'Author', key: 'author'},
     ];
 
     const handlePageChange = (page: number) => {

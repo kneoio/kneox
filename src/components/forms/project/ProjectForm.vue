@@ -43,20 +43,23 @@
               </n-gi>
               <n-gi span="24">
                 <n-form-item label="Manager">
-                  <!--                  <n-select v-model:value="localData.manager.name" :options="officeFrameStore.ts.employeeOptions"
-                                              style="width: 100%; max-width: 600px;"/>-->
+                  <n-select v-model:value="localData.manager.id"
+                            :options="employeeStore.getOptions"
+                            style="width: 100%; max-width: 600px;"/>
                 </n-form-item>
               </n-gi>
               <n-gi span="24">
                 <n-form-item label="Coder">
-                  <!--                  <n-select v-model:value="projectStore.projectFields.coder.id" :options="officeFrameStore.ts.employeeOptions"
-                                              style="width: 100%; max-width: 600px;"/>-->
+                  <n-select v-model:value="localData.coder.id"
+                            :options="employeeStore.getOptions"
+                            style="width: 100%; max-width: 600px;"/>
                 </n-form-item>
               </n-gi>
               <n-gi span="24">
                 <n-form-item label="Tester">
-                  <!--                  <n-select v-model:value="projectStore.projectFields.tester.id" :options="employeeStore.employeeOptions"
-                                              style="width: 100%; max-width: 600px;"/>-->
+                  <n-select v-model:value="localData.tester.id"
+                            :options="employeeStore.getOptions"
+                            style="width: 100%; max-width: 600px;"/>
                 </n-form-item>
               </n-gi>
             </n-grid>
@@ -65,7 +68,7 @@
         <n-tab-pane name="rls" tab="RLS">
           <n-dynamic-input
               v-model:value="localData.rls"
-              :on-remove="handleRemoveReader"
+
           >
             <template #default="{ value }">
               <n-space align="center" style="margin-bottom: 12px;">
@@ -149,10 +152,7 @@ export default defineComponent({
       id: '',
       status: '',
       name: '',
-      finishDate: undefined,
-      manager: '',
-      coder: '',
-      tester: '',
+      finishDate: undefined, coder: {id: "", name: ""}, manager: {id: "", name: ""}, tester: {id: "", name: ""},
       rls: []
     });
 
@@ -178,27 +178,26 @@ export default defineComponent({
       router.push('/projects-and-tasks/projects');
     };
 
-    const handleRemoveReader = (index: number) => {
-
-    };
 
     onMounted(async () => {
       const projectId = route.params.id as string;
-      await store.fetchProject(projectId);
+      await Promise.all([
+        store.fetchProject(projectId),
+        employeeStore.fetchEmployees()
+      ]);
       Object.assign(localData, store.getCurrent);
 
     });
 
     return {
       store,
-      localData,
       employeeStore,
+      localData,
       statusOptions,
       accessLevelOptions,
       handleSaveProject,
       activeTab,
       goBack,
-      handleRemoveReader
     };
   }
 });

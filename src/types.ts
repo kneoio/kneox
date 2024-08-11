@@ -1,5 +1,5 @@
-export interface ApiFormResponse {
-    docData: Record<string, any>;
+export interface ApiFormResponse<T = any> {
+    docData: T;
     actions: any[];
 }
 
@@ -17,6 +17,7 @@ export interface ViewData<T = any> {
 }
 
 export interface Label {
+    id: string;
     label: string;
     value: string;
     color: string;

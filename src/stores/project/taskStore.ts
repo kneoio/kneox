@@ -6,7 +6,7 @@ import {Task, TaskSave} from "../../types/projectTypes";
 
 export const useTaskStore = defineStore('taskStore', () => {
         const apiViewResponse = ref<ApiViewPageResponse<Task> | null>(null);
-        const apiFormResponse = ref<ApiFormResponse | null>(null);
+        const apiFormResponse = ref<ApiFormResponse<Task> | null>(null);
 
         const getEntries = computed(() => {
             return apiViewResponse.value?.viewData.entries || [];
@@ -25,7 +25,7 @@ export const useTaskStore = defineStore('taskStore', () => {
             const docData = apiFormResponse.value?.docData || defaultData;
             return {
                 ...docData,
-                labels: docData.labels.map((label: { id: string }) => label.id)
+                labels: docData.labels.map((label) => label.id)
             };
         });
 

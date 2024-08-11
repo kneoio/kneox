@@ -1,3 +1,5 @@
+import {Label} from "../types";
+
 export interface Project {
     id: string;
     author: string | undefined;
@@ -5,9 +7,18 @@ export interface Project {
     name: string;
     status: string;
     finishDate: string | undefined;
-    manager: string;
-    coder: string;
-    tester: string | undefined;
+    manager: {
+        id: string;
+        name: string;
+    };
+    coder: {
+        id: string;
+        name: string;
+    };
+    tester: {
+        id: string;
+        name: string;
+    };
     selected?: boolean;
     rls:[];
 }
@@ -20,6 +31,8 @@ export interface Task {
     lastModifiedDate: string;
     title: string,
     regNumber: string;
+    startDate: string | undefined;
+    targetDate: string | undefined;
     project: {
         id: string;
         name: string;
@@ -32,7 +45,7 @@ export interface Task {
         identifier: string,
         name: string
     },
-    labels: string[];
+    labels: Label[];
     body: string;
     status: number;
     priority: number;
@@ -44,6 +57,8 @@ export interface TaskSave {
     title: string;
     status: number;
     priority: number;
+    startDate: string | undefined;
+    targetDate: string | undefined;
     project: {
         id: string;
     };
@@ -53,6 +68,6 @@ export interface TaskSave {
     taskType: {
         identifier: string,
     };
-    labels: string[];
+    labels: Label[];
     body: string;
 }

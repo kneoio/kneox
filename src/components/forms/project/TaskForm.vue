@@ -60,12 +60,27 @@
                   />
                 </n-form-item>
               </n-gi>
+              <n-gi span="6">
+                <n-form-item label="Dates">
+                  <n-space>
+                    <n-date-picker
+                        v-model:formatted-value="localFormData.startDate"
+                        value-format="dd.MM.yyyy"
+                        clearable
+                        style="width: 100%; max-width: 300px;"/>
+                    <n-date-picker
+                        v-model:formatted-value="localFormData.targetDate"
+                        value-format="dd.MM.yyyy"
+                        clearable
+                        style="width: 100%; max-width: 300px;"/>
+                  </n-space>
+                </n-form-item>
+              </n-gi>
               <n-gi span="3">
                 <n-form-item label="Priority">
                   <n-slider v-model:value="localFormData.priority"
-                            :step="0.1"
-                            :min="0"
-                            :max="5"
+                            step="mark"
+                            :marks="marks"
                             style="width: 100%; max-width: 600px;"
                   />
                 </n-form-item>
@@ -104,7 +119,7 @@ import {defineComponent, h, onMounted, reactive, ref} from 'vue';
 import {useRoute, useRouter} from 'vue-router';
 import {
   NButton,
-  NButtonGroup,
+  NButtonGroup, NDatePicker,
   NDynamicTags,
   NForm,
   NFormItem,
@@ -121,7 +136,7 @@ import {
   useLoadingBar,
   useMessage,
 } from 'naive-ui';
-import type { SelectRenderTag } from 'naive-ui'
+import type {SelectRenderTag} from 'naive-ui'
 import {Task, TaskSave} from '../../../types/projectTypes';
 import {useTaskStore} from '../../../stores/project/taskStore';
 import {useProjectStore} from '../../../stores/project/projectStore';
@@ -132,6 +147,7 @@ import {useLabelStore} from '../../../stores/of/labelStore';
 export default defineComponent({
   name: 'TaskForm',
   components: {
+    NDatePicker,
     NPageHeader,
     NButtonGroup,
     NForm,
@@ -160,12 +176,13 @@ export default defineComponent({
     const labelStore = useLabelStore();
     const activeTab = ref('properties');
     const localFormData = reactive<Task>({
-      assignee: {id: '', name: ''},
       id: '',
-      author: '',
       regDate: '',
       lastModifier: '',
       lastModifiedDate: '',
+      assignee: {id: '', name: ''},
+      startDate: undefined, targetDate: undefined,
+      author: '',
       title: '',
       regNumber: '',
       project: {
@@ -176,7 +193,7 @@ export default defineComponent({
       taskType: {identifier: '', name: ''},
       priority: 0,
       labels: [],
-      body: '',
+      body: ''
     });
 
     const handleSave = async () => {
@@ -214,7 +231,7 @@ export default defineComponent({
       router.push('/projects-and-tasks/tasks/by-author');
     };
 
-    const renderTag: SelectRenderTag  = ({ option, handleClose }) => {
+    const renderTag: SelectRenderTag = ({option, handleClose}) => {
       const backgroundColor = option.color || '#FFFFFF';
       const luminance = getLuminance(backgroundColor);
       const textColor = luminance > 150 ? '#000000' : '#FFFFFF';
@@ -232,15 +249,15 @@ export default defineComponent({
               handleClose();
             }
           },
-          { default: () => option.label }
+          {default: () => option.label}
       );
     };
 
     function getLuminance(hexColor: string) {
       const rgb = parseInt(hexColor.slice(1), 16);
       const r = (rgb >> 16) & 0xff;
-      const g = (rgb >>  8) & 0xff;
-      const b = (rgb >>  0) & 0xff;
+      const g = (rgb >> 8) & 0xff;
+      const b = (rgb >> 0) & 0xff;
       return 0.299 * r + 0.587 * g + 0.114 * b;
     }
 
@@ -277,7 +294,13 @@ export default defineComponent({
       handleArchive,
       activeTab,
       goBack,
-      renderTag
+      renderTag,
+      marks: {
+        0: 'low',
+        30: 'normal',
+        60: 'urgent',
+        90: 'critical'
+      }
     };
   },
 });

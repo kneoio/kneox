@@ -50,16 +50,17 @@ export default defineComponent({
 
     const projectMenuOptions = [
       { label: 'Projects', key: '/projects-and-tasks/projects', icon: () => h('IconWrapper', { icon: ProjectOutlined }) },
+      { label: 'Tasks', key: '/projects-and-tasks/tasks', icon: () => h('IconWrapper', { icon: ProjectOutlined }) },
       {
-        label: 'Tasks', key: '/tasks', icon: () => h('IconWrapper', { icon: ProjectOutlined }),
+        label: 'My Tasks', key: '/tasks', icon: () => h('IconWrapper', { icon: ProjectOutlined }),
         children: [
           {
-            label: 'By Author',
+            label: 'Created by me',
             key: '/projects-and-tasks/tasks/by-author',
             icon: () => h('IconWrapper', { icon: UserOutlined })
           },
           {
-            label: 'By project',
+            label: 'Assigned to me',
             key: '/projects-and-tasks/tasks/by-project',
             icon: () => h('IconWrapper', { icon: ProjectOutlined })
           }
