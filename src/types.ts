@@ -1,4 +1,3 @@
-// API Response related types
 export interface ApiFormResponse {
     docData: Record<string, any>;
     actions: any[];
@@ -18,12 +17,10 @@ export interface ViewData<T = any> {
 }
 
 export interface Label {
-    id: string;
-    identifier: string;
-    hidden: boolean;
+    label: string;
+    value: string;
     color: string;
 }
-
 
 export interface Actions {
     actions: {

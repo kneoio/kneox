@@ -27,6 +27,13 @@
           <n-form label-placement="left" label-width="auto">
             <n-grid :cols="6" x-gap="12" y-gap="12" class="m-3">
               <n-gi span="6">
+                <n-form-item label="Title">
+                  <n-input v-model:value="localFormData.title"
+                           placeholder="The task title"
+                           style="width: 50%; max-width: 600px;"/>
+                </n-form-item>
+              </n-gi>
+              <n-gi span="6">
                 <n-form-item label="Project">
                   <n-select
                       v-model:value="localFormData.project.id"
@@ -64,17 +71,16 @@
                 </n-form-item>
               </n-gi>
               <n-gi span="6">
-                {{labelStore.getOptions}}
-                {{localFormData.labels}}
                 <n-form-item label="Labels">
                   <n-select
-                      v-model="localFormData.labels"
+                      v-model:value="localFormData.labels"
                       multiple
                       :render-tag="renderTag"
                       :options="labelStore.getOptions"
                       style="width: 50%; max-width: 600px;"
                   />
                 </n-form-item>
+
               </n-gi>
             </n-grid>
           </n-form>
@@ -160,6 +166,7 @@ export default defineComponent({
       regDate: '',
       lastModifier: '',
       lastModifiedDate: '',
+      title: '',
       regNumber: '',
       project: {
         id: '',
@@ -174,16 +181,18 @@ export default defineComponent({
 
     const handleSave = async () => {
       loadingBar.start();
+      console.log(localFormData)
       try {
         const saveDTO: TaskSave = {
+          title: localFormData.title,
           id: localFormData.id,
           status: localFormData.status,
           priority: localFormData.priority,
           project: {id: localFormData.project.id},
           assignee: {id: localFormData.assignee.id},
           taskType: {identifier: localFormData.taskType.identifier},
-          labels: localFormData.labels.map(label =>  label.id),
-          body: localFormData.body,
+          labels: localFormData.labels,
+          body: localFormData.body
         };
         await store.save(saveDTO, localFormData.id);
         message.success('Task saved successfully');

@@ -1,5 +1,3 @@
-import {Label} from "../types";
-
 export interface Project {
     id: string;
     author: string | undefined;
@@ -20,6 +18,7 @@ export interface Task {
     regDate: string;
     lastModifier: string;
     lastModifiedDate: string;
+    title: string,
     regNumber: string;
     project: {
         id: string;
@@ -33,7 +32,7 @@ export interface Task {
         identifier: string,
         name: string
     },
-    labels: Label[];
+    labels: string[];
     body: string;
     status: number;
     priority: number;
@@ -42,6 +41,7 @@ export interface Task {
 
 export interface TaskSave {
     id?: string;
+    title: string;
     status: number;
     priority: number;
     project: {

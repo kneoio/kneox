@@ -18,10 +18,17 @@ export const useTaskStore = defineStore('taskStore', () => {
                 lastModifiedDate: '',
                 regNumber: '',
                 identifier: '',
+                labels: [],
                 status: 1
             };
-            return apiFormResponse.value?.docData || defaultData;
+
+            const docData = apiFormResponse.value?.docData || defaultData;
+            return {
+                ...docData,
+                labels: docData.labels.map((label: { id: string }) => label.id)
+            };
         });
+
 
         const getPagination = computed(() => {
             if (!apiViewResponse.value) {
@@ -46,15 +53,15 @@ export const useTaskStore = defineStore('taskStore', () => {
             };
         });
 
-    const statusTypeMap: Record<number, string> = {
-        0: 'default',
-        100: 'info',
-        101: 'warning',
-        102: 'success',
-        103: 'success',
-        104: 'default',
-        105: 'error'
-    };
+        const statusTypeMap: Record<number, string> = {
+            0: 'default',
+            100: 'info',
+            101: 'warning',
+            102: 'success',
+            103: 'success',
+            104: 'default',
+            105: 'error'
+        };
 
         const fetchTasks = async (page = 1, pageSize = 10) => {
             const response = await apiClient.post(`/tasks?page=${page}&size=${pageSize}`, {});
