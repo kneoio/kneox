@@ -46,21 +46,21 @@ keycloak.init({
                     }
                 } catch (error) {
                     console.error('Failed to refresh token, logging out', error);
-                    keycloak.logout(); // Redirect to login on failure
+                   // keycloak.logout(); // Redirect to login on failure
                 }
             }, 60000); // Check every 60 seconds
 
         } catch (error) {
             console.error('Failed to load user profile', error);
-            keycloak.logout(); // Redirect to login on failure
+          //  keycloak.logout(); // Redirect to login on failure
         }
     } else {
         console.warn('Not authenticated - redirecting to login');
-        keycloak.login();
+      //  keycloak.login();
     }
 }).catch((error: any) => {
     console.error('Failed to initialize Keycloak - redirecting to login', error);
-    keycloak.login();
+   // keycloak.login();
 });
 
 function startApp() {
