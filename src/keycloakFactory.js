@@ -1,9 +1,9 @@
 import Keycloak from 'keycloak-js';
 
 const cfg = {
-    url: 'http://localhost:9087',
-    realm: 'test-realm',
-    clientId: 'test-client'
+    url: 'https://auth.keypractica.com',
+    realm: 'keypractica_auth',
+    clientId: 'keypractica_projects'
 };
 
 const keycloakInst = new Keycloak(cfg);

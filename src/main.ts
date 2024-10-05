@@ -56,7 +56,7 @@ keycloak.init({
         }
     } else {
         console.warn('Not authenticated - redirecting to login');
-      //  keycloak.login();
+        keycloak.login();
     }
 }).catch((error: any) => {
     console.error('Failed to initialize Keycloak - redirecting to login', error);

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import keycloak from '../keycloakFactory'; // Adjust the path according to your project structure
+import keycloak from '../keycloakFactory';
 
 const apiServer = import.meta.env.VITE_API_SERVER;
 

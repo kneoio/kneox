@@ -58,7 +58,7 @@ export default defineComponent({
       if (kc) {
         try {
           await kc.logout();
-          window.location.href = 'http://localhost:8090/dashboard';
+         // window.location.href = 'http://localhost:8090/dashboard';
         } catch (error) {
           console.error("Logout failed", error);
         }
