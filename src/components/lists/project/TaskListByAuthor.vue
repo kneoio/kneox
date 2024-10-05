@@ -26,7 +26,7 @@
           :loading="loading"
           @update:page="handlePageChange"
           @update:page-size="handlePageSizeChange"
-          @update:checked-row-keys="handleCheckedRowKeysChange"
+
       >
         <template #loading>
           <loader-icon />
@@ -81,7 +81,7 @@ export default defineComponent({
       4: 'High',
       5: 'Critical'
     };
-
+/*
     const statusTypeMap: Record<number, string> = {
       0: 'default',
       100: 'info',
@@ -98,7 +98,7 @@ export default defineComponent({
       3: 'warning',
       4: 'error',
       5: 'error'
-    };
+    };*/
 
     async function preFetch() {
       try {
@@ -142,14 +142,14 @@ export default defineComponent({
         title: 'Status',
         key: 'status',
         render(row: Task) {
-          return h(NTag, { type: statusTypeMap[row.status] }, { default: () => statusMap[row.status] });
+          return h(NTag, { default: () => statusMap[row.status] });
         }
       },
       {
         title: 'Priority',
         key: 'priority',
         render(row: Task) {
-          return h(NTag, { type: priorityTypeMap[row.priority] }, { default: () => priorityMap[row.priority] });
+          return h(NTag, { default: () => priorityMap[row.priority] });
         }
       },
       { title: 'Registered', key: 'regDate' },

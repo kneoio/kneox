@@ -26,7 +26,7 @@
           :loading="loading"
           @update:page="handlePageChange"
           @update:page-size="handlePageSizeChange"
-          @update:checked-row-keys="handleCheckedRowKeysChange"
+
       >
         <template #loading>
           <loader-icon /> <!-- Assuming you have a loader-icon component -->

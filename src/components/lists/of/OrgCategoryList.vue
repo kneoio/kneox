@@ -26,7 +26,7 @@
           :row-props="getRowProps"
           @update:page="handlePageChange"
           @update:page-size="handlePageSizeChange"
-          @update:checked-row-keys="handleCheckedRowKeysChange"
+
       />
       <loader-icon v-else /> <!-- Show loader when loading -->
     </n-gi>

@@ -25,7 +25,7 @@
           :row-props="getRowProps"
           @update:page="handlePageChange"
           @update:page-size="handlePageSizeChange"
-          @update:checked-row-keys="handleCheckedRowKeysChange"
+
       />
     </n-gi>
   </n-grid>

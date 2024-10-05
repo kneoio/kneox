@@ -88,14 +88,13 @@
               <n-gi span="6">
                 <n-form-item label="Labels">
                   <n-select
-                      v-model:value="localFormData.labels"
+
                       multiple
                       :render-tag="renderTag"
                       :options="labelStore.getOptions"
                       style="width: 50%; max-width: 600px;"
                   />
                 </n-form-item>
-
               </n-gi>
             </n-grid>
           </n-form>
@@ -209,7 +208,9 @@ export default defineComponent({
           assignee: {id: localFormData.assignee.id},
           taskType: {identifier: localFormData.taskType.identifier},
           labels: localFormData.labels,
-          body: localFormData.body
+          body: localFormData.body,
+          startDate: localFormData.startDate,
+          targetDate: localFormData.targetDate,
         };
         await store.save(saveDTO, localFormData.id);
         message.success('Task saved successfully');
@@ -253,7 +254,7 @@ export default defineComponent({
       );
     };
 
-    function getLuminance(hexColor: string) {
+    function getLuminance(hexColor: any) {
       const rgb = parseInt(hexColor.slice(1), 16);
       const r = (rgb >> 16) & 0xff;
       const g = (rgb >> 8) & 0xff;

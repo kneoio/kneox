@@ -53,17 +53,17 @@ export const useTaskStore = defineStore('taskStore', () => {
             };
         });
 
-        const statusTypeMap: Record<number, string> = {
-            0: 'default',
-            100: 'info',
-            101: 'warning',
-            102: 'success',
-            103: 'success',
-            104: 'default',
-            105: 'error'
-        };
+    const statusTypeMap: Record<number, 'error' | 'info' | 'success' | 'warning' | 'default'> = {
+        0: 'default',
+        100: 'info',
+        101: 'warning',
+        102: 'success',
+        103: 'success',
+        104: 'default',
+        105: 'error'
+    };
 
-        const fetchTasks = async (page = 1, pageSize = 10) => {
+    const fetchTasks = async (page = 1, pageSize = 10) => {
             const response = await apiClient.post(`/tasks?page=${page}&size=${pageSize}`, {});
             if (response && response.data && response.data.payload) {
                 apiViewResponse.value = response.data.payload;
