@@ -23,5 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 /.env
-/ci_cd/deploy_fe.sh
-/ci_cd/
+
+/ci_cd/.env.production
+/ci_cd/copy_script.sh
+
