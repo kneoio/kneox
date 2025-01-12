@@ -52,10 +52,12 @@
               <n-gi>
                 <n-form-item label="Upload File">
                   <n-upload
-                      ref="upload"
-                      :default-upload="false"
-                      multiple
-                      @change="handleChange"
+                      :action="uploadUrl"
+                      :default-file-list="fileList"
+                      show-download-button
+                      @finish="handleFinish"
+                      @success="handleSuccess"
+                      style="width: 50%; max-width: 600px;"
                   >
                     <n-button>Select File</n-button>
                   </n-upload>
@@ -70,8 +72,8 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, reactive } from "vue";
-import { useRouter } from "vue-router";
+import {defineComponent, ref, reactive, onMounted} from "vue";
+import {useRoute, useRouter} from "vue-router";
 import {
   NButton,
   NButtonGroup,
@@ -117,13 +119,14 @@ export default defineComponent({
     const message = useMessage();
     const router = useRouter();
     const store = useSoundFragmentStore();
-
+    const route = useRoute();
     const activeTab = ref("properties");
     const fileList = ref([]);
     const fileListLength = ref(0);
     const uploadRef = ref<UploadInst | null>(null)
     const fileListLengthRef = ref(0)
-
+    const defaultFileList: UploadFileInfo[] = []
+    const uploadUrl = ref("http://localhost:38707/api/kneo/soundfragments/upload");
     const localFormData = reactive<SoundFragment>({
       id: "",
       author: "",
@@ -140,6 +143,7 @@ export default defineComponent({
     });
 
     const handleChange = (data: { fileList: UploadFileInfo[] }) => {
+      console.log('change：', fileList);
       fileListLengthRef.value = data.fileList.length
 
     /*  // Optional: Convert files to base64 and add to the payload
@@ -175,6 +179,25 @@ export default defineComponent({
       }
     };
 
+    const handleFinish = ({file, event}: {
+      file: UploadFileInfo
+      event?: ProgressEvent
+    }) => {
+      message.success((event?.target as XMLHttpRequest).response)
+      const ext = file.name.split('.')[1]
+      file.name = `renamed.${ext}`
+      file.url = 'https://www.mocky.io/v2/5e4bafc63100007100d8b70f'
+      return file
+    }
+
+    const handleSuccess = ({ file }: { file: UploadFileInfo }) => {
+      console.log("Uploaded file URL:", file.url);
+      if (file.url) {
+        //formData.fileUrls.push(file.url);
+      }
+    };
+
+
     const handleArchive = () => {
       message.info("Archive functionality not implemented yet");
     };
@@ -183,6 +206,24 @@ export default defineComponent({
       router.push("/soundfragments");
     };
 
+    onMounted(async () => {
+      const id = route.params.id as string;
+      if (id) {
+        loadingBar.start();
+        try {
+          await Promise.all([
+            store.fetch(id),
+          ]);
+          Object.assign(localFormData, store.getCurrent);
+          loadingBar.finish();
+        } catch (error) {
+          console.error('Failed to fetch: ', error);
+          message.error('Failed to fetch');
+          loadingBar.error();
+        }
+      }
+    });
+
     return {
       store,
       localFormData,
@@ -190,7 +231,11 @@ export default defineComponent({
       handleArchive,
       activeTab,
       goBack,
+      uploadUrl,
       handleChange,
+      handleFinish,
+      handleSuccess,
+      defaultFileList,
       fileList,
       fileListLength,
       uploadRef,
