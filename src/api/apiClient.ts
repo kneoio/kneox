@@ -8,7 +8,7 @@ if (!apiServer) {
 }
 
 const apiClient = axios.create({
-    baseURL: `${apiServer}/api/kneox`,
+    baseURL: `${apiServer}/api/kneo`,
     withCredentials: true,
 });
 
@@ -30,7 +30,7 @@ export const setupApiClient = (token: string) => {
             async (error) => {
                 if (error.response && error.response.status === 401) {
                     try {
-                        await keycloak.login(); // Redirect to login on session expiration
+                        await keycloak.login();
                     } catch (e) {
                         console.error("Failed to re-authenticate after 401", e);
                     }

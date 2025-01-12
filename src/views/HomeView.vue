@@ -1,31 +1,33 @@
 <template>
-  <n-layout>
-    <kneo-header :isAuthenticated="isAuthenticated" @logout="logout" />
-    <kneo-top-menu :isAuthenticated="isAuthenticated" />
-    <n-layout has-sider class="layout-content-expand">
+  <n-grid x-gap="12" y-gap="12" cols="24" responsive="screen">
+    <n-grid-item :span="24">
+      <kneo-header :isAuthenticated="isAuthenticated" @logout="logout" />
+    </n-grid-item>
+    <n-grid-item :span="24">
       <router-view />
-    </n-layout>
-    <kneo-footer :inverted="inverted" />
-  </n-layout>
+    </n-grid-item>
+    <n-grid-item :span="24">
+      <kneo-footer :inverted="inverted" />
+    </n-grid-item>
+  </n-grid>
 </template>
 
 <script lang="ts">
 import { defineComponent, inject, ref, onMounted } from 'vue';
-import { NLayout } from 'naive-ui';
+import { NGrid, NGridItem } from 'naive-ui';
 import KneoHeader from "../components/common/KneoHeader.vue";
-import KneoTopMenu from "../components/KneoTopMenu.vue";
 import KneoFooter from "../components/common/KneoFooter.vue";
-import { KeycloakInstance } from 'keycloak-js';  // Import KeycloakInstance type
+import { KeycloakInstance } from 'keycloak-js';
 
 export default defineComponent({
   components: {
     KneoFooter,
-    KneoTopMenu,
     KneoHeader,
-    NLayout,
+    NGrid,
+    NGridItem,
   },
   setup() {
-    const kc = inject<KeycloakInstance>('keycloak');  // Inject with type KeycloakInstance
+    const kc = inject<KeycloakInstance>('keycloak');
     const userData = inject<any>('userData');
     const isAuthenticated = ref(false);
 
@@ -72,44 +74,30 @@ export default defineComponent({
   overflow: hidden;
 }
 
-.layout-content-expand {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-}
-
 @media (max-width: 768px) { /* Adjustments for tablets and below */
-  .layout-full-height {
-    flex-direction: column;
-  }
-
-  .layout-content-expand {
-    flex-direction: column; /* Stack elements vertically on smaller screens */
-  }
-
-  n-layout-footer {
-    padding: 12px 20px; /* Reduce padding on smaller screens */
+  kneo-header,
+  kneo-footer {
+    width: 100%;
   }
 
   .n-gi {
-    flex-basis: 100%; /* Stack grid items vertically */
+    flex-basis: 100%;
     margin-top: 10px;
-    justify-content: center; /* Center content */
+    justify-content: center;
   }
 
   n-select {
-    width: 100%; /* Full width for select boxes */
+    width: 100%;
   }
 }
 
 @media (max-width: 480px) { /* Adjustments for phones */
-  .layout-content-expand {
-    padding: 0 10px; /* Reduce padding on very small screens */
+  kneo-header {
+    display: none; /* Hide header on very small screens */
   }
 
-  kneo-top-menu,
-  kneo-header {
-    display: none; /* Optionally hide top menu and header on very small screens */
+  kneo-footer {
+    text-align: center;
   }
 }
 </style>

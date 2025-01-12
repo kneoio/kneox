@@ -1,5 +1,6 @@
 <template>
-  <n-grid cols="6" x-gap="12" y-gap="12" class="p-4">
+  <n-grid :cols="isMobile ? 1 : 6" x-gap="12" y-gap="12" class="p-4">
+    <!-- Page Header -->
     <n-gi>
       <n-page-header>
         <template #title>Tasks by Author</template>
@@ -8,13 +9,17 @@
         </template>
       </n-page-header>
     </n-gi>
-    <n-gi span="6">
+
+    <!-- Buttons Section -->
+    <n-gi :span="isMobile ? 1 : 6">
       <n-button-group>
         <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
         <n-button @click="handleArchive" size="large" :disabled="!selectedRows.length">Archive</n-button>
       </n-button-group>
     </n-gi>
-    <n-gi span="6">
+
+    <!-- Data Table Section -->
+    <n-gi :span="isMobile ? 1 : 6">
       <n-data-table
           remote
           :columns="columns"
@@ -26,7 +31,6 @@
           :loading="loading"
           @update:page="handlePageChange"
           @update:page-size="handlePageSizeChange"
-
       >
         <template #loading>
           <loader-icon />
@@ -37,7 +41,7 @@
 </template>
 
 <script lang="ts">
-import {computed, defineComponent, h, onMounted, ref} from 'vue';
+import { computed, defineComponent, h, onMounted, ref } from 'vue';
 import {
   DataTableColumns,
   NButton,
@@ -49,9 +53,9 @@ import {
   NTag,
   useMessage
 } from 'naive-ui';
-import {useRouter} from 'vue-router';
-import {useTaskStore} from "../../../stores/project/taskStore";
-import {Task} from "../../../types/projectTypes";
+import { useRouter } from 'vue-router';
+import { useTaskStore } from "../../../stores/project/taskStore";
+import { Task } from "../../../types/projectTypes";
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
 
 export default defineComponent({
@@ -81,24 +85,6 @@ export default defineComponent({
       4: 'High',
       5: 'Critical'
     };
-/*
-    const statusTypeMap: Record<number, string> = {
-      0: 'default',
-      100: 'info',
-      101: 'warning',
-      102: 'success',
-      103: 'success',
-      104: 'default',
-      105: 'error'
-    };
-    const priorityTypeMap: Record<number, string> = {
-      0: 'default',
-      1: 'info',
-      2: 'success',
-      3: 'warning',
-      4: 'error',
-      5: 'error'
-    };*/
 
     async function preFetch() {
       try {
@@ -119,42 +105,53 @@ export default defineComponent({
       });
     });
 
-    const columns = computed<DataTableColumns<Task>>(() => [
-      {
-        type: 'selection',
-        disabled: (row: Task) => !row.id,
-        options: ['none', 'all'],
-        onSelect: (value: string | number | boolean, row: Task) => {
-          const checked = !!value;
-          if (row.id) {
-            const index = selectedRows.value.indexOf(row.id);
-            if (checked && index === -1) {
-              selectedRows.value.push(row.id);
-            } else if (!checked && index > -1) {
-              selectedRows.value.splice(index, 1);
+    // Define columns with conditional rendering based on screen size
+    const columns = computed<DataTableColumns<Task>>(() => {
+      const baseColumns: DataTableColumns<Task> = [
+        {
+          type: 'selection',
+          disabled: (row: Task) => !row.id,
+          options: ['none', 'all'],
+          onSelect: (value: string | number | boolean, row: Task) => {
+            const checked = !!value;
+            if (row.id) {
+              const index = selectedRows.value.indexOf(row.id);
+              if (checked && index === -1) {
+                selectedRows.value.push(row.id);
+              } else if (!checked && index > -1) {
+                selectedRows.value.splice(index, 1);
+              }
             }
+            return false;
           }
-          return false;
+        },
+        { title: 'Assignee', key: 'assignee.localizedName.ENG' },
+        {
+          title: 'Status',
+          key: 'status',
+          render(row: Task) {
+            return h(NTag, { default: () => statusMap[row.status] });
+          }
+        },
+        {
+          title: 'Priority',
+          key: 'priority',
+          render(row: Task) {
+            return h(NTag, { default: () => priorityMap[row.priority] });
+          }
         }
-      },
-      { title: 'Assignee', key: 'assignee.localizedName.ENG' },
-      {
-        title: 'Status',
-        key: 'status',
-        render(row: Task) {
-          return h(NTag, { default: () => statusMap[row.status] });
-        }
-      },
-      {
-        title: 'Priority',
-        key: 'priority',
-        render(row: Task) {
-          return h(NTag, { default: () => priorityMap[row.priority] });
-        }
-      },
-      { title: 'Registered', key: 'regDate' },
-      { title: 'Author', key: 'author' }
-    ]);
+      ];
+
+      // Add additional columns if not in mobile view
+      if (!isMobile.value) {
+        baseColumns.push(
+            { title: 'Registered', key: 'regDate' },
+            { title: 'Author', key: 'author' }
+        );
+      }
+
+      return baseColumns;
+    });
 
     const handlePageChange = async (page: number) => {
       try {
@@ -221,9 +218,12 @@ export default defineComponent({
 });
 </script>
 
-
 <style scoped>
 .cursor-pointer:hover {
   cursor: pointer;
+}
+
+.p-4 {
+  padding: 1rem;
 }
 </style>

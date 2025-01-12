@@ -1,0 +1,61 @@
+GET http://localhost:38707/api/kneox/soundfragments/
+Authorization: Bearer {{token}}
+
+###
+GET http://localhost:38707/api/kneox/radio/add-test-song
+Authorization: Bearer {{token}}
+
+###
+GET http://localhost:38707/akee/radio/stream
+
+### Upload file for direct streaming (with increased timeout)
+POST http://{{host}}/api/akee/soundfragments/upload
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=boundary
+Connect-Timeout: 60000
+Socket-Timeout: 300000
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="011.Mike_Mareen_Love_Spy.mp3"
+Content-Type: audio/mpeg
+
+#< C:/Users/justa/tmp/hits_of70_80_90/056.  Tony Esposito  -  Kalimba De luna.mp3
+#< C:/Users/justa/tmp/hits_of70_80_90/047.  C.C.Catch  -  I Can Lose My Heart Tonight.mp3
+#< C:/Users/justa/tmp/hits_of70_80_90/011.Mike_Mareen_Love_Spy.mp3
+#< C:/Users/justa/tmp/hits_of70_80_90/094.  Chilli feat. Carrapicho  -  Tic Tic Tac.mp3
+#< C:/Users/justa/tmp/hits_of70_80_90/095.  Berlin  -  Take My Breath Away.mp3
+#< C:/Users/justa/tmp/hits_of70_80_90/097.  Foreigner  -  I Want To Know What Love Is.mp3
+#< C:/Users/justa/tmp/hits_of70_80_90/099.  Sandra  -  In The Heat Of The Night.mp3
+#< C:/Users/justa/tmp/hits_of70_80_90/032.  PatrIcia Kaas  -  Mon Mec A Moi (2).mp3
+# < C:/Users/justa/tmp/hits_of70_80_90/050.  Grant Miller  -  Colder Than Ice.mp3
+#< C:/Users/justa/tmp/hits_of70_80_90/028.  Laid Back  -  Sunshine Reggae.mp3
+#< C:/Users/justa/tmp/hits_of70_80_90/070.  Joan Osborne  -  One Of Us.mp3
+< C:/Users/justa/tmp/hits_of70_80_90/059.  Savage  -  Dont Cry Tonight.mp3
+
+--boundary--
+
+### Test file upload with JWT auth and complete DTO
+POST http://{{host}}/api/akee/soundfragments/
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="011.Mike_Mareen_Love_Spy.mp3"
+Content-Type: audio/mpeg
+
+< C:/Users/justa/tmp/hits_of70_80_90/011.Mike_Mareen_Love_Spy.mp3
+
+--boundary
+Content-Disposition: form-data; name="data"
+Content-Type: application/json
+
+{
+  "source": "LOCAL_DISC",
+  "status": 1,
+  "type": "SONG",
+  "name": "Love Spy",
+  "artist": "Mike Mareen",
+  "genre": "Disco",
+  "album": "Dance Control"
+}
+--boundary--

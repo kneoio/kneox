@@ -27,3 +27,4 @@ dist-ssr
 /ci_cd/.env.production
 /ci_cd/copy_script.sh
 
+/http/http-client.private.env.json
