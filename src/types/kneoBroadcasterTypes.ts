@@ -1,3 +1,5 @@
+import {UploadFileInfo} from "naive-ui/es/upload/src/public-types";
+
 export enum FragmentType {
     SONG = "SONG"
 }
@@ -22,7 +24,7 @@ export interface SoundFragment {
     artist?: string;
     genre?: string;
     album?: string;
-    uploadedFile:  File | null;
+    uploadedFile: UploadFileInfo[];
 }
 
 export interface SoundFragmentSave {
@@ -32,5 +34,5 @@ export interface SoundFragmentSave {
     artist?: string;
     genre?: string;
     album?: string;
-    uploadedFile:  File | null;
+    uploadedFile:  string[] | null;
 }

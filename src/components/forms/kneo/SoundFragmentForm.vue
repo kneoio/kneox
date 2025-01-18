@@ -55,8 +55,8 @@
                       :action="uploadUrl"
                       :default-file-list="fileList"
                       show-download-button
+                      @change="handleChange"
                       @finish="handleFinish"
-                      @success="handleSuccess"
                       style="width: 50%; max-width: 600px;"
                   >
                     <n-button>Select File</n-button>
@@ -72,7 +72,7 @@
 </template>
 
 <script lang="ts">
-import {defineComponent, ref, reactive, onMounted} from "vue";
+import {defineComponent, ref, reactive, onMounted, toRaw} from "vue";
 import {useRoute, useRouter} from "vue-router";
 import {
   NButton,
@@ -121,12 +121,10 @@ export default defineComponent({
     const store = useSoundFragmentStore();
     const route = useRoute();
     const activeTab = ref("properties");
-    const fileList = ref([]);
+    const fileList = ref([] as UploadFileInfo[]);
     const fileListLength = ref(0);
     const uploadRef = ref<UploadInst | null>(null)
-    const fileListLengthRef = ref(0)
-    const defaultFileList: UploadFileInfo[] = []
-    const uploadUrl = ref("http://localhost:38707/api/kneo/soundfragments/upload");
+    const uploadUrl = ref("http://localhost:38707/api/kneo/soundfragments/files");
     const localFormData = reactive<SoundFragment>({
       id: "",
       author: "",
@@ -139,26 +137,31 @@ export default defineComponent({
       artist: "",
       genre: "",
       album: "",
-      uploadedFile: null
+      uploadedFile: [],
     });
 
-    const handleChange = (data: { fileList: UploadFileInfo[] }) => {
-      console.log('change：', fileList);
-      fileListLengthRef.value = data.fileList.length
-
-    /*  // Optional: Convert files to base64 and add to the payload
-      data.fileList.forEach((file) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          localFormData.fileUri = reader.result as string;
-        };
-        reader.readAsDataURL(file.file);
-      });*/
+    const updateFileList = (updatedFileList: UploadFileInfo[]) => {
+      fileList.value = updatedFileList;
+      fileListLength.value = updatedFileList.length;
     };
+
+    const handleChange = (fileList: UploadFileInfo[]) => {
+      localFormData.uploadedFile = fileList;
+      fileListLength.value = fileList.length;
+    };
+
 
     const handleSave = async () => {
       try {
         loadingBar.start();
+
+        // Check and log the uploaded files
+        console.log("Before saving, uploadedFile:", localFormData.uploadedFile);
+
+        const uploadedFileNames = Array.isArray(toRaw(localFormData.uploadedFile))
+            ? toRaw(localFormData.uploadedFile).map((file: UploadFileInfo) => file.name)
+            : null;
+
         const saveDTO: SoundFragmentSave = {
           status: localFormData.status,
           type: localFormData.type,
@@ -166,8 +169,10 @@ export default defineComponent({
           artist: localFormData.artist,
           genre: localFormData.genre,
           album: localFormData.album,
-          uploadedFile: localFormData.uploadedFile,
+          uploadedFile: uploadedFileNames,
         };
+
+        console.log("SaveDTO:", saveDTO);
         await store.save(saveDTO, localFormData.id);
         message.success("Sound Fragment saved successfully");
         await router.push("/soundfragments");
@@ -179,24 +184,24 @@ export default defineComponent({
       }
     };
 
-    const handleFinish = ({file, event}: {
-      file: UploadFileInfo
-      event?: ProgressEvent
-    }) => {
-      message.success((event?.target as XMLHttpRequest).response)
-      const ext = file.name.split('.')[1]
-      file.name = `renamed.${ext}`
-      file.url = 'https://www.mocky.io/v2/5e4bafc63100007100d8b70f'
-      return file
-    }
-
-    const handleSuccess = ({ file }: { file: UploadFileInfo }) => {
-      console.log("Uploaded file URL:", file.url);
-      if (file.url) {
-        //formData.fileUrls.push(file.url);
+    const handleFinish = ({ file, event }: { file: UploadFileInfo, event?: ProgressEvent }) => {
+      const xhr = event?.target as XMLHttpRequest;
+      const responseText = xhr.responseText;
+      console.log("Raw response:", responseText);
+      if (responseText && responseText !== "undefined") {
+        try {
+          const resp = JSON.parse(responseText);
+          console.log("Parsed response:", resp);
+          if (resp && resp.fileName && resp.url) {
+            file.name = resp.fileName;
+            file.url = resp.url;
+          }
+        } catch (e) {
+          console.error("Failed to parse response as JSON:", e);
+        }
       }
+      return file;
     };
-
 
     const handleArchive = () => {
       message.info("Archive functionality not implemented yet");
@@ -224,6 +229,19 @@ export default defineComponent({
       }
     });
 
+    const audioAcceptTypes = [
+      '.mp3',
+      '.wav',
+      '.ogg',
+      '.flac',
+      'audio/mpeg',
+      'audio/wav',
+      'audio/ogg',
+      'audio/flac',
+      'audio/x-wav',
+      'audio/mp4',
+    ].join(',');
+
     return {
       store,
       localFormData,
@@ -233,12 +251,12 @@ export default defineComponent({
       goBack,
       uploadUrl,
       handleChange,
+      updateFileList,
       handleFinish,
-      handleSuccess,
-      defaultFileList,
       fileList,
       fileListLength,
       uploadRef,
+      audioAcceptTypes
     };
   },
 });
