@@ -72,7 +72,7 @@
 </template>
 
 <script lang="ts">
-import {defineComponent, ref, reactive, onMounted, toRaw} from "vue";
+import {defineComponent, onMounted, reactive, ref} from "vue";
 import {useRoute, useRouter} from "vue-router";
 import {
   NButton,
@@ -83,19 +83,20 @@ import {
   NGrid,
   NInput,
   NPageHeader,
-  NUpload,
-  NTabs,
   NTabPane,
-  useLoadingBar,
-  useMessage,
+  NTabs,
+  NUpload,
   UploadFileInfo,
-  UploadInst
+  UploadInst,
+  useLoadingBar,
+  useMessage
 } from "naive-ui";
-import { useSoundFragmentStore } from "../../../stores/kneo/soundFragmentsStore";
+import {useSoundFragmentStore} from "../../../stores/kneo/soundFragmentsStore";
 import {
-  SoundFragment,
+  ExtendedUploadFileInfo,
   FragmentStatus,
   FragmentType,
+  SoundFragment,
   SoundFragmentSave
 } from "../../../types/kneoBroadcasterTypes";
 
@@ -137,7 +138,7 @@ export default defineComponent({
       artist: "",
       genre: "",
       album: "",
-      uploadedFile: [],
+      uploadedFile: null,
     });
 
     const updateFileList = (updatedFileList: UploadFileInfo[]) => {
@@ -145,22 +146,21 @@ export default defineComponent({
       fileListLength.value = updatedFileList.length;
     };
 
-    const handleChange = (fileList: UploadFileInfo[]) => {
-      localFormData.uploadedFile = fileList;
-      fileListLength.value = fileList.length;
+    const handleChange = (options: { file: UploadFileInfo, fileList: UploadFileInfo[] }) => {
+      localFormData.uploadedFile = options.fileList.map(file => ({
+        ...file,
+        fileList: []
+      })) as ExtendedUploadFileInfo[];
+      fileListLength.value = options.fileList.length;
     };
-
 
     const handleSave = async () => {
       try {
         loadingBar.start();
-
-        // Check and log the uploaded files
-        console.log("Before saving, uploadedFile:", localFormData.uploadedFile);
-
-        const uploadedFileNames = Array.isArray(toRaw(localFormData.uploadedFile))
-            ? toRaw(localFormData.uploadedFile).map((file: UploadFileInfo) => file.name)
-            : null;
+        const fileNames =
+            localFormData.uploadedFile && 'fileList' in localFormData.uploadedFile
+                ? localFormData.uploadedFile.fileList.map((file) => file.name)
+                : [];
 
         const saveDTO: SoundFragmentSave = {
           status: localFormData.status,
@@ -169,7 +169,7 @@ export default defineComponent({
           artist: localFormData.artist,
           genre: localFormData.genre,
           album: localFormData.album,
-          uploadedFile: uploadedFileNames,
+          uploadedFile: fileNames,
         };
 
         console.log("SaveDTO:", saveDTO);
@@ -184,7 +184,8 @@ export default defineComponent({
       }
     };
 
-    const handleFinish = ({ file, event }: { file: UploadFileInfo, event?: ProgressEvent }) => {
+
+    const handleFinish = ({file, event}: { file: UploadFileInfo, event?: ProgressEvent }) => {
       const xhr = event?.target as XMLHttpRequest;
       const responseText = xhr.responseText;
       console.log("Raw response:", responseText);

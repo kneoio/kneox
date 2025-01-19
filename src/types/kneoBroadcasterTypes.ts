@@ -1,15 +1,29 @@
-import {UploadFileInfo} from "naive-ui/es/upload/src/public-types";
+import { UploadFileInfo } from "naive-ui/es/upload/src/public-types";
 
 export enum FragmentType {
     SONG = "SONG"
 }
 
 export enum FragmentStatus {
-    UNDEFINED = -13,
-    NOT_PROCESSED = 10,
-    CONVERTED = 11,
-    PLAYED = 12,
-    ARCHIVED = 13
+    UNDEFINED = -13, // Default state
+    NOT_PROCESSED = 10, // Uploaded but not yet processed
+    CONVERTED = 11, // Converted to playable format
+    PLAYED = 12, // Played at least once
+    ARCHIVED = 13 // Archived and no longer active
+}
+
+export interface FileInfo extends UploadFileInfo {
+    id: string;
+    fullPath: string;
+    batchId: string;
+    thumbnailUrl: string | null;
+    type: string;
+    percentage: number;
+    status: 'pending' | 'uploading' | 'finished' | 'removed' | 'error';
+}
+
+export interface ExtendedUploadFileInfo extends UploadFileInfo {
+    fileList: FileInfo[];
 }
 
 export interface SoundFragment {
@@ -24,7 +38,7 @@ export interface SoundFragment {
     artist?: string;
     genre?: string;
     album?: string;
-    uploadedFile: UploadFileInfo[];
+    uploadedFile: ExtendedUploadFileInfo | ExtendedUploadFileInfo[] | null;
 }
 
 export interface SoundFragmentSave {
@@ -34,5 +48,11 @@ export interface SoundFragmentSave {
     artist?: string;
     genre?: string;
     album?: string;
-    uploadedFile:  string[] | null;
+    uploadedFile: string[] | null; // Array of file names
+}
+
+export interface ErrorResponse {
+    code: string;
+    message: string;
+    details?: Record<string, unknown>;
 }
