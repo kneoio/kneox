@@ -1,9 +1,10 @@
 import Keycloak from 'keycloak-js';
 
 const cfg = {
-    url: 'https://auth.keypractica.com',
-    realm: 'keypractica_auth',
-    clientId: 'keypractica_projects'
+    url: 'https://auth.kneo.io',
+    realm: 'kneo',
+    clientId: 'kneo_primary',
+    checkLoginIframe: false,
 };
 
 const keycloakInst = new Keycloak(cfg);

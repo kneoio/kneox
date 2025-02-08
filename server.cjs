@@ -2,8 +2,16 @@ const express = require('express');
 const path = require('path');
 const crypto = require('crypto');
 const ejs = require('ejs');
-const helmet = require('helmet');
 const fs = require('fs');
+const dotenv = require('dotenv');
+
+// Determine which environment file to load
+const envFile = process.env.NODE_ENV === 'production'
+    ? path.join(__dirname, '.env.production')
+    : path.join(__dirname, '.env');
+
+console.log(`Loading environment file: ${envFile}`);
+dotenv.config({ path: envFile });
 
 const app = express();
 
