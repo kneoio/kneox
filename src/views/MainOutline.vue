@@ -1,174 +1,206 @@
 <template>
-  <div class="main-outline">
-    <!-- Mobile Menu Toggle Button -->
-    <n-button v-if="isMobile" @click="menuCollapsed = !menuCollapsed" class="menu-toggle-btn">
-      {{ menuCollapsed ? 'Open Menu' : 'Close Menu' }}
-    </n-button>
+  <div class="home">
+    <div
+        v-if="!isDrawerOpen"
+        class="collapsed-drawer"
+        @click="toggleDrawer"
+    >
+      <n-icon :component="AlignJustified" size="24"/>
+    </div>
 
-    <!-- Drawer for Menu -->
-    <n-drawer v-model:show="menuCollapsed" :width="250" placement="left">
-      <n-drawer-content>
-        <n-h2 class="menu-title">Menu</n-h2>
-        <router-link to="/outline/dashboard" class="menu-item" active-class="active-link">
-          <n-button text>Dashboard</n-button>
-        </router-link>
-        <router-link to="/outline/queue" class="menu-item" active-class="active-link">
-          <n-button text>Track queue</n-button>
-        </router-link>
-        <n-button v-if="isAuthenticated" @click="logout" class="logout-btn">Logout</n-button>
-        <n-button v-else @click="login" class="logout-btn">Login</n-button>
-        <div v-if="isAuthenticated" class="user-info-language">
-          <n-space vertical>
-            <n-h6 class="user-info">Hello, {{ userData?.profile?.username }}</n-h6>
-            <n-select v-model:value="selectedLanguage" :options="languageOptions" class="language-select" />
-            <n-select v-model:value="selectedTheme" :options="themeOptions" class="theme-select" />
-          </n-space>
-        </div>
-      </n-drawer-content>
-    </n-drawer>
+    <div
+        class="drawer"
+        :class="{ 'drawer-open': isDrawerOpen }"
+    >
+      <div class="drawer-header">
+        <h3>Brand</h3>
+      </div>
+      <div class="drawer-content">
+        <n-menu
+            :options="menuOptions"
+            @update:value="handleMenuSelect"
+        />
+      </div>
+    </div>
 
-    <!-- Main Content -->
-    <div class="right-section">
-      <!-- Render Child Route Components Here -->
-      <router-view />
+    <div
+        class="content"
+        :style="{
+          marginLeft: isDrawerOpen ? `${drawerWidth}px` : '0',
+          filter: isDrawerOpen && isMobile ? 'blur(1px)' : 'none'
+        }"
+        @click="handleContentClick"
+    >
+
+
+      <n-h1 style="padding-left: 20%  ">The content should be here</n-h1>
+      <component :is="currentComponent"/>
     </div>
   </div>
+
 </template>
 
 <script lang="ts">
-import { defineComponent, inject, ref, onMounted } from 'vue';
-import { NButton, NGrid, NGi, NSpace, NH2, NH6, NSelect, NDrawer, NDrawerContent } from 'naive-ui';
-import { KeycloakInstance } from 'keycloak-js';
+import {NFlex, NH1, NButton, NDrawer, NDrawerContent, NMenu, NIcon, MenuOption} from 'naive-ui';
+import {Component, defineComponent, onMounted, onUnmounted, ref, shallowRef, h, computed} from 'vue';
+import SongsQueue from "../components/lists/kneo/SongsQueue.vue";
+import SoundFragments from "../components/lists/kneo/SoundFragments.vue";
+import {AlignJustified, List, Music} from '@vicons/tabler'
 
 export default defineComponent({
   components: {
-    NH2,
+    NFlex,
+    NH1,
     NButton,
-    NGrid,
-    NGi,
-    NSpace,
-    NH6,
-    NSelect,
     NDrawer,
     NDrawerContent,
+    NMenu,
+    NIcon
   },
   setup() {
-    const kc = inject<KeycloakInstance>('keycloak');
-    const userData = inject<any>('userData');
-    const isAuthenticated = ref(kc?.authenticated ?? false);
+    const isDrawerOpen = ref(true)
+    const drawerWidth = ref(300)
+    const selectedKey = ref(null)
 
-    const isMobile = ref(window.innerWidth <= 800);
-    const menuCollapsed = ref(!isMobile.value); // Show drawer on desktop by default
 
-    const selectedLanguage = ref('en');
-    const languageOptions = [
-      { label: 'English', value: 'en' },
-      { label: 'Portuguese', value: 'pt' },
+    const selectedMenuKey = ref<string | null>(null);
+    const currentComponent = shallowRef<Component | null>(null);
+    const active = ref(window.innerWidth > 768);
+
+
+
+    const menuOptions: MenuOption[] = [
+      {
+        key: 'divider-1',
+        type: 'divider',
+        props: {
+          style: {
+            marginLeft: '32px'
+          }
+        }
+      },
+      {
+        label: 'Sound Fragments',
+        key: 'sound-fragments',
+        icon: () => h(Music)
+      },
+      {
+        label: 'Track Queue',
+        key: 'track-queue',
+        icon: () => h(List)
+      }
     ];
 
-    const selectedTheme = ref('light');
-    const themeOptions = [
-      { label: 'Light', value: 'light' },
-      { label: 'Dark', value: 'dark' },
-    ];
-
-    const handleResize = () => {
-      isMobile.value = window.innerWidth <= 800;
-      console.log('isMobile:', isMobile.value); // Debugging
-      if (!isMobile.value) {
-        menuCollapsed.value = true; // Show drawer on larger screens
-      } else {
-        menuCollapsed.value = false; // Hide drawer on mobile by default
+    const handleMenuSelect = (key: string) => {
+      console.log(key);
+      selectedMenuKey.value = key;
+      if (window.innerWidth <= 768) {
+        isDrawerOpen.value = false
+      }
+      if (key === 'track-queue') {
+        currentComponent.value = SongsQueue;
+      } else if (key === 'sound-fragments') {
+        currentComponent.value = SoundFragments;
       }
     };
 
-    const login = async () => {
-      if (kc) {
-        try {
-          await kc.login();
-          isAuthenticated.value = kc.authenticated;
-        } catch (error) {
-          console.error('Login failed', error);
-        }
-      } else {
-        console.error('Keycloak instance is not available');
+    const handleContentClick = () => {
+      if (window.innerWidth <= 768) {
+        isDrawerOpen.value = false;
       }
     };
 
-    const logout = async () => {
-      if (kc) {
-        try {
-          await kc.logout();
-          isAuthenticated.value = kc.authenticated;
-        } catch (error) {
-          console.error('Logout failed', error);
-        }
-      } else {
-        console.error('Keycloak instance is not available');
-      }
+    const isMobile = computed(() => window.innerWidth <= 768);
+
+    const updateDrawerState = () => {
+      active.value = window.innerWidth > 768;
     };
+
+    const toggleDrawer = () => {
+      isDrawerOpen.value = !isDrawerOpen.value
+    }
 
     onMounted(() => {
-      window.addEventListener('resize', handleResize);
+      window.addEventListener('resize', updateDrawerState);
+    });
+
+    onUnmounted(() => {
+      window.removeEventListener('resize', updateDrawerState);
     });
 
     return {
+      active,
+      menuOptions,
+      toggleDrawer,
       isMobile,
-      menuCollapsed,
-      login,
-      logout,
-      isAuthenticated,
-      userData,
-      selectedLanguage,
-      languageOptions,
-      selectedTheme,
-      themeOptions,
+      isDrawerOpen,
+      selectedKey,
+      handleMenuSelect,
+      handleContentClick,
+      currentComponent,
+      drawerWidth,
+      AlignJustified
     };
-  },
+  }
 });
 </script>
 
+
 <style scoped>
-.main-outline {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
+.home {
+  position: relative;
 }
 
-.right-section {
-  padding: 20px;
-  flex-grow: 1;
-  overflow-y: auto;
-  margin-left: 250px; /* Add margin to avoid overlapping the drawer */
-}
-
-.menu-toggle-btn {
+/* Drawer (Sidebar) */
+.drawer {
   position: fixed;
-  top: 10px;
-  left: 10px;
+  top: 0;
+  left: 0;
+  width: 300px;
+  height: 100vh;
+  background-color: #f8f8f8;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
   z-index: 1000;
 }
 
-.menu-item {
-  display: block; /* Ensure each menu item is on a new line */
-  margin-bottom: 10px; /* Add spacing between items */
+.drawer.drawer-open {
+  transform: translateX(0);
 }
 
-.menu-title {
-  margin-bottom: 20px; /* Add spacing below the title */
+.drawer-header {
+  padding: 16px;
+  border-bottom: 1px solid #ac4070;
 }
 
-.logout-btn {
-  margin-top: 20px; /* Add spacing above the logout button */
+.drawer-content {
+  padding: 16px;
 }
 
-.user-info-language {
-  margin-top: 20px; /* Add spacing above the user info section */
+/* Collapsed Drawer (Mini Version) */
+.collapsed-drawer {
+  position: fixed;
+  top: 20px;
+  left: 0;
+  width: 50px;
+  height: 50px;
+  background-color: #ffb700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1000;
+  border-radius: 0 8px 8px 0;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.language-select,
-.theme-select {
-  width: 100%; /* Ensure selects take full width */
-  margin-bottom: 10px; /* Add spacing between selects */
+.collapsed-drawer:hover {
+  background-color: #e0e0e0;
+}
+
+.content {
+  padding: 20px;
+  transition: margin-left 0.3s ease;
 }
 </style>

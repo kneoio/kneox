@@ -45,7 +45,7 @@ keycloak.init({
                     }
                 } catch (error) {
                     console.error('Failed to refresh token, logging out', error);
-                    await keycloak.logout(); // Redirect to login on failure
+                    await keycloak.login({ prompt: 'login' });
                 }
             }, 60000);
 
@@ -55,11 +55,12 @@ keycloak.init({
         }
     } else {
         console.warn('Not authenticated - redirecting to login');
-        await keycloak.login();
+        await keycloak.login({ prompt: 'login' });
     }
-}).catch((error: any) => {
+
+}).catch(async (error: any) => {
     console.error('Failed to initialize Keycloak - redirecting to login', error);
-    //keycloak.login();
+    await keycloak.login({prompt: 'login'});
 });
 
 function startApp() {
