@@ -13,7 +13,7 @@
         :class="{ 'drawer-open': isDrawerOpen }"
     >
       <div class="drawer-header">
-        <h3>Brand</h3>
+        <n-h2>kneox</n-h2>
       </div>
       <div class="drawer-content">
         <n-menu
@@ -31,8 +31,6 @@
         }"
         @click="handleContentClick"
     >
-
-
       <n-h1 style="padding-left: 20%  ">The content should be here</n-h1>
       <component :is="currentComponent"/>
     </div>
@@ -41,7 +39,7 @@
 </template>
 
 <script lang="ts">
-import {NFlex, NH1, NButton, NDrawer, NDrawerContent, NMenu, NIcon, MenuOption} from 'naive-ui';
+import {NFlex, NH1, NH2, NButton, NDrawer, NDrawerContent, NMenu, NIcon, MenuOption} from 'naive-ui';
 import {Component, defineComponent, onMounted, onUnmounted, ref, shallowRef, h, computed} from 'vue';
 import SongsQueue from "../components/lists/kneo/SongsQueue.vue";
 import SoundFragments from "../components/lists/kneo/SoundFragments.vue";
@@ -51,6 +49,7 @@ export default defineComponent({
   components: {
     NFlex,
     NH1,
+    NH2,
     NButton,
     NDrawer,
     NDrawerContent,
