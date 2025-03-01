@@ -38,15 +38,17 @@
 
 <script lang="ts">
 import { computed, defineComponent, onMounted, ref, onUnmounted, h } from 'vue';
-import { DataTableColumns, NButton, NButtonGroup, NDataTable, NGi, NGrid, NPageHeader } from 'naive-ui';
+import {DataTableColumns, NButton, NButtonGroup, NDataTable, NGi, NGrid, NIcon, NPageHeader} from 'naive-ui';
 import { useRouter } from 'vue-router';
+import { PlayerPlay } from '@vicons/tabler'; // Import the icon
 
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
 import { SoundFragment } from "../../../types/kneoBroadcasterTypes";
 import { useBrandStore } from "../../../stores/kneo/brandsStore";
+import {LockOutlined} from "@vicons/antd";
 
 export default defineComponent({
-  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon },
+  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, PlayerPlay },
   setup() {
     const router = useRouter();
     const store = useBrandStore();
@@ -116,27 +118,20 @@ export default defineComponent({
         { title: 'Status', key: 'status' },
         { title: 'Name', key: 'slugName' },
         { title: 'Country', key: 'country' },
+        { title: 'URL', key: 'url' },
         {
-          title: 'URL',
-          key: 'url',
+          title: 'Play',
+          key: 'play',
           render: (row: SoundFragment) => {
             return h(
-                'div',
-                { style: 'display: flex; align-items: center;' },
-                [
-                  h('span', { style: 'margin-right: 8px;' }, row.url),
-                  h(
-                      NButton,
-                      {
-                        type: 'primary',
-                        size: 'small',
-                        onClick: () => handlePlayClick(row.url),
-                      },
-                      {
-                        default: () => 'Play', // Pass a function for the default slot
-                      }
-                  ),
-                ]
+                NButton,
+                {
+                  size: 'small',
+                  onClick: () => handlePlayClick(row.url),
+                },
+                {
+                  default: () => h(NIcon, null, { default: () => h(PlayerPlay) })
+                }
             );
           },
         },
