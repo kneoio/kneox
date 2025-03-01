@@ -4,12 +4,17 @@ export enum FragmentType {
     SONG = "SONG"
 }
 
+export enum BrandStatus {
+    OFF_LINE,
+    ON_LINE,
+}
+
 export enum FragmentStatus {
-    UNDEFINED = -13, // Default state
-    NOT_PROCESSED = 10, // Uploaded but not yet processed
-    CONVERTED = 11, // Converted to playable format
-    PLAYED = 12, // Played at least once
-    ARCHIVED = 13 // Archived and no longer active
+    UNDEFINED = -13,
+    NOT_PROCESSED = 10,
+    CONVERTED = 11,
+    PLAYED = 12,
+    ARCHIVED = 13
 }
 
 export interface FileInfo extends UploadFileInfo {
@@ -24,6 +29,18 @@ export interface FileInfo extends UploadFileInfo {
 
 export interface ExtendedUploadFileInfo extends UploadFileInfo {
     fileList: FileInfo[];
+}
+
+export interface Brand {
+    id: string;
+    author: string;
+    regDate: string;
+    lastModifier: string;
+    lastModifiedDate: string;
+    status: BrandStatus;
+    country: string;
+    slug_name: string;
+    url: string;
 }
 
 export interface SoundFragment {

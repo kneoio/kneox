@@ -2,7 +2,7 @@ import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
 
 import MainOutline from '../views/MainOutline.vue';
 import Dashboard from '../views/DashboardView.vue';
-import Tasks from '../components/lists/project/TaskListByAuthor.vue';
+import Brands from '../components/lists/kneo/Brands.vue';
 import Queue from '../components/lists/kneo/SongsQueue.vue';
 import SoundFragments from '../components/lists/kneo/SoundFragments.vue';
 import TaskForm from '../components/forms/project/TaskForm.vue';
@@ -27,6 +27,11 @@ const routes: Array<RouteRecordRaw> = [
                 component: Dashboard
             },
             {
+                path: 'brands',
+                name: 'Brands',
+                component: Brands
+            },
+            {
                 path: 'queue',
                 name: 'Track Queue',
                 component: Queue
@@ -45,11 +50,6 @@ const routes: Array<RouteRecordRaw> = [
                 path: 'queue/:id',
                 name: 'SoundFragment',
                 component: SoundFragment
-            },
-            {
-                path: 'tasks',
-                name: 'Tasks',
-                component: Tasks
             },
             {
                 path: 'tasks/new',

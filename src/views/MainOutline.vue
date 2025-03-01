@@ -39,11 +39,12 @@
 </template>
 
 <script lang="ts">
-import {NFlex, NH1, NH2, NButton, NDrawer, NDrawerContent, NMenu, NIcon, MenuOption} from 'naive-ui';
+import {NFlex, NH1, NH2, NButton, NDrawer, NDrawerContent, NMenu, NSelect, NIcon, MenuOption} from 'naive-ui';
 import {Component, defineComponent, onMounted, onUnmounted, ref, shallowRef, h, computed} from 'vue';
+import Brands from "../components/lists/kneo/Brands.vue";
 import SongsQueue from "../components/lists/kneo/SongsQueue.vue";
 import SoundFragments from "../components/lists/kneo/SoundFragments.vue";
-import {AlignJustified, List, Music} from '@vicons/tabler'
+import {AlignJustified, List, Music, Radio} from '@vicons/tabler'
 
 export default defineComponent({
   components: {
@@ -54,6 +55,7 @@ export default defineComponent({
     NDrawer,
     NDrawerContent,
     NMenu,
+    NSelect,
     NIcon
   },
   setup() {
@@ -70,11 +72,18 @@ export default defineComponent({
 
     const menuOptions: MenuOption[] = [
       {
+        label: 'Brands',
+        key: 'brands',
+        icon: () => h(Radio)
+      },
+      {
         key: 'divider-1',
         type: 'divider',
         props: {
           style: {
-            marginLeft: '32px'
+            marginLeft: '32px',
+            marginBottom: '10px',
+            color: '#ffb700',
           }
         }
       },
@@ -96,7 +105,9 @@ export default defineComponent({
       if (window.innerWidth <= 768) {
         isDrawerOpen.value = false
       }
-      if (key === 'track-queue') {
+      if (key === 'brands') {
+        currentComponent.value = Brands;
+      } else if (key === 'track-queue') {
         currentComponent.value = SongsQueue;
       } else if (key === 'sound-fragments') {
         currentComponent.value = SoundFragments;
