@@ -181,6 +181,11 @@ export default defineComponent({
           },
         },
       ];
+
+      if (isMobile.value) {
+        return baseColumns.filter(column => ['status', 'slugName', 'play'].includes(column.key as string));
+      }
+
       return baseColumns;
     });
 
