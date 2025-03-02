@@ -62,8 +62,8 @@ export const useBrandStore = defineStore('brandStore', () => {
     };
 
 
-    const fetchRadioStations = async (page = 1, pageSize = 10) => {
-        const response = await apiClient.get(`/radiostations?page=${page}&size=${pageSize}`, {});
+    const fetchRadioStations = async (brand: string, page = 1, pageSize = 10) => {
+        const response = await apiClient.get(`${brand}/radiostations?page=${page}&size=${pageSize}`, {});
         if (response?.data?.payload) {
             apiViewResponse.value = response.data.payload;
         } else {
@@ -75,6 +75,15 @@ export const useBrandStore = defineStore('brandStore', () => {
         const response = await apiClient.get(`/radiostations/${id}`);
         if (response?.data?.payload) {
             apiFormResponse.value = response.data.payload;
+        } else {
+            throw new Error('Invalid API response structure');
+        }
+    };
+
+    const fetchStatus = async (brand: string) => {
+        const response = await apiClient.get(`${brand}/radio/status`, {});
+        if (response?.data?.payload) {
+            apiViewResponse.value = response.data.payload;
         } else {
             throw new Error('Invalid API response structure');
         }
@@ -104,6 +113,7 @@ export const useBrandStore = defineStore('brandStore', () => {
         setupApiClient,
         fetchAll: fetchRadioStations,
         fetch: fetchRadioStation,
+        fetchStatus,
         save,
         getEntries,
         getPagination,

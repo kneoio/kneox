@@ -97,6 +97,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         }
     };
 
+
     const updateCurrent = (data: SoundFragment, actions: any = {}) => {
         apiFormResponse.value = {
             docData: data,

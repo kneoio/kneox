@@ -44,6 +44,7 @@ export interface Brand {
 }
 
 export interface SoundFragment {
+    slugName: string;
     id: string;
     author: string;
     regDate: string;

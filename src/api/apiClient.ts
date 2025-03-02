@@ -8,7 +8,7 @@ if (!apiServer) {
 }
 
 const apiClient = axios.create({
-    baseURL: `${apiServer}/api/kneo`,
+    baseURL: `${apiServer}/api`,
     withCredentials: true,
 });
 

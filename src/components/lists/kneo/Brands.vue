@@ -40,8 +40,8 @@
 import {computed, defineComponent, onMounted, ref, onUnmounted, h} from 'vue';
 import {DataTableColumns, NButton, NButtonGroup, NDataTable, NGi, NGrid, NIcon, NPageHeader} from 'naive-ui';
 import {useRouter} from 'vue-router';
-import {PlayerPlay, PlayerStop} from '@vicons/tabler'; // Import play and stop icons
-import Hls from 'hls.js'; // Import HLS.js
+import {PlayerPlay, PlayerStop} from '@vicons/tabler';
+import Hls from 'hls.js';
 
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
 import {SoundFragment} from "../../../types/kneoBroadcasterTypes";
@@ -56,13 +56,13 @@ export default defineComponent({
     const loading = ref(false);
     const intervalId = ref<number | null>(null);
     const audioRef = ref<HTMLAudioElement | null>(null);
-    const hlsInstance = ref<Hls | null>(null); // HLS instance
-    const currentlyPlayingId = ref<string | null>(null); // Track the currently playing row ID
+    const hlsInstance = ref<Hls | null>(null);
+    const currentlyPlayingId = ref<string | null>(null);
 
     async function preFetch() {
       try {
         loading.value = true;
-        await store.fetchAll();
+        await store.fetchAll("kneo");
       } catch (error) {
         console.error('Failed to fetch initial data:', error);
       } finally {
@@ -74,7 +74,7 @@ export default defineComponent({
       if (!intervalId.value) {
         intervalId.value = window.setInterval(async () => {
           try {
-            await store.fetchAll(store.getPagination.page, store.getPagination.pageSize);
+            await store.fetchAll("kneo", store.getPagination.page, store.getPagination.pageSize);
           } catch (error) {
             console.error('Periodic refresh failed:', error);
           }
@@ -105,16 +105,14 @@ export default defineComponent({
         audioRef.value = null;
       }
       if (hlsInstance.value) {
-        hlsInstance.value.destroy(); // Cleanup HLS instance
+        hlsInstance.value.destroy();
       }
     });
 
-    const handlePlayClick = (row: SoundFragment) => {
-      const url = row.url;
+    const handlePlayClick = async (row: SoundFragment) => {
       const rowId = row.id;
 
       if (currentlyPlayingId.value === rowId) {
-        // If the clicked row is already playing, stop it
         if (audioRef.value) {
           audioRef.value.pause();
           audioRef.value = null;
@@ -123,11 +121,10 @@ export default defineComponent({
           hlsInstance.value.destroy();
           hlsInstance.value = null;
         }
-        currentlyPlayingId.value = null; // Reset the currently playing ID
+        currentlyPlayingId.value = null;
         return;
       }
 
-      // If another row is playing, stop it first
       if (currentlyPlayingId.value) {
         if (audioRef.value) {
           audioRef.value.pause();
@@ -139,24 +136,24 @@ export default defineComponent({
         }
       }
 
-      // Start playing the clicked row
       audioRef.value = new Audio();
 
       if (Hls.isSupported()) {
         hlsInstance.value = new Hls();
-        hlsInstance.value.loadSource(url);
+        hlsInstance.value.loadSource(row.url);
         hlsInstance.value.attachMedia(audioRef.value);
         hlsInstance.value.on(Hls.Events.MANIFEST_PARSED, () => {
           audioRef.value?.play();
-          currentlyPlayingId.value = rowId; // Set the currently playing ID
+          currentlyPlayingId.value = rowId;
         });
       } else if (audioRef.value.canPlayType('application/vnd.apple.mpegurl')) {
-        audioRef.value.src = url;
+        audioRef.value.src = row.url;
         audioRef.value.play();
-        currentlyPlayingId.value = rowId; // Set the currently playing ID
+        currentlyPlayingId.value = rowId;
       } else {
         console.error('HLS is not supported in this browser.');
       }
+      await store.fetchAll("kneo", store.getPagination.page, store.getPagination.pageSize);
     };
 
     const columns = computed<DataTableColumns<SoundFragment>>(() => {
@@ -177,7 +174,7 @@ export default defineComponent({
                 },
                 {
                   default: () => h(NIcon, null, {
-                    default: () => currentlyPlayingId.value === row.id ? h(PlayerStop) : h(PlayerPlay) // Toggle icon based on currently playing row
+                    default: () => currentlyPlayingId.value === row.id ? h(PlayerStop) : h(PlayerPlay)
                   })
                 }
             );
@@ -190,7 +187,7 @@ export default defineComponent({
     const handlePageChange = async (page: number) => {
       try {
         loading.value = true;
-        await store.fetchAll(page, store.getPagination.pageSize);
+        await store.fetchAll("kneo", page, store.getPagination.pageSize);
       } finally {
         loading.value = false;
       }
@@ -199,7 +196,7 @@ export default defineComponent({
     const handlePageSizeChange = async (pageSize: number) => {
       try {
         loading.value = true;
-        await store.fetchAll(1, pageSize);
+        await store.fetchAll("kneo",1, pageSize);
       } finally {
         loading.value = false;
       }
