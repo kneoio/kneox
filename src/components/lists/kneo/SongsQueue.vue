@@ -57,7 +57,7 @@ export default defineComponent({
     async function preFetch() {
       try {
         loading.value = true;
-        await store.fetchAll();
+        await store.fetchAll("kneo");
       } catch (error) {
         console.error('Failed to fetch initial data:', error);
       } finally {
@@ -70,7 +70,7 @@ export default defineComponent({
       if (!intervalId.value) {
         intervalId.value = window.setInterval(async () => {
           try {
-            await store.fetchAll(store.getPagination.page, store.getPagination.pageSize);
+            await store.fetchAll("kneo",store.getPagination.page, store.getPagination.pageSize);
           } catch (error) {
             console.error('Periodic refresh failed:', error);
           }
@@ -126,7 +126,7 @@ export default defineComponent({
     const handlePageChange = async (page: number) => {
       try {
         loading.value = true;
-        await store.fetchAll(page, store.getPagination.pageSize);
+        await store.fetchAll("kneo",page, store.getPagination.pageSize);
       } finally {
         loading.value = false;
       }
@@ -135,7 +135,7 @@ export default defineComponent({
     const handlePageSizeChange = async (pageSize: number) => {
       try {
         loading.value = true;
-        await store.fetchAll(1, pageSize);
+        await store.fetchAll("kneo",1, pageSize);
       } finally {
         loading.value = false;
       }

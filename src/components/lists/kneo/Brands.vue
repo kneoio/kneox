@@ -37,7 +37,7 @@
 </template>
 
 <script lang="ts">
-import {computed, defineComponent, onMounted, ref, onUnmounted, h} from 'vue';
+import {computed, defineComponent, onMounted, ref, onUnmounted, h, inject, Ref} from 'vue';
 import {DataTableColumns, NButton, NButtonGroup, NDataTable, NGi, NGrid, NIcon, NPageHeader} from 'naive-ui';
 import {useRouter} from 'vue-router';
 import {PlayerPlay, PlayerStop} from '@vicons/tabler';
@@ -58,6 +58,7 @@ export default defineComponent({
     const audioRef = ref<HTMLAudioElement | null>(null);
     const hlsInstance = ref<Hls | null>(null);
     const currentlyPlayingId = ref<string | null>(null);
+    const currentSongName = inject<Ref<string | null>>('parentTitle');
 
     async function preFetch() {
       try {
@@ -153,6 +154,10 @@ export default defineComponent({
       } else {
         console.error('HLS is not supported in this browser.');
       }
+      const songName = await fetchAndParsePlaylist(row.url);
+      if (currentSongName) {
+        currentSongName.value = songName;
+      }
       await store.fetchAll("kneo", store.getPagination.page, store.getPagination.pageSize);
     };
 
@@ -225,11 +230,32 @@ export default defineComponent({
       };
     };
 
+    async function fetchAndParsePlaylist(url: string): Promise<string | null> {
+      try {
+        const response = await fetch(url);
+        const playlistText = await response.text();
+        const lines = playlistText.split('\n');
+
+        for (let i = 0; i < lines.length; i++) {
+          if (lines[i].startsWith('#EXTINF:')) {
+            const parts = lines[i].split(',');
+            if (parts.length > 1) {
+              return parts[1].trim(); // Return the song name
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch or parse playlist:', error);
+      }
+      return null;
+    }
+
     return {
       store,
       columns,
       rowKey: (row: any) => row.id,
       isMobile,
+      currentSongName,
       handleNewClick,
       getRowProps,
       handlePageChange,

@@ -31,7 +31,9 @@
         }"
         @click="handleContentClick"
     >
-      <n-h1 style="padding-left: 20%  ">The content should be here</n-h1>
+      <n-h1 style="padding-left: 20%">
+        {{ viewTitle || "" }}
+      </n-h1>
       <component :is="currentComponent"/>
     </div>
   </div>
@@ -40,7 +42,17 @@
 
 <script lang="ts">
 import {NFlex, NH1, NH2, NButton, NDrawer, NDrawerContent, NMenu, NSelect, NIcon, MenuOption} from 'naive-ui';
-import {Component, defineComponent, onMounted, onUnmounted, ref, shallowRef, h, computed} from 'vue';
+import {
+  Component,
+  defineComponent,
+  onMounted,
+  onUnmounted,
+  ref,
+  shallowRef,
+  h,
+  computed,
+  provide,
+} from 'vue';
 import Brands from "../components/lists/kneo/Brands.vue";
 import SongsQueue from "../components/lists/kneo/SongsQueue.vue";
 import SoundFragments from "../components/lists/kneo/SoundFragments.vue";
@@ -59,15 +71,15 @@ export default defineComponent({
     NIcon
   },
   setup() {
-    const isDrawerOpen = ref(true)
-    const drawerWidth = ref(300)
-    const selectedKey = ref(null)
-
-
+    const isDrawerOpen = ref(true);
+    const drawerWidth = ref(300);
+    const selectedKey = ref(null);
     const selectedMenuKey = ref<string | null>(null);
     const currentComponent = shallowRef<Component | null>(null);
     const active = ref(window.innerWidth > 768);
+    const viewTitle = ref<string | null>(null);
 
+    provide('parentTitle', viewTitle);
 
 
     const menuOptions: MenuOption[] = [
@@ -138,11 +150,13 @@ export default defineComponent({
       window.removeEventListener('resize', updateDrawerState);
     });
 
+
     return {
       active,
       menuOptions,
       toggleDrawer,
       isMobile,
+      viewTitle,
       isDrawerOpen,
       selectedKey,
       handleMenuSelect,
