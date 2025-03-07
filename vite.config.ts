@@ -8,6 +8,7 @@ export default defineConfig({
   ],
   server: {
     port: 8090,
+    middlewareMode: false
   },
   build: {
     outDir: 'dist',
@@ -22,6 +23,7 @@ export default defineConfig({
         assetFileNames: '[name].[hash].[ext]',
       },
     },
-    target: 'es2015',
+    target: 'esnext',
+    modulePreload: true,
   },
 });
