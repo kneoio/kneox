@@ -5,7 +5,9 @@
     <link rel="icon" type="image/svg+xml" href="/kx.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title><%= title %></title>
-    <link nonce="<%= nonce %>" rel="stylesheet" href="/<%= cssFile %>">
+    <% if (cssFile) { %>
+    <link rel="stylesheet" href="/<%= cssFile %>" />
+    <% } %>
     <script>
         window.env = {
             VITE_API_SERVER: '<%= apiServer %>'
@@ -13,7 +15,7 @@
     </script>
 </head>
 <body>
-<div id="app"></div>
-<script nonce="<%= nonce %>" type="module" src="/<%= scriptFilename %>"></script>
+    <div id="app">Loading ...</div>
+    <script type="module" src="/<%= scriptFilename %>"></script>
 </body>
 </html>
