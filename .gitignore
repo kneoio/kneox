@@ -25,3 +25,6 @@ ci_cd
 /.env
 
 /http/http-client.private.env.json
+
+# PowerShell scripts
+*.ps1
