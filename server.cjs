@@ -36,7 +36,12 @@ app.use((req, res, next) => {
 
 app.use(express.static(path.join(__dirname, 'dist'), {
     setHeaders: (res, filePath) => {
+        console.log('Serving file:', filePath); // Debug log
         if (filePath.endsWith('.js')) {
+            console.log('Setting JS MIME type for:', filePath);
+            res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+        } else if (filePath.endsWith('.mjs')) {
+            console.log('Setting MJS MIME type for:', filePath);
             res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
         } else if (filePath.endsWith('.css')) {
             res.setHeader('Content-Type', 'text/css; charset=utf-8');
