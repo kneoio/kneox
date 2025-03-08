@@ -5,63 +5,70 @@ const ejs = require('ejs');
 const fs = require('fs');
 const dotenv = require('dotenv');
 
+// Load environment variables based on environment
 const envFile = process.env.NODE_ENV === 'production'
     ? path.join(__dirname, '.env.production')
     : path.join(__dirname, '.env');
 
-console.log(`Loading environment file: ${envFile}`);
 dotenv.config({ path: envFile });
 
 const app = express();
 
-console.log('Starting production server...');
+// Minimal startup logging
 console.log(`Environment: ${process.env.NODE_ENV}`);
 console.log(`API server: ${process.env.VITE_API_SERVER}`);
-console.log(`Organization: ${process.env.ORG_NAME}`);
-console.log(`Serving static files from: ${path.join(__dirname, 'dist')}`);
 
+// Load Vite manifest for asset paths
 let manifest = {};
 const manifestPath = path.join(__dirname, 'dist', '.vite', 'manifest.json');
 if (fs.existsSync(manifestPath)) {
     manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
-    console.log('Manifest loaded:', manifest);
 } else {
     console.log('Manifest not found');
 }
 
+// Generate security nonce for each request
 app.use((req, res, next) => {
     res.locals.nonce = crypto.randomBytes(16).toString('base64');
     next();
 });
 
-app.use(express.static(path.join(__dirname, 'dist'), {
-    setHeaders: (res, filePath) => {
-        console.log('Serving file:', filePath); // Debug log
-        if (filePath.endsWith('.js')) {
-            console.log('Setting JS MIME type for:', filePath);
-            res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-        } else if (filePath.endsWith('.mjs')) {
-            console.log('Setting MJS MIME type for:', filePath);
-            res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-        } else if (filePath.endsWith('.css')) {
-            res.setHeader('Content-Type', 'text/css; charset=utf-8');
-        }
-    }
-}));
+// We're only serving static files that Nginx might miss or can't be configured to serve
+// In production, you should configure Nginx to serve all static content from 'dist'
+// This is just a fallback
+app.use(express.static(path.join(__dirname, 'dist')));
 
-const templateString = fs.readFileSync(path.join(__dirname, 'template.ejs'), 'utf-8');
-const templateFunction = ejs.compile(templateString);
+// Load and compile template once on startup
+let templateFunction;
+try {
+    const templateString = fs.readFileSync(path.join(__dirname, 'template.ejs'), 'utf-8');
+    templateFunction = ejs.compile(templateString);
+} catch (error) {
+    console.error('Error loading template:', error);
+    process.exit(1);
+}
 
+// Handle all routes by rendering the template with dynamic values
 app.get('*', (req, res) => {
-    const html = templateFunction({
-        nonce: res.locals.nonce,
-        title: process.env.ORG_NAME,
-        cssFile: manifest['src/main.ts']?.css[0] || '',
-        scriptFilename: manifest['src/main.ts']?.file || '',
-        apiServer: process.env.VITE_API_SERVER
-    });
+    try {
+        const html = templateFunction({
+            nonce: res.locals.nonce,
+            title: process.env.ORG_NAME,
+            cssFile: manifest['src/main.ts']?.css[0] || '',
+            scriptFilename: manifest['src/main.ts']?.file || '',
+            apiServer: process.env.VITE_API_SERVER
+        });
 
-    res.send(html);
+        res.send(html);
+    } catch (error) {
+        console.error('Error rendering template:', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+// Add a simple health check endpoint for monitoring
+app.get('/health', (req, res) => {
+    res.status(200).send('OK');
 });
 
 const port = process.env.PORT || 8090;
