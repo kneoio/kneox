@@ -62,8 +62,8 @@ export const useBrandStore = defineStore('brandStore', () => {
     };
 
 
-    const fetchRadioStations = async (brand: string, page = 1, pageSize = 10) => {
-        const response = await apiClient.get(`${brand}/radiostations?page=${page}&size=${pageSize}`, {});
+    const fetchRadioStations = async (page = 1, pageSize = 10) => {
+        const response = await apiClient.get(`/radiostations?page=${page}&size=${pageSize}`, {});
         if (response?.data?.payload) {
             apiViewResponse.value = response.data.payload;
         } else {
@@ -80,8 +80,8 @@ export const useBrandStore = defineStore('brandStore', () => {
         }
     };
 
-    const fetchStatus = async (brand: string) => {
-        const response = await apiClient.get(`${brand}/radio/status`, {});
+    const fetchStatus = async () => {
+        const response = await apiClient.get(`/radio/status`, {});
         if (response?.data?.payload) {
             apiViewResponse.value = response.data.payload;
         } else {

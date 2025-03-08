@@ -5,7 +5,6 @@ const ejs = require('ejs');
 const fs = require('fs');
 const dotenv = require('dotenv');
 
-// Load environment variables based on environment
 const envFile = process.env.NODE_ENV === 'production'
     ? path.join(__dirname, '.env.production')
     : path.join(__dirname, '.env');
@@ -14,11 +13,9 @@ dotenv.config({ path: envFile });
 
 const app = express();
 
-// Minimal startup logging
 console.log(`Environment: ${process.env.NODE_ENV}`);
 console.log(`API server: ${process.env.VITE_API_SERVER}`);
 
-// Load Vite manifest for asset paths
 let manifest = {};
 const manifestPath = path.join(__dirname, 'dist', '.vite', 'manifest.json');
 if (fs.existsSync(manifestPath)) {
@@ -27,18 +24,13 @@ if (fs.existsSync(manifestPath)) {
     console.log('Manifest not found');
 }
 
-// Generate security nonce for each request
 app.use((req, res, next) => {
     res.locals.nonce = crypto.randomBytes(16).toString('base64');
     next();
 });
 
-// We're only serving static files that Nginx might miss or can't be configured to serve
-// In production, you should configure Nginx to serve all static content from 'dist'
-// This is just a fallback
 app.use(express.static(path.join(__dirname, 'dist')));
 
-// Load and compile template once on startup
 let templateFunction;
 try {
     const templateString = fs.readFileSync(path.join(__dirname, 'template.ejs'), 'utf-8');
@@ -48,7 +40,6 @@ try {
     process.exit(1);
 }
 
-// Handle all routes by rendering the template with dynamic values
 app.get('*', (req, res) => {
     try {
         const html = templateFunction({
@@ -66,7 +57,6 @@ app.get('*', (req, res) => {
     }
 });
 
-// Add a simple health check endpoint for monitoring
 app.get('/health', (req, res) => {
     res.status(200).send('OK');
 });

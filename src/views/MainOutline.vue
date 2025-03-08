@@ -18,6 +18,7 @@
       <div class="drawer-content">
         <n-menu
             :options="menuOptions"
+            :value="activeMenuKey"
             @update:value="handleMenuSelect"
         />
       </div>
@@ -26,7 +27,7 @@
     <div
         class="content"
         :style="{
-          marginLeft: isDrawerOpen ? `${drawerWidth}px` : '0',
+          marginLeft: isDrawerOpen && !isMobile ? `${drawerWidth}px` : '0',
           filter: isDrawerOpen && isMobile ? 'blur(1px)' : 'none'
         }"
         @click="handleContentClick"
@@ -34,28 +35,23 @@
       <n-h1 style="padding-left: 20%">
         {{ viewTitle || "" }}
       </n-h1>
-      <component :is="currentComponent"/>
+      <router-view />
     </div>
   </div>
-
 </template>
 
 <script lang="ts">
 import {NFlex, NH1, NH2, NButton, NDrawer, NDrawerContent, NMenu, NSelect, NIcon, MenuOption} from 'naive-ui';
 import {
-  Component,
   defineComponent,
   onMounted,
   onUnmounted,
   ref,
-  shallowRef,
-  h,
   computed,
   provide,
+  h,
 } from 'vue';
-import Brands from "../components/lists/kneo/Brands.vue";
-import SongsQueue from "../components/lists/kneo/SongsQueue.vue";
-import SoundFragments from "../components/lists/kneo/SoundFragments.vue";
+import { useRouter, useRoute } from 'vue-router';
 import {AlignJustified, List, Music, Radio} from '@vicons/tabler'
 
 export default defineComponent({
@@ -71,16 +67,27 @@ export default defineComponent({
     NIcon
   },
   setup() {
-    const isDrawerOpen = ref(true);
+    const router = useRouter();
+    const route = useRoute();
+
+    const isMobile = ref(window.innerWidth <= 768);
+    const isDrawerOpen = ref(!isMobile.value); // Open by default on desktop, closed on mobile
     const drawerWidth = ref(300);
-    const selectedKey = ref(null);
-    const selectedMenuKey = ref<string | null>(null);
-    const currentComponent = shallowRef<Component | null>(null);
     const active = ref(window.innerWidth > 768);
     const viewTitle = ref<string | null>(null);
 
     provide('parentTitle', viewTitle);
 
+    // Compute menu key based on current route
+    const activeMenuKey = computed(() => {
+      if (route.name === 'Brands') return 'brands';
+      if (route.name === 'TrackQueue') return 'track-queue';
+      if (route.name === 'SoundFragments') return 'sound-fragments';
+      return null;
+    });
+
+    // Update view title based on route
+    viewTitle.value = route.name?.toString() || '';
 
     const menuOptions: MenuOption[] = [
       {
@@ -112,44 +119,45 @@ export default defineComponent({
     ];
 
     const handleMenuSelect = (key: string) => {
-      console.log(key);
-      selectedMenuKey.value = key;
-      if (window.innerWidth <= 768) {
-        isDrawerOpen.value = false
+      if (isMobile.value) {
+        isDrawerOpen.value = false;
       }
+
       if (key === 'brands') {
-        currentComponent.value = Brands;
+        router.push({ name: 'Brands' });
       } else if (key === 'track-queue') {
-        currentComponent.value = SongsQueue;
+        router.push({ name: 'TrackQueue' });
       } else if (key === 'sound-fragments') {
-        currentComponent.value = SoundFragments;
+        router.push({ name: 'SoundFragments' });
       }
     };
 
     const handleContentClick = () => {
-      if (window.innerWidth <= 768) {
+      if (isMobile.value && isDrawerOpen.value) {
         isDrawerOpen.value = false;
       }
     };
 
-    const isMobile = computed(() => window.innerWidth <= 768);
-
     const updateDrawerState = () => {
-      active.value = window.innerWidth > 768;
+      const newIsMobile = window.innerWidth <= 768;
+      isMobile.value = newIsMobile;
+
+      // Auto-open on desktop, auto-close on mobile
+      isDrawerOpen.value = !newIsMobile;
     };
 
     const toggleDrawer = () => {
-      isDrawerOpen.value = !isDrawerOpen.value
+      isDrawerOpen.value = !isDrawerOpen.value;
     }
 
     onMounted(() => {
       window.addEventListener('resize', updateDrawerState);
+      updateDrawerState(); // Initialize on mount
     });
 
     onUnmounted(() => {
       window.removeEventListener('resize', updateDrawerState);
     });
-
 
     return {
       active,
@@ -158,17 +166,15 @@ export default defineComponent({
       isMobile,
       viewTitle,
       isDrawerOpen,
-      selectedKey,
+      activeMenuKey,
       handleMenuSelect,
       handleContentClick,
-      currentComponent,
       drawerWidth,
       AlignJustified
     };
   }
 });
 </script>
-
 
 <style scoped>
 .home {
@@ -226,5 +232,11 @@ export default defineComponent({
 .content {
   padding: 20px;
   transition: margin-left 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .content {
+    margin-left: 0 !important;
+  }
 }
 </style>

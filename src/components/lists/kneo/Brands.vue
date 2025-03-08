@@ -40,7 +40,7 @@
 import {computed, defineComponent, onMounted, ref, onUnmounted, h, inject, Ref} from 'vue';
 import {DataTableColumns, NButton, NButtonGroup, NDataTable, NGi, NGrid, NIcon, NPageHeader} from 'naive-ui';
 import {useRouter} from 'vue-router';
-import {PlayerPlay, PlayerStop} from '@vicons/tabler';
+import {Ear, EarOff} from '@vicons/tabler';
 import Hls from 'hls.js';
 
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
@@ -48,7 +48,7 @@ import {SoundFragment} from "../../../types/kneoBroadcasterTypes";
 import {useBrandStore} from "../../../stores/kneo/brandsStore";
 
 export default defineComponent({
-  components: {NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, PlayerPlay, PlayerStop},
+  components: {NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, Ear, EarOff},
   setup() {
     const router = useRouter();
     const store = useBrandStore();
@@ -59,11 +59,14 @@ export default defineComponent({
     const hlsInstance = ref<Hls | null>(null);
     const currentlyPlayingId = ref<string | null>(null);
     const currentSongName = inject<Ref<string | null>>('parentTitle');
+    const songNamesMap = ref<Map<string, string>>(new Map());
 
     async function preFetch() {
       try {
         loading.value = true;
-        await store.fetchAll("kneo");
+        await store.fetchAll();
+        // Fetch song names for all entries after loading data
+        await fetchAllSongNames();
       } catch (error) {
         console.error('Failed to fetch initial data:', error);
       } finally {
@@ -73,13 +76,16 @@ export default defineComponent({
 
     const startPeriodicRefresh = () => {
       if (!intervalId.value) {
+        // More frequent refresh (10 seconds) for better song tracking
         intervalId.value = window.setInterval(async () => {
           try {
-            await store.fetchAll("kneo", store.getPagination.page, store.getPagination.pageSize);
+            await store.fetchAll(store.getPagination.page, store.getPagination.pageSize);
+            // Refresh song names on periodic updates
+            await fetchAllSongNames();
           } catch (error) {
             console.error('Periodic refresh failed:', error);
           }
-        }, 30000);
+        }, 10000);
       }
     };
 
@@ -89,6 +95,17 @@ export default defineComponent({
         intervalId.value = null;
       }
     };
+
+    async function fetchAllSongNames() {
+      for (const entry of store.getEntries) {
+        if (!songNamesMap.value.has(entry.id)) {
+          const songName = await fetchAndParsePlaylist(entry.url);
+          if (songName) {
+            songNamesMap.value.set(entry.id, songName);
+          }
+        }
+      }
+    }
 
     preFetch();
     startPeriodicRefresh();
@@ -155,31 +172,63 @@ export default defineComponent({
         console.error('HLS is not supported in this browser.');
       }
       const songName = await fetchAndParsePlaylist(row.url);
-      if (currentSongName) {
-        currentSongName.value = songName;
+      if (songName) {
+        songNamesMap.value.set(row.id, songName);
       }
-      await store.fetchAll("kneo", store.getPagination.page, store.getPagination.pageSize);
+      if (currentSongName) {
+        currentSongName.value = songName || null;
+      }
+      await store.fetchAll(store.getPagination.page, store.getPagination.pageSize);
     };
 
     const columns = computed<DataTableColumns<SoundFragment>>(() => {
       const baseColumns: DataTableColumns<SoundFragment> = [
-        {title: 'Status', key: 'status'},
+        {
+          title: 'Status',
+          key: 'status',
+          render: (row: SoundFragment) => {
+            return h('span', {
+              style: row.status === 'ON_LINE' ? 'color: blue;' : 'color: #FF69B4;'
+            }, row.status);
+          }
+        },
         {title: 'Name', key: 'slugName'},
+        {
+          title: 'Playing...',
+          key: 'songName',
+          render: (row: SoundFragment) => {
+            const songName = songNamesMap.value.get(row.id);
+            const isPlaying = currentlyPlayingId.value === row.id;
+
+            return h('div', {}, [
+              h('span', {
+                style: isPlaying ? 'font-weight: bold; color: #4CAF50;' : ''
+              }, songName || (isPlaying ? '♪ Loading... ♪' : 'Not playing')),
+              isPlaying ? h('span', {
+                class: 'animate-pulse',
+                style: 'margin-left: 5px; color: #4CAF50;'
+              }, ' ♫') : null
+            ]);
+          }
+        },
         {title: 'Country', key: 'country'},
         {title: 'URL', key: 'url'},
         {
-          title: 'Play',
+          title: 'You can hear it now',
           key: 'play',
           render: (row: SoundFragment) => {
+            const isPlaying = currentlyPlayingId.value === row.id;
             return h(
                 NButton,
                 {
                   size: 'small',
                   onClick: () => handlePlayClick(row),
+                  color: isPlaying ? '#98FB98' : undefined,
+                  textColor: isPlaying ? 'black' : undefined
                 },
                 {
                   default: () => h(NIcon, null, {
-                    default: () => currentlyPlayingId.value === row.id ? h(PlayerStop) : h(PlayerPlay)
+                    default: () => isPlaying ? h(Ear) : h(EarOff)
                   })
                 }
             );
@@ -188,7 +237,60 @@ export default defineComponent({
       ];
 
       if (isMobile.value) {
-        return baseColumns.filter(column => ['status', 'slugName', 'play'].includes(column.key as string));
+        return [
+          {
+            title: 'Station',
+            key: 'combined',
+            render: (row: SoundFragment) => {
+              const isOnline = row.status === 'ON_LINE';
+              return h('div', {}, [
+                h('div', { style: 'font-weight: bold;' }, row.slugName),
+                h('div', {
+                  style: isOnline ? 'color: blue; font-size: 0.8rem;' : 'color: #FF69B4; font-size: 0.8rem;'
+                }, isOnline ? '● ONLINE' : '○ OFFLINE')
+              ]);
+            }
+          },
+          {
+            title: 'Playing...',
+            key: 'songName',
+            render: (row: SoundFragment) => {
+              const songName = songNamesMap.value.get(row.id);
+              const isPlaying = currentlyPlayingId.value === row.id;
+
+              return h('div', {}, [
+                h('span', {
+                  style: isPlaying ? 'font-weight: bold; color: #4CAF50;' : ''
+                }, songName || (isPlaying ? '♪ Loading... ♪' : 'Not playing')),
+                isPlaying ? h('span', {
+                  class: 'animate-pulse',
+                  style: 'margin-left: 5px; color: #4CAF50;'
+                }, ' ♫') : null
+              ]);
+            }
+          },
+          {
+            title: 'Listen',
+            key: 'play',
+            render: (row: SoundFragment) => {
+              const isPlaying = currentlyPlayingId.value === row.id;
+              return h(
+                  NButton,
+                  {
+                    size: 'small',
+                    onClick: () => handlePlayClick(row),
+                    color: isPlaying ? '#98FB98' : undefined,
+                    textColor: isPlaying ? 'black' : undefined
+                  },
+                  {
+                    default: () => h(NIcon, null, {
+                      default: () => isPlaying ? h(Ear) : h(EarOff)
+                    })
+                  }
+              );
+            },
+          },
+        ];
       }
 
       return baseColumns;
@@ -197,7 +299,8 @@ export default defineComponent({
     const handlePageChange = async (page: number) => {
       try {
         loading.value = true;
-        await store.fetchAll("kneo", page, store.getPagination.pageSize);
+        await store.fetchAll(page, store.getPagination.pageSize);
+        await fetchAllSongNames();
       } finally {
         loading.value = false;
       }
@@ -206,7 +309,8 @@ export default defineComponent({
     const handlePageSizeChange = async (pageSize: number) => {
       try {
         loading.value = true;
-        await store.fetchAll("kneo",1, pageSize);
+        await store.fetchAll(1, pageSize);
+        await fetchAllSongNames();
       } finally {
         loading.value = false;
       }
@@ -269,5 +373,18 @@ export default defineComponent({
 <style scoped>
 .p-4 {
   padding: 1rem;
+}
+
+.animate-pulse {
+  animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
 }
 </style>

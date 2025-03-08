@@ -1,17 +1,15 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
-
 import MainOutline from '../views/MainOutline.vue';
 import Dashboard from '../views/DashboardView.vue';
 import Brands from '../components/lists/kneo/Brands.vue';
 import Queue from '../components/lists/kneo/SongsQueue.vue';
 import SoundFragments from '../components/lists/kneo/SoundFragments.vue';
-import TaskForm from '../components/forms/project/TaskForm.vue';
 import SoundFragment from '../components/forms/kneo/SoundFragmentForm.vue';
 
 const routes: Array<RouteRecordRaw> = [
     {
-        path: '/:catchAll(.*)*',
-        redirect: '/outline/dashboard' // Redirect to the outline's dashboard as a fallback
+        path: '/',
+        redirect: { name: 'Dashboard' }
     },
     {
         path: '/outline',
@@ -19,7 +17,7 @@ const routes: Array<RouteRecordRaw> = [
         children: [
             {
                 path: '',
-                redirect: '/outline/dashboard'
+                redirect: { name: 'Dashboard' }
             },
             {
                 path: 'dashboard',
@@ -33,7 +31,7 @@ const routes: Array<RouteRecordRaw> = [
             },
             {
                 path: 'queue',
-                name: 'Track Queue',
+                name: 'TrackQueue',
                 component: Queue
             },
             {
@@ -48,20 +46,14 @@ const routes: Array<RouteRecordRaw> = [
             },
             {
                 path: 'queue/:id',
-                name: 'SoundFragment',
+                name: 'EditSoundFragment',
                 component: SoundFragment
-            },
-            {
-                path: 'tasks/new',
-                name: 'NewTaskForm',
-                component: TaskForm
-            },
-            {
-                path: 'tasks/:id', // Route for editing an existing task
-                name: 'EditTaskForm',
-                component: TaskForm
             }
         ]
+    },
+    {
+        path: '/:catchAll(.*)*',
+        redirect: { name: 'Dashboard' }
     }
 ];
 

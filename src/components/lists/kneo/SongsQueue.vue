@@ -126,7 +126,7 @@ export default defineComponent({
     const handlePageChange = async (page: number) => {
       try {
         loading.value = true;
-        await store.fetchAll("kneo",page, store.getPagination.pageSize);
+        await store.fetchAll(page, store.getPagination.pageSize);
       } finally {
         loading.value = false;
       }
@@ -135,7 +135,7 @@ export default defineComponent({
     const handlePageSizeChange = async (pageSize: number) => {
       try {
         loading.value = true;
-        await store.fetchAll("kneo",1, pageSize);
+        await store.fetchAll(pageSize);
       } finally {
         loading.value = false;
       }
