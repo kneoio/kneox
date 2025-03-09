@@ -40,7 +40,7 @@
 import {computed, defineComponent, onMounted, ref, onUnmounted, h, inject, Ref} from 'vue';
 import {DataTableColumns, NButton, NButtonGroup, NDataTable, NGi, NGrid, NIcon, NPageHeader} from 'naive-ui';
 import {useRouter} from 'vue-router';
-import {Ear, EarOff} from '@vicons/tabler';
+import {Ear, EarOff, PlayerPlay, PlayerStop} from '@vicons/tabler';
 import Hls from 'hls.js';
 
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
@@ -48,7 +48,7 @@ import {SoundFragment} from "../../../types/kneoBroadcasterTypes";
 import {useBrandStore} from "../../../stores/kneo/brandsStore";
 
 export default defineComponent({
-  components: {NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, Ear, EarOff},
+  components: {NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, Ear, EarOff, PlayerPlay, PlayerStop},
   setup() {
     const router = useRouter();
     const store = useBrandStore();
@@ -65,7 +65,6 @@ export default defineComponent({
       try {
         loading.value = true;
         await store.fetchAll();
-        // Fetch song names for all entries after loading data
         await fetchAllSongNames();
       } catch (error) {
         console.error('Failed to fetch initial data:', error);
@@ -80,7 +79,6 @@ export default defineComponent({
         intervalId.value = window.setInterval(async () => {
           try {
             await store.fetchAll(store.getPagination.page, store.getPagination.pageSize);
-            // Refresh song names on periodic updates
             await fetchAllSongNames();
           } catch (error) {
             console.error('Periodic refresh failed:', error);
@@ -97,11 +95,16 @@ export default defineComponent({
     };
 
     async function fetchAllSongNames() {
-      for (const entry of store.getEntries) {
-        if (!songNamesMap.value.has(entry.id)) {
-          const songName = await fetchAndParsePlaylist(entry.url);
+      // Only fetch song name for the currently playing station
+      if (currentlyPlayingId.value) {
+        const currentStation = store.getEntries.find(entry => entry.id === currentlyPlayingId.value);
+        if (currentStation && currentStation.status === 'ON_LINE') {
+          const songName = await fetchAndParsePlaylist(currentStation.url);
           if (songName) {
-            songNamesMap.value.set(entry.id, songName);
+            songNamesMap.value.set(currentStation.id, songName);
+            if (currentSongName) {
+              currentSongName.value = songName;
+            }
           }
         }
       }
@@ -156,21 +159,46 @@ export default defineComponent({
 
       audioRef.value = new Audio();
 
-      if (Hls.isSupported()) {
-        hlsInstance.value = new Hls();
-        hlsInstance.value.loadSource(row.url);
-        hlsInstance.value.attachMedia(audioRef.value);
-        hlsInstance.value.on(Hls.Events.MANIFEST_PARSED, () => {
-          audioRef.value?.play();
-          currentlyPlayingId.value = rowId;
-        });
-      } else if (audioRef.value.canPlayType('application/vnd.apple.mpegurl')) {
-        audioRef.value.src = row.url;
-        audioRef.value.play();
+      // Configure HLS with options that prevent jumping to latest segments
+    /*  hlsInstance.value = new Hls({
+        liveSyncDuration: 0,            // Don't try to sync to live edge
+        liveMaxLatencyDuration: 30,     // Allow more latency
+        liveDurationInfinity: true,     // Treat stream as infinite
+        startLevel: -1,                 // Let HLS determine the starting level
+        startPosition: -1,              // Start from default position
+        maxBufferLength: 30,            // Increase buffer length
+        maxMaxBufferLength: 600,        // Maximum buffer size
+        maxBufferSize: 60 * 1000 * 1000 // 60MB buffer size
+      });*/
+      hlsInstance.value = new Hls();
+
+      hlsInstance.value.loadSource(row.url);
+      hlsInstance.value.attachMedia(audioRef.value);
+
+      // Add error handling and recovery
+      hlsInstance.value.on(Hls.Events.ERROR, (event, data) => {
+        if (data.fatal) {
+          switch(data.type) {
+            case Hls.ErrorTypes.NETWORK_ERROR:
+              console.log('Fatal network error encountered, trying to recover');
+              hlsInstance.value?.startLoad();
+              break;
+            case Hls.ErrorTypes.MEDIA_ERROR:
+              console.log('Fatal media error encountered, trying to recover');
+              hlsInstance.value?.recoverMediaError();
+              break;
+            default:
+              console.log('Fatal error, cannot recover');
+              break;
+          }
+        }
+      });
+
+      hlsInstance.value.on(Hls.Events.MANIFEST_PARSED, () => {
+        audioRef.value?.play();
         currentlyPlayingId.value = rowId;
-      } else {
-        console.error('HLS is not supported in this browser.');
-      }
+      });
+
       const songName = await fetchAndParsePlaylist(row.url);
       if (songName) {
         songNamesMap.value.set(row.id, songName);
@@ -178,20 +206,40 @@ export default defineComponent({
       if (currentSongName) {
         currentSongName.value = songName || null;
       }
-      await store.fetchAll(store.getPagination.page, store.getPagination.pageSize);
+    };
+
+    const startBroadcasting = async (row: SoundFragment) => {
+      try {
+        loading.value = true;
+
+        // Use correct endpoint for PUT request
+        const response = await fetch(row.actionUrl, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ action: 'start' })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to start broadcasting: ${response.statusText}`);
+        }
+
+        await store.fetchAll(store.getPagination.page, store.getPagination.pageSize);
+
+        const songName = await fetchAndParsePlaylist(row.url);
+        if (songName) {
+          songNamesMap.value.set(row.id, songName);
+        }
+      } catch (error) {
+        console.error('Failed to start broadcasting:', error);
+      } finally {
+        loading.value = false;
+      }
     };
 
     const columns = computed<DataTableColumns<SoundFragment>>(() => {
       const baseColumns: DataTableColumns<SoundFragment> = [
-        {
-          title: 'Status',
-          key: 'status',
-          render: (row: SoundFragment) => {
-            return h('span', {
-              style: row.status === 'ON_LINE' ? 'color: blue;' : 'color: #FF69B4;'
-            }, row.status);
-          }
-        },
         {title: 'Name', key: 'slugName'},
         {
           title: 'Playing...',
@@ -212,24 +260,76 @@ export default defineComponent({
           }
         },
         {title: 'Country', key: 'country'},
-        {title: 'URL', key: 'url'},
         {
-          title: 'You can hear it now',
-          key: 'play',
+          title: 'URL',
+          key: 'url',
           render: (row: SoundFragment) => {
-            const isPlaying = currentlyPlayingId.value === row.id;
+            return h('div', { style: 'display: flex; align-items: center;' }, [
+              h('span', { style: 'margin-right: 8px; overflow: hidden; text-overflow: ellipsis;' }, row.url),
+              h(NButton, {
+                size: 'small',
+                onClick: (e) => {
+                  e.stopPropagation();
+                  navigator.clipboard.writeText(row.url);
+                }
+              }, { default: () => 'Copy URL' })
+            ]);
+          }
+        },
+        {
+          title: 'Status',
+          key: 'broadcast',
+          render: (row: SoundFragment) => {
+            const isOnline = row.status === 'ON_LINE';
             return h(
                 NButton,
                 {
                   size: 'small',
-                  onClick: () => handlePlayClick(row),
-                  color: isPlaying ? '#98FB98' : undefined,
-                  textColor: isPlaying ? 'black' : undefined
+                  onClick: (e) => {
+                    e.stopPropagation();
+                    startBroadcasting(row);
+                  },
+                  color: isOnline ? '#829ff3' : undefined,
+                  textColor: isOnline ? 'black' : undefined,
+                  disabled: isOnline
                 },
                 {
-                  default: () => h(NIcon, null, {
-                    default: () => isPlaying ? h(Ear) : h(EarOff)
-                  })
+                  default: () => [
+                    h(NIcon, null, {
+                      default: () => isOnline ? h(PlayerStop) : h(PlayerPlay)
+                    }),
+                    h('span', { style: 'margin-left: 5px' }, isOnline ? 'Broadcasting' : 'Broadcast')
+                  ]
+                }
+            );
+          },
+        },
+        {
+          title: 'Listen',
+          key: 'play',
+          render: (row: SoundFragment) => {
+            const isPlaying = currentlyPlayingId.value === row.id;
+            const isOnline = row.status === 'ON_LINE';
+
+            return h(
+                NButton,
+                {
+                  size: 'small',
+                  onClick: (e) => {
+                    e.stopPropagation();
+                    handlePlayClick(row);
+                  },
+                  color: isPlaying ? '#98FB98' : undefined,
+                  textColor: isPlaying ? 'black' : undefined,
+                  disabled: !isOnline
+                },
+                {
+                  default: () => [
+                    h(NIcon, null, {
+                      default: () => isPlaying ? h(Ear) : h(EarOff)
+                    }),
+                    h('span', { style: 'margin-left: 5px' }, isPlaying ? 'Stop' : 'Listen')
+                  ]
                 }
             );
           },
@@ -261,7 +361,7 @@ export default defineComponent({
               return h('div', {}, [
                 h('span', {
                   style: isPlaying ? 'font-weight: bold; color: #4CAF50;' : ''
-                }, songName || (isPlaying ? '♪ Loading... ♪' : 'Not playing')),
+                }, songName || (isPlaying ? '♪ Loading... ♪' : '')),
                 isPlaying ? h('span', {
                   class: 'animate-pulse',
                   style: 'margin-left: 5px; color: #4CAF50;'
@@ -270,26 +370,52 @@ export default defineComponent({
             }
           },
           {
-            title: 'Listen',
-            key: 'play',
+            title: 'Actions',
+            key: 'actions',
             render: (row: SoundFragment) => {
               const isPlaying = currentlyPlayingId.value === row.id;
-              return h(
-                  NButton,
-                  {
-                    size: 'small',
-                    onClick: () => handlePlayClick(row),
-                    color: isPlaying ? '#98FB98' : undefined,
-                    textColor: isPlaying ? 'black' : undefined
-                  },
-                  {
-                    default: () => h(NIcon, null, {
-                      default: () => isPlaying ? h(Ear) : h(EarOff)
-                    })
-                  }
-              );
-            },
-          },
+              const isOnline = row.status === 'ON_LINE';
+
+              return h('div', { style: 'display: flex; gap: 8px;' }, [
+                h(
+                    NButton,
+                    {
+                      size: 'small',
+                      onClick: (e) => {
+                        e.stopPropagation();
+                        startBroadcasting(row);
+                      },
+                      color: isOnline ? '#98FB98' : undefined,
+                      textColor: isOnline ? 'black' : undefined,
+                      disabled: isOnline
+                    },
+                    {
+                      default: () => h(NIcon, null, {
+                        default: () => isOnline ? h(PlayerStop) : h(PlayerPlay)
+                      })
+                    }
+                ),
+                h(
+                    NButton,
+                    {
+                      size: 'small',
+                      onClick: (e) => {
+                        e.stopPropagation();
+                        handlePlayClick(row);
+                      },
+                      color: isPlaying ? '#98FB98' : undefined,
+                      textColor: isPlaying ? 'black' : undefined,
+                      disabled: !isOnline
+                    },
+                    {
+                      default: () => h(NIcon, null, {
+                        default: () => isPlaying ? h(Ear) : h(EarOff)
+                      })
+                    }
+                )
+              ]);
+            }
+          }
         ];
       }
 
@@ -340,14 +466,18 @@ export default defineComponent({
         const playlistText = await response.text();
         const lines = playlistText.split('\n');
 
+        // Find the last #EXTINF entry in the playlist
+        let lastSongName = null;
         for (let i = 0; i < lines.length; i++) {
           if (lines[i].startsWith('#EXTINF:')) {
             const parts = lines[i].split(',');
             if (parts.length > 1) {
-              return parts[1].trim(); // Return the song name
+              lastSongName = parts[1].trim();
             }
           }
         }
+
+        return lastSongName;
       } catch (error) {
         console.error('Failed to fetch or parse playlist:', error);
       }

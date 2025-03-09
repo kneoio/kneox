@@ -80,9 +80,9 @@ export default defineComponent({
 
     // Compute menu key based on current route
     const activeMenuKey = computed(() => {
-      if (route.name === 'Brands') return 'brands';
-      if (route.name === 'TrackQueue') return 'track-queue';
-      if (route.name === 'SoundFragments') return 'sound-fragments';
+      if (route.name === 'RadioStationQueue') return 'queues';
+      if (route.name === 'RadioStations') return 'brands';
+      if (route.name === 'SoundFragments') return 'fragments';
       return null;
     });
 
@@ -91,8 +91,8 @@ export default defineComponent({
 
     const menuOptions: MenuOption[] = [
       {
-        label: 'Brands',
-        key: 'brands',
+        label: 'Queues',
+        key: 'queues',
         icon: () => h(Radio)
       },
       {
@@ -108,12 +108,12 @@ export default defineComponent({
       },
       {
         label: 'Sound Fragments',
-        key: 'sound-fragments',
+        key: 'fragments',
         icon: () => h(Music)
       },
       {
-        label: 'Track Queue',
-        key: 'track-queue',
+        label: 'Radio Stations',
+        key: 'brands',
         icon: () => h(List)
       }
     ];
@@ -125,9 +125,9 @@ export default defineComponent({
 
       if (key === 'brands') {
         router.push({ name: 'Brands' });
-      } else if (key === 'track-queue') {
-        router.push({ name: 'TrackQueue' });
-      } else if (key === 'sound-fragments') {
+      } else if (key === 'queues') {
+        router.push({ name: 'RadioStationQueue' });
+      } else if (key === 'fragments') {
         router.push({ name: 'SoundFragments' });
       }
     };

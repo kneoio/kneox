@@ -1,10 +1,9 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
 import MainOutline from '../views/MainOutline.vue';
 import Dashboard from '../views/DashboardView.vue';
-import Brands from '../components/lists/kneo/Brands.vue';
-import Queue from '../components/lists/kneo/SongsQueue.vue';
+import RadioStationQueue from '../components/lists/kneo/RadioStationQueue.vue';
+import RadioStations from '../components/lists/kneo/RadioStations.vue';
 import SoundFragments from '../components/lists/kneo/SoundFragments.vue';
-import SoundFragment from '../components/forms/kneo/SoundFragmentForm.vue';
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -25,29 +24,19 @@ const routes: Array<RouteRecordRaw> = [
                 component: Dashboard
             },
             {
-                path: 'brands',
-                name: 'Brands',
-                component: Brands
+                path: 'queues',
+                name: 'RadioStationQueue',
+                component: RadioStationQueue
             },
             {
-                path: 'queue',
-                name: 'TrackQueue',
-                component: Queue
+                path: 'brands',
+                name: 'Brands',
+                component: RadioStations
             },
             {
                 path: 'soundfragments',
                 name: 'SoundFragments',
                 component: SoundFragments
-            },
-            {
-                path: 'queue/new',
-                name: 'NewSoundFragment',
-                component: SoundFragment
-            },
-            {
-                path: 'queue/:id',
-                name: 'EditSoundFragment',
-                component: SoundFragment
             }
         ]
     },

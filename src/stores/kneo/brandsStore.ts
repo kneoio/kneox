@@ -51,17 +51,6 @@ export const useBrandStore = defineStore('brandStore', () => {
         };
     });
 
-    const statusTypeMap: Record<number, 'error' | 'info' | 'success' | 'warning' | 'default'> = {
-        0: 'default',
-        100: 'info',
-        101: 'warning',
-        102: 'success',
-        103: 'success',
-        104: 'default',
-        105: 'error'
-    };
-
-
     const fetchRadioStations = async (page = 1, pageSize = 10) => {
         const response = await apiClient.get(`/radiostations?page=${page}&size=${pageSize}`, {});
         if (response?.data?.payload) {
@@ -118,6 +107,5 @@ export const useBrandStore = defineStore('brandStore', () => {
         getEntries,
         getPagination,
         getCurrent,
-        statusTypeMap
     };
 });

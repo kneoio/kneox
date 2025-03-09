@@ -57,6 +57,7 @@ export interface SoundFragment {
     genre?: string;
     album?: string;
     url: string;
+    actionUrl: string;
     uploadedFile: ExtendedUploadFileInfo | ExtendedUploadFileInfo[] | null;
 }
 

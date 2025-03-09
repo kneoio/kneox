@@ -2,7 +2,7 @@
   <n-grid :cols="isMobile ? 1 : 6" x-gap="12" y-gap="12" class="p-4">
     <n-gi>
       <n-page-header>
-        <template #title>Current queue</template>
+        <template #title>Brands</template>
         <template #footer>
           Total: {{ store.getPagination.itemCount }}
         </template>
@@ -29,7 +29,7 @@
           @update:page-size="handlePageSizeChange"
       >
         <template #loading>
-          <loader-icon />
+          <loader-icon/>
         </template>
       </n-data-table>
     </n-gi>
@@ -37,19 +37,19 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, h, onMounted, ref, onUnmounted } from 'vue';
-import { DataTableColumns, NButton, NButtonGroup, NDataTable, NGi, NGrid, NPageHeader, NTag } from 'naive-ui';
-import { useRouter } from 'vue-router';
+import {computed, defineComponent, onMounted, ref, onUnmounted} from 'vue';
+import {DataTableColumns, NButton, NButtonGroup, NDataTable, NGi, NGrid, NPageHeader} from 'naive-ui';
+import {useRouter} from 'vue-router';
 
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
-import { useSoundFragmentStore } from "../../../stores/kneo/soundFragmentsStore";
-import { SoundFragment } from "../../../types/kneoBroadcasterTypes";
+import {SoundFragment} from "../../../types/kneoBroadcasterTypes";
+import {useBrandStore} from "../../../stores/kneo/brandsStore";
 
 export default defineComponent({
-  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, NTag, LoaderIcon },
+  components: {NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon},
   setup() {
     const router = useRouter();
-    const store = useSoundFragmentStore();
+    const store = useBrandStore();
     const isMobile = ref(window.innerWidth < 768);
     const loading = ref(false);
     const intervalId = ref<number | null>(null);
@@ -57,7 +57,7 @@ export default defineComponent({
     async function preFetch() {
       try {
         loading.value = true;
-        await store.fetchAll("kneo");
+        await store.fetchAll();
       } catch (error) {
         console.error('Failed to fetch initial data:', error);
       } finally {
@@ -65,16 +65,16 @@ export default defineComponent({
       }
     }
 
-
     const startPeriodicRefresh = () => {
       if (!intervalId.value) {
+        // Less frequent refresh (60 seconds)
         intervalId.value = window.setInterval(async () => {
           try {
-            await store.fetchAll("kneo",store.getPagination.page, store.getPagination.pageSize);
+            await store.fetchAll(store.getPagination.page, store.getPagination.pageSize);
           } catch (error) {
             console.error('Periodic refresh failed:', error);
           }
-        }, 30000); // Refresh every 30 seconds
+        }, 60000);
       }
     };
 
@@ -84,7 +84,6 @@ export default defineComponent({
         intervalId.value = null;
       }
     };
-
 
     preFetch();
     startPeriodicRefresh();
@@ -101,23 +100,40 @@ export default defineComponent({
 
     const columns = computed<DataTableColumns<SoundFragment>>(() => {
       const baseColumns: DataTableColumns<SoundFragment> = [
-        { title: 'Name', key: 'name' },
-        { title: 'Artist', key: 'artist' },
-        { title: 'Genre', key: 'genre' },
         {
           title: 'Status',
           key: 'status',
-          render(row: SoundFragment) {
-            return h(NTag, { default: () => row.status });
+          render: (row: SoundFragment) => {
+            return h('span', {
+              style: row.status === 'ON_LINE' ? 'color: blue;' : 'color: #FF69B4;'
+            }, row.status);
           }
-        }
+        },
+        {title: 'Name', key: 'slugName'},
+        {title: 'Country', key: 'country'},
+        {title: 'URL', key: 'url'},
       ];
 
-      if (!isMobile.value) {
-        baseColumns.push(
-            { title: 'Album', key: 'album' },
-            { title: 'Type', key: 'type' }
-        );
+      if (isMobile.value) {
+        return [
+          {
+            title: 'Station',
+            key: 'combined',
+            render: (row: SoundFragment) => {
+              const isOnline = row.status === 'ON_LINE';
+              return h('div', {}, [
+                h('div', { style: 'font-weight: bold;' }, row.slugName),
+                h('div', {
+                  style: isOnline ? 'color: blue; font-size: 0.8rem;' : 'color: #FF69B4; font-size: 0.8rem;'
+                }, isOnline ? '● ONLINE' : '○ OFFLINE')
+              ]);
+            }
+          },
+          {
+            title: 'Country',
+            key: 'country'
+          }
+        ];
       }
 
       return baseColumns;
@@ -135,14 +151,14 @@ export default defineComponent({
     const handlePageSizeChange = async (pageSize: number) => {
       try {
         loading.value = true;
-        await store.fetchAll(pageSize);
+        await store.fetchAll(1, pageSize);
       } finally {
         loading.value = false;
       }
     };
 
     const handleNewClick = () => {
-      router.push({ name: 'NewSoundFragment' }).catch(err => {
+      router.push({name: 'NewSoundFragment'}).catch((err) => {
         console.error('Navigation error:', err);
       });
     };
@@ -151,11 +167,11 @@ export default defineComponent({
       return {
         style: 'cursor: pointer;',
         onClick: () => {
-          const routeTo = { name: 'SoundFragment', params: { id: row.id } };
-          router.push(routeTo).catch(err => {
+          const routeTo = {name: 'SoundFragment', params: {id: row.id}};
+          router.push(routeTo).catch((err) => {
             console.error('Navigation error:', err);
           });
-        }
+        },
       };
     };
 
@@ -168,9 +184,9 @@ export default defineComponent({
       getRowProps,
       handlePageChange,
       handlePageSizeChange,
-      loading
+      loading,
     };
-  }
+  },
 });
 </script>
 
