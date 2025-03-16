@@ -1,3 +1,4 @@
+<!-- Updated template with Task Timeline section -->
 <template>
   <div class="home">
     <!-- Main Grid Layout -->
@@ -75,6 +76,43 @@
                 </div>
               </div>
 
+              <!-- Task Timeline Section -->
+              <div v-if="dashboard.stats.taskTimeline && dashboard.stats.taskTimeline.tasks" class="task-timeline-section">
+                <n-divider>
+                  <n-text strong>Tasks Timeline</n-text>
+                </n-divider>
+
+                <n-timeline>
+                  <n-timeline-item
+                      v-for="(task, id) in dashboard.stats.taskTimeline.tasks"
+                      :key="id"
+                      :type="getTaskTimelineType(task)"
+                      :title="task.name"
+                      :content="task.schedulerName"
+                      :time="formatDateTime(task.lastExecutionTime)"
+                  >
+                    <template #icon>
+                      <n-icon>
+                        <clock-circle-outlined />
+                      </n-icon>
+                    </template>
+                    <template #footer>
+                      <div class="task-details">
+                        <div>Next execution: {{ formatDateTime(task.nextExecutionTime) }}</div>
+                        <div>Time remaining: {{ formatRemainingTime(task.timeRemaining) }}</div>
+                        <n-progress
+                            type="line"
+                            :percentage="task.currentProgress"
+                            :indicator-placement="'inside'"
+                            :status="getTaskProgressStatus(task)"
+                            :show-indicator="true"
+                        />
+                      </div>
+                    </template>
+                  </n-timeline-item>
+                </n-timeline>
+              </div>
+
               <n-divider />
               <n-text v-if="dashboard.version" class="version-text">
                 Version: {{ dashboard.version }}
@@ -115,7 +153,9 @@
 
 <script lang="ts">
 import {defineComponent, ref, inject, onMounted, onUnmounted, h, computed} from 'vue';
-import { NButton, NSelect, NText, NGrid, NGi, NCard, NStatistic, NDivider, NDataTable, NTag, NAlert } from 'naive-ui';
+import { NButton, NSelect, NText, NGrid, NGi, NCard, NStatistic, NDivider, NDataTable, NTag, NAlert,
+  NTimeline, NTimelineItem, NProgress, NIcon } from 'naive-ui';
+import { ClockCircleOutlined } from '@vicons/antd';
 import {useDashboardStore} from "../stores/kneo/dashboardStore";
 
 
@@ -131,7 +171,12 @@ export default defineComponent({
     NDivider,
     NDataTable,
     NTag,
-    NAlert
+    NAlert,
+    NTimeline,
+    NTimelineItem,
+    NProgress,
+    NIcon,
+    ClockCircleOutlined
   },
   setup() {
     const selectedLanguage = ref('en');
@@ -254,6 +299,32 @@ export default defineComponent({
       return date.toLocaleTimeString();
     };
 
+    const formatDateTime = (dateString: string) => {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      return date.toLocaleString();
+    };
+
+    const formatRemainingTime = (seconds: number) => {
+      if (!seconds && seconds !== 0) return '';
+
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = Math.floor(seconds % 60);
+      return `${minutes}m ${remainingSeconds}s`;
+    };
+
+    const getTaskTimelineType = (task: any) => {
+      // Return different types based on task status or progress
+      if (task.timeRemaining < 30) return 'warning'; // Warning if less than 30 seconds remaining
+      return 'success';  // Default to success
+    };
+
+    const getTaskProgressStatus = (task: any) => {
+      if (task.currentProgress < 30) return 'error';
+      if (task.currentProgress < 70) return 'warning';
+      return 'success';
+    };
+
     const getCurrentFragment = () => {
       if (!dashboard.stationsList || dashboard.stationsList.length === 0) {
         return null;
@@ -289,6 +360,10 @@ export default defineComponent({
       dashboard,
       stationColumns,
       formatTime,
+      formatDateTime,
+      formatRemainingTime,
+      getTaskTimelineType,
+      getTaskProgressStatus,
       getCurrentFragment,
       isMobile
     };
@@ -402,6 +477,17 @@ export default defineComponent({
   justify-content: flex-end;
 }
 
+/* Task Timeline specific styles */
+.task-timeline-section {
+  margin-top: 16px;
+}
+
+.task-details {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 5px;
+}
+
 /* Mobile dashboard specific styles */
 .mobile-dashboard {
   padding: 0;
@@ -474,6 +560,15 @@ export default defineComponent({
   :deep(.n-data-table-th) {
     padding: 8px 4px;
     text-align: left;
+  }
+
+  /* Mobile task timeline */
+  .task-timeline-section :deep(.n-timeline) {
+    padding-left: 12px;
+  }
+
+  .task-timeline-section :deep(.n-timeline-item-content) {
+    margin-left: 12px;
   }
 }
 </style>
