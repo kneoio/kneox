@@ -105,6 +105,8 @@ export default defineComponent({
             if (currentSongName) {
               currentSongName.value = songName;
             }
+          } else {
+            songNamesMap.value.set(currentStation.id, '');
           }
         }
       }
@@ -251,7 +253,7 @@ export default defineComponent({
             return h('div', {}, [
               h('span', {
                 style: isPlaying ? 'font-weight: bold; color: #4CAF50;' : ''
-              }, songName || (isPlaying ? '♪ Loading... ♪' : 'Not playing')),
+              }, songName || (isPlaying ? '♪ Loading... ♪' : '')),
               isPlaying ? h('span', {
                 class: 'animate-pulse',
                 style: 'margin-left: 5px; color: #4CAF50;'

@@ -52,7 +52,7 @@ import {
   h,
 } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import {AlignJustified, List, Music, Radio} from '@vicons/tabler'
+import {AlignJustified, List, Music, Radio, Dashboard} from '@vicons/tabler'
 
 export default defineComponent({
   components: {
@@ -71,15 +71,15 @@ export default defineComponent({
     const route = useRoute();
 
     const isMobile = ref(window.innerWidth <= 768);
-    const isDrawerOpen = ref(!isMobile.value); // Open by default on desktop, closed on mobile
+    const isDrawerOpen = ref(!isMobile.value);
     const drawerWidth = ref(300);
     const active = ref(window.innerWidth > 768);
     const viewTitle = ref<string | null>(null);
 
     provide('parentTitle', viewTitle);
 
-    // Compute menu key based on current route
     const activeMenuKey = computed(() => {
+      if (route.name === 'Dashboard') return 'dashboard';
       if (route.name === 'RadioStationQueue') return 'queues';
       if (route.name === 'RadioStations') return 'brands';
       if (route.name === 'SoundFragments') return 'fragments';
@@ -90,6 +90,11 @@ export default defineComponent({
     viewTitle.value = route.name?.toString() || '';
 
     const menuOptions: MenuOption[] = [
+      {
+        label: 'Dashboard',
+        key: 'dashboard',
+        icon: () => h(Dashboard)
+      },
       {
         label: 'Queues',
         key: 'queues',
@@ -125,6 +130,8 @@ export default defineComponent({
 
       if (key === 'brands') {
         router.push({ name: 'Brands' });
+      } else if (key === 'dashboard') {
+        router.push({ name: 'Dashboard' });
       } else if (key === 'queues') {
         router.push({ name: 'RadioStationQueue' });
       } else if (key === 'fragments') {
