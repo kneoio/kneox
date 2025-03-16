@@ -1,13 +1,13 @@
 <template>
   <div class="home">
     <!-- Main Grid Layout -->
-    <n-grid x-gap="12" y-gap="12" cols="24" class="grid-layout">
-      <!-- Spacer Section -->
-      <n-gi span="2" class="spacer-section"></n-gi>
+    <n-grid x-gap="12" y-gap="12" :cols="isMobile ? 1 : 24" class="grid-layout">
+      <!-- These sections only show on desktop (non-mobile) view -->
+      <n-gi v-if="!isMobile" span="2" class="spacer-section"></n-gi>
 
-      <!-- Left Section for Dashboard - NARROWER -->
-      <n-gi span="8" class="left-section">
-        <p v-if="userData.profile && userData.profile.username">
+      <!-- Left Section for Dashboard -->
+      <n-gi :span="isMobile ? 1 : 8" class="left-section">
+        <p v-if="userData.profile && userData.profile.username" class="username">
           Hello, {{ userData.profile.username }}
         </p>
         <div class="dashboard-section">
@@ -29,12 +29,18 @@
               <pre v-if="dashboard.response" class="debug-data">{{ JSON.stringify(dashboard.response, null, 2) }}</pre>
             </div>
 
-            <div v-else>
-              <n-statistic label="Total Stations" :value="dashboard.stats.totalStations" />
+            <div v-else class="stats-container">
+              <div class="stat-item">
+                <n-statistic label="Total Stations" :value="dashboard.stats.totalStations" />
+              </div>
               <n-divider />
-              <n-statistic label="Online Stations" :value="dashboard.stats.onlineStations" />
+              <div class="stat-item">
+                <n-statistic label="Online Stations" :value="dashboard.stats.onlineStations" />
+              </div>
               <n-divider />
-              <n-statistic label="Minimum Segments" :value="dashboard.stats.minimumSegments" />
+              <div class="stat-item">
+                <n-statistic label="Minimum Segments" :value="dashboard.stats.minimumSegments" />
+              </div>
             </div>
 
             <n-divider />
@@ -45,8 +51,8 @@
         </div>
       </n-gi>
 
-      <!-- Right Section (Station List) - WIDER -->
-      <n-gi span="14" class="right-section">
+      <!-- Right Section (Station List) -->
+      <n-gi :span="isMobile ? 1 : 14" class="right-section">
         <n-card title="Active Stations" :bordered="false" class="station-list-card">
           <n-data-table
               :columns="stationColumns"
@@ -75,9 +81,10 @@
 </template>
 
 <script lang="ts">
-import {defineComponent, ref, inject, onMounted, onUnmounted, h} from 'vue';
+import {defineComponent, ref, inject, onMounted, onUnmounted, h, computed} from 'vue';
 import { NButton, NSelect, NText, NGrid, NGi, NCard, NStatistic, NDivider, NDataTable, NTag, NAlert } from 'naive-ui';
 import {useDashboardStore} from "../stores/kneo/dashboardStore";
+
 
 export default defineComponent({
   components: {
@@ -101,37 +108,75 @@ export default defineComponent({
     ];
     const userData = inject<any>('userData');
     const dashboard = useDashboardStore();
+    const isMobile = ref(window.innerWidth < 768);
 
-    const stationColumns = [
-      {
-        title: 'Name',
-        key: 'brandName'
-      },
-      {
-        title: 'Status',
-        key: 'status',
-        render(row: any) {
-          return h(
-              NTag,
-              { type: row.status === 'ON_LINE' ? 'success' : 'warning' },
-              { default: () => row.status }
-          )
+    const stationColumns = computed(() => {
+      const baseColumns = [
+        {
+          title: 'Name',
+          key: 'brandName',
+          width: 150
+        },
+        {
+          title: 'Status',
+          key: 'status',
+          width: 120,
+          render(row: any) {
+            return h(
+                NTag,
+                {
+                  type: row.status === 'ON_LINE' ? 'success' : 'warning',
+                  style: 'margin: 0 auto;'
+                },
+                { default: () => row.status }
+            )
+          }
+        },
+        {
+          title: 'Segments',
+          key: 'segmentsSize',
+          width: 100
+        },
+        {
+          title: 'Last Segment',
+          key: 'lastSegmentKey',
+          width: 150,
+          ellipsis: {
+            tooltip: true
+          }
+        },
+        {
+          title: 'Current Fragment',
+          key: 'currentFragment',
+          width: 200,
+          ellipsis: {
+            tooltip: true
+          }
         }
-      },
-      {
-        title: 'Segments',
-        key: 'segmentsSize'
-      },
-      {
-        title: 'Last Segment',
-        key: 'lastSegmentKey'
-      },
-      {
-        title: 'Current Fragment',
-        key: 'currentFragment',
-        width: 300
+      ];
+
+      // For mobile view, show simplified columns
+      if (isMobile.value) {
+        return [
+          {
+            title: 'Station',
+            key: 'combined',
+            render: (row: any) => {
+              const isOnline = row.status === 'ON_LINE';
+              return h('div', {}, [
+                h('div', { style: 'font-weight: bold;' }, row.brandName),
+                h('div', {
+                  style: isOnline ? 'color: green; font-size: 0.8rem;' : 'color: orange; font-size: 0.8rem;'
+                }, isOnline ? '● ONLINE' : '○ OFFLINE'),
+                h('div', { style: 'font-size: 0.8rem;' }, `Segments: ${row.segmentsSize || 0}`)
+              ]);
+            }
+          }
+        ];
       }
-    ];
+
+      return baseColumns;
+    });
 
     const formatTime = (date: Date) => {
       return date.toLocaleTimeString();
@@ -151,9 +196,17 @@ export default defineComponent({
       dashboard.connect();
       const cleanup = dashboard.setupPeriodicRefresh(10000);
 
+      // Add resize event listener for responsive layout
+      window.addEventListener('resize', () => {
+        isMobile.value = window.innerWidth < 768;
+      });
+
       onUnmounted(() => {
         cleanup();
         dashboard.disconnect();
+        window.removeEventListener('resize', () => {
+          isMobile.value = window.innerWidth < 768;
+        });
       });
     });
 
@@ -164,13 +217,28 @@ export default defineComponent({
       dashboard,
       stationColumns,
       formatTime,
-      getCurrentFragment
+      getCurrentFragment,
+      isMobile
     };
   },
 });
 </script>
 
 <style scoped>
+.username {
+  font-weight: bold;
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+}
+
+.stats-container {
+  padding: 8px 0;
+}
+
+.stat-item {
+  padding: 8px 0;
+}
+
 .home {
   display: flex;
   flex-direction: column;
@@ -262,36 +330,55 @@ export default defineComponent({
   justify-content: flex-end;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .grid-layout {
-    flex-direction: column;
     width: 100%;
+    margin: 0;
+    padding: 10px;
   }
 
   .left-section {
     margin-left: 0;
     margin-bottom: 20px;
-    padding: 15px;
+    padding: 10px;
   }
 
   .right-section {
-    padding: 15px;
-    justify-content: center;
-    text-align: center;
+    padding: 10px;
+  }
+
+  .dashboard-card,
+  .station-list-card {
+    border-radius: 8px;
   }
 
   .bottom-section {
+    width: 100%;
     flex-direction: column;
     align-items: center;
   }
 
   .language-select {
+    width: 100%;
     justify-content: center;
     margin-bottom: 20px;
   }
 
   .links {
+    width: 100%;
     justify-content: center;
+    margin-top: 10px;
+  }
+
+  /* Fix for mobile table display */
+  :deep(.n-data-table .n-data-table-td) {
+    padding: 8px 4px;
+    text-align: left;
+  }
+
+  :deep(.n-data-table-th) {
+    padding: 8px 4px;
+    text-align: left;
   }
 }
 </style>
