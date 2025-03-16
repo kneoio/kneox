@@ -5,8 +5,8 @@
       <!-- Spacer Section -->
       <n-gi span="2" class="spacer-section"></n-gi>
 
-      <!-- Left Section for Dashboard -->
-      <n-gi span="10" class="left-section">
+      <!-- Left Section for Dashboard - NARROWER -->
+      <n-gi span="8" class="left-section">
         <p v-if="userData.profile && userData.profile.username">
           Hello, {{ userData.profile.username }}
         </p>
@@ -45,8 +45,8 @@
         </div>
       </n-gi>
 
-      <!-- Right Section (Station List) -->
-      <n-gi span="12" class="right-section">
+      <!-- Right Section (Station List) - WIDER -->
+      <n-gi span="14" class="right-section">
         <n-card title="Active Stations" :bordered="false" class="station-list-card">
           <n-data-table
               :columns="stationColumns"
@@ -76,7 +76,7 @@
 
 <script lang="ts">
 import {defineComponent, ref, inject, onMounted, onUnmounted, h} from 'vue';
-import { NButton, NSelect, NText, NGrid, NGi, NCard, NStatistic, NDivider, NDataTable, NTag } from 'naive-ui';
+import { NButton, NSelect, NText, NGrid, NGi, NCard, NStatistic, NDivider, NDataTable, NTag, NAlert } from 'naive-ui';
 import {useDashboardStore} from "../stores/kneo/dashboardStore";
 
 export default defineComponent({
@@ -90,7 +90,8 @@ export default defineComponent({
     NStatistic,
     NDivider,
     NDataTable,
-    NTag
+    NTag,
+    NAlert
   },
   setup() {
     const selectedLanguage = ref('en');
@@ -124,6 +125,11 @@ export default defineComponent({
       {
         title: 'Last Segment',
         key: 'lastSegmentKey'
+      },
+      {
+        title: 'Current Fragment',
+        key: 'currentFragment',
+        width: 300
       }
     ];
 
