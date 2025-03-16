@@ -12,41 +12,74 @@
         </p>
         <div class="dashboard-section">
           <n-card title="Broadcasting Dashboard" :bordered="false" class="dashboard-card">
-            <div class="connection-status">
-              <n-tag :type="dashboard.isConnected ? 'success' : 'error'" size="small">
-                {{ dashboard.isConnected ? 'Connected' : 'Disconnected' }}
-              </n-tag>
-              <n-text v-if="dashboard.lastUpdate" class="update-time">
-                Last update: {{ formatTime(dashboard.lastUpdate) }}
+            <!-- Mobile compact view -->
+            <div v-if="isMobile" class="mobile-dashboard">
+              <div class="connection-status">
+                <n-tag :type="dashboard.isConnected ? 'success' : 'error'" size="small">
+                  {{ dashboard.isConnected ? 'Connected' : 'Disconnected' }}
+                </n-tag>
+              </div>
+
+              <div v-if="!dashboard.stats.totalStations" class="debug-info">
+                <n-alert type="warning" size="small">
+                  No stats data received
+                </n-alert>
+              </div>
+
+              <div v-else class="mobile-stats">
+                <div class="mobile-stat-row">
+                  <span>Total: {{ dashboard.stats.totalStations }}</span>
+                  <span>Online: {{ dashboard.stats.onlineStations }}</span>
+                  <span>Min Segments: {{ dashboard.stats.minimumSegments }}</span>
+                </div>
+                <div class="mobile-stat-row" v-if="dashboard.stats.slidingWindowSize">
+                  <span>Sliding Window: {{ dashboard.stats.slidingWindowSize }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Desktop normal view -->
+            <div v-else>
+              <div class="connection-status">
+                <n-tag :type="dashboard.isConnected ? 'success' : 'error'" size="small">
+                  {{ dashboard.isConnected ? 'Connected' : 'Disconnected' }}
+                </n-tag>
+                <n-text v-if="dashboard.lastUpdate" class="update-time">
+                  Last update: {{ formatTime(dashboard.lastUpdate) }}
+                </n-text>
+              </div>
+              <n-divider />
+
+              <div v-if="!dashboard.stats.totalStations" class="debug-info">
+                <n-alert type="warning">
+                  No stats data received from server
+                </n-alert>
+                <pre v-if="dashboard.response" class="debug-data">{{ JSON.stringify(dashboard.response, null, 2) }}</pre>
+              </div>
+
+              <div v-else class="stats-container">
+                <div class="stat-item">
+                  <n-statistic label="Total Stations" :value="dashboard.stats.totalStations" />
+                </div>
+                <n-divider />
+                <div class="stat-item">
+                  <n-statistic label="Online Stations" :value="dashboard.stats.onlineStations" />
+                </div>
+                <n-divider />
+                <div class="stat-item">
+                  <n-statistic label="Minimum Segments" :value="dashboard.stats.minimumSegments" />
+                </div>
+                <n-divider />
+                <div class="stat-item" v-if="dashboard.stats.slidingWindowSize">
+                  <n-statistic label="Sliding Window Size" :value="dashboard.stats.slidingWindowSize" />
+                </div>
+              </div>
+
+              <n-divider />
+              <n-text v-if="dashboard.version" class="version-text">
+                Version: {{ dashboard.version }}
               </n-text>
             </div>
-            <n-divider />
-
-            <div v-if="!dashboard.stats.totalStations" class="debug-info">
-              <n-alert type="warning">
-                No stats data received from server
-              </n-alert>
-              <pre v-if="dashboard.response" class="debug-data">{{ JSON.stringify(dashboard.response, null, 2) }}</pre>
-            </div>
-
-            <div v-else class="stats-container">
-              <div class="stat-item">
-                <n-statistic label="Total Stations" :value="dashboard.stats.totalStations" />
-              </div>
-              <n-divider />
-              <div class="stat-item">
-                <n-statistic label="Online Stations" :value="dashboard.stats.onlineStations" />
-              </div>
-              <n-divider />
-              <div class="stat-item">
-                <n-statistic label="Minimum Segments" :value="dashboard.stats.minimumSegments" />
-              </div>
-            </div>
-
-            <n-divider />
-            <n-text v-if="dashboard.version" class="version-text">
-              Version: {{ dashboard.version }}
-            </n-text>
           </n-card>
         </div>
       </n-gi>
@@ -138,24 +171,45 @@ export default defineComponent({
           width: 100
         },
         {
-          title: 'Last Segment',
-          key: 'lastSegmentKey',
-          width: 150,
-          ellipsis: {
-            tooltip: true
+          title: 'Bitrate',
+          key: 'bitrate',
+          width: 100,
+          render(row: any) {
+            return row.bitrate ? `${row.bitrate} kbps` : '-';
           }
         },
         {
-          title: 'Current Fragment',
+          title: 'Current Fragment / Recently Played',
           key: 'currentFragment',
-          width: 200,
-          ellipsis: {
-            tooltip: true
+          render(row: any) {
+            // Create a container element
+            return h('div', {}, [
+              // Current fragment with normal styling
+              h('div', {
+                style: 'font-weight: bold; margin-bottom: 4px;',
+                title: row.currentFragment
+              }, row.currentFragment || '-'),
+
+              // Recently played list with smaller font
+              h('div', { style: 'margin-top: 5px;' }, [
+                Array.isArray(row.recentlyPlayedTitles) && row.recentlyPlayedTitles.length > 0
+                    ? h('div', { style: 'font-size: 0.75rem; color: #666;' }, [
+                      h('div', { style: 'margin-bottom: 3px;' }, 'Recently played:'),
+                      ...row.recentlyPlayedTitles.map((title: string) =>
+                          h('div', {
+                            style: 'padding-left: 8px; margin-bottom: 2px; border-left: 2px solid #e8e8e8;',
+                            title: title
+                          }, title)
+                      )
+                    ])
+                    : null
+              ])
+            ]);
           }
         }
       ];
 
-      // For mobile view, show simplified columns
+      // For mobile view, show simplified columns with Current Fragment
       if (isMobile.value) {
         return [
           {
@@ -168,7 +222,25 @@ export default defineComponent({
                 h('div', {
                   style: isOnline ? 'color: green; font-size: 0.8rem;' : 'color: orange; font-size: 0.8rem;'
                 }, isOnline ? '● ONLINE' : '○ OFFLINE'),
-                h('div', { style: 'font-size: 0.8rem;' }, `Segments: ${row.segmentsSize || 0}`)
+                h('div', { style: 'font-size: 0.8rem;' }, `Segments: ${row.segmentsSize || 0}`),
+                row.bitrate ? h('div', { style: 'font-size: 0.8rem;' }, `Bitrate: ${row.bitrate} kbps`) : null,
+                row.currentFragment ? h('div', {
+                  style: 'font-size: 0.75rem; margin-top: 4px; font-weight: bold;',
+                  title: row.currentFragment
+                }, `Current: ${row.currentFragment}`) : null,
+
+                // Recently played for mobile
+                Array.isArray(row.recentlyPlayedTitles) && row.recentlyPlayedTitles.length > 0
+                    ? h('div', { style: 'margin-top: 5px; font-size: 0.7rem; color: #666;' }, [
+                      h('div', {}, 'Recently played:'),
+                      ...row.recentlyPlayedTitles.map((title: string) =>
+                          h('div', {
+                            style: 'padding-left: 5px; margin-top: 2px; border-left: 2px solid #e8e8e8;',
+                            title: title
+                          }, title)
+                      )
+                    ])
+                    : null
               ]);
             }
           }
@@ -328,6 +400,29 @@ export default defineComponent({
 .links {
   display: flex;
   justify-content: flex-end;
+}
+
+/* Mobile dashboard specific styles */
+.mobile-dashboard {
+  padding: 0;
+}
+
+.mobile-stats {
+  margin: 8px 0;
+}
+
+.mobile-stat-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  font-size: 0.85rem;
+}
+
+.mobile-stat-row span {
+  margin: 4px 0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background-color: #f5f7fa;
 }
 
 @media (max-width: 768px) {
