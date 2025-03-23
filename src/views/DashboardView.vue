@@ -90,7 +90,7 @@
                     <n-statistic label="Online Stations" :value="dashboard.stats.onlineStations"/>
                   </n-col>
                   <n-col :span="12">
-                    <n-statistic label="Minimum Segments" :value="dashboard.stats.minimumSegments"/>
+                    <n-statistic label="Min.segments(to start ask more from PlaylistManager)" :value="dashboard.stats.minimumSegments"/>
                     <n-statistic label="Sliding Window Size" :value="dashboard.stats.slidingWindowSize"/>
                   </n-col>
                 </n-row>
@@ -186,7 +186,7 @@ export default defineComponent({
           key: 'status',
           width: 120,
           render(row: any) {
-            const statusText = row.status === 'ON_LINE' ? 'Online' : row.status;
+            const statusText = row.status === 'ON_LINE' ? 'Online' : row.status === 'WARMING_UP' ? 'Warming up' : row.status;
             return h(
                 NTag,
                 {

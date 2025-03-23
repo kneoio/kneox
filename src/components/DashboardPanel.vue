@@ -17,11 +17,11 @@
         <div class="stat-value">{{ dashboard.stats.onlineStations }}</div>
       </div>
       <div class="stat-item">
-        <div class="stat-label">Minimum Segments</div>
+        <div class="stat-label">Min.segments(to start ask more from PlaylistManager)</div>
         <div class="stat-value">{{ dashboard.stats.minimumSegments }}</div>
       </div>
       <div class="stat-item">
-        <div class="stat-label">Sliding Window</div>
+        <div class="stat-label">Max.segments to start clean</div>
         <div class="stat-value">{{ dashboard.stats.slidingWindowSize }}</div>
       </div>
     </div>
