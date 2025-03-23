@@ -52,7 +52,7 @@ import {
   h,
 } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import {AlignJustified, List, Music, Radio, Dashboard} from '@vicons/tabler'
+import {AlignJustified, List, Music, Radio, Dashboard, MoodHappy} from '@vicons/tabler'
 
 export default defineComponent({
   components: {
@@ -80,6 +80,7 @@ export default defineComponent({
 
     const activeMenuKey = computed(() => {
       if (route.name === 'Dashboard') return 'dashboard';
+      if (route.name === 'Player') return 'player';
       if (route.name === 'RadioStationQueue') return 'queues';
       if (route.name === 'RadioStations') return 'brands';
       if (route.name === 'SoundFragments') return 'fragments';
@@ -94,6 +95,11 @@ export default defineComponent({
         label: 'Dashboard',
         key: 'dashboard',
         icon: () => h(Dashboard)
+      },
+      {
+        label: 'Test Player',
+        key: 'player',
+        icon: () => h(MoodHappy)
       },
       {
         label: 'Queues',
@@ -132,6 +138,8 @@ export default defineComponent({
         router.push({ name: 'Brands' });
       } else if (key === 'dashboard') {
         router.push({ name: 'Dashboard' });
+      } else if (key === 'player') {
+        router.push({ name: 'HlsStreamTester' });
       } else if (key === 'queues') {
         router.push({ name: 'RadioStationQueue' });
       } else if (key === 'fragments') {

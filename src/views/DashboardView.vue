@@ -1,18 +1,13 @@
 <!-- Updated template with Task Timeline section -->
 <template>
   <div class="home">
-    <!-- Main Grid Layout -->
     <n-grid x-gap="12" y-gap="12" :cols="isMobile ? 1 : 24" class="grid-layout">
-      <!-- These sections only show on desktop (non-mobile) view -->
-      <n-gi v-if="!isMobile" span="2" class="spacer-section"></n-gi>
-
-      <!-- Left Section for Dashboard -->
       <n-gi :span="isMobile ? 1 : 8" class="left-section">
         <p v-if="userData.profile && userData.profile.username" class="username">
           Hello, {{ userData.profile.username }}
         </p>
         <div class="dashboard-section">
-          <n-card title="Broadcasting Dashboard" :bordered="false" class="dashboard-card">
+          <n-card title="Dashboard" :bordered="false" class="dashboard-card">
             <!-- Mobile compact view -->
             <div v-if="isMobile" class="mobile-dashboard">
               <div class="connection-status">
@@ -39,7 +34,7 @@
               </div>
             </div>
 
-            <!-- Desktop normal view -->
+
             <div v-else>
               <div class="connection-status">
                 <n-tag :type="dashboard.isConnected ? 'success' : 'error'" size="small">
@@ -49,71 +44,58 @@
                   Last update: {{ formatTime(dashboard.lastUpdate) }}
                 </n-text>
               </div>
-              <n-divider />
 
               <div v-if="!dashboard.stats.totalStations" class="debug-info">
                 <n-alert type="warning">
                   No stats data received from server
                 </n-alert>
-                <pre v-if="dashboard.response" class="debug-data">{{ JSON.stringify(dashboard.response, null, 2) }}</pre>
+                <pre v-if="dashboard.response" class="debug-data">{{
+                    JSON.stringify(dashboard.response, null, 2)
+                  }}</pre>
               </div>
 
-              <div v-else class="stats-container">
-                <div class="stat-item">
-                  <n-statistic label="Total Stations" :value="dashboard.stats.totalStations" />
-                </div>
-                <n-divider />
-                <div class="stat-item">
-                  <n-statistic label="Online Stations" :value="dashboard.stats.onlineStations" />
-                </div>
-                <n-divider />
-                <div class="stat-item">
-                  <n-statistic label="Minimum Segments" :value="dashboard.stats.minimumSegments" />
-                </div>
-                <n-divider />
-                <div class="stat-item" v-if="dashboard.stats.slidingWindowSize">
-                  <n-statistic label="Sliding Window Size" :value="dashboard.stats.slidingWindowSize" />
-                </div>
-              </div>
-
-              <!-- Task Timeline Section -->
-              <div v-if="dashboard.stats.taskTimeline && dashboard.stats.taskTimeline.tasks" class="task-timeline-section">
-                <n-divider>
-                  <n-text strong>Tasks Timeline</n-text>
-                </n-divider>
-
-                <n-timeline>
-                  <n-timeline-item
-                      v-for="(task, id) in dashboard.stats.taskTimeline.tasks"
+              <n-card title="Periodic tasks" class="task-timeline-section">
+                <div class="task-list">
+                  <div
+                      v-for="(task, id) in dashboard.stats.timelines"
                       :key="id"
-                      :type="getTaskTimelineType(task)"
-                      :title="task.name"
-                      :content="task.schedulerName"
-                      :time="formatDateTime(task.lastExecutionTime)"
+                      class="task-item"
+                      :class="getTaskTimelineType(task)"
                   >
-                    <template #icon>
-                      <n-icon>
-                        <clock-circle-outlined />
-                      </n-icon>
-                    </template>
-                    <template #footer>
-                      <div class="task-details">
+                    <div class="task-header">
+                      <div class="task-title">{{ task.name }}</div>
+                      <div class="task-scheduler">{{ task.schedulerName }}</div>
+                      <div class="task-time">{{ formatDateTime(task.lastExecutionTime) }}</div>
+                    </div>
+                    <div class="task-details">
+                      <n-space>
                         <div>Next execution: {{ formatDateTime(task.nextExecutionTime) }}</div>
                         <div>Time remaining: {{ formatRemainingTime(task.timeRemaining) }}</div>
-                        <n-progress
-                            type="line"
-                            :percentage="task.currentProgress"
-                            :indicator-placement="'inside'"
-                            :status="getTaskProgressStatus(task)"
-                            :show-indicator="true"
-                        />
-                      </div>
-                    </template>
-                  </n-timeline-item>
-                </n-timeline>
-              </div>
-
-              <n-divider />
+                      </n-space>
+                      <n-progress
+                          type="line"
+                          :percentage="task.currentProgress"
+                          :indicator-placement="'inside'"
+                          :status="getTaskProgressStatus(task)"
+                          :show-indicator="true"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </n-card>
+              <n-card title="Overall stats">
+                <n-row>
+                  <n-col :span="12">
+                    <n-statistic label="Total Stations" :value="dashboard.stats.totalStations"/>
+                    <n-statistic label="Online Stations" :value="dashboard.stats.onlineStations"/>
+                  </n-col>
+                  <n-col :span="12">
+                    <n-statistic label="Minimum Segments" :value="dashboard.stats.minimumSegments"/>
+                    <n-statistic label="Sliding Window Size" :value="dashboard.stats.slidingWindowSize"/>
+                  </n-col>
+                </n-row>
+              </n-card>
+              <n-divider/>
               <n-text v-if="dashboard.version" class="version-text">
                 Version: {{ dashboard.version }}
               </n-text>
@@ -121,8 +103,6 @@
           </n-card>
         </div>
       </n-gi>
-
-      <!-- Right Section (Station List) -->
       <n-gi :span="isMobile ? 1 : 14" class="right-section">
         <n-card title="Active Stations" :bordered="false" class="station-list-card">
           <n-data-table
@@ -135,14 +115,10 @@
       </n-gi>
     </n-grid>
 
-    <!-- Bottom Grid Layout for Language Selection and Links -->
     <n-grid x-gap="12" y-gap="12" cols="24" class="bottom-section">
-      <!-- Language Selection Section -->
       <n-gi span="12" class="language-select">
-        <n-select v-model:value="selectedLanguage" :options="languageOptions" />
+        <n-select v-model:value="selectedLanguage" :options="languageOptions"/>
       </n-gi>
-
-      <!-- Links Section -->
       <n-gi span="12" class="links">
         <n-button text>License</n-button>&nbsp;&nbsp;&nbsp;
         <n-button text>About</n-button>
@@ -153,10 +129,14 @@
 
 <script lang="ts">
 import {defineComponent, ref, inject, onMounted, onUnmounted, h, computed} from 'vue';
-import { NButton, NSelect, NText, NGrid, NGi, NCard, NStatistic, NDivider, NDataTable, NTag, NAlert,
-  NTimeline, NTimelineItem, NProgress, NIcon } from 'naive-ui';
-import { ClockCircleOutlined } from '@vicons/antd';
+import {
+  NButton, NSelect, NText, NGrid, NGi, NCard, NStatistic, NDivider, NDataTable, NTag, NAlert,
+  NTimeline, NTimelineItem, NProgress, NIcon, NCol, NRow, NSpace
+} from 'naive-ui';
+import {ClockCircleOutlined} from '@vicons/antd';
 import {useDashboardStore} from "../stores/kneo/dashboardStore";
+import DesktopRow from "../components/dashboard/DesktopRow.vue";
+import MobileRow from "../components/dashboard/MobileRow.vue";
 
 
 export default defineComponent({
@@ -176,13 +156,16 @@ export default defineComponent({
     NTimelineItem,
     NProgress,
     NIcon,
-    ClockCircleOutlined
+    ClockCircleOutlined,
+    NCol,
+    NRow, NSpace
   },
   setup() {
+    const parentTitle = inject('parentTitle', ref(''));
     const selectedLanguage = ref('en');
     const languageOptions = [
-      { label: 'English', value: 'en' },
-      { label: 'Portuguese', value: 'pt' },
+      {label: 'English', value: 'en'},
+      {label: 'Portuguese', value: 'pt'},
     ];
     const userData = inject<any>('userData');
     const dashboard = useDashboardStore();
@@ -193,27 +176,35 @@ export default defineComponent({
         {
           title: 'Name',
           key: 'brandName',
-          width: 150
+          width: 150,
+          render(row: any) {
+            return row.brandName; // Directly render the brandName
+          }
         },
         {
           title: 'Status',
           key: 'status',
           width: 120,
           render(row: any) {
+            const statusText = row.status === 'ON_LINE' ? 'Online' : row.status;
             return h(
                 NTag,
                 {
                   type: row.status === 'ON_LINE' ? 'success' : 'warning',
                   style: 'margin: 0 auto;'
                 },
-                { default: () => row.status }
-            )
+                { default: () => statusText }
+            );
           }
+
         },
         {
           title: 'Segments',
           key: 'segmentsSize',
-          width: 100
+          width: 100,
+          render(row: any) {
+            return row.segmentsSize || '-';
+          }
         },
         {
           title: 'Bitrate',
@@ -227,29 +218,7 @@ export default defineComponent({
           title: 'Current Fragment / Recently Played',
           key: 'currentFragment',
           render(row: any) {
-            // Create a container element
-            return h('div', {}, [
-              // Current fragment with normal styling
-              h('div', {
-                style: 'font-weight: bold; margin-bottom: 4px;',
-                title: row.currentFragment
-              }, row.currentFragment || '-'),
-
-              // Recently played list with smaller font
-              h('div', { style: 'margin-top: 5px;' }, [
-                Array.isArray(row.recentlyPlayedTitles) && row.recentlyPlayedTitles.length > 0
-                    ? h('div', { style: 'font-size: 0.75rem; color: #666;' }, [
-                      h('div', { style: 'margin-bottom: 3px;' }, 'Recently played:'),
-                      ...row.recentlyPlayedTitles.map((title: string) =>
-                          h('div', {
-                            style: 'padding-left: 8px; margin-bottom: 2px; border-left: 2px solid #e8e8e8;',
-                            title: title
-                          }, title)
-                      )
-                    ])
-                    : null
-              ])
-            ]);
+            return h(DesktopRow, { row }); // Pass the entire row to DesktopRow
           }
         }
       ];
@@ -261,32 +230,7 @@ export default defineComponent({
             title: 'Station',
             key: 'combined',
             render: (row: any) => {
-              const isOnline = row.status === 'ON_LINE';
-              return h('div', {}, [
-                h('div', { style: 'font-weight: bold;' }, row.brandName),
-                h('div', {
-                  style: isOnline ? 'color: green; font-size: 0.8rem;' : 'color: orange; font-size: 0.8rem;'
-                }, isOnline ? '● ONLINE' : '○ OFFLINE'),
-                h('div', { style: 'font-size: 0.8rem;' }, `Segments: ${row.segmentsSize || 0}`),
-                row.bitrate ? h('div', { style: 'font-size: 0.8rem;' }, `Bitrate: ${row.bitrate} kbps`) : null,
-                row.currentFragment ? h('div', {
-                  style: 'font-size: 0.75rem; margin-top: 4px; font-weight: bold;',
-                  title: row.currentFragment
-                }, `Current: ${row.currentFragment}`) : null,
-
-                // Recently played for mobile
-                Array.isArray(row.recentlyPlayedTitles) && row.recentlyPlayedTitles.length > 0
-                    ? h('div', { style: 'margin-top: 5px; font-size: 0.7rem; color: #666;' }, [
-                      h('div', {}, 'Recently played:'),
-                      ...row.recentlyPlayedTitles.map((title: string) =>
-                          h('div', {
-                            style: 'padding-left: 5px; margin-top: 2px; border-left: 2px solid #e8e8e8;',
-                            title: title
-                          }, title)
-                      )
-                    ])
-                    : null
-              ]);
+              return h(MobileRow, { row }); // Pass the entire row to MobileRow
             }
           }
         ];
@@ -343,6 +287,8 @@ export default defineComponent({
       window.addEventListener('resize', () => {
         isMobile.value = window.innerWidth < 768;
       });
+
+      parentTitle.value = 'Dashboard';
 
       onUnmounted(() => {
         cleanup();
@@ -406,7 +352,7 @@ export default defineComponent({
   align-items: flex-start;
   justify-content: center;
   text-align: left;
-  padding: 20px;
+  padding: 5px;
   margin-left: 20px;
 }
 
@@ -452,7 +398,7 @@ export default defineComponent({
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 20px;
+  padding: 5px;
 }
 
 .station-list-card {

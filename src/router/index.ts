@@ -4,6 +4,7 @@ import Dashboard from '../views/DashboardView.vue';
 import RadioStationQueue from '../components/lists/kneo/RadioStationQueue.vue';
 import RadioStations from '../components/lists/kneo/RadioStations.vue';
 import SoundFragments from '../components/lists/kneo/SoundFragments.vue';
+import HlsStreamView from "../views/HlsStreamView.vue";
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -37,6 +38,11 @@ const routes: Array<RouteRecordRaw> = [
                 path: 'soundfragments',
                 name: 'SoundFragments',
                 component: SoundFragments
+            },
+            {
+                path: '/player',
+                name: 'HlsStreamTester',
+                component: HlsStreamView
             }
         ]
     },

@@ -18,8 +18,19 @@ export interface DashboardStats {
     minimumSegments: number;
     slidingWindowSize: number;
     stations: Record<string, Station>;
+    timelines: PeriodicTask[];
 
 }
+
+export interface PeriodicTask {
+    name: string;
+    schedulerName: string;
+    lastExecutionTime: string;
+    nextExecutionTime: string;
+    timeRemaining: number;
+    currentProgress: number;
+}
+
 
 export interface DashboardResponse {
     payload: {
@@ -40,7 +51,8 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
             onlineStations: 0,
             minimumSegments: 0,
             slidingWindowSize: 0,
-            stations: {}
+            stations: {},
+            timelines: []
         };
     });
 
@@ -58,20 +70,11 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
                 websocket.value.readyState === WebSocket.CONNECTING)) {
             return;
         }
-
-        // Ensure we have authentication before connecting
-
         const baseUrl = apiClient.defaults.baseURL || '';
         const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-
-        // Extract the host and path from the API baseURL
         const urlObject = new URL(baseUrl);
         const host = urlObject.host;
-
-        // Match the path in the controller
         const wsUrl = `${wsProtocol}//${host}/api/ws/dashboard`;
-
-        // Add token as query parameter for authentication
         const token = keycloak.token;
         const url = token ? `${wsUrl}?token=${token}` : wsUrl;
 
@@ -85,24 +88,12 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
 
         websocket.value.onmessage = (event) => {
             try {
-                console.log('Raw WebSocket message:', event.data);
                 const data = JSON.parse(event.data);
                 console.log('Parsed WebSocket message:', data);
-
-                // Debug payload structure
-                if (data.payload) {
-                    console.log('Payload found:', data.payload);
-                    console.log('Stats in payload:', data.payload.stats);
-                } else {
-                    console.log('No payload found in message');
-                }
-
-                // Handle potential error messages
                 if (data.error) {
                     console.error('WebSocket error message:', data.error);
                     return;
                 }
-
                 response.value = data;
                 lastUpdate.value = new Date();
             } catch (error) {
@@ -113,8 +104,6 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
         websocket.value.onclose = (event) => {
             console.log('WebSocket connection closed:', event.code, event.reason);
             isConnected.value = false;
-
-            // Only attempt to reconnect for normal closures or network errors
             if (event.code === 1000 || event.code === 1001 || event.code === 1006) {
                 console.log('Attempting to reconnect in 3 seconds...');
                 setTimeout(connect, 3000);

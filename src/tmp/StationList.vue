@@ -1,8 +1,8 @@
 <template>
-  <n-card title="Active Station" :bordered="false" class="station-list-card">
+  <n-card title="Active Stations" :bordered="false" class="station-list-card">
     <n-data-table
         :columns="stationColumns"
-        :data="dashboard.stationsList"
+        :data="stationsList"
         :pagination="{ pageSize: 5 }"
         :row-key="row => row.brandName"
     />
@@ -12,7 +12,8 @@
 <script setup lang="ts">
 import { defineProps, computed, h } from 'vue';
 import { NCard, NDataTable, NTag, NButton } from 'naive-ui';
-import StationRow from '../../../tmp/StationRow.vue';
+import { Refresh } from '@vicons/tabler';
+import StationRow from './StationRow.vue'; // Import the new component
 
 const { dashboard, isMobile, handleStationAction } = defineProps({
   dashboard: {
@@ -27,6 +28,11 @@ const { dashboard, isMobile, handleStationAction } = defineProps({
     type: Function,
     required: true
   }
+});
+
+// Extract stations list from the payload
+const stationsList = computed(() => {
+  return Object.values(dashboard.payload.stations);
 });
 
 const stationColumns = computed(() => {
