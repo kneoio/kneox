@@ -6,7 +6,7 @@
         :format-date-time="formatDateTime"
     />
   </n-card>
-    <n-card title="Dashboard" :bordered="false" class="dashboard-card">
+    <n-card title="Dashboarddddddddddddddd" :bordered="false" class="dashboard-card">
     <div class="dashboard-stats">
       <div class="stat-item">
         <div class="stat-label">Total Stations</div>
@@ -36,7 +36,7 @@
 <script setup lang="ts">
 import {NCard} from 'naive-ui';
 import {computed} from 'vue';
-import TaskTimeline from './TaskTimeline.vue';
+import TaskTimeline from '../components/TaskTimeline.vue';
 
 // Define props
 const props = defineProps({

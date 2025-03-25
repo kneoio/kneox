@@ -1,110 +1,50 @@
-<!-- Updated template with Task Timeline section -->
 <template>
   <div class="home">
     <n-grid x-gap="12" y-gap="12" :cols="isMobile ? 1 : 24" class="grid-layout">
-      <n-gi :span="isMobile ? 1 : 8" class="left-section">
-        <p v-if="userData.profile && userData.profile.username" class="username">
+      <!-- Top section with connection status and stats -->
+      <n-gi :span="24" class="top-section">
+        <p v-if="userData?.profile?.username" class="username">
           Hello, {{ userData.profile.username }}
         </p>
-        <div class="dashboard-section">
-          <n-card title="Dashboard" :bordered="false" class="dashboard-card">
-            <!-- Mobile compact view -->
-            <div v-if="isMobile" class="mobile-dashboard">
-              <div class="connection-status">
-                <n-tag :type="dashboard.isConnected ? 'success' : 'error'" size="small">
-                  {{ dashboard.isConnected ? 'Connected' : 'Disconnected' }}
-                </n-tag>
-              </div>
+        <n-card :bordered="false" class="stats-card mb-0">
+          <div class="connection-status">
+            <n-tag :type="dashboard.isConnected ? 'success' : 'error'" size="small">
+              {{ dashboard.isConnected ? 'Connected' : 'Disconnected' }}
+            </n-tag>
+            <n-text v-if="dashboard.lastUpdate" class="update-time">
+              Last update: {{ formatTime(dashboard.lastUpdate) }}
+            </n-text>
+            <n-text v-if="dashboard.version" class="version-text">
+              Version: {{ dashboard.version }}
+            </n-text>
+          </div>
 
-              <div v-if="!dashboard.stats.totalStations" class="debug-info">
-                <n-alert type="warning" size="small">
-                  No stats data received
-                </n-alert>
-              </div>
+          <n-divider v-if="!isMobile" />
 
-              <div v-else class="mobile-stats">
-                <div class="mobile-stat-row">
-                  <span>Total: {{ dashboard.stats.totalStations }}</span>
-                  <span>Online: {{ dashboard.stats.onlineStations }}</span>
-                  <span>Min Segments: {{ dashboard.stats.minimumSegments }}</span>
-                </div>
-                <div class="mobile-stat-row" v-if="dashboard.stats.slidingWindowSize">
-                  <span>Sliding Window: {{ dashboard.stats.slidingWindowSize }}</span>
-                </div>
-              </div>
-            </div>
+          <n-row v-if="dashboard.stats.totalStations">
+            <n-col :span="6">
+              <n-statistic label="Total Stations" :value="dashboard.stats.totalStations" />
+            </n-col>
+            <n-col :span="6">
+              <n-statistic label="Online Stations" :value="dashboard.stats.onlineStations" />
+            </n-col>
+            <n-col :span="6">
+              <n-statistic label="Min Segments" :value="dashboard.stats.minimumSegments" />
+            </n-col>
+            <n-col :span="6">
+              <n-statistic label="Sliding Window" :value="dashboard.stats.slidingWindowSize" />
+            </n-col>
+          </n-row>
 
-
-            <div v-else>
-              <div class="connection-status">
-                <n-tag :type="dashboard.isConnected ? 'success' : 'error'" size="small">
-                  {{ dashboard.isConnected ? 'Connected' : 'Disconnected' }}
-                </n-tag>
-                <n-text v-if="dashboard.lastUpdate" class="update-time">
-                  Last update: {{ formatTime(dashboard.lastUpdate) }}
-                </n-text>
-              </div>
-
-              <div v-if="!dashboard.stats.totalStations" class="debug-info">
-                <n-alert type="warning">
-                  No stats data received from server
-                </n-alert>
-                <pre v-if="dashboard.response" class="debug-data">{{
-                    JSON.stringify(dashboard.response, null, 2)
-                  }}</pre>
-              </div>
-
-              <n-card title="Periodic tasks" class="task-timeline-section">
-                <div class="task-list">
-                  <div
-                      v-for="(task, id) in dashboard.stats.timelines"
-                      :key="id"
-                      class="task-item"
-                      :class="getTaskTimelineType(task)"
-                  >
-                    <div class="task-header">
-                      <div class="task-title">{{ task.name }}</div>
-                      <div class="task-scheduler">{{ task.schedulerName }}</div>
-                      <div class="task-time">{{ formatDateTime(task.lastExecutionTime) }}</div>
-                    </div>
-                    <div class="task-details">
-                      <n-space>
-                        <div>Next execution: {{ formatDateTime(task.nextExecutionTime) }}</div>
-                        <div>Time remaining: {{ formatRemainingTime(task.timeRemaining) }}</div>
-                      </n-space>
-                      <n-progress
-                          type="line"
-                          :percentage="task.currentProgress"
-                          :indicator-placement="'inside'"
-                          :status="getTaskProgressStatus(task)"
-                          :show-indicator="true"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </n-card>
-              <n-card title="Overall stats">
-                <n-row>
-                  <n-col :span="12">
-                    <n-statistic label="Total Stations" :value="dashboard.stats.totalStations"/>
-                    <n-statistic label="Online Stations" :value="dashboard.stats.onlineStations"/>
-                  </n-col>
-                  <n-col :span="12">
-                    <n-statistic label="Min.segments(to start ask more from PlaylistManager)" :value="dashboard.stats.minimumSegments"/>
-                    <n-statistic label="Sliding Window Size" :value="dashboard.stats.slidingWindowSize"/>
-                  </n-col>
-                </n-row>
-              </n-card>
-              <n-divider/>
-              <n-text v-if="dashboard.version" class="version-text">
-                Version: {{ dashboard.version }}
-              </n-text>
-            </div>
-          </n-card>
-        </div>
+          <n-alert v-else type="warning">
+            No stats data received from server
+          </n-alert>
+        </n-card>
       </n-gi>
-      <n-gi :span="isMobile ? 1 : 14" class="right-section">
-        <n-card title="Active Stations" :bordered="false" class="station-list-card">
+
+      <!-- Full-width stations table -->
+      <n-gi :span="24" class="stations-section">
+        <n-card title="Active Stations" :bordered="false" class="station-list-card mt-0" >
           <n-data-table
               :columns="stationColumns"
               :data="dashboard.stationsList"
@@ -131,13 +71,11 @@
 import {defineComponent, ref, inject, onMounted, onUnmounted, h, computed} from 'vue';
 import {
   NButton, NSelect, NText, NGrid, NGi, NCard, NStatistic, NDivider, NDataTable, NTag, NAlert,
-  NTimeline, NTimelineItem, NProgress, NIcon, NCol, NRow, NSpace
+  NCol, NRow
 } from 'naive-ui';
-import {ClockCircleOutlined} from '@vicons/antd';
 import {useDashboardStore} from "../stores/kneo/dashboardStore";
 import DesktopRow from "../components/dashboard/DesktopRow.vue";
 import MobileRow from "../components/dashboard/MobileRow.vue";
-
 
 export default defineComponent({
   components: {
@@ -152,13 +90,10 @@ export default defineComponent({
     NDataTable,
     NTag,
     NAlert,
-    NTimeline,
-    NTimelineItem,
-    NProgress,
-    NIcon,
-    ClockCircleOutlined,
     NCol,
-    NRow, NSpace
+    NRow,
+    DesktopRow,
+    MobileRow
   },
   setup() {
     const parentTitle = inject('parentTitle', ref(''));
@@ -167,7 +102,11 @@ export default defineComponent({
       {label: 'English', value: 'en'},
       {label: 'Portuguese', value: 'pt'},
     ];
-    const userData = inject<any>('userData');
+    const userData = inject('userData', ref({
+      profile: {
+        username: 'Guest'
+      }
+    }));
     const dashboard = useDashboardStore();
     const isMobile = ref(window.innerWidth < 768);
 
@@ -178,7 +117,7 @@ export default defineComponent({
           key: 'brandName',
           width: 150,
           render(row: any) {
-            return row.brandName; // Directly render the brandName
+            return row.brandName;
           }
         },
         {
@@ -186,7 +125,9 @@ export default defineComponent({
           key: 'status',
           width: 120,
           render(row: any) {
-            const statusText = row.status === 'ON_LINE' ? 'Online' : row.status === 'WARMING_UP' ? 'Warming up' : row.status;
+            const statusText = row.status === 'ON_LINE' ? 'Online' :
+                row.status === 'WARMING_UP' ? 'Warming up' :
+                    row.status;
             return h(
                 NTag,
                 {
@@ -196,7 +137,6 @@ export default defineComponent({
                 { default: () => statusText }
             );
           }
-
         },
         {
           title: 'Segments',
@@ -218,19 +158,18 @@ export default defineComponent({
           title: 'Current Fragment / Recently Played',
           key: 'currentFragment',
           render(row: any) {
-            return h(DesktopRow, { row }); // Pass the entire row to DesktopRow
+            return h(DesktopRow, { row });
           }
         }
       ];
 
-      // For mobile view, show simplified columns with Current Fragment
       if (isMobile.value) {
         return [
           {
             title: 'Station',
             key: 'combined',
             render: (row: any) => {
-              return h(MobileRow, { row }); // Pass the entire row to MobileRow
+              return h(MobileRow, { row });
             }
           }
         ];
@@ -243,47 +182,10 @@ export default defineComponent({
       return date.toLocaleTimeString();
     };
 
-    const formatDateTime = (dateString: string) => {
-      if (!dateString) return '';
-      const date = new Date(dateString);
-      return date.toLocaleString();
-    };
-
-    const formatRemainingTime = (seconds: number) => {
-      if (!seconds && seconds !== 0) return '';
-
-      const minutes = Math.floor(seconds / 60);
-      const remainingSeconds = Math.floor(seconds % 60);
-      return `${minutes}m ${remainingSeconds}s`;
-    };
-
-    const getTaskTimelineType = (task: any) => {
-      // Return different types based on task status or progress
-      if (task.timeRemaining < 30) return 'warning'; // Warning if less than 30 seconds remaining
-      return 'success';  // Default to success
-    };
-
-    const getTaskProgressStatus = (task: any) => {
-      if (task.currentProgress < 30) return 'error';
-      if (task.currentProgress < 70) return 'warning';
-      return 'success';
-    };
-
-    const getCurrentFragment = () => {
-      if (!dashboard.stationsList || dashboard.stationsList.length === 0) {
-        return null;
-      }
-
-      // Get the first online station's current fragment
-      const onlineStation = dashboard.stationsList.find(station => station.status === 'ON_LINE');
-      return onlineStation?.currentFragment || null;
-    };
-
     onMounted(() => {
       dashboard.connect();
       const cleanup = dashboard.setupPeriodicRefresh(10000);
 
-      // Add resize event listener for responsive layout
       window.addEventListener('resize', () => {
         isMobile.value = window.innerWidth < 768;
       });
@@ -306,11 +208,6 @@ export default defineComponent({
       dashboard,
       stationColumns,
       formatTime,
-      formatDateTime,
-      formatRemainingTime,
-      getTaskTimelineType,
-      getTaskProgressStatus,
-      getCurrentFragment,
       isMobile
     };
   },
@@ -322,14 +219,6 @@ export default defineComponent({
   font-weight: bold;
   margin-bottom: 10px;
   font-size: 1.1rem;
-}
-
-.stats-container {
-  padding: 8px 0;
-}
-
-.stat-item {
-  padding: 8px 0;
 }
 
 .home {
@@ -346,22 +235,11 @@ export default defineComponent({
   margin: auto;
 }
 
-.left-section {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  text-align: left;
-  padding: 5px;
-  margin-left: 20px;
+.top-section {
+  margin-bottom: 20px;
 }
 
-.dashboard-section {
-  width: 100%;
-  margin-top: 20px;
-}
-
-.dashboard-card {
+.stats-card {
   width: 100%;
 }
 
@@ -370,6 +248,8 @@ export default defineComponent({
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .update-time {
@@ -380,25 +260,10 @@ export default defineComponent({
 .version-text {
   font-size: 12px;
   color: #666;
-  text-align: right;
 }
 
-.current-fragment {
-  margin: 10px 0;
-}
-
-.fragment-name {
-  font-weight: bold;
-  font-size: 16px;
-  margin-top: 5px;
-  color: #18a058;
-}
-
-.right-section {
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 5px;
+.stations-section {
+  margin-top: 20px;
 }
 
 .station-list-card {
@@ -423,40 +288,6 @@ export default defineComponent({
   justify-content: flex-end;
 }
 
-/* Task Timeline specific styles */
-.task-timeline-section {
-  margin-top: 16px;
-}
-
-.task-details {
-  font-size: 0.8rem;
-  color: #666;
-  margin-top: 5px;
-}
-
-/* Mobile dashboard specific styles */
-.mobile-dashboard {
-  padding: 0;
-}
-
-.mobile-stats {
-  margin: 8px 0;
-}
-
-.mobile-stat-row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  font-size: 0.85rem;
-}
-
-.mobile-stat-row span {
-  margin: 4px 0;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background-color: #f5f7fa;
-}
-
 @media (max-width: 768px) {
   .grid-layout {
     width: 100%;
@@ -464,17 +295,13 @@ export default defineComponent({
     padding: 10px;
   }
 
-  .left-section {
-    margin-left: 0;
-    margin-bottom: 20px;
-    padding: 10px;
+  .connection-status {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
   }
 
-  .right-section {
-    padding: 10px;
-  }
-
-  .dashboard-card,
+  .stats-card,
   .station-list-card {
     border-radius: 8px;
   }
@@ -495,26 +322,6 @@ export default defineComponent({
     width: 100%;
     justify-content: center;
     margin-top: 10px;
-  }
-
-  /* Fix for mobile table display */
-  :deep(.n-data-table .n-data-table-td) {
-    padding: 8px 4px;
-    text-align: left;
-  }
-
-  :deep(.n-data-table-th) {
-    padding: 8px 4px;
-    text-align: left;
-  }
-
-  /* Mobile task timeline */
-  .task-timeline-section :deep(.n-timeline) {
-    padding-left: 12px;
-  }
-
-  .task-timeline-section :deep(.n-timeline-item-content) {
-    margin-left: 12px;
   }
 }
 </style>

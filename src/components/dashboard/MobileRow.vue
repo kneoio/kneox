@@ -14,32 +14,31 @@
       <div v-if="row.bitrate">Bitrate: {{ row.bitrate }} kbps</div>
     </div>
 
-    <!-- Current Fragment -->
-    <div v-if="row.playlistManagerStats?.currentlyPlaying" class="current-fragment" :title="row.playlistManagerStats.currentlyPlaying">
-      Current: {{ row.playlistManagerStats.currentlyPlaying }}
-    </div>
-
     <!-- Recently Played Titles -->
     <div v-if="row.recentlyPlayedTitles && row.recentlyPlayedTitles.length > 0" class="recently-played">
       <div class="recently-played-label">Recently played:</div>
       <div v-for="(title, index) in row.recentlyPlayedTitles" :key="index" class="recently-played-item" :title="title">
-        {{ title }}
+        <span class="item-number">{{ index + 1 }}.</span> {{ title }}
       </div>
     </div>
 
-    <!-- Played Fragments List -->
     <div v-if="row.playlistManagerStats?.playedFragmentsList && row.playlistManagerStats.playedFragmentsList.length > 0" class="fragment-list">
-      <div class="fragment-list-label">Played:</div>
-      <div v-for="(fragment, index) in row.playlistManagerStats.playedFragmentsList" :key="index" class="fragment-item" :title="fragment">
-        {{ fragment }}
+      <div class="fragment-list-label">Ready to consume:</div>
+      <div
+          v-for="(fragment, index) in row.playlistManagerStats.playedFragmentsList"
+          :key="index"
+          class="fragment-item"
+          :class="{ 'currently-playing': fragment === row.playlistManagerStats?.currentlyPlaying }"
+          :title="fragment"
+      >
+        <span class="item-number">{{ index + 1 }}.</span> {{ fragment }}
       </div>
     </div>
 
-    <!-- Ready to Play List -->
     <div v-if="row.playlistManagerStats?.readyToPlayList && row.playlistManagerStats.readyToPlayList.length > 0" class="fragment-list">
-      <div class="fragment-list-label">Ready:</div>
+      <div class="fragment-list-label">Not processed:</div>
       <div v-for="(fragment, index) in row.playlistManagerStats.readyToPlayList" :key="index" class="fragment-item" :title="fragment">
-        {{ fragment }}
+        <span class="item-number">{{ index + 1 }}.</span> {{ fragment }}
       </div>
     </div>
   </div>
@@ -92,11 +91,6 @@ export default defineComponent({
   margin-bottom: 4px; /* Spacing below station details */
 }
 
-.current-fragment {
-  font-weight: bold;
-  margin-top: 4px; /* Spacing above current fragment */
-}
-
 .recently-played {
   font-size: 0.75rem; /* Smaller font size for recently played */
   color: #666; /* Subtle text color */
@@ -111,6 +105,7 @@ export default defineComponent({
   padding-left: 5px;
   margin-top: 2px;
   border-left: 2px solid #e8e8e8; /* Visual separation */
+  display: flex;
 }
 
 .fragment-list {
@@ -128,5 +123,24 @@ export default defineComponent({
   padding-left: 8px;
   margin-bottom: 2px;
   border-left: 2px solid #e8e8e8;
+  display: flex;
+}
+
+.item-number {
+  min-width: 20px;
+  color: #999;
+  margin-right: 4px;
+}
+
+.currently-playing {
+  font-weight: bold;
+  color: #2c3e50;
+  background-color: #f0f8ff;
+  border-left: 2px solid #3498db;
+}
+
+.currently-playing .item-number {
+  color: #3498db;
+  font-weight: bold;
 }
 </style>
