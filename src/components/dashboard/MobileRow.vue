@@ -66,46 +66,56 @@ export default defineComponent({
 
 <style scoped>
 .mobile-row {
-  font-size: 0.875rem; /* Slightly smaller font size for mobile */
+  font-size: 0.875rem;
+  padding: 12px;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .station-name {
   font-weight: bold;
-  margin-bottom: 4px; /* Spacing below station name */
+  font-size: 1rem;
+  margin-bottom: 6px;
+  color: #333;
 }
 
 .status-indicator {
   font-size: 0.8rem;
-  margin-bottom: 4px; /* Spacing below status indicator */
+  margin-bottom: 6px;
 }
 
 .status-indicator.online {
-  color: green;
+  color: #52c41a;
 }
 
 .status-indicator:not(.online) {
-  color: orange;
+  color: #faad14;
 }
 
 .station-details {
-  margin-bottom: 4px; /* Spacing below station details */
+  display: flex;
+  gap: 12px;
+  margin-bottom: 8px;
+  font-size: 0.8rem;
+  color: #666;
 }
 
 .recently-played {
-  font-size: 0.75rem; /* Smaller font size for recently played */
-  color: #666; /* Subtle text color */
-  margin-top: 4px; /* Spacing above recently played */
+  font-size: 0.75rem;
+  color: #666;
+  margin-top: 8px;
 }
 
 .recently-played-label {
-  margin-bottom: 2px; /* Spacing below label */
+  font-weight: 500;
+  margin-bottom: 4px;
 }
 
 .recently-played-item {
-  padding-left: 5px;
-  margin-top: 2px;
-  border-left: 2px solid #e8e8e8; /* Visual separation */
+  padding-left: 8px;
+  margin-bottom: 2px;
+  border-left: 2px solid #e8e8e8;
   display: flex;
+  line-height: 1.4;
 }
 
 .fragment-list {
@@ -115,7 +125,7 @@ export default defineComponent({
 }
 
 .fragment-list-label {
-  font-weight: bold;
+  font-weight: 500;
   margin-bottom: 4px;
 }
 
@@ -124,6 +134,7 @@ export default defineComponent({
   margin-bottom: 2px;
   border-left: 2px solid #e8e8e8;
   display: flex;
+  line-height: 1.4;
 }
 
 .item-number {
@@ -134,13 +145,12 @@ export default defineComponent({
 
 .currently-playing {
   font-weight: bold;
-  color: #2c3e50;
-  background-color: #f0f8ff;
-  border-left: 2px solid #3498db;
+  color: #1890ff;
+  background-color: #e6f7ff;
+  border-left: 2px solid #1890ff;
 }
 
 .currently-playing .item-number {
-  color: #3498db;
-  font-weight: bold;
+  color: #1890ff;
 }
 </style>

@@ -1,17 +1,33 @@
 <template>
-  <n-config-provider :theme="currentTheme" :theme-overrides="currentThemeOverrides">
-    <n-button @click="toggleTheme" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
-      {{ isDarkTheme ? 'Switch to Light Theme' : 'Switch to Dark Theme' }}
-    </n-button>
-    <router-view/>
+  <n-config-provider
+      :theme="currentTheme"
+      :theme-overrides="currentThemeOverrides"
+      class="theme-provider"
+  >
+    <n-switch
+        v-model:value="isDarkTheme"
+        size="large"
+        style="position: fixed; top: 20px; right: 20px; z-index: 1000;"
+    >
+      <template #checked-icon>
+        <n-icon :component="Moon" />
+      </template>
+      <template #unchecked-icon>
+        <n-icon :component="Sun" />
+      </template>
+    </n-switch>
+    <router-view />
   </n-config-provider>
 </template>
 
-<script>
-import { NConfigProvider, NButton, darkTheme } from 'naive-ui';
-import { ref, computed } from 'vue';
+<script setup>
+import { NConfigProvider, NSwitch, NIcon, darkTheme } from 'naive-ui'
+import { ref, computed } from 'vue'
+import { Sun, Moon } from '@vicons/tabler'
 
-// Light theme overrides
+const isDarkTheme = ref(false)
+
+// Theme overrides with all required colors
 const lightThemeOverrides = {
   common: {
     primaryColor: '#003f5c',
@@ -34,67 +50,61 @@ const lightThemeOverrides = {
     successColorHover: '#cc60a0',
     successColorPressed: '#ac4070',
     successColorSuppl: '#cc60a0',
-  }
-};
 
-// Dark theme overrides
+    // Custom colors for drawer
+    bodyColor: '#f8f8f8',
+    textColorBase: '#333',
+    borderColor: '#e0e0e0',
+
+    // These ensure CSS variables are generated
+    color: '#f8f8f8',
+    textColor: '#333',
+
+  }
+}
+
 const darkThemeOverrides = {
   common: {
-    primaryColor: '#4CAF50', // Green for dark theme
+    primaryColor: '#4CAF50',
     primaryColorHover: '#66BB6A',
     primaryColorPressed: '#388E3C',
     primaryColorSuppl: '#66BB6A',
-    infoColor: '#2196F3', // Blue for dark theme
+    infoColor: '#2196F3',
     infoColorHover: '#42A5F5',
     infoColorPressed: '#1E88E5',
     infoColorSuppl: '#42A5F5',
-    warningColor: '#FFC107', // Amber for dark theme
+    warningColor: '#FFC107',
     warningColorHover: '#FFCA28',
     warningColorPressed: '#FFB300',
     warningColorSuppl: '#FFCA28',
-    errorColor: '#F44336', // Red for dark theme
+    errorColor: '#F44336',
     errorColorHover: '#EF5350',
     errorColorPressed: '#E53935',
     errorColorSuppl: '#EF5350',
-    successColor: '#8BC34A', // Light green for dark theme
+    successColor: '#8BC34A',
     successColorHover: '#9CCC65',
     successColorPressed: '#7CB342',
     successColorSuppl: '#9CCC65',
-  }
-};
 
-export default {
-  name: 'App',
-  components: {
-    NConfigProvider,
-    NButton,
-  },
-  setup() {
-    const isDarkTheme = ref(false);
+    // Custom colors for drawer
+    bodyColor: '#1a1a1a',
+    textColorBase: '#f0f0f0',
+    borderColor: '#333',
 
-    // Function to toggle theme
-    const toggleTheme = () => {
-      isDarkTheme.value = !isDarkTheme.value;
-    };
+    // These ensure CSS variables are generated
+    color: '#1a1a1a',
+    textColor: '#f0f0f0',
 
-    // Computed property to return the current theme
-    const currentTheme = computed(() => {
-      return isDarkTheme.value ? darkTheme : null; // null means light theme
-    });
-
-    // Computed property to return the current theme overrides
-    const currentThemeOverrides = computed(() => {
-      return isDarkTheme.value ? darkThemeOverrides : lightThemeOverrides;
-    });
-
-    return {
-      currentTheme,
-      currentThemeOverrides,
-      isDarkTheme,
-      toggleTheme,
-    };
   }
 }
+
+const currentTheme = computed(() => {
+  return isDarkTheme.value ? darkTheme : null
+})
+
+const currentThemeOverrides = computed(() => {
+  return isDarkTheme.value ? darkThemeOverrides : lightThemeOverrides
+})
 </script>
 
 <style>

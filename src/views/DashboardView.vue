@@ -117,7 +117,12 @@ export default defineComponent({
           key: 'brandName',
           width: 150,
           render(row: any) {
-            return row.brandName;
+            return h('div', {
+              style: {
+                'font-weight': 'bold',
+                'font-size': '1.1rem'
+              }
+            }, row.brandName);
           }
         },
         {
@@ -182,6 +187,29 @@ export default defineComponent({
       return date.toLocaleTimeString();
     };
 
+    const triggerAction = async (brandName: string, action: string) => {
+      try {
+        const response = await fetch(`http://localhost:38707/${brandName}/queue/action`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': 'Bearer eyJhbGciOn3Uz8QkrHaPg',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ action })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to trigger action');
+        }
+
+        // Handle success
+        console.log(`Action "${action}" triggered for ${brandName}`);
+      } catch (error) {
+        console.error('Error triggering action:', error);
+        // You might want to show a notification here
+      }
+    };
+
     onMounted(() => {
       dashboard.connect();
       const cleanup = dashboard.setupPeriodicRefresh(10000);
@@ -207,6 +235,7 @@ export default defineComponent({
       userData,
       dashboard,
       stationColumns,
+      triggerAction,
       formatTime,
       isMobile
     };

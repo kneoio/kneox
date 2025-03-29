@@ -3,44 +3,24 @@
     <n-space vertical>
       <n-card>
         <n-form :model="formState" label-placement="left" label-width="auto">
+          <n-space>
           <n-form-item label="Stream URL">
-            <n-input v-model:value="formState.url" placeholder="Enter HLS stream URL" />
+            <n-input v-model:value="formState.url" placeholder="Enter HLS stream URL" style="min-width: 400px" />
           </n-form-item>
-
           <n-form-item>
             <n-button type="primary" @click="loadStream" :loading="isLoading">
               {{ isLoading ? 'Loading...' : 'Load Stream' }}
             </n-button>
           </n-form-item>
+          </n-space>
         </n-form>
       </n-card>
 
-      <div v-if="showPlayer" class="player-wrapper">
-        <hls-player :source="formState.url" :debug="true" />
-      </div>
 
-      <n-collapse v-if="showPlayer">
-        <n-collapse-item title="About HLS Testing">
-          <div class="info-section">
-            <p>
-              This player uses the industry-standard <strong>hls.js</strong> library which implements the HLS protocol
-              according to specifications. It behaves exactly like a real production player and is ideal for testing
-              your HLS server.
-            </p>
-            <n-ul>
-              <n-li>Adaptive Bitrate Streaming (ABR)</n-li>
-              <n-li>Buffer management with recovery</n-li>
-              <n-li>Error handling and resilience</n-li>
-              <n-li>Detailed network and playback metrics</n-li>
-              <n-li>Standards-compliant playlist and segment handling</n-li>
-            </n-ul>
-            <p>
-              The statistics panel shows buffer length, bandwidth usage, and other metrics to help diagnose
-              streaming issues. Events show real-time playlist requests and segment downloads.
-            </p>
-          </div>
-        </n-collapse-item>
-      </n-collapse>
+        <hls-player :source="formState.url" :debug="true" />
+
+
+
     </n-space>
   </div>
 </template>
@@ -78,7 +58,6 @@ export default defineComponent({
   },
   setup() {
     const parentTitle = inject('parentTitle', ref(''));
-    const showPlayer = ref(false);
     const isLoading = ref(false);
     const formState = ref({
       url: 'http://localhost:38707/gill-russell/radio/stream.m3u8'
@@ -111,7 +90,6 @@ export default defineComponent({
 
     return {
       formState,
-      showPlayer,
       loadStream,
       isLoading
     };
