@@ -44,7 +44,7 @@
 
       <!-- Full-width stations table -->
       <n-gi :span="24" class="stations-section">
-        <n-card title="Active Stations" :bordered="false" class="station-list-card mt-0" >
+        <n-card title="Active Stations" :bordered="false" class="station-list-card mt-0">
           <n-data-table
               :columns="stationColumns"
               :data="dashboard.stationsList"
@@ -68,16 +68,18 @@
 </template>
 
 <script lang="ts">
-import {defineComponent, ref, inject, onMounted, onUnmounted, h, computed} from 'vue';
+import { defineComponent, ref, inject, onMounted, onUnmounted, h, computed } from 'vue';
 import {
   NButton, NSelect, NText, NGrid, NGi, NCard, NStatistic, NDivider, NDataTable, NTag, NAlert,
   NCol, NRow
 } from 'naive-ui';
-import {useDashboardStore} from "../stores/kneo/dashboardStore";
+import { useDashboardStore } from "../stores/kneo/dashboardStore";
 import DesktopRow from "../components/dashboard/DesktopRow.vue";
 import MobileRow from "../components/dashboard/MobileRow.vue";
+import {useStationColumns} from "../components/dashboard/stationColumns";
 
 export default defineComponent({
+  name: 'DashboardView',
   components: {
     NButton,
     NSelect,
@@ -99,8 +101,8 @@ export default defineComponent({
     const parentTitle = inject('parentTitle', ref(''));
     const selectedLanguage = ref('en');
     const languageOptions = [
-      {label: 'English', value: 'en'},
-      {label: 'Portuguese', value: 'pt'},
+      { label: 'English', value: 'en' },
+      { label: 'Portuguese', value: 'pt' },
     ];
     const userData = inject('userData', ref({
       profile: {
@@ -110,7 +112,13 @@ export default defineComponent({
     const dashboard = useDashboardStore();
     const isMobile = ref(window.innerWidth < 768);
 
-    const stationColumns = computed(() => {
+    const formatTime = (date: Date) => {
+      return date.toLocaleTimeString();
+    };
+
+    const stationColumns = useStationColumns(dashboard, isMobile);
+
+    const stationColumns1 = computed(() => {
       const baseColumns = [
         {
           title: 'Name',
@@ -146,9 +154,131 @@ export default defineComponent({
         {
           title: 'Segments',
           key: 'segmentsSize',
-          width: 100,
+          width: 220,
           render(row: any) {
-            return row.segmentsSize || '-';
+            const history = row.segmentSizeHistory || [];
+            const minSegments = dashboard.stats.minimumSegments || 280;
+            const currentValue = row.segmentsSize || 0;
+            const last30Items = history.slice(-30); // Now represents 150 seconds (30 * 5s)
+
+            return h('div', {
+              style: {
+                display: 'flex',
+                'flex-direction': 'column',
+                gap: '4px'
+              }
+            }, [
+              h('div', {
+                style: {
+                  'font-weight': 'bold',
+                  'text-align': 'center',
+                  color: currentValue >= minSegments ? '#18a058' : '#2080f0'
+                }
+              }, `${currentValue}/${minSegments}`),
+
+              h('div', {
+                style: {
+                  height: '80px',
+                  display: 'flex',
+                  'flex-direction': 'column',
+                  position: 'relative'
+                }
+              }, [
+                h('div', {
+                  style: {
+                    position: 'absolute',
+                    left: '0',
+                    top: '0',
+                    bottom: '0',
+                    width: '24px',
+                    'border-right': '1px solid #e0e0e0',
+                    display: 'flex',
+                    'flex-direction': 'column',
+                    'justify-content': 'space-between',
+                    'font-size': '0.7rem',
+                    color: '#666'
+                  }
+                }, [
+                  h('span', { style: { 'text-align': 'right', 'padding-right': '4px' } }, minSegments),
+                  h('span', { style: { 'text-align': 'right', 'padding-right': '4px' } }, Math.floor(minSegments/2)),
+                  h('span', { style: { 'text-align': 'right', 'padding-right': '4px' } }, '0')
+                ]),
+
+                h('div', {
+                  style: {
+                    'margin-left': '24px',
+                    height: '100%',
+                    position: 'relative'
+                  }
+                }, [
+                  h('div', {
+                    style: {
+                      position: 'absolute',
+                      top: '0',
+                      left: '0',
+                      right: '0',
+                      bottom: '0',
+                      display: 'flex',
+                      'flex-direction': 'column',
+                      'justify-content': 'space-between'
+                    }
+                  }, [
+                    h('div', { style: { 'border-top': '1px dashed #e0e0e0' } }),
+                    h('div', { style: { 'border-top': '1px dashed #e0e0e0' } }),
+                    h('div', { style: { 'border-top': '1px solid #e0e0e0' } })
+                  ]),
+
+                  h('svg', {
+                    style: {
+                      position: 'absolute',
+                      top: '0',
+                      left: '0',
+                      width: '100%',
+                      height: '100%'
+                    },
+                    viewBox: `0 0 ${last30Items.length * 10} 100`,
+                    preserveAspectRatio: 'none'
+                  }, [
+                    h('polyline', {
+                      points: last30Items.map((value, index) => {
+                        const x = index * 10;
+                        const y = 100 - (value / minSegments * 100);
+                        return `${x},${y}`;
+                      }).join(' '),
+                      style: {
+                        fill: 'none',
+                        stroke: '#2080f0',
+                        'stroke-width': '2',
+                        'stroke-linejoin': 'round'
+                      }
+                    }),
+
+                    h('circle', {
+                      cx: (last30Items.length - 1) * 10,
+                      cy: 100 - (currentValue / minSegments * 100),
+                      r: '3',
+                      fill: '#18a058'
+                    })
+                  ]),
+
+                  h('div', {
+                    style: {
+                      position: 'absolute',
+                      bottom: '-20px',
+                      left: '0',
+                      right: '0',
+                      display: 'flex',
+                      'justify-content': 'space-between',
+                      'font-size': '0.6rem',
+                      color: '#666'
+                    }
+                  }, [
+                    h('span', {}, '150s ago'),
+                    h('span', {}, 'now')
+                  ])
+                ])
+              ])
+            ]);
           }
         },
         {
@@ -183,10 +313,6 @@ export default defineComponent({
       return baseColumns;
     });
 
-    const formatTime = (date: Date) => {
-      return date.toLocaleTimeString();
-    };
-
     const triggerAction = async (brandName: string, action: string) => {
       try {
         const response = await fetch(`http://localhost:38707/${brandName}/queue/action`, {
@@ -202,11 +328,9 @@ export default defineComponent({
           throw new Error('Failed to trigger action');
         }
 
-        // Handle success
         console.log(`Action "${action}" triggered for ${brandName}`);
       } catch (error) {
         console.error('Error triggering action:', error);
-        // You might want to show a notification here
       }
     };
 
@@ -352,5 +476,16 @@ export default defineComponent({
     justify-content: center;
     margin-top: 10px;
   }
+}
+
+/* Chart specific styles */
+.chart-line {
+  stroke: #2080f0;
+  stroke-width: 2;
+  fill: none;
+}
+
+.current-point {
+  fill: #18a058;
 }
 </style>

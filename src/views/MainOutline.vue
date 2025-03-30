@@ -32,16 +32,16 @@
         }"
         @click="handleContentClick"
     >
-      <n-h1 style="padding-left: 20%">
+      <h1 style="padding-left: 20%">
         {{ viewTitle || "" }}
-      </n-h1>
+      </h1>
       <router-view />
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import {NFlex, NH1, NH2, NButton, NDrawer, NDrawerContent, NMenu, NSelect, NIcon, MenuOption} from 'naive-ui';
+import {NFlex, NButton, NDrawer, NDrawerContent, NMenu, NSelect, NIcon, NH2, MenuOption} from 'naive-ui';
 import {
   defineComponent,
   onMounted,
@@ -57,14 +57,13 @@ import {AlignJustified, List, Music, Radio, Dashboard, MoodHappy} from '@vicons/
 export default defineComponent({
   components: {
     NFlex,
-    NH1,
-    NH2,
     NButton,
     NDrawer,
     NDrawerContent,
     NMenu,
     NSelect,
-    NIcon
+    NIcon,
+    NH2
   },
   setup() {
     const router = useRouter();
@@ -203,7 +202,6 @@ export default defineComponent({
   left: 0;
   width: 300px;
   height: 100vh;
-  background-color: #f8f8f8;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
   transform: translateX(-100%);
   transition: transform 0.3s ease;
@@ -217,6 +215,12 @@ export default defineComponent({
 .drawer-header {
   padding: 16px;
   border-bottom: 1px solid #ac4070;
+}
+
+.drawer-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
 }
 
 .drawer-content {
@@ -247,6 +251,12 @@ export default defineComponent({
 .content {
   padding: 20px;
   transition: margin-left 0.3s ease;
+}
+
+.content h1 {
+  margin: 0 0 1rem 0;
+  font-size: 2rem;
+  font-weight: 600;
 }
 
 @media (max-width: 768px) {

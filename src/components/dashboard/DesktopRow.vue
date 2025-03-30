@@ -3,8 +3,8 @@
     <!-- Recently Played Titles -->
     <div v-if="row.recentlyPlayedTitles && row.recentlyPlayedTitles.length > 0" class="recently-played">
       <div class="recently-played-label">Recently played:</div>
-      <div v-for="(title, index) in row.recentlyPlayedTitles" :key="index" class="recently-played-item" :title="title">
-        <span class="item-number">{{ index + 1 }}.</span> {{ title }}
+      <div v-for="(title, index) in row.recentlyPlayedTitles" :key="index" class="recently-played-item" :title="cleanTitle(title)">
+        <span class="item-number">{{ index + 1 }}.</span> {{ cleanTitle(title) }}
       </div>
     </div>
 
@@ -16,10 +16,10 @@
             v-for="(fragment, index) in row.playlistManagerStats.playedFragmentsList"
             :key="index"
             class="fragment-item"
-            :class="{ 'currently-playing': fragment === row.playlistManagerStats?.currentlyPlaying }"
-            :title="fragment"
+            :class="{ 'currently-playing': isCurrentlyPlaying(fragment) }"
+            :title="cleanTitle(fragment)"
         >
-          <span class="item-number">{{ index + 1 }}.</span> {{ fragment }}
+          <span class="item-number">{{ index + 1 }}.</span> {{ cleanTitle(fragment) }}
         </div>
       </div>
       <div v-else class="fragment-item">No played fragments available.</div>
@@ -28,8 +28,8 @@
     <div class="fragment-list">
       <div class="fragment-list-label">Not processed:</div>
       <div v-if="row.playlistManagerStats?.readyToPlayList && row.playlistManagerStats.readyToPlayList.length > 0">
-        <div v-for="(fragment, index) in row.playlistManagerStats.readyToPlayList" :key="index" class="fragment-item" :title="fragment">
-          <span class="item-number">{{ index + 1 }}.</span> {{ fragment }}
+        <div v-for="(fragment, index) in row.playlistManagerStats.readyToPlayList" :key="index" class="fragment-item" :title="cleanTitle(fragment)">
+          <span class="item-number">{{ index + 1 }}.</span> {{ cleanTitle(fragment) }}
         </div>
       </div>
       <div v-else class="fragment-item">No ready to play fragments available.</div>
@@ -48,8 +48,21 @@ export default defineComponent({
     }
   },
   setup(props) {
-    console.log(props.row); // Debug: Log the row object
-    return {};
+    const cleanTitle = (title: string) => {
+      // Remove ### prefix if present
+      return title.replace(/^#+\s*/, '').trim();
+    };
+
+    const isCurrentlyPlaying = (fragment: string) => {
+      const current = props.row.playlistManagerStats?.currentlyPlaying || '';
+      // Compare cleaned versions of both strings
+      return cleanTitle(fragment) === cleanTitle(current);
+    };
+
+    return {
+      cleanTitle,
+      isCurrentlyPlaying
+    };
   }
 });
 </script>
