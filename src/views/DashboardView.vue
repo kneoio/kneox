@@ -11,6 +11,15 @@
             <n-tag :type="dashboard.isConnected ? 'success' : 'error'" size="small">
               {{ dashboard.isConnected ? 'Connected' : 'Disconnected' }}
             </n-tag>
+            <n-select
+                v-model:value="selectedAction"
+                :options="actionOptions"
+                placeholder="Select action"
+                filterable
+                size="small"
+                style="width: 120px; margin-left: 10px;"
+                @update:value="(value) => triggerAction('pacheco-llc', value)"
+            />
             <n-text v-if="dashboard.lastUpdate" class="update-time">
               Last update: {{ formatTime(dashboard.lastUpdate) }}
             </n-text>
@@ -110,12 +119,20 @@ export default defineComponent({
 
     const stationColumns = useStationColumns(dashboard, isMobile);
 
+    const selectedAction = ref('');
+    const actionOptions = [
+      { label: 'Start', value: 'start' },
+      { label: 'Stop', value: 'stop' },
+      { label: 'Restart', value: 'restart' },
+      { label: 'Pause', value: 'pause' }
+    ];
+
     const triggerAction = async (brandName: string, action: string) => {
       try {
-        const response = await fetch(`http://localhost:38707/${brandName}/queue/action`, {
+        const response = await fetch(`http://localhost:38707/api/${brandName}/queue/action`, {
           method: 'PUT',
           headers: {
-            'Authorization': 'Bearer eyJhbGciOn3Uz8QkrHaPg',
+            'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIign3Uz8QkrHaPg',
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({ action })
@@ -158,7 +175,9 @@ export default defineComponent({
       stationColumns,
       triggerAction,
       formatTime,
-      isMobile
+      isMobile,
+      selectedAction ,
+       actionOptions
     };
   },
 });
