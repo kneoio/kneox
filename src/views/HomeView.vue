@@ -4,7 +4,8 @@
       <kneo-header :isAuthenticated="isAuthenticated" @logout="logout" />
     </n-grid-item>
     <n-grid-item :span="24">
-      <router-view />
+      <router-view v-if="authInitialized" />
+      <n-spin v-else size="large" class="loading-spinner" />
     </n-grid-item>
     <n-grid-item :span="24">
       <kneo-footer :inverted="inverted" />
@@ -13,37 +14,70 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, inject, ref, onMounted } from 'vue';
-import { NGrid, NGridItem } from 'naive-ui';
+import { defineComponent, inject, ref, onMounted, watch } from 'vue';
+import { NGrid, NGridItem, NSpin } from 'naive-ui';
 import KneoHeader from "../components/common/KneoHeader.vue";
 import KneoFooter from "../components/common/KneoFooter.vue";
 import { KeycloakInstance } from 'keycloak-js';
+//import { useRouter } from 'vue-router';
 
 export default defineComponent({
+  name: 'HomeView',
   components: {
     KneoFooter,
     KneoHeader,
     NGrid,
     NGridItem,
+    NSpin
   },
   setup() {
+    //const router = useRouter();
     const kc = inject<KeycloakInstance>('keycloak');
     const userData = inject<any>('userData');
     const isAuthenticated = ref(false);
+    const authInitialized = ref(false);
+    const inverted = ref(false);
 
-    const checkAuthentication = () => {
-      if (kc && kc.authenticated) {
-        isAuthenticated.value = true;
-      } else {
-        isAuthenticated.value = false;
+    // Initialize Keycloak and set up token refresh
+    const initAuth = async () => {
+      if (!kc) {
+        console.error('Keycloak instance not available');
+        return;
+      }
+
+      try {
+        // Initialize Keycloak
+        const authenticated = await kc.init({
+          onLoad: 'login-required',
+          checkLoginIframe: false
+        });
+
+        isAuthenticated.value = authenticated;
+        authInitialized.value = true;
+
+        // Set up token refresh
+        setInterval(async () => {
+          if (kc.authenticated) {
+            try {
+              await kc.updateToken(30); // Refresh if token expires in <30 seconds
+            } catch (error) {
+              console.error('Token refresh failed:', error);
+              isAuthenticated.value = false;
+              await kc.login();
+            }
+          }
+        }, 60000); // Check every minute
+
+      } catch (error) {
+        console.error('Keycloak initialization failed:', error);
+        await kc.login();
       }
     };
 
     const logout = async () => {
       if (kc) {
         try {
-          await kc.logout();
-          isAuthenticated.value = false;
+          await kc.logout({ redirectUri: window.location.origin });
         } catch (error) {
           console.error("Logout failed", error);
         }
@@ -53,13 +87,21 @@ export default defineComponent({
     };
 
     onMounted(() => {
-      checkAuthentication();
+      initAuth();
+    });
+
+    // Watch for authentication changes
+    watch(isAuthenticated, (newVal) => {
+      if (!newVal && kc) {
+        kc.login();
+      }
     });
 
     return {
       userData,
-      inverted: ref(false),
+      inverted,
       isAuthenticated,
+      authInitialized,
       logout,
     };
   }
@@ -74,7 +116,14 @@ export default defineComponent({
   overflow: hidden;
 }
 
-@media (max-width: 768px) { /* Adjustments for tablets and below */
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+@media (max-width: 768px) {
   kneo-header,
   kneo-footer {
     width: 100%;
@@ -91,9 +140,9 @@ export default defineComponent({
   }
 }
 
-@media (max-width: 480px) { /* Adjustments for phones */
+@media (max-width: 480px) {
   kneo-header {
-    display: none; /* Hide header on very small screens */
+    display: none;
   }
 
   kneo-footer {

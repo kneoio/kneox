@@ -5,6 +5,7 @@ const cfg = {
     realm: 'kneo',
     clientId: 'kneo_primary',
     checkLoginIframe: false,
+    onLoad: 'login-required'
 };
 
 const keycloakInst = new Keycloak(cfg);
