@@ -122,7 +122,6 @@ export default defineComponent({
       try {
         loading.value = true;
 
-        // Use correct endpoint for PUT request
         const response = await fetch(row.actionUrl, {
           method: 'PUT',
           headers: {

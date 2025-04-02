@@ -36,7 +36,6 @@
             <n-descriptions-item label="Min.segments">{{ dashboard.stats.minimumSegments }}</n-descriptions-item>
             <n-descriptions-item label="Max.segments">{{ dashboard.stats.slidingWindowSize }}</n-descriptions-item>
           </n-descriptions>
-
           <n-alert v-else type="warning">
             No stats data received from server
           </n-alert>

@@ -1,6 +1,6 @@
 <template>
   <div class="desktop-row">
-    <!-- Playlist Manager Section (kept intact) -->
+    <!-- Playlist Manager Section -->
     <div class="playlist-manager-section">
       <div class="section-label">Playlist Manager Stats</div>
 
@@ -40,7 +40,7 @@
       </div>
     </div>
 
-    <!-- Improved HLS Provider Section -->
+    <!-- HLS Provider Section -->
     <div v-if="row.songStatistics" class="hls-provider-section">
       <div class="section-label">HLS Provider Stats</div>
 
@@ -70,6 +70,15 @@
             <div class="table-cell">{{ stats.averageBitrate }} kbps</div>
             <div class="table-cell">{{ stats.requestCount }}</div>
           </div>
+
+          <!-- Summary Row (only for Segments and Duration) -->
+          <div class="table-row summary-row">
+            <div class="table-cell song-name">Total</div>
+            <div class="table-cell">{{ totalSegments }}</div>
+            <div class="table-cell">{{ totalDuration }}s</div>
+            <div class="table-cell"></div>
+            <div class="table-cell"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -77,7 +86,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent, computed } from 'vue';
 
 export default defineComponent({
   props: {
@@ -91,8 +100,21 @@ export default defineComponent({
       return title.replace(/^#+\s*/, '').trim();
     };
 
+    const totalSegments = computed(() => {
+      return Object.values(props.row.songStatistics || {})
+          .reduce((sum: number, stats: any) => sum + (stats.segmentCount || 0), 0);
+    });
+
+    const totalDuration = computed(() => {
+      return Object.values(props.row.songStatistics || {})
+          .reduce((sum: number, stats: any) => sum + (stats.totalDuration || 0), 0)
+          .toFixed(2);
+    });
+
     return {
-      cleanTitle
+      cleanTitle,
+      totalSegments,
+      totalDuration
     };
   }
 });
@@ -143,7 +165,6 @@ export default defineComponent({
   margin-right: 4px;
 }
 
-/* HLS Provider specific styles */
 .hls-provider-section {
   min-width: 400px;
 }
@@ -232,5 +253,15 @@ export default defineComponent({
 
 .table-row:hover {
   background-color: #f0f0f0;
+}
+
+.summary-row {
+  font-weight: bold;
+  background-color: #f0f0f0 !important;
+  border-top: 2px solid #ddd;
+}
+
+.summary-row .table-cell {
+  color: #2c3e50;
 }
 </style>
