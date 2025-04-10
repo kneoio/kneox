@@ -1,10 +1,8 @@
 <template>
   <div class="desktop-row">
-    <!-- Playlist Manager Section -->
     <div class="playlist-manager-section">
       <div class="section-label">Playlist Manager Stats</div>
 
-      <!-- Recently Played Titles -->
       <div v-if="row.recentlyPlayedTitles && row.recentlyPlayedTitles.length > 0" class="recently-played">
         <div class="sub-label">Recently played:</div>
         <div v-for="(title, index) in row.recentlyPlayedTitles" :key="index" class="playlist-item" :title="cleanTitle(title)">
@@ -12,7 +10,6 @@
         </div>
       </div>
 
-      <!-- Ready to consume -->
       <div class="fragment-list">
         <div class="sub-label">Ready to consume:</div>
         <div v-if="row.playlistManagerStats?.playedFragmentsList && row.playlistManagerStats.playedFragmentsList.length > 0">
@@ -28,7 +25,6 @@
         <div v-else class="playlist-item">No played fragments available.</div>
       </div>
 
-      <!-- Not processed -->
       <div class="fragment-list">
         <div class="sub-label">Not processed:</div>
         <div v-if="row.playlistManagerStats?.readyToPlayList && row.playlistManagerStats.readyToPlayList.length > 0">
@@ -40,24 +36,16 @@
       </div>
     </div>
 
-    <!-- HLS Provider Section -->
     <div v-if="row.songStatistics" class="hls-provider-section">
       <div class="section-label">HLS Provider Stats</div>
-
-      <div class="stats-summary">
-        <div class="stat-item">
-          <span class="stat-label">Total Fragments:</span>
-          <span class="stat-value">{{ Object.keys(row.songStatistics).length }}</span>
-        </div>
-      </div>
 
       <div class="songs-table">
         <div class="table-header">
           <div class="header-cell song-name">Title</div>
-          <div class="header-cell">Segments</div>
           <div class="header-cell">Duration</div>
           <div class="header-cell">Bitrate</div>
           <div class="header-cell">Requests</div>
+          <div class="header-cell">Segment Range</div>
         </div>
 
         <div class="table-body">
@@ -65,19 +53,14 @@
             <div class="table-cell song-name" :title="cleanTitle(songName)">
               {{ cleanTitle(songName) }}
             </div>
-            <div class="table-cell">{{ stats.segmentCount }}</div>
-            <div class="table-cell">{{ stats.totalDuration }}s</div>
+            <div class="table-cell">{{ formatDuration(stats.totalDuration) }}</div>
             <div class="table-cell">{{ stats.averageBitrate }} kbps</div>
             <div class="table-cell">{{ stats.requestCount }}</div>
-          </div>
-
-          <!-- Summary Row (only for Segments and Duration) -->
-          <div class="table-row summary-row">
-            <div class="table-cell song-name">Total</div>
-            <div class="table-cell">{{ totalSegments }}</div>
-            <div class="table-cell">{{ totalDuration }}s</div>
-            <div class="table-cell"></div>
-            <div class="table-cell"></div>
+            <div class="table-cell range-cell">
+              <div class="range-display">
+                {{ stats.start }} → {{ stats.end }}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -86,7 +69,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from 'vue';
+import { defineComponent } from 'vue';
 
 export default defineComponent({
   props: {
@@ -95,26 +78,20 @@ export default defineComponent({
       required: true
     }
   },
-  setup(props) {
+  setup() {
     const cleanTitle = (title: string) => {
       return title.replace(/^#+\s*/, '').trim();
     };
 
-    const totalSegments = computed(() => {
-      return Object.values(props.row.songStatistics || {})
-          .reduce((sum: number, stats: any) => sum + (stats.segmentCount || 0), 0);
-    });
-
-    const totalDuration = computed(() => {
-      return Object.values(props.row.songStatistics || {})
-          .reduce((sum: number, stats: any) => sum + (stats.totalDuration || 0), 0)
-          .toFixed(2);
-    });
+    const formatDuration = (seconds: number) => {
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
 
     return {
       cleanTitle,
-      totalSegments,
-      totalDuration
+      formatDuration
     };
   }
 });
@@ -166,30 +143,15 @@ export default defineComponent({
 }
 
 .hls-provider-section {
-  min-width: 400px;
+  min-width: 500px;
 }
 
-.stats-summary {
+.current-segment {
   margin-bottom: 12px;
   padding: 8px;
-  background-color: #f5f5f5;
+  background-color: #f0f0f0;
   border-radius: 4px;
-}
-
-.stat-item {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 4px;
-}
-
-.stat-label {
-  font-weight: 600;
-  color: #555;
-}
-
-.stat-value {
-  font-weight: 500;
-  color: #2c3e50;
+  font-weight: bold;
 }
 
 .songs-table {
@@ -247,21 +209,24 @@ export default defineComponent({
   text-overflow: ellipsis;
 }
 
+.range-cell {
+  min-width: 150px;
+}
+
+.range-display {
+  font-family: monospace;
+}
+
+.current-indicator {
+  color: #ff6b6b;
+  font-weight: bold;
+}
+
 .table-row:nth-child(even) {
   background-color: #f9f9f9;
 }
 
 .table-row:hover {
   background-color: #f0f0f0;
-}
-
-.summary-row {
-  font-weight: bold;
-  background-color: #f0f0f0 !important;
-  border-top: 2px solid #ddd;
-}
-
-.summary-row .table-cell {
-  color: #2c3e50;
 }
 </style>
