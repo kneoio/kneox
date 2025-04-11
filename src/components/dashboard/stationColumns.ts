@@ -4,7 +4,7 @@ import DesktopRow from "./DesktopRow.vue";
 import SegmentsChart from "./SegmentsChart.vue";
 import MobileRow from "./MobileRow.vue";
 
-export const useStationColumns = (dashboard: any, isMobile: any) => {
+export const useStationColumns = (dashboardStore: any, isMobile: any) => {
     return computed(() => {
         const baseColumns = [
             {
@@ -12,15 +12,18 @@ export const useStationColumns = (dashboard: any, isMobile: any) => {
                 key: 'brandName',
                 width: 150,
                 render(row: any) {
-                    const statusText = row.status === 'ON_LINE' ? 'Online' :
-                        row.status === 'WARMING_UP' ? 'Warming up' :
-                            row.status;
+                    // Get the full station details from the store
+                    const stationDetails = dashboardStore.getStationDetails(row.brandName) || row;
 
-                    const managedByText = row.managedBy === 'ITSELF' ? 'Self-managed' :
-                        row.managedBy === 'AI_AGENT' ? 'AI-managed' :
-                            row.managedBy;
+                    const statusText = stationDetails.status === 'ON_LINE' ? 'Online' :
+                        stationDetails.status === 'WARMING_UP' ? 'Warming up' :
+                            stationDetails.status;
 
-                    const managedByType = row.managedBy === 'AI_AGENT' ? 'info' : 'default';
+                    const managedByText = stationDetails.managedBy === 'ITSELF' ? 'Self-managed' :
+                        stationDetails.managedBy === 'AI_AGENT' ? 'AI-managed' :
+                            stationDetails.managedBy;
+
+                    const managedByType = stationDetails.managedBy === 'AI_AGENT' ? 'info' : 'default';
 
                     return h('div', {
                         style: {
@@ -34,11 +37,11 @@ export const useStationColumns = (dashboard: any, isMobile: any) => {
                                 'font-weight': 'bold',
                                 'font-size': '1.1rem'
                             }
-                        }, row.brandName),
+                        }, stationDetails.brandName),
                         h(
                             NTag,
                             {
-                                type: row.status === 'ON_LINE' ? 'success' : 'warning',
+                                type: stationDetails.status === 'ON_LINE' ? 'success' : 'warning',
                                 size: 'small',
                                 style: 'margin: 0; width: fit-content;'
                             },
@@ -62,6 +65,10 @@ export const useStationColumns = (dashboard: any, isMobile: any) => {
                 key: 'segmentsSize',
                 width: 220,
                 render(row: any) {
+                    // Get the full station details from the store
+                    const stationDetails = dashboardStore.getStationDetails(row.brandName) || row;
+                    const minSegments = dashboardStore.stats.minimumSegments || 280;
+
                     return h('div', {
                         style: {
                             display: 'flex',
@@ -73,16 +80,16 @@ export const useStationColumns = (dashboard: any, isMobile: any) => {
                             style: {
                                 'font-weight': 'bold',
                                 'text-align': 'center',
-                                color: row.segmentsSize >= (dashboard.stats.minimumSegments || 280)
+                                color: stationDetails.segmentsSize >= minSegments
                                     ? '#18a058'
                                     : '#2080f0'
                             }
-                        }, `${row.segmentsSize || 0}/${dashboard.stats.minimumSegments || 280}`),
+                        }, `${stationDetails.segmentsSize || 0}/${minSegments}`),
 
                         h(SegmentsChart, {
-                            history: row.segmentSizeHistory || [],
-                            currentValue: row.segmentsSize || 0,
-                            minSegments: dashboard.stats.minimumSegments || 280
+                            history: stationDetails.segmentSizeHistory || [],
+                            currentValue: stationDetails.segmentsSize || 0,
+                            minSegments: minSegments
                         })
                     ]);
                 }
@@ -91,7 +98,16 @@ export const useStationColumns = (dashboard: any, isMobile: any) => {
                 title: 'Current Fragment / Recently Played',
                 key: 'currentFragment',
                 render(row: any) {
-                    return h(DesktopRow, { row });
+                    // Get the full station details from the store
+                    const stationDetails = dashboardStore.getStationDetails(row.brandName) || row;
+                    return h(DesktopRow, {
+                        row: {
+                            ...row,
+                            ...stationDetails,
+                            // Merge playlist data if available
+                            playlistManagerStats: stationDetails.playlistManagerStats || {}
+                        }
+                    });
                 }
             }
         ];
@@ -102,7 +118,16 @@ export const useStationColumns = (dashboard: any, isMobile: any) => {
                     title: 'Station',
                     key: 'combined',
                     render: (row: any) => {
-                        return h(MobileRow, { row });
+                        // Get the full station details from the store
+                        const stationDetails = dashboardStore.getStationDetails(row.brandName) || row;
+                        return h(MobileRow, {
+                            row: {
+                                ...row,
+                                ...stationDetails,
+                                // Merge playlist data if available
+                                playlistManagerStats: stationDetails.playlistManagerStats || {}
+                            }
+                        });
                     }
                 }
             ];

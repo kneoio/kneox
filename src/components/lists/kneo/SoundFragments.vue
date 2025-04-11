@@ -101,7 +101,7 @@ export default defineComponent({
 
     const columns = computed<DataTableColumns<SoundFragment>>(() => {
       const baseColumns: DataTableColumns<SoundFragment> = [
-        { title: 'Name', key: 'name' },
+        { title: 'Title', key: 'title' },
         { title: 'Artist', key: 'artist' },
         { title: 'Genre', key: 'genre' },
         {
@@ -115,7 +115,6 @@ export default defineComponent({
 
       if (!isMobile.value) {
         baseColumns.push(
-            { title: 'Album', key: 'album' },
             { title: 'Type', key: 'type' }
         );
       }

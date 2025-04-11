@@ -8,24 +8,36 @@
         </p>
         <n-card :bordered="false" class="stats-card mb-0">
           <div class="connection-status">
-            <n-tag :type="dashboard.isConnected ? 'success' : 'error'" size="small">
-              {{ dashboard.isConnected ? 'Connected' : 'Disconnected' }}
-            </n-tag>
-            <n-select
-                v-model:value="selectedAction"
-                :options="actionOptions"
-                placeholder="Select action"
-                filterable
-                size="small"
-                style="width: 120px; margin-left: 10px;"
-                @update:value="(value) => triggerAction('pacheco-llc', value)"
-            />
-            <n-text v-if="dashboard.lastUpdate" class="update-time">
-              Last update: {{ formatTime(dashboard.lastUpdate) }}
-            </n-text>
-            <n-text v-if="dashboard.version" class="version-text">
-              Version: {{ dashboard.version }}
-            </n-text>
+            <div class="left-controls">
+              <n-tag :type="dashboard.isConnected ? 'success' : 'error'" size="small">
+                {{ dashboard.isConnected ? 'Connected' : 'Disconnected' }}
+              </n-tag>
+              <n-select
+                  v-model:value="selectedBrand"
+                  :options="brandOptions"
+                  placeholder="Select brand"
+                  filterable
+                  size="small"
+                  style="width: 200px;"
+              />
+              <n-button
+                  size="small"
+                  type="primary"
+                  @click="startBroadcast(selectedBrand)"
+                  :disabled="!selectedBrand"
+                  :loading="isStartingBroadcast"
+              >
+                Start Broadcast
+              </n-button>
+            </div>
+            <div class="right-info">
+              <n-text v-if="dashboard.lastUpdate" class="update-time">
+                Last update: {{ formatTime(dashboard.lastUpdate) }}
+              </n-text>
+              <n-text v-if="dashboard.version" class="version-text">
+                Version: {{ dashboard.version }}
+              </n-text>
+            </div>
           </div>
 
           <n-divider v-if="!isMobile" />
@@ -68,12 +80,13 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, inject, onMounted, onUnmounted } from 'vue';
+import { defineComponent, ref, inject, onMounted, onUnmounted, computed } from 'vue';
 import {
   NButton, NSelect, NText, NGrid, NGi, NCard, NStatistic, NDivider, NDataTable, NTag, NAlert,
   NCol, NRow, NDescriptions, NDescriptionsItem
 } from 'naive-ui';
 import { useDashboardStore } from "../stores/kneo/dashboardStore";
+import { useBrandStore } from "../stores/kneo/brandsStore";
 import DesktopRow from "../components/dashboard/DesktopRow.vue";
 import MobileRow from "../components/dashboard/MobileRow.vue";
 import {useStationColumns} from "../components/dashboard/stationColumns";
@@ -95,7 +108,9 @@ export default defineComponent({
     NCol,
     NRow,
     DesktopRow,
-    MobileRow,  NDescriptions, NDescriptionsItem
+    MobileRow,
+    NDescriptions,
+    NDescriptionsItem
   },
   setup() {
     const parentTitle = inject('parentTitle', ref(''));
@@ -110,7 +125,9 @@ export default defineComponent({
       }
     }));
     const dashboard = useDashboardStore();
+    const brandStore = useBrandStore();
     const isMobile = ref(window.innerWidth < 768);
+    const isStartingBroadcast = ref(false);
 
     const formatTime = (date: Date) => {
       return date.toLocaleTimeString();
@@ -118,38 +135,33 @@ export default defineComponent({
 
     const stationColumns = useStationColumns(dashboard, isMobile);
 
-    const selectedAction = ref('');
-    const actionOptions = [
-      { label: 'Start', value: 'start' },
-      { label: 'Stop', value: 'stop' },
-      { label: 'Restart', value: 'restart' },
-      { label: 'Pause', value: 'pause' }
-    ];
+    const selectedBrand = ref('');
 
-    const triggerAction = async (brandName: string, action: string) => {
+    const brandOptions = computed(() => {
+      return brandStore.getEntries.map(brand => ({
+        label: brand.slugName,
+        value: brand.slugName
+      }));
+    });
+
+
+    const startBroadcast = async (brandName: string) => {
+      if (!brandName) return;
+      isStartingBroadcast.value = true;
       try {
-        const response = await fetch(`http://localhost:38707/api/${brandName}/queue/action`, {
-          method: 'PUT',
-          headers: {
-            'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIign3Uz8QkrHaPg',
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ action })
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to trigger action');
+        const success = await dashboard.triggerBroadcastAction(brandName, 'start');
+        if (success) {
+          dashboard.fetchDashboard();
         }
-
-        console.log(`Action "${action}" triggered for ${brandName}`);
-      } catch (error) {
-        console.error('Error triggering action:', error);
+      } finally {
+        isStartingBroadcast.value = false;
       }
     };
 
     onMounted(() => {
       dashboard.connect();
       const cleanup = dashboard.setupPeriodicRefresh(10000);
+      brandStore.fetchAll();
 
       window.addEventListener('resize', () => {
         isMobile.value = window.innerWidth < 768;
@@ -172,11 +184,12 @@ export default defineComponent({
       userData,
       dashboard,
       stationColumns,
-      triggerAction,
+      startBroadcast,
       formatTime,
       isMobile,
-      selectedAction ,
-       actionOptions
+      selectedBrand,
+      brandOptions,
+      isStartingBroadcast
     };
   },
 });
@@ -215,8 +228,18 @@ export default defineComponent({
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
   flex-wrap: wrap;
+  gap: 10px;
+}
+
+.left-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.right-info {
+  display: flex;
   gap: 10px;
 }
 
@@ -267,6 +290,16 @@ export default defineComponent({
     flex-direction: column;
     align-items: flex-start;
     gap: 5px;
+  }
+
+  .left-controls {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .right-info {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .stats-card,
