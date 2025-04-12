@@ -166,7 +166,7 @@ export default defineComponent({
 
     onMounted(() => {
       dashboard.connect();
-      const cleanup = dashboard.setupPeriodicRefresh(10000);
+      const cleanup = dashboard.setupPeriodicRefresh(3000);
       brandStore.fetchAll();
 
       window.addEventListener('resize', () => {
@@ -237,10 +237,6 @@ export default defineComponent({
 
 .top-section {
   margin-bottom: 20px;
-}
-
-.stats-card {
-  width: 100%;
 }
 
 .connection-status {

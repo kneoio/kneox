@@ -49,7 +49,7 @@
             <div class="table-cell duration-cell">{{ formatDuration(stats.totalDuration) }}</div>
             <div class="table-cell bitrate-cell">{{ stats.averageBitrate }} kbps</div>
             <div class="table-cell requests-cell">{{ stats.requestCount }}</div>
-            <div class="table-cell segment-range-cell">
+            <div class="table-cell segment-range-cell" :class="{ 'in-current-window': isInCurrentWindow(stats.start, stats.end) }">
               <div class="range-display">
                 {{ stats.start }}
                 <span v-if="!isLatestSegment(stats.start, stats.end)" class="range-separator">→</span>
@@ -91,9 +91,14 @@ export default defineComponent({
     };
 
     const latestRequestedSeg = computed(() => props.row.latestRequestedSeg);
+    const currentWindow = computed(() => props.row.currentWindow || []);
 
     const isLatestSegment = (start: number, end: number): boolean => {
       return latestRequestedSeg.value !== undefined && latestRequestedSeg.value >= start && latestRequestedSeg.value <= end;
+    };
+
+    const isInCurrentWindow = (start: number, end: number): boolean => {
+      return currentWindow.value.some(window => start >= window[0] && end <= window[1]);
     };
 
     return {
@@ -101,6 +106,7 @@ export default defineComponent({
       formatDuration,
       latestRequestedSeg,
       isLatestSegment,
+      isInCurrentWindow,
     };
   }
 });
@@ -164,7 +170,7 @@ export default defineComponent({
 }
 
 .header-cell.song-name {
-  flex: 2;
+  flex: 3;
   text-align: left;
 }
 
@@ -207,7 +213,7 @@ export default defineComponent({
 }
 
 .table-cell.song-name {
-  flex: 2;
+  flex: 3;
   text-align: left;
   white-space: nowrap;
   overflow: hidden;
@@ -271,5 +277,11 @@ export default defineComponent({
 
 .table-row:hover {
   background-color: #f0f0f0;
+}
+
+.in-current-window {
+  background-color: #e6ffe6 !important; /* Light green background */
+  color: #28a745 !important; /* Darker green text */
+  font-weight: bold;
 }
 </style>
