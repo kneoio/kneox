@@ -1,14 +1,15 @@
-// types/dashboard.ts
+
+export interface StationEntry {
+    brandName: string;
+}
+
 export interface Station {
     brandName: string;
     status: string;
     segmentsSize: number;
-    lastSegmentKey: number;
-    lastRequested: number;
-    currentFragment: string;
-    segmentSizeHistory?: number[]; // Added to match your usage
-    bitrate?: number; // Added to match your usage
-    recentlyPlayed?: string[]; // Added to match your usage
+    lastSegmentKey?: number;
+    lastRequested?: number;
+    currentFragment?: string;
 }
 
 export interface DashboardStats {
@@ -16,35 +17,66 @@ export interface DashboardStats {
     onlineStations: number;
     minimumSegments: number;
     slidingWindowSize: number;
-    stations: Record<string, Station>;
+    stations: StationEntry[];
     timelines: PeriodicTask[];
 }
 
 export interface PeriodicTask {
+    id: string;
     name: string;
-    schedulerName: string;
+    startTime?: string;
+    schedulerName?: string;
     lastExecutionTime: string;
     nextExecutionTime: string;
     timeRemaining: number;
     currentProgress: number;
+    intervalSeconds?: number;
+    executionCount?: number;
 }
 
 export interface DashboardResponse {
     payload: {
-        kneobroadcaster: string[];
+        kneobroadcaster: string;
         stats: DashboardStats;
     };
 }
 
-export interface DashboardStore {
-    response: DashboardResponse | null;
-    isConnected: boolean;
-    lastUpdate: Date | null;
-    stats: DashboardStats;
-    stationsList: Station[];
-    version: string;
-    connect: () => void;
-    disconnect: () => void;
-    fetchDashboard: () => void;
-    setupPeriodicRefresh: (intervalMs?: number) => () => void;
+export interface PlaylistManagerStats {
+    obtainedByPlaylist: string[];
+    readyToBeConsumed: string[];
+    brand: string;
+}
+
+export interface SongStatistics {
+    segmentCount: number;
+    totalDuration: number;
+    totalSize: number;
+    averageBitrate: number;
+    requestCount: number;
+    start: number;
+    end: number;
+    latestRequestedSegment: number;
+}
+
+export interface StationDetails {
+    brandName: string;
+    status: string;
+    managedBy: string;
+    segmentsSize: number;
+    playlistManagerStats: PlaylistManagerStats;
+    timelines: Array<{
+        task: PeriodicTask;
+    }>;
+    totalBytesProcessed: number;
+    bitrate: number;
+    queueSize: number;
+    songStatistics: Record<string, SongStatistics>;
+    segmentSizeHistory: number[];
+}
+
+export interface StationResponse {
+    payload: {
+        kneobroadcaster: string;
+        station: StationDetails;
+    };
 }

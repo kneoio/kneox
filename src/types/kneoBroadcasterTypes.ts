@@ -39,7 +39,7 @@ export interface Brand {
     lastModifiedDate: string;
     status: BrandStatus;
     country: string;
-    slug_name: string;
+    slugName: string;
     url: string;
 }
 
@@ -68,7 +68,7 @@ export interface SoundFragmentSave {
     artist?: string;
     genre?: string;
     album?: string;
-    uploadedFile: string[] | null; // Array of file names
+    uploadedFile: string[] | null;
 }
 
 export interface ErrorResponse {

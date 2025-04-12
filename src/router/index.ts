@@ -77,7 +77,6 @@ export function setupRouterGuard() {
     router.beforeEach(async (to) => {
         if (to.matched.some(record => record.meta.requiresAuth)) {
             try {
-                // Initialize Keycloak if not already done
                 if (!keycloak.authenticated) {
                     await keycloak.init({
                         onLoad: 'login-required',
@@ -85,10 +84,8 @@ export function setupRouterGuard() {
                     });
                 }
 
-                // Check authentication status
                 if (keycloak.authenticated) {
                     try {
-                        // Refresh token if needed
                         await keycloak.updateToken(30);
                         return true;
                     } catch (error) {

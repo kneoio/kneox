@@ -1,12 +1,10 @@
 <template>
   <div class="home">
     <n-grid x-gap="12" y-gap="12" :cols="isMobile ? 1 : 24" class="grid-layout">
-      <!-- Top section with connection status and stats -->
       <n-gi :span="24" class="top-section">
         <p v-if="userData?.profile?.username" class="username">
           Hello, {{ userData.profile.username }}
         </p>
-        <n-card :bordered="false" class="stats-card mb-0">
           <div class="connection-status">
             <div class="left-controls">
               <n-tag :type="dashboard.isConnected ? 'success' : 'error'" size="small">
@@ -41,7 +39,6 @@
           </div>
 
           <n-divider v-if="!isMobile" />
-
           <n-descriptions v-if="dashboard.stats.totalStations" label-placement="top" :column="isMobile ? 2 : 4" size="small">
             <n-descriptions-item label="Total Stations">{{ dashboard.stats.totalStations }}</n-descriptions-item>
             <n-descriptions-item label="Online Stations">{{ dashboard.stats.onlineStations }}</n-descriptions-item>
@@ -51,19 +48,18 @@
           <n-alert v-else type="warning">
             No stats data received from server
           </n-alert>
-        </n-card>
+
       </n-gi>
 
-      <!-- Full-width stations table -->
       <n-gi :span="24" class="stations-section">
-        <n-card title="Active Stations" :bordered="false" class="station-list-card mt-0">
+
           <n-data-table
               :columns="stationColumns"
-              :data="dashboard.stationsList"
+              :data="detailedStationsList"
               :pagination="{ pageSize: 5 }"
-              :row-key="row => row.brandName"
+              :row-key="(row: StationEntry) => row.brandName"
           />
-        </n-card>
+
       </n-gi>
     </n-grid>
 
@@ -80,16 +76,25 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, inject, onMounted, onUnmounted, computed } from 'vue';
+import {computed, defineComponent, inject, onMounted, onUnmounted, ref, watch} from 'vue';
 import {
-  NButton, NSelect, NText, NGrid, NGi, NCard, NStatistic, NDivider, NDataTable, NTag, NAlert,
-  NCol, NRow, NDescriptions, NDescriptionsItem
+  NAlert,
+  NButton,
+  NCard,
+  NDataTable,
+  NDescriptions,
+  NDescriptionsItem,
+  NDivider,
+  NGi,
+  NGrid,
+  NSelect,
+  NTag,
+  NText
 } from 'naive-ui';
-import { useDashboardStore } from "../stores/kneo/dashboardStore";
-import { useBrandStore } from "../stores/kneo/brandsStore";
-import DesktopRow from "../components/dashboard/DesktopRow.vue";
-import MobileRow from "../components/dashboard/MobileRow.vue";
+import {useDashboardStore} from "../stores/kneo/dashboardStore";
+import {useBrandStore} from "../stores/kneo/brandsStore";
 import {useStationColumns} from "../components/dashboard/stationColumns";
+import {StationEntry} from "../types/dashboard";
 
 export default defineComponent({
   name: 'DashboardView',
@@ -100,15 +105,10 @@ export default defineComponent({
     NGrid,
     NGi,
     NCard,
-    NStatistic,
     NDivider,
     NDataTable,
     NTag,
     NAlert,
-    NCol,
-    NRow,
-    DesktopRow,
-    MobileRow,
     NDescriptions,
     NDescriptionsItem
   },
@@ -137,6 +137,16 @@ export default defineComponent({
 
     const selectedBrand = ref('');
 
+    const startBroadcast = async (brandName: string) => {
+      if (!brandName) return;
+      isStartingBroadcast.value = true;
+      try {
+        await dashboard.triggerBroadcastAction(brandName, 'start');
+      } finally {
+        isStartingBroadcast.value = false;
+      }
+    };
+
     const brandOptions = computed(() => {
       return brandStore.getEntries.map(brand => ({
         label: brand.slugName,
@@ -144,19 +154,15 @@ export default defineComponent({
       }));
     });
 
-
-    const startBroadcast = async (brandName: string) => {
-      if (!brandName) return;
-      isStartingBroadcast.value = true;
-      try {
-        const success = await dashboard.triggerBroadcastAction(brandName, 'start');
-        if (success) {
-          dashboard.fetchDashboard();
-        }
-      } finally {
-        isStartingBroadcast.value = false;
-      }
-    };
+    watch(
+        () => dashboard.stationsList,
+        (newStations) => {
+          newStations.forEach(station => {
+            dashboard.ensureStationConnected(station.brandName);
+          });
+        },
+        { immediate: true }
+    );
 
     onMounted(() => {
       dashboard.connect();
@@ -172,9 +178,21 @@ export default defineComponent({
       onUnmounted(() => {
         cleanup();
         dashboard.disconnect();
+        dashboard.stationsList.forEach(station => {
+          dashboard.disconnectStation(station.brandName);
+        });
         window.removeEventListener('resize', () => {
           isMobile.value = window.innerWidth < 768;
         });
+      });
+    });
+
+    const detailedStationsList = computed(() => {
+      return dashboard.stationsList.map(station => {
+        const details = dashboard.getStationDetails(station.brandName);
+        return {
+          ...(details || {}),
+        };
       });
     });
 
@@ -189,7 +207,8 @@ export default defineComponent({
       isMobile,
       selectedBrand,
       brandOptions,
-      isStartingBroadcast
+      isStartingBroadcast,
+      detailedStationsList
     };
   },
 });
@@ -326,7 +345,6 @@ export default defineComponent({
   }
 }
 
-/* Chart specific styles */
 .chart-line {
   stroke: #2080f0;
   stroke-width: 2;
