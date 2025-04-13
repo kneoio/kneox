@@ -105,7 +105,7 @@ export default defineComponent({
     source: {
       type: String,
       required: true,
-      default: 'http://localhost:38707/gill-russell/radio/stream.m3u8'
+      default: 'http://localhost:38707/mitchell-inc/radio/stream.m3u8'
     },
     autoplay: {
       type: Boolean,
@@ -122,7 +122,7 @@ export default defineComponent({
     const playerState = ref('Initializing');
     const levels = ref([]);
     const currentLevel = ref(null);
-    const isMuted = ref(true); // Default to muted since we're hiding the video
+    const isMuted = ref(true);
     const playerEvents = ref([]);
     const stats = ref({
       buffered: 0,
@@ -140,7 +140,6 @@ export default defineComponent({
         };
       });
 
-      // Add auto quality option at the beginning
       options.unshift({
         label: 'Auto',
         value: -1
@@ -165,18 +164,16 @@ export default defineComponent({
     const initPlayer = () => {
       if (!videoElement.value) return;
 
-      // Check if HLS is supported natively
       if (Hls.isSupported()) {
         const hlsInstance = new Hls({
           debug: props.debug,
-          startLevel: -1, // -1 means auto
+          startLevel: -1,
           enableWorker: true,
           lowLatencyMode: true
         });
 
         hls.value = hlsInstance;
 
-        // Bind events
         hls.value.on(Hls.Events.MEDIA_ATTACHED, onMediaAttached);
         hls.value.on(Hls.Events.MANIFEST_PARSED, onManifestParsed);
         hls.value.on(Hls.Events.LEVEL_SWITCHED, onLevelSwitched);
@@ -185,23 +182,17 @@ export default defineComponent({
         hls.value.on(Hls.Events.FRAG_LOADING, (_, data) => addEvent('fragment', `Loading fragment ${data.frag.sn}`));
         hls.value.on(Hls.Events.LEVEL_LOADING, (_, data) => addEvent('level', `Loading level ${data.level}`));
 
-        // Add more detailed events for network monitoring with null checks
         hls.value.on(Hls.Events.FRAG_LOADED, (_, data) => {
           const frag = data.frag;
           const fragStats = data.stats;
-
-          // Safe way to calculate loading time with null checking
           let loadingTime = 'unknown';
           if (fragStats && fragStats.loading &&
               fragStats.loading.end !== undefined &&
               fragStats.loading.start !== undefined) {
             loadingTime = `${fragStats.loading.end - fragStats.loading.start}ms`;
           }
-
-          // Safe way to access total with null checking
           const totalKB = fragStats && fragStats.total ?
               Math.round(fragStats.total / 1024) : 'unknown';
-
           addEvent('network', `Fragment ${frag.sn} loaded in ${loadingTime} (${totalKB} KB)`);
         });
 
@@ -209,21 +200,11 @@ export default defineComponent({
           addEvent('playback', `Playing fragment ${data.frag.sn}`);
         });
 
-        // Attach media element
         hls.value.attachMedia(videoElement.value);
-
-        // Load source
         hls.value.loadSource(props.source);
-
-        // Set up stats interval - update more frequently for better monitoring
         statsInterval = window.setInterval(updateStats, 500);
-
-        // Mute if needed
-        if (videoElement.value) {
-          videoElement.value.muted = isMuted.value;
-        }
+        videoElement.value.muted = isMuted.value;
       } else if (videoElement.value.canPlayType('application/vnd.apple.mpegurl')) {
-        // For Safari which has native HLS support
         videoElement.value.src = props.source;
         videoElement.value.addEventListener('loadedmetadata', () => {
           if (props.autoplay && videoElement.value) {
@@ -269,16 +250,13 @@ export default defineComponent({
         switch (data.type) {
           case Hls.ErrorTypes.NETWORK_ERROR:
             playerState.value = 'Network Error';
-            // Try to recover
             if (hls.value) hls.value.startLoad();
             break;
           case Hls.ErrorTypes.MEDIA_ERROR:
             playerState.value = 'Media Error';
-            // Try to recover
             if (hls.value) hls.value.recoverMediaError();
             break;
           default:
-            // Fatal error, cannot recover
             playerState.value = 'Fatal Error';
             destroyPlayer();
             break;
@@ -317,8 +295,6 @@ export default defineComponent({
       if (!hls.value || !videoElement.value) return;
 
       const video = videoElement.value;
-
-      // Calculate buffered time
       let buffered = 0;
       for (let i = 0; i < video.buffered.length; i++) {
         if (video.buffered.start(i) <= video.currentTime && video.currentTime <= video.buffered.end(i)) {
@@ -327,20 +303,10 @@ export default defineComponent({
         }
       }
 
-      // Update stats - add check for stats property existence
       stats.value.buffered = buffered;
-
-      // Check if stats property exists before accessing its properties
-      if (hls.value.stats) {
-        stats.value.dropped = hls.value.stats.droppedFrames || 0;
-        stats.value.loaded = hls.value.stats.loaded || 0;
-        stats.value.bandwidth = hls.value.stats.bw || 0;
-      } else {
-        // Set default values if stats doesn't exist
-        stats.value.dropped = 0;
-        stats.value.loaded = 0;
-        stats.value.bandwidth = 0;
-      }
+      stats.value.dropped = hls.value.stats?.droppedFrames || 0;
+      stats.value.loaded = hls.value.stats?.loaded || 0;
+      stats.value.bandwidth = hls.value.stats?.bw || 0;
     };
 
     const addEvent = (type, details) => {
@@ -353,7 +319,6 @@ export default defineComponent({
         details
       });
 
-      // Keep only the last 200 events for better monitoring
       if (playerEvents.value.length > 200) {
         playerEvents.value.pop();
       }
@@ -445,7 +410,6 @@ export default defineComponent({
   color: #333;
 }
 
-/* Make the event list more compact too */
 .event-item {
   padding: 2px 0;
   font-size: 11px;

@@ -49,7 +49,7 @@ export const useStationColumns = (dashboardStore: any, isMobile: any) => {
                                     'font-size': '0.8rem',
                                     'color': '#555'
                                 }
-                            }, `Next sliding: ${row.nextScheduledTime}`),
+                            }, `Last slide: ${row.lastSlide}`),
                         ]);
                 }
             },

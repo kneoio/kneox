@@ -1,78 +1,90 @@
 <template>
-  <div class="desktop-row">
-    <div class="playlist-manager-section">
-      <div class="fragment-list">
-        <div class="sub-label">Consumed by HLS player:</div>
-        <div v-if="row.playlistManagerStats?.obtainedByPlaylist && row.playlistManagerStats.obtainedByPlaylist.length > 0">
-          <div
-              v-for="(fragment, index) in row.playlistManagerStats.obtainedByPlaylist"
-              :key="index"
-              class="playlist-item"
-              :title="cleanTitle(fragment)"
-          >
-            <span class="item-number">{{ index + 1 }}.</span> {{ cleanTitle(fragment) }}
-          </div>
-        </div>
-        <div v-else class="playlist-item">No played fragments available.</div>
-      </div>
-
-      <div class="fragment-list">
-        <div class="sub-label">Ready to be consumed by HLS player:</div>
-        <div v-if="row.playlistManagerStats?.readyToBeConsumed && row.playlistManagerStats.readyToBeConsumed.length > 0">
-          <div
-              v-for="(fragment, index) in row.playlistManagerStats.readyToBeConsumed"
-              :key="index"
-              class="playlist-item"
-              :title="cleanTitle(fragment)"
-          >
-            <span class="item-number">{{ index + 1 }}.</span> {{ cleanTitle(fragment) }}
-          </div>
-        </div>
-        <div v-else class="playlist-item">No ready to play fragments available.</div>
-      </div>
-    </div>
-
-    <div v-if="row.songStatistics" class="hls-provider-section">
-      <div class="songs-table">
-        <div class="table-header">
-          <div class="header-cell song-name">Title</div>
-          <div class="header-cell duration-cell">Duration</div>
-          <div class="header-cell bitrate-cell">Bitrate</div>
-          <div class="header-cell requests-cell">Requests</div>
-          <div class="header-cell segment-range-cell">Segment Range</div>
-        </div>
-        <div class="table-body">
-          <div v-for="(stats, start) in row.songStatistics" :key="start" class="table-row">
-            <div class="table-cell song-name" :title="cleanTitle(stats.title)">
-              {{ cleanTitle(stats.title) }}
+  <div class="dashboard-container">
+    <div class="desktop-row">
+      <div class="playlist-manager-section">
+        <div class="fragment-list">
+          <div class="sub-label">Consumed by HLS player:</div>
+          <div v-if="row.playlistManagerStats?.obtainedByPlaylist && row.playlistManagerStats.obtainedByPlaylist.length > 0">
+            <div
+                v-for="(fragment, index) in row.playlistManagerStats.obtainedByPlaylist"
+                :key="index"
+                class="playlist-item"
+                :title="cleanTitle(fragment)"
+            >
+              <span class="item-number">{{ index + 1 }}.</span> {{ cleanTitle(fragment) }}
             </div>
-            <div class="table-cell duration-cell">{{ formatDuration(stats.totalDuration) }}</div>
-            <div class="table-cell bitrate-cell">{{ stats.averageBitrate }} kbps</div>
-            <div class="table-cell requests-cell">{{ stats.requestCount }}</div>
-            <div class="table-cell segment-range-cell" :class="{ 'in-current-window': isInCurrentWindow(stats.start, stats.end) }">
-              <div class="range-display">
-                {{ stats.start }}
-                <span v-if="!isLatestSegment(stats.start, stats.end)" class="range-separator">→</span>
-                <span
-                    v-else
-                    class="latest-segment flash"
-                >
-                  {{ latestRequestedSeg }}
-                </span>
-                {{ stats.end }}
+          </div>
+          <div v-else class="playlist-item">No played fragments available.</div>
+        </div>
+
+        <div class="fragment-list">
+          <div class="sub-label">Ready to be consumed by HLS player:</div>
+          <div v-if="row.playlistManagerStats?.readyToBeConsumed && row.playlistManagerStats.readyToBeConsumed.length > 0">
+            <div
+                v-for="(fragment, index) in row.playlistManagerStats.readyToBeConsumed"
+                :key="index"
+                class="playlist-item"
+                :title="cleanTitle(fragment)"
+            >
+              <span class="item-number">{{ index + 1 }}.</span> {{ cleanTitle(fragment) }}
+            </div>
+          </div>
+          <div v-else class="playlist-item">No ready to play fragments available.</div>
+        </div>
+      </div>
+
+      <div v-if="row.songStatistics" class="hls-provider-section">
+        <div class="songs-table">
+          <div class="table-header">
+            <div class="header-cell song-name">Title</div>
+            <div class="header-cell duration-cell">Duration</div>
+            <div class="header-cell bitrate-cell">Bitrate</div>
+            <div class="header-cell requests-cell">Requests</div>
+            <div class="header-cell segment-range-cell">Segment Range</div>
+          </div>
+          <div class="table-body">
+            <div v-for="(stats, start) in row.songStatistics" :key="start" class="table-row">
+              <div class="table-cell song-name" :title="cleanTitle(stats.title)">
+                {{ cleanTitle(stats.title) }}
+              </div>
+              <div class="table-cell duration-cell">{{ formatDuration(stats.totalDuration) }}</div>
+              <div class="table-cell bitrate-cell">{{ stats.averageBitrate }} kbps</div>
+              <div class="table-cell requests-cell">{{ stats.requestCount }}</div>
+              <div class="table-cell segment-range-cell" :class="{ 'in-current-window': isInCurrentWindow(stats.start, stats.end) }">
+                <div class="range-display">
+                  {{ stats.start }}
+                  <span v-if="!isLatestSegment(stats.start, stats.end)" class="range-separator">→</span>
+                  <span
+                      v-else
+                      class="latest-segment flash"
+                  >
+                    {{ latestRequestedSeg }}
+                  </span>
+                  {{ stats.end }}
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+
+    <SlideHistoryTimeline
+        v-if="row.slideHistory && row.slideHistory.length > 0"
+        :slide-history="row.slideHistory"
+        :last-slide="row.lastSlide"
+    />
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent, computed } from 'vue';
+import SlideHistoryTimeline from './SlideHistoryTimeline.vue';
 
 export default defineComponent({
+  components: {
+    SlideHistoryTimeline
+  },
   props: {
     row: {
       type: Object,
@@ -94,11 +106,15 @@ export default defineComponent({
     const currentWindow = computed(() => props.row.currentWindow || []);
 
     const isLatestSegment = (start: number, end: number): boolean => {
-      return latestRequestedSeg.value !== undefined && latestRequestedSeg.value >= start && latestRequestedSeg.value <= end;
+      return latestRequestedSeg.value !== undefined &&
+          latestRequestedSeg.value >= start &&
+          latestRequestedSeg.value <= end;
     };
 
     const isInCurrentWindow = (start: number, end: number): boolean => {
-      return currentWindow.value.some(window => start >= window[0] && end <= window[1]);
+      return currentWindow.value.some(window =>
+          start >= window[0] && end <= window[1]
+      );
     };
 
     return {
@@ -106,16 +122,22 @@ export default defineComponent({
       formatDuration,
       latestRequestedSeg,
       isLatestSegment,
-      isInCurrentWindow,
+      isInCurrentWindow
     };
   }
 });
 </script>
 
 <style scoped>
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
 .desktop-row {
   display: flex;
-  gap: 50px; /* Even wider gap */
+  gap: 50px;
   font-size: 1rem;
 }
 
@@ -147,7 +169,7 @@ export default defineComponent({
 }
 
 .hls-provider-section {
-  min-width: 800px; /* Even wider section */
+  min-width: 800px;
 }
 
 .songs-table {
@@ -170,24 +192,24 @@ export default defineComponent({
 }
 
 .header-cell.song-name {
-  flex: 3;
+  flex: 2;
   text-align: left;
 }
 
 .header-cell.duration-cell {
-  flex: 1.5; /* Further adjusted flex */
+  flex: 1.5;
 }
 
 .header-cell.bitrate-cell {
-  flex: 1.5; /* Further adjusted flex */
+  flex: 1.5;
 }
 
 .header-cell.requests-cell {
-  flex: 1.5; /* Further adjusted flex */
+  flex: 1.5;
 }
 
 .header-cell.segment-range-cell {
-  flex: 2; /* Even wider for segment range */
+  flex: 2;
 }
 
 .table-body {
@@ -245,11 +267,11 @@ export default defineComponent({
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 8px; /* Increased gap for the arrow */
+  gap: 8px;
 }
 
 .range-separator {
-  font-size: 1.2em; /* Make the arrow wider */
+  font-size: 1.2em;
   color: #777;
 }
 
@@ -280,8 +302,8 @@ export default defineComponent({
 }
 
 .in-current-window {
-  background-color: #e6ffe6 !important; /* Light green background */
-  color: #28a745 !important; /* Darker green text */
+  background-color: #e6ffe6 !important;
+  color: #28a745 !important;
   font-weight: bold;
 }
 </style>
