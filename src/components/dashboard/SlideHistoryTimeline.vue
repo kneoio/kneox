@@ -3,8 +3,9 @@
     <h3 class="section-title">Slide Events</h3>
 
     <div class="timeline-container">
-      <n-timeline horizontal>
+      <n-timeline horizontal item-placement="right">
         <n-timeline-item
+            item-placement="right"
             v-for="(slide, index) in latestFiveEvents"
             :key="`slide-${index}-${slide.timestamp}`"
             :type="getTimelineItemType(slide)"
