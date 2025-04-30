@@ -3,12 +3,12 @@
     <h3 class="section-title">Slide Events</h3>
 
     <div class="timeline-container">
-      <n-timeline horizontal item-placement="right">
+      <n-timeline horizontal item-placement="bottom">
         <n-timeline-item
-            item-placement="right"
             v-for="(slide, index) in latestFiveEvents"
             :key="`slide-${index}-${slide.timestamp}`"
             :type="getTimelineItemType(slide)"
+            :line-type="getLineType(slide)"
         >
           <div class="slide-content">
             <div class="slide-top">
@@ -55,16 +55,13 @@ export default defineComponent({
   setup(props) {
     const latestFiveEvents = computed(() => {
       return [...props.slideHistory]
-          .slice(-5)
-          .reverse();
+          .slice(-5);
     });
 
-    // Format error with fixed width
     const formatError = (error?: number) => {
       return ` - ${(error ?? 0).toFixed(1)}ms`.padStart(7, ' ');
     };
 
-    // Format time to HHMMSS (no separators)
     const formatTime = (timestamp: string) => {
       try {
         const date = new Date(timestamp);
@@ -84,10 +81,15 @@ export default defineComponent({
     };
 
     const getTimelineItemType = (slide: any) => {
+      if (slide.type === 'ESTIMATED') return 'success';
       const error = slide.timingError ?? 0;
       if (error > 100) return 'error';
       if (error > 50) return 'warning';
       return 'info';
+    };
+
+    const getLineType = (slide: any) => {
+      return slide.type === 'ESTIMATED' ? 'dashed' : 'solid';
     };
 
     const calculatedAvgError = computed(() => {
@@ -104,19 +106,16 @@ export default defineComponent({
       formatTime,
       formatLastSlideTime,
       getTimelineItemType,
+      getLineType,
       calculatedAvgError
     };
   }
 });
 </script>
 
+
 <style scoped>
-.timeline-section {
-  margin-top: 10px;
-  padding: 10px;
-  background-color: #f8f9fa;
-  border-radius: 6px;
-}
+
 
 .section-title {
   margin: 0 0 8px 0;
@@ -127,6 +126,7 @@ export default defineComponent({
   overflow-x: auto;
   padding: 5px 0;
   margin-bottom: 8px;
+  white-space: nowrap;
 }
 
 .slide-content {

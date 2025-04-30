@@ -50,7 +50,13 @@
               <div class="table-cell duration-cell">{{ formatDuration(stats.totalDuration) }}</div>
               <div class="table-cell bitrate-cell">{{ stats.averageBitrate }} kbps</div>
               <div class="table-cell requests-cell">{{ stats.requestCount }}</div>
-              <div class="table-cell segment-range-cell" :class="{ 'in-current-window': isInCurrentWindow(stats.start, stats.end) }">
+              <div
+                  class="table-cell segment-range-cell"
+                  :class="{
+                  'in-current-window': isInCurrentWindow(stats.start, stats.end),
+                  'stale-segment': stats.stale
+                }"
+              >
                 <div class="range-display">
                   {{ stats.start }}
                   <span v-if="!isLatestSegment(stats.start, stats.end)" class="range-separator">→</span>
@@ -180,7 +186,6 @@ export default defineComponent({
 
 .table-header {
   display: flex;
-  background-color: #f0f0f0;
   color: #444;
   border-bottom: 1px solid #e0e0e0;
 }
@@ -276,16 +281,16 @@ export default defineComponent({
 }
 
 .latest-segment {
-  background-color: #007bff;
+  background-color: #2664b3;
   color: white;
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: 2px;
   font-size: 0.75rem;
   z-index: 10;
 }
 
 .flash {
-  animation: flash-animation 1s infinite alternate;
+  animation: flash-animation 0.2s infinite alternate;
 }
 
 @keyframes flash-animation {
@@ -293,17 +298,16 @@ export default defineComponent({
   to { opacity: 0.4; }
 }
 
-.table-row:nth-child(even) {
-  background-color: #f9f9f9;
-}
-
 .table-row:hover {
   background-color: #f0f0f0;
 }
 
 .in-current-window {
-  background-color: #e6ffe6 !important;
   color: #28a745 !important;
   font-weight: bold;
+}
+
+.stale-segment {
+  color: #c62828 !important;
 }
 </style>

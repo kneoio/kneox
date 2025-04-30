@@ -46,10 +46,10 @@ const lightThemeOverrides = {
     errorColorHover: '#ff7371',
     errorColorPressed: '#ff5251',
     errorColorSuppl: '#ff7371',
-    successColor: '#bc5090',
-    successColorHover: '#cc60a0',
-    successColorPressed: '#ac4070',
-    successColorSuppl: '#cc60a0',
+    successColor: '#5e9e15',
+    successColorHover: '#9CCC65',
+    successColorPressed: '#7CB342',
+    successColorSuppl: '#9CCC65',
 
     // Custom colors for drawer
     bodyColor: '#f8f8f8',
