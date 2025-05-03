@@ -1,116 +1,111 @@
 <template>
-  <div class="home">
-    <n-grid x-gap="12" y-gap="12" :cols="isMobile ? 1 : 24" class="grid-layout">
-      <n-gi :span="24" class="top-section">
-        <p v-if="userData?.profile?.username" class="username">
-          Hello, {{ userData.profile.username }}
-        </p>
-          <div class="connection-status">
-            <div class="left-controls">
-              <n-tag :type="dashboard.isConnected ? 'success' : 'error'" size="small">
-                {{ dashboard.isConnected ? 'Connected' : 'Disconnected' }}
-              </n-tag>
-              <n-select
-                  v-model:value="selectedBrand"
-                  :options="brandOptions"
-                  placeholder="Select brand"
-                  filterable
-                  size="small"
-                  style="width: 200px;"
-              />
-              <n-button
-                  size="small"
-                  type="primary"
-                  @click="startBroadcast(selectedBrand)"
-                  :disabled="!selectedBrand"
-                  :loading="isStartingBroadcast"
-              >
-                Start Broadcast
-              </n-button>
-            </div>
-            <div class="right-info">
-              <n-text v-if="dashboard.lastUpdate" class="update-time">
-                Last update: {{ formatTime(dashboard.lastUpdate) }}
-              </n-text>
-              <n-text v-if="dashboard.version" class="version-text">
-                Version: {{ dashboard.version }}
-              </n-text>
-            </div>
+  <div class="dashboard">
+    <n-grid x-gap="12" y-gap="12" :cols="isMobile ? 1 : 24">
+      <n-gi :span="24">
+        <div class="header">
+          <p v-if="userData?.profile?.username" class="username">Hello, {{ userData.profile.username }}</p>
+          <div class="controls">
+            <n-tag :type="dashboard.isConnected ? 'success' : 'error'" size="small">
+              {{ dashboard.isConnected ? 'Connected' : 'Disconnected' }}
+            </n-tag>
+            <n-select
+                v-model:value="selectedBrand"
+                :options="brandOptions"
+                placeholder="Select brand"
+                filterable
+                size="small"
+                style="width: 150px"
+            />
+            <n-button
+                size="small"
+                type="primary"
+                @click="startBroadcast(selectedBrand)"
+                :disabled="!selectedBrand"
+                :loading="isStartingBroadcast"
+            >
+              Start
+            </n-button>
           </div>
+          <div class="meta">
+            <n-text v-if="dashboard.lastUpdate" depth="3" class="text-sm">
+              Updated: {{ formatTime(dashboard.lastUpdate) }}
+            </n-text>
+            <n-text v-if="dashboard.version" depth="3" class="text-sm">
+              v{{ dashboard.version }}
+            </n-text>
+          </div>
+        </div>
 
-          <n-divider v-if="!isMobile" />
-          <n-descriptions v-if="dashboard.stats.totalStations" label-placement="top" :column="isMobile ? 2 : 4" size="small">
-            <n-descriptions-item label="Total Stations">{{ dashboard.stats.totalStations }}</n-descriptions-item>
-            <n-descriptions-item label="Online Stations">{{ dashboard.stats.onlineStations }}</n-descriptions-item>
-            <n-descriptions-item label="Min.segments">{{ dashboard.stats.minimumSegments }}</n-descriptions-item>
-            <n-descriptions-item label="Max.segments">{{ dashboard.stats.slidingWindowSize }}</n-descriptions-item>
-          </n-descriptions>
-          <n-alert v-else type="warning">
-            No stats data received from server
-          </n-alert>
+        <n-divider />
 
+        <n-descriptions
+            v-if="dashboard.stats"
+            label-placement="top"
+            :column="isMobile ? 2 : 4"
+            size="small"
+            bordered
+        >
+          <n-descriptions-item label="Total Stations">
+            <n-tag :type="dashboard.stats.totalStations > 0 ? 'info' : 'warning'" size="small">
+              {{ dashboard.stats.totalStations }}
+            </n-tag>
+          </n-descriptions-item>
+          <n-descriptions-item label="Status">
+            <div class="status-tags">
+              <n-tag type="success" size="small">Online: {{ dashboard.stats.onlineStations }}</n-tag>
+              <n-tag type="warning" size="small">Warming: {{ dashboard.stats.warmingStations }}</n-tag>
+              <n-tag type="error" size="small">Offline: {{ dashboard.stats.offlineStations }}</n-tag>
+            </div>
+          </n-descriptions-item>
+          <n-descriptions-item label="Segments">
+            {{ dashboard.stats.minimumSegments }}-{{ dashboard.stats.slidingWindowSize }}
+          </n-descriptions-item>
+          <n-descriptions-item label="Storage">
+            <div class="storage-stats">
+              <div>Files: {{ dashboard.stats.fileMaintenanceStats.filesDeleted }}</div>
+              <div>Space: {{ formatBytes(dashboard.stats.fileMaintenanceStats.spaceFreedBytes) }}</div>
+              <div>Dirs: {{ dashboard.stats.fileMaintenanceStats.directoriesDeleted }}</div>
+            </div>
+          </n-descriptions-item>
+        </n-descriptions>
+        <n-alert v-else type="warning" class="mt-2">No stats available</n-alert>
       </n-gi>
 
-      <n-gi :span="24" class="stations-section">
-
-          <n-data-table
-              :columns="stationColumns"
-              :data="detailedStationsList"
-              :pagination="{ pageSize: 5 }"
-              :row-key="(row: StationEntry) => row.brandName"
-          />
-
+      <n-gi :span="24" class="mt-4">
+        <n-data-table
+            :columns="stationColumns"
+            :data="detailedStationsList"
+            :pagination="{ pageSize: 5 }"
+            :row-key="(row: StationEntry) => row.brandName"
+            size="small"
+        />
       </n-gi>
     </n-grid>
 
-    <n-grid x-gap="12" y-gap="12" cols="24" class="bottom-section">
-      <n-gi span="12" class="language-select">
-        <n-select v-model:value="selectedLanguage" :options="languageOptions"/>
-      </n-gi>
-      <n-gi span="12" class="links">
-        <n-button text>License</n-button>&nbsp;&nbsp;&nbsp;
-        <n-button text>About</n-button>
-      </n-gi>
-    </n-grid>
+    <div class="footer">
+      <n-select v-model:value="selectedLanguage" :options="languageOptions" size="small" style="width: 120px" />
+      <div>
+        <n-button text size="small">License</n-button>
+        <n-button text size="small">About</n-button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
-import {computed, defineComponent, inject, onMounted, onUnmounted, ref, watch} from 'vue';
+import { computed, defineComponent, inject, onMounted, onUnmounted, ref, watch } from 'vue';
 import {
-  NAlert,
-  NButton,
-  NCard,
-  NDataTable,
-  NDescriptions,
-  NDescriptionsItem,
-  NDivider,
-  NGi,
-  NGrid,
-  NSelect,
-  NTag,
-  NText
+  NAlert, NButton, NDataTable, NDescriptions, NDescriptionsItem, NDivider, NGi, NGrid, NSelect, NTag, NText
 } from 'naive-ui';
-import {useDashboardStore} from "../stores/kneo/dashboardStore";
-import {useBrandStore} from "../stores/kneo/brandsStore";
-import {useStationColumns} from "../components/dashboard/stationColumns";
-import {StationEntry} from "../types/dashboard";
+import { useDashboardStore } from "../stores/kneo/dashboardStore";
+import { useBrandStore } from "../stores/kneo/brandsStore";
+import { useStationColumns } from "../components/dashboard/stationColumns";
+import { StationEntry } from "../types/dashboard";
 
 export default defineComponent({
   name: 'DashboardView',
   components: {
-    NButton,
-    NSelect,
-    NText,
-    NGrid,
-    NGi,
-    NCard,
-    NDivider,
-    NDataTable,
-    NTag,
-    NAlert,
-    NDescriptions,
-    NDescriptionsItem
+    NButton, NSelect, NText, NGrid, NGi, NDivider, NDataTable, NTag, NAlert, NDescriptions, NDescriptionsItem
   },
   setup() {
     const parentTitle = inject('parentTitle', ref(''));
@@ -119,24 +114,23 @@ export default defineComponent({
       { label: 'English', value: 'en' },
       { label: 'Portuguese', value: 'pt' },
     ];
-    const userData = inject('userData', ref({
-      profile: {
-        username: 'Guest'
-      }
-    }));
+    const userData = inject('userData', ref({ profile: { username: 'Guest' } }));
     const dashboard = useDashboardStore();
     const brandStore = useBrandStore();
     const isMobile = ref(window.innerWidth < 768);
     const isStartingBroadcast = ref(false);
 
-    const formatTime = (date: Date) => {
-      return date.toLocaleTimeString();
+    const formatTime = (date: Date) => date.toLocaleTimeString();
+    const formatBytes = (bytes: number) => {
+      if (bytes === 0) return '0B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + sizes[i];
     };
 
     const stationColumns = useStationColumns(dashboard, isMobile);
-
     const selectedBrand = ref('');
-
     const startBroadcast = async (brandName: string) => {
       if (!brandName) return;
       isStartingBroadcast.value = true;
@@ -147,52 +141,33 @@ export default defineComponent({
       }
     };
 
-    const brandOptions = computed(() => {
-      return brandStore.getEntries.map(brand => ({
-        label: brand.slugName,
-        value: brand.slugName
-      }));
-    });
+    const brandOptions = computed(() => brandStore.getEntries.map(brand => ({
+      label: brand.slugName,
+      value: brand.slugName
+    })));
 
-    watch(
-        () => dashboard.stationsList,
-        (newStations) => {
-          newStations.forEach(station => {
-            dashboard.ensureStationConnected(station.brandName);
-          });
-        },
-        { immediate: true }
-    );
+    watch(() => dashboard.stationsList, (newStations) => {
+      newStations.forEach(station => dashboard.ensureStationConnected(station.brandName));
+    }, { immediate: true });
 
     onMounted(() => {
       dashboard.connect();
       const cleanup = dashboard.setupPeriodicRefresh(3000);
       brandStore.fetchAll();
-
-      window.addEventListener('resize', () => {
-        isMobile.value = window.innerWidth < 768;
-      });
-
+      window.addEventListener('resize', () => isMobile.value = window.innerWidth < 768);
       parentTitle.value = 'Dashboard';
-
       onUnmounted(() => {
         cleanup();
         dashboard.disconnect();
-        dashboard.stationsList.forEach(station => {
-          dashboard.disconnectStation(station.brandName);
-        });
-        window.removeEventListener('resize', () => {
-          isMobile.value = window.innerWidth < 768;
-        });
+        dashboard.stationsList.forEach(station => dashboard.disconnectStation(station.brandName));
+        window.removeEventListener('resize', () => isMobile.value = window.innerWidth < 768);
       });
     });
 
     const detailedStationsList = computed(() => {
       return dashboard.stationsList.map(station => {
         const details = dashboard.getStationDetails(station.brandName);
-        return {
-          ...(details || {}),
-        };
+        return details ? { ...details } : {};
       });
     });
 
@@ -204,6 +179,7 @@ export default defineComponent({
       stationColumns,
       startBroadcast,
       formatTime,
+      formatBytes,
       isMobile,
       selectedBrand,
       brandOptions,
@@ -215,139 +191,97 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.username {
-  font-weight: bold;
-  margin-bottom: 10px;
-  font-size: 1.1rem;
-}
-
-.home {
+.dashboard {
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
   min-height: 100vh;
 }
 
-.grid-layout {
-  width: 80%;
-  margin: auto;
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
 }
 
-.top-section {
-  margin-bottom: 20px;
+.username {
+  font-weight: 600;
+  margin: 0;
+  font-size: 1rem;
 }
 
-.connection-status {
+.controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.meta {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.text-sm {
+  font-size: 0.85rem;
+}
+
+.mt-2 {
+  margin-top: 8px;
+}
+
+.mt-4 {
+  margin-top: 16px;
+}
+
+.footer {
+  margin-top: auto;
+  padding-top: 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.status-tags {
+  display: flex;
+  gap: 6px;
   flex-wrap: wrap;
-  gap: 10px;
 }
 
-.left-controls {
+.storage-stats {
   display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.right-info {
-  display: flex;
-  gap: 10px;
-}
-
-.update-time {
-  font-size: 12px;
-  color: #666;
-}
-
-.version-text {
-  font-size: 12px;
-  color: #666;
-}
-
-.stations-section {
-  margin-top: 20px;
-}
-
-.station-list-card {
-  width: 100%;
-}
-
-.bottom-section {
-  width: 80%;
-  margin: auto;
-  margin-top: 20px;
-}
-
-.language-select {
-  display: flex;
-  justify-content: flex-start;
-  width: 150px;
-  margin-bottom: 10px;
-}
-
-.links {
-  display: flex;
-  justify-content: flex-end;
+  flex-direction: column;
+  gap: 2px;
 }
 
 @media (max-width: 768px) {
-  .grid-layout {
-    width: 100%;
-    margin: 0;
-    padding: 10px;
-  }
-
-  .connection-status {
+  .header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 5px;
+    gap: 8px;
   }
 
-  .left-controls {
+  .controls {
     width: 100%;
     flex-wrap: wrap;
   }
 
-  .right-info {
+  .meta {
     width: 100%;
     justify-content: space-between;
   }
 
-  .stats-card,
-  .station-list-card {
-    border-radius: 8px;
-  }
-
-  .bottom-section {
-    width: 100%;
+  .footer {
     flex-direction: column;
-    align-items: center;
+    gap: 8px;
+    align-items: flex-start;
   }
 
-  .language-select {
-    width: 100%;
-    justify-content: center;
-    margin-bottom: 20px;
+  .status-tags {
+    flex-direction: column;
+    gap: 4px;
   }
-
-  .links {
-    width: 100%;
-    justify-content: center;
-    margin-top: 10px;
-  }
-}
-
-.chart-line {
-  stroke: #2080f0;
-  stroke-width: 2;
-  fill: none;
-}
-
-.current-point {
-  fill: #18a058;
 }
 </style>
