@@ -60,12 +60,17 @@
           <n-descriptions-item label="Segments">
             {{ dashboard.stats.minimumSegments }}-{{ dashboard.stats.slidingWindowSize }}
           </n-descriptions-item>
-          <n-descriptions-item label="Storage">
+          <n-descriptions-item label="Storage" v-if="dashboard?.stats?.fileMaintenanceStats">
             <div class="storage-stats">
+              <div>Total: {{ (dashboard.stats.fileMaintenanceStats.totalSpaceBytes / (1024 * 1024)).toFixed(2) }} MB</div>
+              <div>Available: {{ (dashboard.stats.fileMaintenanceStats.availableSpaceBytes / (1024 * 1024)).toFixed(2) }} MB</div>
               <div>Files: {{ dashboard.stats.fileMaintenanceStats.filesDeleted }}</div>
-              <div>Space: {{ formatBytes(dashboard.stats.fileMaintenanceStats.spaceFreedBytes) }}</div>
+              <div>Space: {{ (dashboard.stats.fileMaintenanceStats.spaceFreedBytes / (1024 * 1024)).toFixed(2) }} MB</div>
               <div>Dirs: {{ dashboard.stats.fileMaintenanceStats.directoriesDeleted }}</div>
             </div>
+          </n-descriptions-item>
+          <n-descriptions-item label="Storage" v-else>
+            <div>Loading storage information...</div>
           </n-descriptions-item>
         </n-descriptions>
         <n-alert v-else type="warning" class="mt-2">No stats available</n-alert>
