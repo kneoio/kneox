@@ -1,7 +1,6 @@
 <template>
   <div class="hls-player-container">
     <n-card :bordered="false" class="player-card">
-      <!-- Controls in one line -->
       <div class="controls-row">
         <n-space>
           <n-button @click="refreshStream" size="small" type="primary">
@@ -21,6 +20,9 @@
           <n-tag type="info" v-if="playerState">{{ playerState }}</n-tag>
           <n-tag type="success" v-if="currentLevel !== null">
             {{ currentQuality }}
+          </n-tag>
+          <n-tag v-if="currentSongName !== null">
+            {{ currentSongName }}
           </n-tag>
         </n-space>
       </div>
@@ -67,7 +69,7 @@
             <n-divider />
             <n-collapse arrow-placement="right" :default-expanded-names="['events']">
               <n-collapse-item title="Events" name="events">
-                <n-scrollbar style="max-height: 200px">
+                <n-scrollbar style="max-height: 400px">
                   <div v-for="(event, index) in playerEvents" :key="index" class="event-item">
                     <span class="event-time">{{ event.time }}</span>
                     <span :class="['event-type', `event-${event.type}`]">{{ event.type }}</span>
@@ -104,8 +106,7 @@ export default defineComponent({
   props: {
     source: {
       type: String,
-      required: true,
-      default: 'http://localhost:38707/mitchell-inc/radio/stream.m3u8'
+      required: true
     },
     autoplay: {
       type: Boolean,
@@ -119,6 +120,7 @@ export default defineComponent({
   setup(props) {
     const videoElement = ref(null);
     const hls = ref(null);
+    const currentSongName = ref('');
     const playerState = ref('Initializing');
     const levels = ref([]);
     const currentLevel = ref(null);
@@ -186,13 +188,15 @@ export default defineComponent({
           const frag = data.frag;
           const fragStats = data.stats;
           let loadingTime = 'unknown';
-          if (fragStats && fragStats.loading &&
-              fragStats.loading.end !== undefined &&
-              fragStats.loading.start !== undefined) {
-            loadingTime = `${fragStats.loading.end - fragStats.loading.start}ms`;
+          if (frag && frag.stats.loading &&
+              frag.stats.loading.end !== undefined &&
+              frag.stats.loading.start !== undefined) {
+            const loadTime = frag.stats.loading.end - frag.stats.loading.start;
+            loadingTime = `${loadTime.toFixed(2)}ms`;
           }
-          const totalKB = fragStats && fragStats.total ?
-              Math.round(fragStats.total / 1024) : 'unknown';
+
+          const totalKB = frag && frag.stats.total ?
+              Math.round( frag.stats.total / 1024) : 'unknown';
           addEvent('network', `Fragment ${frag.sn} loaded in ${loadingTime} (${totalKB} KB)`);
         });
 
@@ -235,6 +239,20 @@ export default defineComponent({
               playerState.value = 'Autoplay Blocked';
             });
       }
+
+     /* const playlistText = hls.value.frag.mediaPlaylist.raw;
+      const extInfRegex = /#EXTINF:([0-9.]+),(.*)/;
+      const lines = playlistText.split('\n');
+
+      // Try to get the song name from the first EXTINF tag (assuming it's consistent)
+      for (const line of lines) {
+        const match = line.match(extInfRegex);
+        if (match && match[2]) {
+          currentSongName.value = match[2].trim();
+          break; // Assuming the song name is the same for all segments in a single playlist load
+        }
+      }*/
+
     };
 
     const onLevelSwitched = (_, data) => {
@@ -353,6 +371,7 @@ export default defineComponent({
       qualityOptions,
       currentLevelName,
       currentQuality,
+      currentSongName,
       handlePlaying,
       handleWaiting,
       handleError,

@@ -275,7 +275,7 @@ export default defineComponent({
 }
 
 .config-stats {
-  max-height: 200px;
+  max-height: 100px;
   overflow-y: auto;
   font-size: 0.8rem;
 }

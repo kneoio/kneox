@@ -11,7 +11,7 @@ export const useStationColumns = (dashboardStore: any, isMobile: any) => {
                 key: 'state',
                 width: 150,
                 render(row: any) {
-                    const statusText = row.status === 'ON_LINE' ? 'Online' :
+                    const statusText = row.status === 'ON_LINE' ? 'Online' :  row.status === 'ON_LINE_WELL' ? 'Online, fed' :
                         row.status === 'WARMING_UP' ? 'Warming up' :
                             row.status;
                     const managedByText = row.managedBy === 'ITSELF' ? 'Self-managed' :
