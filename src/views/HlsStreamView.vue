@@ -4,41 +4,42 @@
       <n-card>
         <n-form :model="formState" label-placement="left" label-width="auto">
           <n-space>
-          <n-form-item label="Stream URL">
-            <n-input v-model:value="formState.url" placeholder="Enter HLS stream URL" style="min-width: 400px" />
-          </n-form-item>
-          <n-form-item>
-            <n-button type="primary" @click="loadStream" :loading="isLoading">
-              {{ isLoading ? 'Loading...' : 'Load Stream' }}
-            </n-button>
-          </n-form-item>
+            <n-form-item label="Stream Source">
+              <n-select
+                  v-model:value="selectedSource"
+                  :options="sourceOptions"
+                  placeholder="Select stream source"
+                  filterable
+                  style="min-width: 400px"
+                  @update:value="handleSourceChange"
+              />
+            </n-form-item>
+            <n-form-item>
+              <n-button type="primary" @click="loadStream" :loading="isLoading">
+                {{ isLoading ? 'Loading...' : 'Load Stream' }}
+              </n-button>
+            </n-form-item>
           </n-space>
         </n-form>
       </n-card>
 
-
-        <hls-player :source="formState.url" :debug="true" />
-
-
-
+      <hls-player :source="formState.url" :debug="true" />
     </n-space>
   </div>
 </template>
 
 <script>
-import { defineComponent, ref, inject, onMounted } from 'vue';
+import { defineComponent, ref, inject, onMounted, computed } from 'vue';
 import HlsPlayer from "../components/HlsPlayer.vue";
+import { useBrandStore } from "../stores/kneo/brandsStore";
 import {
   NButton,
   NSpace,
-  NCollapse,
-  NCollapseItem,
   NForm,
   NFormItem,
   NInput,
   NCard,
-  NUl,
-  NLi
+  NSelect
 } from 'naive-ui';
 
 export default defineComponent({
@@ -47,21 +48,50 @@ export default defineComponent({
     HlsPlayer,
     NButton,
     NSpace,
-    NCollapse,
-    NCollapseItem,
     NForm,
     NFormItem,
     NInput,
     NCard,
-    NUl,
-    NLi
+    NSelect
   },
   setup() {
     const parentTitle = inject('parentTitle', ref(''));
     const isLoading = ref(false);
+    const selectedSource = ref('');
+    const brandStore = useBrandStore();
+
     const formState = ref({
-      url: 'http://localhost:38707/gill-russell/radio/stream.m3u8'
+      url: ''
     });
+
+    const sourceOptions = computed(() => {
+      const brandOptions = brandStore.getEntries.map(brand => ({
+        label: brand.slugName,
+        value: `brand:${brand.slugName}`,
+        url: brand.url
+      }));
+
+      return [
+        ...brandOptions,
+        {
+          label: 'Custom URL',
+          value: 'custom',
+          url: ''
+        }
+      ];
+    });
+
+    const handleSourceChange = (value) => {
+      if (value === 'custom') {
+        formState.value.url = '';
+        return;
+      }
+
+      const selectedOption = sourceOptions.value.find(option => option.value === value);
+      if (selectedOption) {
+        formState.value.url = selectedOption.url;
+      }
+    };
 
     const loadStream = async () => {
       if (!formState.value.url) {
@@ -69,12 +99,9 @@ export default defineComponent({
       }
 
       isLoading.value = true;
-      showPlayer.value = false;
 
-      // Simulate checking stream validity
       try {
         await new Promise(resolve => setTimeout(resolve, 1000));
-        showPlayer.value = true;
       } catch (error) {
         console.error('Error loading stream', error);
       } finally {
@@ -86,12 +113,16 @@ export default defineComponent({
       if (parentTitle) {
         parentTitle.value = 'HLS Stream Tester';
       }
+      brandStore.fetchAll();
     });
 
     return {
       formState,
       loadStream,
-      isLoading
+      isLoading,
+      selectedSource,
+      sourceOptions,
+      handleSourceChange
     };
   }
 });

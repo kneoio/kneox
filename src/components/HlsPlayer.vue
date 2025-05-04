@@ -395,7 +395,7 @@ export default defineComponent({
   display: flex;
   align-items: center;
   padding: 2px 4px;
-  font-size: 12px;
+  font-size: 13px;
   background-color: #f9f9f9;
   border-radius: 4px;
 }
@@ -412,7 +412,7 @@ export default defineComponent({
 
 .event-item {
   padding: 2px 0;
-  font-size: 11px;
+  font-size: 15px;
   line-height: 1.2;
   border-bottom: 1px solid #f0f0f0;
 }
@@ -420,7 +420,7 @@ export default defineComponent({
 .event-time {
   color: #999;
   margin-right: 4px;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .event-type {
@@ -428,7 +428,7 @@ export default defineComponent({
   padding: 0px 2px;
   margin-right: 4px;
   border-radius: 2px;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .event-error {

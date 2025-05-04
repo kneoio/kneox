@@ -41,36 +41,45 @@
         <n-descriptions
             v-if="dashboard.stats"
             label-placement="top"
-            :column="isMobile ? 2 : 4"
+            :column="isMobile ? 2 : 3"
             size="small"
             bordered
         >
-          <n-descriptions-item label="Total Stations">
-            <n-tag :type="dashboard.stats.totalStations > 0 ? 'info' : 'warning'" size="small">
-              {{ dashboard.stats.totalStations }}
-            </n-tag>
-          </n-descriptions-item>
-          <n-descriptions-item label="Status">
-            <div class="status-tags">
-              <n-tag type="success" size="small">Online: {{ dashboard.stats.onlineStations }}</n-tag>
-              <n-tag type="warning" size="small">Warming: {{ dashboard.stats.warmingStations }}</n-tag>
-              <n-tag type="error" size="small">Offline: {{ dashboard.stats.offlineStations }}</n-tag>
+          <n-descriptions-item label="Stations">
+            <div class="stations-info">
+              <n-tag :type="dashboard.stats.totalStations > 0 ? 'info' : 'warning'" size="small">
+                Total: {{ dashboard.stats.totalStations }}
+              </n-tag>
+              <div class="status-tags">
+                <n-tag type="success" size="small">Online: {{ dashboard.stats.onlineStations }}</n-tag>
+                <n-tag type="warning" size="small">Warming: {{ dashboard.stats.warmingStations }}</n-tag>
+                <n-tag type="error" size="small">Offline: {{ dashboard.stats.offlineStations }}</n-tag>
+              </div>
+              <div class="segments-info">
+                Segments: {{ dashboard.stats.minimumSegments }}-{{ dashboard.stats.slidingWindowSize }}
+              </div>
             </div>
           </n-descriptions-item>
-          <n-descriptions-item label="Segments">
-            {{ dashboard.stats.minimumSegments }}-{{ dashboard.stats.slidingWindowSize }}
-          </n-descriptions-item>
+
           <n-descriptions-item label="Storage" v-if="dashboard?.stats?.fileMaintenanceStats">
             <div class="storage-stats">
-              <div>Total: {{ (dashboard.stats.fileMaintenanceStats.totalSpaceBytes / (1024 * 1024)).toFixed(2) }} MB</div>
-              <div>Available: {{ (dashboard.stats.fileMaintenanceStats.availableSpaceBytes / (1024 * 1024)).toFixed(2) }} MB</div>
-              <div>Files: {{ dashboard.stats.fileMaintenanceStats.filesDeleted }}</div>
-              <div>Space: {{ (dashboard.stats.fileMaintenanceStats.spaceFreedBytes / (1024 * 1024)).toFixed(2) }} MB</div>
-              <div>Dirs: {{ dashboard.stats.fileMaintenanceStats.directoriesDeleted }}</div>
+              <div>Total: {{ (dashboard.stats.fileMaintenanceStats.totalSpaceBytes / (1024 * 1024 * 1024)).toFixed(2) }} GB</div>
+              <div>Available: {{ (dashboard.stats.fileMaintenanceStats.availableSpaceBytes / (1024 * 1024 * 1024)).toFixed(2) }} GB</div>
+              <div>Freed: {{ (dashboard.stats.fileMaintenanceStats.spaceFreedBytes / (1024 * 1024)).toFixed(2) }} MB</div>
+              <div>Files/Dirs: {{ dashboard.stats.fileMaintenanceStats.filesDeleted }}/{{ dashboard.stats.fileMaintenanceStats.directoriesDeleted }}</div>
             </div>
           </n-descriptions-item>
-          <n-descriptions-item label="Storage" v-else>
-            <div>Loading storage information...</div>
+
+          <n-descriptions-item label="Configuration">
+            <div class="config-stats">
+              <div v-for="(section, sectionName) in dashboard.stats.configurationStats?.configDetails" :key="sectionName">
+                <div class="config-section-title">{{ sectionName }}</div>
+                <div v-for="(value, key) in section" :key="key" class="config-item">
+                  <span class="config-key">{{ key }}:</span>
+                  <span class="config-value">{{ value }}</span>
+                </div>
+              </div>
+            </div>
           </n-descriptions-item>
         </n-descriptions>
         <n-alert v-else type="warning" class="mt-2">No stats available</n-alert>
@@ -126,13 +135,6 @@ export default defineComponent({
     const isStartingBroadcast = ref(false);
 
     const formatTime = (date: Date) => date.toLocaleTimeString();
-    const formatBytes = (bytes: number) => {
-      if (bytes === 0) return '0B';
-      const k = 1024;
-      const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-      const i = Math.floor(Math.log(bytes) / Math.log(k));
-      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + sizes[i];
-    };
 
     const stationColumns = useStationColumns(dashboard, isMobile);
     const selectedBrand = ref('');
@@ -184,7 +186,6 @@ export default defineComponent({
       stationColumns,
       startBroadcast,
       formatTime,
-      formatBytes,
       isMobile,
       selectedBrand,
       brandOptions,
@@ -249,16 +250,57 @@ export default defineComponent({
   align-items: center;
 }
 
+.stations-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .status-tags {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
 }
 
+.segments-info {
+  font-size: 0.85rem;
+  color: var(--n-text-color-3);
+}
+
 .storage-stats {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
+  font-size: 0.85rem;
+}
+
+.config-stats {
+  max-height: 200px;
+  overflow-y: auto;
+  font-size: 0.8rem;
+}
+
+.config-section-title {
+  font-weight: 600;
+  margin: 4px 0 2px 0;
+  color: var(--n-text-color-1);
+}
+
+.config-item {
+  display: flex;
+  margin-bottom: 2px;
+  line-height: 1.3;
+}
+
+.config-key {
+  color: var(--n-text-color-3);
+  margin-right: 4px;
+  min-width: 120px;
+}
+
+.config-value {
+  color: var(--n-text-color-2);
+  word-break: break-all;
 }
 
 @media (max-width: 768px) {
@@ -287,6 +329,10 @@ export default defineComponent({
   .status-tags {
     flex-direction: column;
     gap: 4px;
+  }
+
+  .config-key {
+    min-width: 100px;
   }
 }
 </style>
