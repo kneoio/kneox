@@ -80,7 +80,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
 
 
     const fetchSoundFragments = async (page = 1, pageSize = 10) => {
-        const response = await apiClient.get(`/thomas-lee/soundfragments?page=${page}&size=${pageSize}`, {});
+        const response = await apiClient.get(`/soundfragments?page=${page}&size=${pageSize}`, {});
         if (response?.data?.payload) {
             apiViewResponse.value = response.data.payload;
         } else {
@@ -89,7 +89,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
     };
 
     const fetchSoundFragment = async (id: string) => {
-        const response = await apiClient.get(`/thomas-lee/soundfragments/${id}`);
+        const response = await apiClient.get(`/soundfragments/${id}`);
         if (response?.data?.payload) {
             apiFormResponse.value = response.data.payload;
         } else {
@@ -106,7 +106,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
     };
 
     const save = async (data: SoundFragmentSave, id?: string) => {
-        const response = await apiClient.post(`/thomas-lee/soundfragments/${id}`, data);
+        const response = await apiClient.post(`/soundfragments/${id}`, data);
         if (response?.data) {
             const {docData} = response.data;
             updateCurrent(docData, {});
