@@ -49,6 +49,12 @@ export const useStationColumns = (dashboardStore: any, isMobile: any) => {
                                     'font-size': '0.8rem',
                                     'color': '#555'
                                 }
+                            }, `Alive: ${row.aliveTimeInHours}`),
+                            h('div', {
+                                style: {
+                                    'font-size': '0.8rem',
+                                    'color': '#555'
+                                }
                             }, `Last slide: ${row.lastSlide}`),
                         ]);
                 }
