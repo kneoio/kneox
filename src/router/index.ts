@@ -7,6 +7,7 @@ import RadioStationQueue from '../components/lists/kneo/RadioStationQueue.vue';
 import RadioStations from '../components/lists/kneo/RadioStations.vue';
 import SoundFragments from '../components/lists/kneo/SoundFragments.vue';
 import HlsStreamView from "../views/HlsStreamView.vue";
+import WelcomeView from "../views/WelcomeView.vue";
 
 declare module 'vue-router' {
     interface RouteMeta {
@@ -16,9 +17,10 @@ declare module 'vue-router' {
 
 const routes: Array<RouteRecordRaw> = [
     {
-        path: '/',
-        redirect: { name: 'Dashboard' },
-        meta: { requiresAuth: true }
+        path: '/welcome',
+        name: 'WelcomeView',
+        component: WelcomeView,
+        meta: { requiresAuth: false }
     },
     {
         path: '/outline',
@@ -58,7 +60,7 @@ const routes: Array<RouteRecordRaw> = [
     },
     {
         path: '/:catchAll(.*)*',
-        redirect: { name: 'Dashboard' }
+        redirect: { name: 'WelcomeView' }
     }
 ];
 

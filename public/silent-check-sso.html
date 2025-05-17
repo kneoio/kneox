@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SSO Check</title>
+    <script src="https://auth.kneo.io/js/keycloak.js"></script>
+    <script>
+        window.addEventListener('load', function() {
+            if (window.parent && window.parent.Keycloak) {
+                window.parent.Keycloak().login();
+            }
+        });
+    </script>
+</head>
+<body></body>
+</html>
