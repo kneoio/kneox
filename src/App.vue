@@ -1,29 +1,33 @@
 <template>
-  <n-config-provider
-      :theme="currentTheme"
-      :theme-overrides="currentThemeOverrides"
-      class="theme-provider"
-  >
-    <n-switch
-        v-model:value="isDarkTheme"
-        size="large"
-        style="position: fixed; top: 20px; right: 20px; z-index: 1000;"
-    >
-      <template #checked-icon>
-        <n-icon :component="Moon" />
-      </template>
-      <template #unchecked-icon>
-        <n-icon :component="Sun" />
-      </template>
-    </n-switch>
-    <router-view />
-  </n-config-provider>
+  <n-loading-bar-provider>
+    <n-message-provider>
+      <n-config-provider
+          :theme="currentTheme"
+          :theme-overrides="currentThemeOverrides"
+          class="theme-provider"
+      >
+        <n-switch
+            v-model:value="isDarkTheme"
+            size="large"
+            style="position: fixed; top: 20px; right: 20px; z-index: 1000;"
+        >
+          <template #checked-icon>
+            <n-icon :component="Moon"/>
+          </template>
+          <template #unchecked-icon>
+            <n-icon :component="Sun"/>
+          </template>
+        </n-switch>
+        <router-view/>
+      </n-config-provider>
+    </n-message-provider>
+  </n-loading-bar-provider>
 </template>
 
 <script setup>
-import { NConfigProvider, NSwitch, NIcon, darkTheme } from 'naive-ui'
-import { ref, computed } from 'vue'
-import { Sun, Moon } from '@vicons/tabler'
+import {NConfigProvider, NSwitch, NIcon, darkTheme, NLoadingBarProvider, NMessageProvider} from 'naive-ui'
+import {ref, computed} from 'vue'
+import {Sun, Moon} from '@vicons/tabler'
 
 const isDarkTheme = ref(false)
 

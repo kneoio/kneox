@@ -46,6 +46,7 @@ import { useSoundFragmentStore } from "../../../stores/kneo/soundFragmentsStore"
 import { SoundFragment } from "../../../types/kneoBroadcasterTypes";
 
 export default defineComponent({
+  name: 'SoundFragments',
   components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, NTag, LoaderIcon },
   setup() {
     const router = useRouter();
@@ -141,7 +142,7 @@ export default defineComponent({
     };
 
     const handleNewClick = () => {
-      router.push({ name: 'NewSoundFragment' }).catch(err => {
+      router.push({ name: 'SoundFragment' }).catch(err => {
         console.error('Navigation error:', err);
       });
     };

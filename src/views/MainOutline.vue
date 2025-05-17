@@ -66,6 +66,7 @@ export default defineComponent({
     NH2
   },
   setup() {
+
     const router = useRouter();
     const route = useRoute();
 

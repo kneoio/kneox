@@ -15,6 +15,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
     const getCurrent = computed(() => {
         const defaultData = {
             id: '',
+            slugName: '',
             author: 0,
             regDate: '',
             lastModifier: '',

@@ -2,9 +2,11 @@
   <n-grid cols="6" x-gap="12" y-gap="12" class="m-5">
     <n-gi span="6">
       <n-page-header subtitle="Sound Fragment" @back="goBack">
-        <template #title>{{ store.getCurrent.title }}</template>
+        <template #title>{{ store.getCurrent.title || store.getCurrent.slugName }}</template>
         <template #footer>
           Registered: {{ store.getCurrent.regDate }}, Last Modified: {{ store.getCurrent.lastModifiedDate }}
+          <br>
+          Author: {{ store.getCurrent.author }}, Last Modifier: {{ store.getCurrent.lastModifier }}
         </template>
       </n-page-header>
     </n-gi>
@@ -26,6 +28,14 @@
           <n-form label-placement="left" label-width="auto">
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
               <n-gi>
+                <n-form-item label="Slug Name">
+                  <n-input
+                      v-model:value="localFormData.slugName"
+                      style="width: 50%; max-width: 600px;"
+                  />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
                 <n-form-item label="Title">
                   <n-input
                       v-model:value="localFormData.title"
@@ -45,6 +55,30 @@
                 <n-form-item label="Genre">
                   <n-input
                       v-model:value="localFormData.genre"
+                      style="width: 50%; max-width: 600px;"
+                  />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="Album">
+                  <n-input
+                      v-model:value="localFormData.album"
+                      style="width: 50%; max-width: 600px;"
+                  />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="URL">
+                  <n-input
+                      v-model:value="localFormData.url"
+                      style="width: 50%; max-width: 600px;"
+                  />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="Action URL">
+                  <n-input
+                      v-model:value="localFormData.actionUrl"
                       style="width: 50%; max-width: 600px;"
                   />
                 </n-form-item>
@@ -127,6 +161,7 @@ export default defineComponent({
     const uploadRef = ref<UploadInst | null>(null)
     const uploadUrl = ref("http://localhost:38707/api/kneo/soundfragments/files");
     const localFormData = reactive<SoundFragment>({
+      slugName: "",
       id: "",
       author: "",
       regDate: "",
@@ -138,6 +173,8 @@ export default defineComponent({
       artist: "",
       genre: "",
       album: "",
+      url: "",
+      actionUrl: "",
       uploadedFile: null,
     });
 
@@ -158,8 +195,8 @@ export default defineComponent({
       try {
         loadingBar.start();
         const fileNames =
-            localFormData.uploadedFile && 'fileList' in localFormData.uploadedFile
-                ? localFormData.uploadedFile.fileList.map((file) => file.name)
+            localFormData.uploadedFile && Array.isArray(localFormData.uploadedFile)
+                ? localFormData.uploadedFile.map((file) => file.name)
                 : [];
 
         const saveDTO: SoundFragmentSave = {
@@ -169,6 +206,8 @@ export default defineComponent({
           artist: localFormData.artist,
           genre: localFormData.genre,
           album: localFormData.album,
+          url: localFormData.url,
+          actionUrl: localFormData.actionUrl,
           uploadedFile: fileNames,
         };
 
@@ -183,7 +222,6 @@ export default defineComponent({
         loadingBar.finish();
       }
     };
-
 
     const handleFinish = ({file, event}: { file: UploadFileInfo, event?: ProgressEvent }) => {
       const xhr = event?.target as XMLHttpRequest;

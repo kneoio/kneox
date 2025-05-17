@@ -31,7 +31,7 @@ export default defineComponent({
     NSpin
   },
   setup() {
-    //const router = useRouter();
+    const parentTitle = inject('parentTitle', ref(''));
     const kc = inject<KeycloakInstance>('keycloak');
     const userData = inject<any>('userData');
     const isAuthenticated = ref(false);
@@ -87,6 +87,9 @@ export default defineComponent({
     };
 
     onMounted(() => {
+      if (parentTitle) {
+        parentTitle.value = 'Radiostation';
+      }
       initAuth();
     });
 
