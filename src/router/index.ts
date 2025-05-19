@@ -1,14 +1,15 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
 import { inject } from 'vue';
-import type { KeycloakInstance } from 'keycloak-js';
 import MainOutline from '../views/MainOutline.vue';
 import Dashboard from '../views/DashboardView.vue';
 import RadioStationQueue from '../components/lists/kneo/RadioStationQueue.vue';
 import RadioStations from '../components/lists/kneo/RadioStations.vue';
+import RadioStation from '../components/forms/kneo/RadioStationForm.vue';
 import SoundFragments from '../components/lists/kneo/SoundFragments.vue';
 import SoundFragment from '../components/forms/kneo/SoundFragmentForm.vue';
 import HlsStreamView from "../views/HlsStreamView.vue";
 import WelcomeView from "../views/WelcomeView.vue";
+import Keycloak from "keycloak-js";
 
 declare module 'vue-router' {
     interface RouteMeta {
@@ -48,14 +49,20 @@ const routes: Array<RouteRecordRaw> = [
                 component: RadioStations
             },
             {
+                path: 'brands/:id',
+                name: 'RadioStation',
+                component: RadioStation
+            },
+            {
                 path: 'soundfragments',
                 name: 'SoundFragments',
                 component: SoundFragments
             },
             {
-                path: 'soundfragment',
+                path: 'soundfragments/:id',
                 name: 'SoundFragment',
-                component: SoundFragment
+                component: SoundFragment,
+                props: true
             },
             {
                 path: '/player',
@@ -76,7 +83,7 @@ const router = createRouter({
 });
 
 export function setupRouterGuard() {
-    const keycloak = inject<KeycloakInstance>('keycloak');
+    const keycloak = inject<Keycloak>('keycloak');
 
     if (!keycloak) {
         throw new Error('Keycloak instance not provided');

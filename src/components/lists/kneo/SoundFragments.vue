@@ -71,7 +71,7 @@ export default defineComponent({
       if (!intervalId.value) {
         intervalId.value = window.setInterval(async () => {
           try {
-            await store.fetchAll("kneo",store.getPagination.page, store.getPagination.pageSize);
+            await store.fetchAll(store.getPagination.page, store.getPagination.pageSize);
           } catch (error) {
             console.error('Periodic refresh failed:', error);
           }
@@ -148,6 +148,7 @@ export default defineComponent({
     };
 
     const getRowProps = (row: SoundFragment) => {
+      console.log(row);
       return {
         style: 'cursor: pointer;',
         onClick: () => {

@@ -31,7 +31,6 @@ import {Sun, Moon} from '@vicons/tabler'
 
 const isDarkTheme = ref(false)
 
-// Theme overrides with all required colors
 const lightThemeOverrides = {
   common: {
     primaryColor: '#003f5c',

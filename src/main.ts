@@ -32,26 +32,30 @@ keycloak.init({
             const profile = await keycloak.loadUserProfile();
             userData.profile = profile;
             console.log('User profile loaded', profile);
-            setupApiClient(keycloak.token);
+            setupApiClient(keycloak.idToken); // The line in question
             startApp();
 
             setInterval(async () => {
                 try {
-                    const refreshed = keycloak.updateToken(70);
+                    const refreshed = await keycloak.updateToken(70); // Added await here as updateToken is often promise-based
                     if (refreshed) {
-                        setupApiClient(keycloak.token);
+                        console.log('Token was successfully refreshed');
+                        setupApiClient(keycloak.idToken);
                     } else {
                         console.log('Token is still valid');
                     }
                 } catch (error) {
-                    console.error('Failed to refresh token, logging out', error);
-                    await keycloak.login({ prompt: 'login' });
+                    console.error('Failed to refresh token, attempting login', error); // Changed message slightly
+                    // It's generally better to attempt a login or handle this state rather than just logging out without warning
+                    // Depending on the error, a full login might be needed.
+                    // keycloak.logout(); // Or attempt login again if preferred.
+                    await keycloak.login({ prompt: 'login' }); // Example: force new login
                 }
-            }, 60000);
+            }, 60000); // 60 seconds
 
         } catch (error) {
             console.error('Failed to load user profile', error);
-          //  keycloak.logout(); // Redirect to login on failure
+            //  keycloak.logout(); // Redirect to login on failure - This was commented out
         }
     } else {
         console.warn('Not authenticated - redirecting to login');

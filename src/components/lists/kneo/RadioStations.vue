@@ -158,7 +158,7 @@ export default defineComponent({
     };
 
     const handleNewClick = () => {
-      router.push({name: 'NewSoundFragment'}).catch((err) => {
+      router.push({name: 'RadioStation'}).catch((err) => {
         console.error('Navigation error:', err);
       });
     };
@@ -167,7 +167,7 @@ export default defineComponent({
       return {
         style: 'cursor: pointer;',
         onClick: () => {
-          const routeTo = {name: 'SoundFragment', params: {id: row.id}};
+          const routeTo = {name: 'RadioStation', params: {id: row.id}};
           router.push(routeTo).catch((err) => {
             console.error('Navigation error:', err);
           });

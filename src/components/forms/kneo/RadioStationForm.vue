@@ -1,7 +1,7 @@
 <template>
   <n-grid cols="6" x-gap="12" y-gap="12" class="m-5">
     <n-gi span="6">
-      <n-page-header subtitle="Sound Fragment" @back="goBack">
+      <n-page-header subtitle="Radio Station" @back="goBack">
         <template #title>{{ store.getCurrent.title || store.getCurrent.slugName }}</template>
         <template #footer>
           Registered: {{ store.getCurrent.regDate }}, Last Modified: {{ store.getCurrent.lastModifiedDate }}
@@ -94,9 +94,10 @@ import {
 } from "naive-ui";
 import {useSoundFragmentStore} from "../../../stores/kneo/soundFragmentsStore";
 import {SoundFragment, SoundFragmentSave} from "../../../types/kneoBroadcasterTypes";
+import {useBrandStore} from "../../../stores/kneo/brandsStore";
 
 export default defineComponent({
-  name: "SoundFragmentForm",
+  name: "RadioStationForm",
   components: {
     NPageHeader,
     NButtonGroup,
@@ -115,7 +116,7 @@ export default defineComponent({
     const loadingBar = useLoadingBar();
     const message = useMessage();
     const router = useRouter();
-    const store = useSoundFragmentStore();
+    const store = useBrandStore();
     const route = useRoute();
     const activeTab = ref("properties");
     const fileList = ref([] as UploadFileInfo[]);
