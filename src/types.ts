@@ -32,12 +32,6 @@ export interface Actions {
     }
 }
 
-export interface KneoGeneric {
-    id: string;
-    author: string | undefined;
-    lastModifier: string | undefined;
-}
-
 export interface Rl {
     reader: string;
     accessLevel: string;

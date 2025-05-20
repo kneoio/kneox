@@ -43,4 +43,8 @@ export const setupApiClient = (token: string) => {
     }
 };
 
+export const getBaseURL = () => {
+    return apiClient.defaults.baseURL;
+}
+
 export default apiClient;

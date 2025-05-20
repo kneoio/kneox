@@ -73,8 +73,8 @@
 </template>
 
 <script lang="ts">
-import {defineComponent, onMounted, reactive, ref} from "vue";
-import {useRoute, useRouter} from "vue-router";
+import { defineComponent, onMounted, reactive, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import {
   NButton,
   NButtonGroup,
@@ -88,12 +88,12 @@ import {
   NTabPane,
   NTabs,
   NUpload,
-  UploadFileInfo,
   useLoadingBar,
-  useMessage
+  useMessage,
+  type UploadFileInfo
 } from "naive-ui";
-import {useSoundFragmentStore} from "../../../stores/kneo/soundFragmentsStore";
-import {SoundFragment, SoundFragmentSave} from "../../../types/kneoBroadcasterTypes";
+import { useSoundFragmentStore } from "../../../stores/kneo/soundFragmentsStore";
+import { FragmentStatus, FragmentType, SoundFragment, SoundFragmentSave } from "../../../types/kneoBroadcasterTypes";
 
 export default defineComponent({
   name: "SoundFragmentForm",
@@ -115,10 +115,10 @@ export default defineComponent({
     const loadingBar = useLoadingBar();
     const message = useMessage();
     const router = useRouter();
-    const store = useSoundFragmentStore();
     const route = useRoute();
+    const store = useSoundFragmentStore();
     const activeTab = ref("properties");
-    const fileList = ref([] as UploadFileInfo[]);
+    const fileList = ref<UploadFileInfo[]>([]);
     const localFormData = reactive<SoundFragment>({
       slugName: "",
       id: "",
@@ -126,52 +126,61 @@ export default defineComponent({
       regDate: "",
       lastModifier: "",
       lastModifiedDate: "",
-      status: 0,
-      type: "SONG",
+      status: FragmentStatus.UNDEFINED,
+      type: FragmentType.SONG,
       title: "",
       artist: "",
       genre: "",
       album: "",
       url: "",
       actionUrl: "",
-      uploadedFile: null,
+      uploadedFiles: []
     });
 
-    const handleUpload = async ({ file, onFinish, onError, onProgress }: {
+    watch(
+        () => store.getCurrent?.uploadedFiles,
+        (files) => {
+          fileList.value = files || [];
+        },
+        { immediate: true }
+    );
+
+    const handleUpload = async ({ file, onFinish, onError }: {
       file: UploadFileInfo,
       onFinish?: (file?: UploadFileInfo) => void,
       onError?: (e: Error) => void,
-      onProgress?: (e: { percent: number }) => void
     }) => {
       try {
-        const uploadedFile = await store.uploadFile(file.file as File);
+        const response = await store.uploadFile(file.file as File);
         const newFile = {
           ...file,
-          url: uploadedFile.url,
-          name: uploadedFile.fileName,
+          ...response,
           status: 'finished'
         };
         if (onFinish) onFinish(newFile);
         return newFile;
       } catch (error) {
         if (onError) onError(error as Error);
-        return file;
+        throw error;
       }
     };
 
-    const handleChange = (options: { file: UploadFileInfo, fileList: UploadFileInfo[] }) => {
-      localFormData.uploadedFile = options.fileList;
+    const handleChange = (data: {
+      file: UploadFileInfo;
+      fileList: UploadFileInfo[];
+    }) => {
+      fileList.value = data.fileList;
     };
 
-    const handleFinish = ({ file }: { file: UploadFileInfo }) => {
+    const handleFinish = ({ file }: {
+      file: UploadFileInfo;
+    }) => {
       return file;
     };
 
     const handleSave = async () => {
       try {
         loadingBar.start();
-        const fileNames = localFormData.uploadedFile?.map((file) => file.name) || [];
-
         const saveDTO: SoundFragmentSave = {
           status: localFormData.status,
           type: localFormData.type,
@@ -179,14 +188,13 @@ export default defineComponent({
           artist: localFormData.artist,
           genre: localFormData.genre,
           album: localFormData.album,
-          uploadedFile: fileNames,
+          uploadedFiles: fileList.value.map(f => f.id),
         };
-
         await store.save(saveDTO, localFormData.id);
-        message.success("Sound Fragment saved successfully");
+        message.success("Saved successfully");
         await router.push("/soundfragments");
       } catch (error) {
-        message.error("Failed to save Sound Fragment");
+        message.error("Save failed");
       } finally {
         loadingBar.finish();
       }
@@ -207,16 +215,8 @@ export default defineComponent({
         try {
           await store.fetch(id);
           Object.assign(localFormData, store.getCurrent);
-          if (store.getCurrent.url) {
-            fileList.value = [{
-              id: store.getCurrent.id || '',
-              name: store.getCurrent.title || store.getCurrent.slugName || '',
-              status: 'finished',
-              url: store.getCurrent.url,
-            }];
-          }
         } catch (error) {
-          message.error('Failed to fetch sound fragment data');
+          message.error('Failed to load data');
         } finally {
           loadingBar.finish();
         }

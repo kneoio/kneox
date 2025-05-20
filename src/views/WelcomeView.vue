@@ -30,7 +30,7 @@
           <template #icon>
             <n-icon :component="LoginIcon"/>
           </template>
-          Login to Build Your Station
+          Jump to control center ...
         </n-button>
       </n-space>
     </n-layout-content>
@@ -53,12 +53,11 @@ import {
   NButton,
   NIcon
 } from 'naive-ui';
-import {Login as LoginIcon} from '@vicons/tabler'; // Assuming Login icon is appropriate
+import {Login as LoginIcon} from '@vicons/tabler';
 
 const keycloak = inject('keycloak'); // Keep Keycloak injection for login
 const router = useRouter(); // Keep router for navigation
 
-// Updated features to reflect advanced capabilities
 const features = [
   {
     title: 'Personal AI DJ',
@@ -76,7 +75,6 @@ const features = [
 
 const login = async () => {
   try {
-    //await keycloak.login();
     router.push('/outline/dashboard');
 
   } catch (error) {

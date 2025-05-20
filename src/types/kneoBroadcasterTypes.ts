@@ -17,20 +17,6 @@ export enum FragmentStatus {
     ARCHIVED = 13
 }
 
-export interface FileInfo extends UploadFileInfo {
-    id: string;
-    fullPath: string;
-    batchId: string;
-    thumbnailUrl: string | null;
-    type: string;
-    percentage: number;
-    status: 'pending' | 'uploading' | 'finished' | 'removed' | 'error';
-}
-
-export interface ExtendedUploadFileInfo extends UploadFileInfo {
-    fileList: FileInfo[];
-}
-
 export interface Brand {
     id: string;
     author: string;
@@ -58,7 +44,7 @@ export interface SoundFragment {
     album?: string;
     url: string;
     actionUrl: string;
-    uploadedFile: ExtendedUploadFileInfo | ExtendedUploadFileInfo[] | null;
+    uploadedFiles: UploadFileInfo[];
 }
 
 export interface SoundFragmentSave {
@@ -68,11 +54,5 @@ export interface SoundFragmentSave {
     artist?: string;
     genre?: string;
     album?: string;
-    uploadedFile: string[] | null;
-}
-
-export interface ErrorResponse {
-    code: string;
-    message: string;
-    details?: Record<string, unknown>;
+    uploadedFiles: string[] | null;
 }
