@@ -7,9 +7,7 @@ import type { SoundFragment, SoundFragmentSave } from "../../types/kneoBroadcast
 export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
     const apiViewResponse = ref<ApiViewPageResponse<SoundFragment> | null>(null);
     const apiFormResponse = ref<ApiFormResponse<SoundFragment> | null>(null);
-
     const getEntries = computed(() => apiViewResponse.value?.viewData.entries || []);
-
     const getCurrent = computed(() => apiFormResponse.value?.docData || {
         id: '',
         slugName: '',
@@ -158,6 +156,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         apiFormResponse.value = response.data.payload;
         return apiFormResponse.value?.docData;
     };
+
 
     return {
         apiViewResponse,

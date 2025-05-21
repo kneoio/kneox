@@ -94,6 +94,7 @@ import {
 } from "naive-ui";
 import { useSoundFragmentStore } from "../../../stores/kneo/soundFragmentsStore";
 import { FragmentStatus, FragmentType, SoundFragment, SoundFragmentSave } from "../../../types/kneoBroadcasterTypes";
+import { getBaseURL } from  '../../../api/apiClient';
 
 export default defineComponent({
   name: "SoundFragmentForm",
@@ -188,7 +189,7 @@ export default defineComponent({
           artist: localFormData.artist,
           genre: localFormData.genre,
           album: localFormData.album,
-          uploadedFiles: fileList.value.map(f => f.id),
+          filesToUpload: fileList.value.map(f => f.id),
         };
         await store.save(saveDTO, localFormData.id);
         message.success("Saved successfully");
@@ -215,6 +216,15 @@ export default defineComponent({
         try {
           await store.fetch(id);
           Object.assign(localFormData, store.getCurrent);
+          fileList.value = store.getCurrent.uploadedFiles.map(f => ({
+            id: f.id,
+            name: f.name,
+            type: f.type,
+            thumbnailUrl: f.thumbnailUrl,
+            status: 'finished',
+            percentage: f.percentage,
+            url: `${getBaseURL()}/${f.url}`,
+          }))
         } catch (error) {
           message.error('Failed to load data');
         } finally {
