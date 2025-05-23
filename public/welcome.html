@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Personal Radio Station</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fef6e4;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+        }
+        .vivid-border-1 {
+            border-left: 4px solid #ff6b6b;
+        }
+        .vivid-border-2 {
+            border-left: 4px solid #48dbfb;
+        }
+        .vivid-border-3 {
+            border-left: 4px solid #feca57;
+        }
+        .rainbow-text {
+            background: linear-gradient(
+                    to right,
+                    #ff0000,
+                    #ff7f00,
+                    #ffff00,
+                    #00ff00,
+                    #0000ff,
+                    #4b0082,
+                    #9400d3
+            );
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: inline;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center">
+<div class="max-w-6xl mx-auto px-8 py-12">
+    <div class="flex flex-col items-center space-y-8"> <!-- Reduced space-y from 12 to 8 -->
+        <!-- Added logo container -->
+        <div class="w-32 h-32 mb-4"> <!-- Adjust size as needed -->
+            <img src="logo.jpg" alt="Radio Station Logo" class="w-full h-full object-contain">
+        </div>
+
+        <h1 class="text-4xl font-bold text-center text-gray-800">
+            Your Personal <span class="rainbow-text">Radio</span> Station
+        </h1>
+        <p class="text-xl text-center text-gray-600">
+            Create, customize, and share your perfect audio stream.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
+            <!-- Feature 1 -->
+            <div class="feature-card bg-white p-6 rounded-lg border border-gray-100">
+                <h3 class="text-xl font-semibold mb-2 text-gray-800 pl-3 vivid-border-1">Personal DJ</h3>
+                <p class="text-gray-600">
+                    Let our system curate the perfect music mix just for you, or take control yourself.
+                </p>
+            </div>
+
+            <!-- Feature 2 -->
+            <div class="feature-card bg-white p-6 rounded-lg border border-gray-100">
+                <h3 class="text-xl font-semibold mb-2 text-gray-800 pl-3 vivid-border-2">Create Unique Tracks</h3>
+                <p class="text-gray-600">
+                    Generate personalized songs and audio experiences on demand.
+                </p>
+            </div>
+
+            <!-- Feature 3 -->
+            <div class="feature-card bg-white p-6 rounded-lg border border-gray-100">
+                <h3 class="text-xl font-semibold mb-2 text-gray-800 pl-3 vivid-border-3">Share with Friends</h3>
+                <p class="text-gray-600">
+                    Broadcast your station or share favorite tracks and playlists with your network.
+                </p>
+            </div>
+        </div>
+
+        <a href="/outline/dashboard"
+           class="mt-8 px-6 py-3 bg-white text-amber-500 rounded-lg font-medium hover:bg-amber-50 flex items-center space-x-2 border-2 border-amber-400 shadow-sm hover:shadow-md transition-all"
+        >
+            <span>Jump to control center...</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+        </a>
+    </div>
+</div>
+</body>
+</html>

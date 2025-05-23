@@ -8,7 +8,6 @@ import RadioStation from '../components/forms/kneo/RadioStationForm.vue';
 import SoundFragments from '../components/lists/kneo/SoundFragments.vue';
 import SoundFragment from '../components/forms/kneo/SoundFragmentForm.vue';
 import HlsStreamView from "../views/HlsStreamView.vue";
-import WelcomeView from "../views/WelcomeView.vue";
 import Keycloak from "keycloak-js";
 
 declare module 'vue-router' {
@@ -21,7 +20,12 @@ const routes: Array<RouteRecordRaw> = [
     {
         path: '/welcome',
         name: 'WelcomeView',
-        component: WelcomeView,
+        // Remove the WelcomeView component import and component property
+        // since we're using static HTML now
+        redirect: () => {
+            window.location.href = '/welcome.html';
+            return { name: 'WelcomeView' }; // This won't actually be reached
+        },
         meta: { requiresAuth: false }
     },
     {
@@ -90,6 +94,11 @@ export function setupRouterGuard() {
     }
 
     router.beforeEach(async (to) => {
+        // Skip auth check for welcome page
+        if (to.name === 'WelcomeView') {
+            return true;
+        }
+
         if (to.matched.some(record => record.meta.requiresAuth)) {
             try {
                 if (!keycloak.authenticated) {

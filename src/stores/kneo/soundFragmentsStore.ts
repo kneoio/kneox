@@ -7,6 +7,8 @@ import type { SoundFragment, SoundFragmentSave } from "../../types/kneoBroadcast
 export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
     const apiViewResponse = ref<ApiViewPageResponse<SoundFragment> | null>(null);
     const apiFormResponse = ref<ApiFormResponse<SoundFragment> | null>(null);
+    const genreOptions = ref<Array<{label: string, value: string}>>([]);
+
     const getEntries = computed(() => apiViewResponse.value?.viewData.entries || []);
     const getCurrent = computed(() => apiFormResponse.value?.docData || {
         id: '',
@@ -63,67 +65,18 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         { label: "audiobook", value: "AUDIOBOOK" }
     ]);
 
-    const genreOptions = ref([
-        { label: "Crowd Rock", value: "Crowd Rock" },
-        { label: "Dark Synth", value: "Dark Synth" },
-        { label: "Industrial", value: "Industrial" },
-        { label: "Synthwave", value: "Synthwave" },
-        { label: "Alternative Rock", value: "Alternative Rock" },
-        { label: "Ambient", value: "Ambient" },
-        { label: "Blues", value: "Blues" },
-        { label: "Chillout", value: "Chillout" },
-        { label: "Classical", value: "Classical" },
-        { label: "Country", value: "Country" },
-        { label: "Dance", value: "Dance" },
-        { label: "Downtempo", value: "Downtempo" },
-        { label: "Drum and Bass", value: "Drum and Bass" },
-        { label: "Dubstep", value: "Dubstep" },
-        { label: "EBM", value: "EBM" },
-        { label: "Electronic", value: "Electronic" },
-        { label: "Electropop", value: "Electropop" },
-        { label: "Experimental", value: "Experimental" },
-        { label: "Folk", value: "Folk" },
-        { label: "Funk", value: "Funk" },
-        { label: "Futurepop", value: "Futurepop" },
-        { label: "Garage Rock", value: "Garage Rock" },
-        { label: "Gospel", value: "Gospel" },
-        { label: "Goth Rock", value: "Goth Rock" },
-        { label: "Grunge", value: "Grunge" },
-        { label: "Hard Rock", value: "Hard Rock" },
-        { label: "Hip Hop", value: "Hip Hop" },
-        { label: "House", value: "House" },
-        { label: "IDM", value: "IDM" },
-        { label: "Indie Pop", value: "Indie Pop" },
-        { label: "Indie Rock", value: "Indie Rock" },
-        { label: "Industrial Metal", value: "Industrial Metal" },
-        { label: "Instrumental", value: "Instrumental" },
-        { label: "Jazz", value: "Jazz" },
-        { label: "Latin", value: "Latin" },
-        { label: "Lo-fi", value: "Lo-fi" },
-        { label: "Metal", value: "Metal" },
-        { label: "Minimal Synth", value: "Minimal Synth" },
-        { label: "New Wave", value: "New Wave" },
-        { label: "Noise", value: "Noise" },
-        { label: "Pop", value: "Pop" },
-        { label: "Post-Punk", value: "Post-Punk" },
-        { label: "Progressive Rock", value: "Progressive Rock" },
-        { label: "Psychedelic Rock", value: "Psychedelic Rock" },
-        { label: "Punk Rock", value: "Punk Rock" },
-        { label: "R&B", value: "R&B" },
-        { label: "Reggae", value: "Reggae" },
-        { label: "Rock", value: "Rock" },
-        { label: "Shoegaze", value: "Shoegaze" },
-        { label: "Ska", value: "Ska" },
-        { label: "Soul", value: "Soul" },
-        { label: "Soundtrack", value: "Soundtrack" },
-        { label: "Spoken Word", value: "Spoken Word" },
-        { label: "Techno", value: "Techno" },
-        { label: "Trance", value: "Trance" },
-        { label: "Trip Hop", value: "Trip Hop" },
-        { label: "Vaporwave", value: "Vaporwave" },
-        { label: "World Music", value: "World Music" },
-        { label: "Other", value: "Other" },
-    ].sort((a, b) => a.label.localeCompare(b.label)));
+    const fetchGenres = async () => {
+        const response = await apiClient.get('/genres');
+        if (!response?.data?.payload) throw new Error('Invalid API response');
+
+        genreOptions.value = response.data.payload.viewData.entries
+            .map((entry: any) => ({
+                label: entry.identifier,
+                value: entry.identifier
+            }))
+            .sort((a: {label: string}, b: {label: string}) =>
+                a.label.localeCompare(b.label));
+    };
 
     const fetchSoundFragments = async (page = 1, pageSize = 10) => {
         const response = await apiClient.get(`/soundfragments?page=${page}&size=${pageSize}`);
@@ -157,6 +110,13 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         return apiFormResponse.value?.docData;
     };
 
+    const downloadFile = async (id: string, fileId: string) => {
+        return await apiClient.get(`/soundfragments/files/${id}/${fileId}`, {
+            responseType: 'blob'
+        });
+    };
+
+    fetchGenres();
 
     return {
         apiViewResponse,
@@ -171,6 +131,8 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         fetch: fetchSoundFragment,
         save,
         uploadFile,
-        updateCurrent
+        updateCurrent,
+        downloadFile,
+        fetchGenres
     };
 });

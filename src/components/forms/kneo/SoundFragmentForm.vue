@@ -50,17 +50,33 @@
               <n-gi>
                 <n-form-item label="Upload File">
                   <n-upload
-                      :default-file-list="fileList"
+                      v-model:file-list="fileList"
                       :multiple="false"
                       :max="1"
-                      show-download-button
+                      :show-download-button="true"
                       @change="handleChange"
                       @finish="handleFinish"
+                      @download="handleDownload"
                       style="width: 50%; max-width: 600px;"
                       :accept="audioAcceptTypes"
                       :custom-request="handleUpload"
+                      :show-remove-button="true"
+                      :show-retry-button="false"
+                      :show-cancel-button="false"
                   >
                     <n-button>Select File</n-button>
+                    <template #file="{ file }">
+                      <div class="file-item">
+                        <n-text>{{ file.name }}</n-text>
+                        <n-button
+                            size="small"
+                            @click="triggerDownload(file)"
+                            class="ml-2"
+                        >
+                          Download
+                        </n-button>
+                      </div>
+                    </template>
                   </n-upload>
                 </n-form-item>
               </n-gi>
@@ -166,6 +182,63 @@ export default defineComponent({
       }
     };
 
+    // Add this method
+    const triggerDownload = async (file: UploadFileInfo) => {
+      console.log('Manual download triggered for:', file.name);
+      try {
+        await handleDownload(file);
+      } catch (error) {
+        message.error(`Download failed: ${error.message}`);
+      }
+    };
+
+// Modified handleDownload
+    const handleDownload = async (file: UploadFileInfo) => {
+      console.group('Download Debug');
+      try {
+        console.log('Starting download for:', file);
+
+        if (!file.id) {
+          console.warn('No file ID, trying URL fallback');
+          if (file.url) {
+            window.open(file.url, '_blank');
+            return false;
+          }
+          throw new Error('No download source available');
+        }
+
+        console.log('Fetching file via API...');
+        const response = await store.downloadFile(localFormData.id, file.id);
+        console.log('API response received');
+
+        const blobUrl = window.URL.createObjectURL(new Blob([response.data]));
+        console.log('Created blob URL:', blobUrl);
+
+        const anchor = document.createElement('a');
+        anchor.href = blobUrl;
+        anchor.download = file.name || 'audio_file';
+        anchor.style.display = 'none';
+        document.body.appendChild(anchor);
+
+        console.log('Triggering download...');
+        anchor.click();
+
+        setTimeout(() => {
+          document.body.removeChild(anchor);
+          window.URL.revokeObjectURL(blobUrl);
+          console.log('Cleanup complete');
+        }, 100);
+
+        return true;
+      } catch (error) {
+        console.error('Download error:', error);
+        message.error('Download failed');
+        return false;
+      } finally {
+        console.groupEnd();
+      }
+    };
+
     const handleChange = (data: {
       file: UploadFileInfo;
       fileList: UploadFileInfo[];
@@ -223,7 +296,7 @@ export default defineComponent({
             thumbnailUrl: f.thumbnailUrl,
             status: 'finished',
             percentage: f.percentage,
-            url: `${getBaseURL()}/${f.url}`,
+           // url: `${getBaseURL()}/${f.url}`,
           }))
         } catch (error) {
           message.error('Failed to load data');
@@ -256,6 +329,8 @@ export default defineComponent({
       handleChange,
       handleFinish,
       handleUpload,
+      handleDownload,
+      triggerDownload,
       fileList,
       audioAcceptTypes
     };
