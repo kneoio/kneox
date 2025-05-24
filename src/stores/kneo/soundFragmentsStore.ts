@@ -105,9 +105,9 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
 
     const save = async (data: SoundFragmentSave, id?: string) => {
         const response = await apiClient.post(`/soundfragments/${id || ''}`, data);
-        if (!response?.data?.payload) throw new Error('Invalid API response');
-        apiFormResponse.value = response.data.payload;
-        return apiFormResponse.value?.docData;
+        if (!response?.data) throw new Error('Invalid API response');
+        apiFormResponse.value = response.data;
+        return apiFormResponse.value;
     };
 
     const downloadFile = async (id: string, fileId: string) => {

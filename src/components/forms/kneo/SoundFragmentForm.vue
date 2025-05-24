@@ -110,7 +110,6 @@ import {
 } from "naive-ui";
 import { useSoundFragmentStore } from "../../../stores/kneo/soundFragmentsStore";
 import { FragmentStatus, FragmentType, SoundFragment, SoundFragmentSave } from "../../../types/kneoBroadcasterTypes";
-import { getBaseURL } from  '../../../api/apiClient';
 
 export default defineComponent({
   name: "SoundFragmentForm",
@@ -182,7 +181,6 @@ export default defineComponent({
       }
     };
 
-    // Add this method
     const triggerDownload = async (file: UploadFileInfo) => {
       console.log('Manual download triggered for:', file.name);
       try {
@@ -192,7 +190,6 @@ export default defineComponent({
       }
     };
 
-// Modified handleDownload
     const handleDownload = async (file: UploadFileInfo) => {
       console.group('Download Debug');
       try {
@@ -279,7 +276,7 @@ export default defineComponent({
     };
 
     const goBack = () => {
-      router.push("/soundfragments");
+      router.push("/outline/soundfragments");
     };
 
     onMounted(async () => {
@@ -296,7 +293,6 @@ export default defineComponent({
             thumbnailUrl: f.thumbnailUrl,
             status: 'finished',
             percentage: f.percentage,
-           // url: `${getBaseURL()}/${f.url}`,
           }))
         } catch (error) {
           message.error('Failed to load data');

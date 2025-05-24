@@ -20,11 +20,9 @@ const routes: Array<RouteRecordRaw> = [
     {
         path: '/welcome',
         name: 'WelcomeView',
-        // Remove the WelcomeView component import and component property
-        // since we're using static HTML now
         redirect: () => {
             window.location.href = '/welcome.html';
-            return { name: 'WelcomeView' }; // This won't actually be reached
+            return { name: 'WelcomeView' };
         },
         meta: { requiresAuth: false }
     },

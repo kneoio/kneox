@@ -106,14 +106,10 @@ export default defineComponent({
         { title: 'Artist', key: 'artist' },
         { title: 'Genre', key: 'genre' },
         {
-          title: 'Status',
-          key: 'status',
-          render(row: SoundFragment) {
-            return h(NTag, { default: () => row.status });
-          }
+          title: 'Source',
+          key: 'source'
         }
       ];
-
       if (!isMobile.value) {
         baseColumns.push(
             { title: 'Type', key: 'type' }
