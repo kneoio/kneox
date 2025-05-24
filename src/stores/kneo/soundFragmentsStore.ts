@@ -90,10 +90,10 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         apiFormResponse.value = response.data.payload;
     };
 
-    const uploadFile = async (file: File) => {
+    const uploadFile = async (id: string, file: File) => {
         const formData = new FormData();
         formData.append('file', file);
-        const response = await apiClient.post('/soundfragments/files', formData, {
+        const response = await apiClient.post('/soundfragments/files/' + id, formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
         return response.data;

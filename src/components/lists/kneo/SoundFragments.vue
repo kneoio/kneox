@@ -144,7 +144,7 @@ export default defineComponent({
     };
 
     const getRowProps = (row: SoundFragment) => {
-      console.log(row);
+      //console.log(row);
       return {
         style: 'cursor: pointer;',
         onClick: () => {

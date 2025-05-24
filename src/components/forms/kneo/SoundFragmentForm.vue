@@ -54,6 +54,7 @@
                       :multiple="false"
                       :max="1"
                       :show-download-button="true"
+                      :disabled="false"
                       @change="handleChange"
                       @finish="handleFinish"
                       @download="handleDownload"
@@ -61,8 +62,6 @@
                       :accept="audioAcceptTypes"
                       :custom-request="handleUpload"
                       :show-remove-button="true"
-                      :show-retry-button="false"
-                      :show-cancel-button="false"
                   >
                     <n-button>Select File</n-button>
                   </n-upload>
@@ -123,6 +122,7 @@ export default defineComponent({
     const store = useSoundFragmentStore();
     const activeTab = ref("properties");
     const fileList = ref<UploadFileInfo[]>([]);
+
     const localFormData = reactive<SoundFragment>({
       slugName: "",
       id: "",
@@ -155,7 +155,7 @@ export default defineComponent({
       onError?: (e: Error) => void,
     }) => {
       try {
-        const response = await store.uploadFile(file.file as File);
+        const response = await store.uploadFile(localFormData.id, file.file as File);
         const newFile = {
           ...file,
           ...response,
@@ -169,59 +169,32 @@ export default defineComponent({
       }
     };
 
-    const triggerDownload = async (file: UploadFileInfo) => {
-      console.log('Manual download triggered for:', file.name);
-      try {
-        await handleDownload(file);
-      } catch (error) {
-        message.error(`Download failed: ${error.message}`);
-      }
-    };
-
     const handleDownload = async (file: UploadFileInfo) => {
-      console.group('Download Debug');
-      try {
-        console.log('Starting download for:', file);
-
-        if (!file.id) {
-          console.warn('No file ID, trying URL fallback');
-          if (file.url) {
-            window.open(file.url, '_blank');
-            return false;
-          }
-          throw new Error('No download source available');
-        }
-
-        console.log('Fetching file via API...');
-        const response = await store.downloadFile(localFormData.id, file.id);
-        console.log('API response received');
-
-        const blobUrl = window.URL.createObjectURL(new Blob([response.data]));
-        console.log('Created blob URL:', blobUrl);
-
-        const anchor = document.createElement('a');
-        anchor.href = blobUrl;
-        anchor.download = file.name || 'audio_file';
-        anchor.style.display = 'none';
-        document.body.appendChild(anchor);
-
-        console.log('Triggering download...');
-        anchor.click();
-
-        setTimeout(() => {
-          document.body.removeChild(anchor);
-          window.URL.revokeObjectURL(blobUrl);
-          console.log('Cleanup complete');
-        }, 100);
-
-        return true;
-      } catch (error) {
-        console.error('Download error:', error);
-        message.error('Download failed');
+      if (!file.id && file.url) {
+        window.open(file.url, '_blank');
         return false;
-      } finally {
-        console.groupEnd();
       }
+
+      if (!file.id) {
+        throw new Error('No download source available');
+      }
+
+      const response = await store.downloadFile(localFormData.id, file.id);
+      const blobUrl = window.URL.createObjectURL(new Blob([response.data]));
+
+      const anchor = document.createElement('a');
+      anchor.href = blobUrl;
+      anchor.download = file.name || 'audio_file';
+      anchor.style.display = 'none';
+      document.body.appendChild(anchor);
+      anchor.click();
+
+      setTimeout(() => {
+        document.body.removeChild(anchor);
+        window.URL.revokeObjectURL(blobUrl);
+      }, 100);
+
+      return true;
     };
 
     const handleChange = (data: {
@@ -274,14 +247,6 @@ export default defineComponent({
         try {
           await store.fetch(id);
           Object.assign(localFormData, store.getCurrent);
-          fileList.value = store.getCurrent.uploadedFiles.map(f => ({
-            id: f.id,
-            name: f.name,
-            type: f.type,
-            thumbnailUrl: f.thumbnailUrl,
-            status: 'finished',
-            percentage: f.percentage,
-          }))
         } catch (error) {
           message.error('Failed to load data');
         } finally {
@@ -314,7 +279,6 @@ export default defineComponent({
       handleFinish,
       handleUpload,
       handleDownload,
-      triggerDownload,
       fileList,
       audioAcceptTypes
     };
