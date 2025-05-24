@@ -263,9 +263,9 @@ export default defineComponent({
         };
         await store.save(saveDTO, localFormData.id);
         message.success("Saved successfully");
-        await router.push("/soundfragments");
+        await router.push("/outline/soundfragments");
       } catch (error) {
-        message.error("Save failed");
+        message.error("Save failed: " + error);
       } finally {
         loadingBar.finish();
       }
