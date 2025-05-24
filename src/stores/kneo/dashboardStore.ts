@@ -169,8 +169,9 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
             onmessage: (event: MessageEvent) => {
                 try {
                     const data = JSON.parse(event.data);
+                    console.log(data);
                     if (data.error) {
-                        console.error(`${options.type} ${options.brandName || ''} error:`, data.error);
+                        console.error(`${options.brandName || ''} error:`, data.error);
                         return;
                     }
                     options.onMessage(data);

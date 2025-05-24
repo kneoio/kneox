@@ -65,18 +65,6 @@
                       :show-cancel-button="false"
                   >
                     <n-button>Select File</n-button>
-                    <template #file="{ file }">
-                      <div class="file-item">
-                        <n-text>{{ file.name }}</n-text>
-                        <n-button
-                            size="small"
-                            @click="triggerDownload(file)"
-                            class="ml-2"
-                        >
-                          Download
-                        </n-button>
-                      </div>
-                    </template>
                   </n-upload>
                 </n-form-item>
               </n-gi>
