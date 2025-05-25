@@ -33,102 +33,97 @@
         </div>
       </div>
 
-      <div v-if="row.songStatistics" class="hls-provider-section">
-        <div class="songs-table">
-          <div class="table-header">
-            <div class="header-cell song-name">Title</div>
-            <div class="header-cell duration-cell">Duration</div>
-            <div class="header-cell bitrate-cell">Bitrate</div>
-            <div class="header-cell requests-cell">Requests</div>
-            <div class="header-cell segment-range-cell">Segment Range</div>
+      <div v-if="row.timeline" class="hls-provider-section segment-timeline-display">
+        <div class="sub-label timeline-main-label">Segment Timeline:</div>
+
+        <div v-if="row.hlsSongStats" class="hls-song-info">
+          <div class="song-title-container">
+            <span class="info-label">Current Track:</span>
+            <span class="song-title" :title="cleanTitle(row.hlsSongStats.title)">
+              {{ cleanTitle(row.hlsSongStats.title) }}
+            </span>
           </div>
-          <div class="table-body">
-            <div v-for="(stats, start) in row.songStatistics" :key="start" class="table-row">
-              <div class="table-cell song-name" :title="cleanTitle(stats.title)">
-                {{ cleanTitle(stats.title) }}
-              </div>
-              <div class="table-cell duration-cell">{{ formatDuration(stats.totalDuration) }}</div>
-              <div class="table-cell bitrate-cell">{{ stats.averageBitrate }} kbps</div>
-              <div class="table-cell requests-cell">{{ stats.requestCount }}</div>
-              <div
-                  class="table-cell segment-range-cell"
-                  :class="{
-                  'in-current-window': isInCurrentWindow(stats.start, stats.end),
-                  'stale-segment': stats.stale
-                }"
-              >
-                <div class="range-display">
-                  {{ stats.start }}
-                  <span v-if="!isLatestSegment(stats.start, stats.end)" class="range-separator">→</span>
-                  <span
-                      v-else
-                      class="latest-segment flash"
-                  >
-                    {{ latestRequestedSeg }}
-                  </span>
-                  {{ stats.end }}
-                </div>
-              </div>
-            </div>
+          <div class="song-timestamp-container">
+            <span class="info-label">Est. Time:</span>
+            <span class="song-timestamp">
+              {{ formatHlsTimestamp(row.hlsSongStats.segmentTimestamp) }}
+            </span>
           </div>
+          <div class="activity-info-container">
+            <span class="info-label">Recent Requests:</span>
+            <span class="request-count-display">
+              {{ row.hlsSongStats.requestCount }}
+              <span class="request-count-unit">/ 5min</span>
+              <span class="live-dot" v-if="row.hlsSongStats.requestCount > 0">●</span>
+            </span>
+          </div>
+          <div class="estimated-listeners-container">
+            <span class="info-label">Est. Listeners:</span>
+            <span class="listeners-count-value">
+              <template v-if="row.listenersCount === -1">
+                <span title="Cannot determine listeners (check config/duration)">N/A</span>
+              </template>
+              <template v-else>
+                {{ row.listenersCount }}
+              </template>
+            </span>
+          </div>
+        </div>
+
+        <div class="timeline-string-container">
+          <span v-if="row.timeline.pastSegmentSequences && row.timeline.pastSegmentSequences.length > 0" class="timeline-part timeline-past">
+            {{ row.timeline.pastSegmentSequences.join('-') }}
+          </span>
+          <span v-if="row.timeline.pastSegmentSequences && row.timeline.pastSegmentSequences.length > 0" class="timeline-part-separator">-</span>
+
+          <span class="timeline-delimiter">||></span>
+
+          <span v-if="row.timeline.visibleSegmentSequences && row.timeline.visibleSegmentSequences.length > 0" class="timeline-part timeline-visible">
+            {{ row.timeline.visibleSegmentSequences.join('-') }}
+          </span>
+          <span v-else class="timeline-part timeline-visible-empty">(empty)</span>
+
+          <span class="timeline-delimiter"><||</span>
+
+          <span v-if="row.timeline.upcomingSegmentSequences && row.timeline.upcomingSegmentSequences.length > 0" class="timeline-part-separator">-</span>
+          <span v-if="row.timeline.upcomingSegmentSequences && row.timeline.upcomingSegmentSequences.length > 0" class="timeline-part timeline-upcoming">
+            {{ row.timeline.upcomingSegmentSequences.join('-') }}
+          </span>
         </div>
       </div>
     </div>
-
-    <SlideHistoryTimeline
-        v-if="row.slideHistory && row.slideHistory.length > 0"
-        :slide-history="row.slideHistory"
-        :last-slide="row.lastSlide"
-    />
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from 'vue';
-import SlideHistoryTimeline from './SlideHistoryTimeline.vue';
+import { defineComponent } from 'vue';
 
 export default defineComponent({
-  components: {
-    SlideHistoryTimeline
-  },
   props: {
     row: {
       type: Object,
       required: true
     }
   },
-  setup(props) {
-    const cleanTitle = (title: string) => {
+  setup() {
+    const cleanTitle = (title: string | undefined | null): string => {
+      if (!title) return 'N/A';
       return title.replace(/^#+\s*/, '').trim();
     };
 
-    const formatDuration = (seconds: number) => {
-      const mins = Math.floor(seconds / 60);
-      const secs = Math.floor(seconds % 60);
-      return `${mins}:${secs.toString().padStart(2, '0')}`;
-    };
-
-    const latestRequestedSeg = computed(() => props.row.latestRequestedSeg);
-    const currentWindow = computed(() => props.row.currentWindow || []);
-
-    const isLatestSegment = (start: number, end: number): boolean => {
-      return latestRequestedSeg.value !== undefined &&
-          latestRequestedSeg.value >= start &&
-          latestRequestedSeg.value <= end;
-    };
-
-    const isInCurrentWindow = (start: number, end: number): boolean => {
-      return currentWindow.value.some(window =>
-          start >= window[0] && end <= window[1]
-      );
+    const formatHlsTimestamp = (timestampSeconds: number | undefined | null): string => {
+      if (!timestampSeconds) return 'N/A';
+      try {
+        const date = new Date(timestampSeconds * 1000);
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      } catch (e) {
+        return 'Invalid Date';
+      }
     };
 
     return {
       cleanTitle,
-      formatDuration,
-      latestRequestedSeg,
-      isLatestSegment,
-      isInCurrentWindow
+      formatHlsTimestamp,
     };
   }
 });
@@ -175,139 +170,133 @@ export default defineComponent({
 }
 
 .hls-provider-section {
-  min-width: 800px;
+  min-width: 500px;
 }
 
-.songs-table {
-  border: 1px solid #e0e0e0;
+.segment-timeline-display .timeline-main-label {
+  margin-bottom: 8px;
+}
+
+.hls-song-info {
+  margin-bottom: 10px;
+  padding: 8px;
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
   border-radius: 4px;
-  overflow: hidden;
+  font-size: 0.85rem;
 }
 
-.table-header {
+.song-title-container,
+.song-timestamp-container,
+.activity-info-container,
+.estimated-listeners-container {
   display: flex;
-  color: #444;
-  border-bottom: 1px solid #e0e0e0;
+  align-items: center;
+  margin-bottom: 4px;
 }
 
-.header-cell {
-  padding: 8px 12px;
-  flex: 1;
-  text-align: center;
-}
-
-.header-cell.song-name {
-  flex: 2;
-  text-align: left;
-}
-
-.header-cell.duration-cell {
-  flex: 1.5;
-}
-
-.header-cell.bitrate-cell {
-  flex: 1.5;
-}
-
-.header-cell.requests-cell {
-  flex: 1.5;
-}
-
-.header-cell.segment-range-cell {
-  flex: 2;
-}
-
-.table-body {
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.table-row {
-  display: flex;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.table-row:last-child {
-  border-bottom: none;
-}
-
-.table-cell {
-  padding: 8px 12px;
-  flex: 1;
-  text-align: center;
-  font-size: 0.875rem;
+.info-label {
+  font-weight: 600;
   color: #555;
+  margin-right: 8px;
+  min-width: 110px; /* Adjusted for new label */
 }
 
-.table-cell.song-name {
-  flex: 3;
-  text-align: left;
+.song-title {
+  color: #333;
+  font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 350px;
 }
 
-.table-cell.duration-cell {
-  flex: 1.5;
+.song-timestamp {
+  color: #333;
 }
 
-.table-cell.bitrate-cell {
-  flex: 1.5;
-}
-
-.table-cell.requests-cell {
-  flex: 1.5;
-}
-
-.table-cell.segment-range-cell {
-  flex: 2;
-}
-
-.segment-range-cell {
-  position: relative;
-}
-
-.range-display {
-  font-family: monospace;
+.request-count-display {
   display: flex;
-  justify-content: center;
   align-items: center;
-  gap: 8px;
+  color: #333;
 }
 
-.range-separator {
-  font-size: 1.2em;
-  color: #777;
+.request-count-unit {
+  font-size: 0.9em;
+  color: #6c757d;
+  margin-left: 3px;
+  margin-right: 5px;
 }
 
-.latest-segment {
-  background-color: #2664b3;
-  color: white;
-  padding: 2px 6px;
-  border-radius: 2px;
-  font-size: 0.75rem;
-  z-index: 10;
-}
-
-.flash {
-  animation: flash-animation 0.2s infinite alternate;
-}
-
-@keyframes flash-animation {
-  from { opacity: 1; }
-  to { opacity: 0.4; }
-}
-
-.table-row:hover {
-  background-color: #f0f0f0;
-}
-
-.in-current-window {
-  color: #28a745 !important;
+.listeners-count-value {
+  color: #333;
   font-weight: bold;
 }
 
-.stale-segment {
-  color: #c62828 !important;
+.listeners-count-value span[title] {
+  font-weight: normal;
+  color: #757575;
+  cursor: help;
+}
+
+.live-dot {
+  color: #28a745;
+  font-size: 1.2em;
+  margin-left: 4px;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.7; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.timeline-string-container {
+  font-family: monospace;
+  font-size: 0.9rem;
+  background-color: #f0f0f0;
+  padding: 10px 15px;
+  border-radius: 4px;
+  display: inline-block;
+  border: 1px solid #dcdcdc;
+  white-space: nowrap;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.timeline-part {
+  /* Base style for segment sequence number groups */
+}
+
+.timeline-past {
+  color: #5a5a5a;
+}
+
+.timeline-visible {
+  color: #1a73e8;
+  font-weight: bold;
+}
+
+.timeline-visible-empty {
+  color: #d93025;
+  font-style: italic;
+}
+
+.timeline-upcoming {
+  color: #188038;
+}
+
+.timeline-delimiter {
+  color: #ff6f00;
+  font-weight: bold;
+  margin-left: 3px;
+  margin-right: 3px;
+}
+
+.timeline-part-separator {
+  color: #757575;
+  margin-left: 1px;
+  margin-right: 1px;
 }
 </style>

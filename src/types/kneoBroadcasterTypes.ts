@@ -54,5 +54,5 @@ export interface SoundFragmentSave {
     artist?: string;
     genre?: string;
     album?: string;
-    filesToUpload: string[] | null;
+    newlyUploaded: string[];
 }

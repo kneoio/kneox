@@ -81,7 +81,6 @@ export default defineComponent({
     const activeMenuKey = computed(() => {
       if (route.name === 'Dashboard') return 'dashboard';
       if (route.name === 'Player') return 'player';
-      if (route.name === 'RadioStationQueue') return 'queues';
       if (route.name === 'RadioStations') return 'brands';
       if (route.name === 'SoundFragments') return 'fragments';
       return null;
@@ -100,11 +99,6 @@ export default defineComponent({
         label: 'Test Player',
         key: 'player',
         icon: () => h(MoodHappy)
-      },
-      {
-        label: 'Queues',
-        key: 'queues',
-        icon: () => h(Radio)
       },
       {
         key: 'divider-1',
@@ -140,8 +134,6 @@ export default defineComponent({
         router.push({ name: 'Dashboard' });
       } else if (key === 'player') {
         router.push({ name: 'HlsStreamTester' });
-      } else if (key === 'queues') {
-        router.push({ name: 'RadioStationQueue' });
       } else if (key === 'fragments') {
         router.push({ name: 'SoundFragments' });
       }

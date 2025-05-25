@@ -2,7 +2,6 @@ import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
 import { inject } from 'vue';
 import MainOutline from '../views/MainOutline.vue';
 import Dashboard from '../views/DashboardView.vue';
-import RadioStationQueue from '../components/lists/kneo/RadioStationQueue.vue';
 import RadioStations from '../components/lists/kneo/RadioStations.vue';
 import RadioStation from '../components/forms/kneo/RadioStationForm.vue';
 import SoundFragments from '../components/lists/kneo/SoundFragments.vue';
@@ -39,11 +38,6 @@ const routes: Array<RouteRecordRaw> = [
                 path: 'dashboard',
                 name: 'Dashboard',
                 component: Dashboard
-            },
-            {
-                path: 'queues',
-                name: 'RadioStationQueue',
-                component: RadioStationQueue
             },
             {
                 path: 'brands',

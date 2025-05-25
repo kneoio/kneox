@@ -37,27 +37,33 @@
 </template>
 
 <script lang="ts">
-import {computed, defineComponent, onMounted, ref, onUnmounted, h} from 'vue';
-import {DataTableColumns, NButton, NButtonGroup, NDataTable, NGi, NGrid, NPageHeader} from 'naive-ui';
+import {computed, defineComponent, onMounted, ref, onUnmounted, h, inject, Ref} from 'vue';
+import {DataTableColumns, NButton, NButtonGroup, NCheckbox, NDataTable, NGi, NGrid, NIcon, NPageHeader, useMessage} from 'naive-ui';
 import {useRouter} from 'vue-router';
+import {PlayerPlay, PlayerStop} from '@vicons/tabler';
 
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
 import {SoundFragment} from "../../../types/kneoBroadcasterTypes";
 import {useBrandStore} from "../../../stores/kneo/brandsStore";
 
 export default defineComponent({
-  components: {NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon},
+  components: {NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, PlayerPlay, PlayerStop},
   setup() {
     const router = useRouter();
+    const message = useMessage();
     const store = useBrandStore();
     const isMobile = ref(window.innerWidth < 768);
     const loading = ref(false);
     const intervalId = ref<number | null>(null);
+    const currentSongName = inject<Ref<string | null>>('parentTitle');
+    const songNamesMap = ref<Map<string, string>>(new Map());
+    const checkedRowKeys = ref<(string | number)[]>([]);
 
     async function preFetch() {
       try {
         loading.value = true;
         await store.fetchAll();
+        await fetchAllSongNames();
       } catch (error) {
         console.error('Failed to fetch initial data:', error);
       } finally {
@@ -67,14 +73,14 @@ export default defineComponent({
 
     const startPeriodicRefresh = () => {
       if (!intervalId.value) {
-        // Less frequent refresh (60 seconds)
         intervalId.value = window.setInterval(async () => {
           try {
             await store.fetchAll(store.getPagination.page, store.getPagination.pageSize);
+            await fetchAllSongNames();
           } catch (error) {
             console.error('Periodic refresh failed:', error);
           }
-        }, 60000);
+        }, 10000);
       }
     };
 
@@ -84,6 +90,22 @@ export default defineComponent({
         intervalId.value = null;
       }
     };
+
+    async function fetchAllSongNames() {
+      // Fetch current song names for all online stations
+      for (const station of store.getEntries) {
+        if (station.status === 'ON_LINE') {
+          try {
+            const songName = await fetchAndParsePlaylist(station.url);
+            if (songName) {
+              songNamesMap.value.set(station.id, songName);
+            }
+          } catch (error) {
+            console.error('Error fetching song name for station:', station.id, error);
+          }
+        }
+      }
+    }
 
     preFetch();
     startPeriodicRefresh();
@@ -98,24 +120,129 @@ export default defineComponent({
       stopPeriodicRefresh();
     });
 
+    const startBroadcasting = async (row: SoundFragment) => {
+      try {
+        loading.value = true;
+
+        const response = await fetch(row.actionUrl, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ action: 'start' })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to start broadcasting: ${response.statusText}`);
+        }
+
+        await store.fetchAll(store.getPagination.page, store.getPagination.pageSize);
+
+        const songName = await fetchAndParsePlaylist(row.url);
+        if (songName) {
+          songNamesMap.value.set(row.id, songName);
+        }
+      } catch (error) {
+        console.error('Failed to start broadcasting:', error);
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    const handleCopyUrl = (url: string) => {
+      navigator.clipboard.writeText(url)
+          .then(() => message.success('URL copied to clipboard'))
+          .catch(() => message.error('Failed to copy URL'));
+    };
+
     const columns = computed<DataTableColumns<SoundFragment>>(() => {
       const baseColumns: DataTableColumns<SoundFragment> = [
         {
-          title: 'Status',
-          key: 'status',
-          render: (row: SoundFragment) => {
-            return h('span', {
-              style: row.status === 'ON_LINE' ? 'color: blue;' : 'color: #FF69B4;'
-            }, row.status);
-          }
+          type: 'selection',
+          fixed: 'left',
+          width: 50,
+          renderHeader: () => h(NCheckbox, {
+            indeterminate: checkedRowKeys.value.length > 0 && checkedRowKeys.value.length < store.getEntries.length,
+            checked: checkedRowKeys.value.length === store.getEntries.length && store.getEntries.length > 0,
+            onClick: (e: MouseEvent) => {
+              e.stopPropagation();
+              if (checkedRowKeys.value.length === store.getEntries.length) {
+                checkedRowKeys.value = [];
+              } else {
+                checkedRowKeys.value = store.getEntries.map(item => item.id);
+              }
+            }
+          })
         },
         {title: 'Name', key: 'slugName'},
         {title: 'Country', key: 'country'},
-        {title: 'URL', key: 'url'},
+        {
+          title: 'URL',
+          key: 'url',
+          render: (row: SoundFragment) => {
+            return h('div', {
+              style: 'display: flex; align-items: center; cursor: pointer;',
+              onClick: (e: MouseEvent) => {
+                e.stopPropagation();
+                handleCopyUrl(row.url);
+              },
+              title: 'Click to copy URL'
+            }, [
+              h('span', {
+                style: 'overflow: hidden; text-overflow: ellipsis;',
+              }, row.url)
+            ]);
+          }
+        },
+        {
+          title: 'Status',
+          key: 'broadcast',
+          render: (row: SoundFragment) => {
+            const isOnline = row.status === 'ON_LINE';
+            return h(
+                NButton,
+                {
+                  size: 'small',
+                  onClick: (e) => {
+                    e.stopPropagation();
+                    startBroadcasting(row);
+                  },
+                  color: isOnline ? '#829ff3' : undefined,
+                  textColor: isOnline ? 'black' : undefined,
+                  disabled: isOnline
+                },
+                {
+                  default: () => [
+                    h(NIcon, null, {
+                      default: () => isOnline ? h(PlayerStop) : h(PlayerPlay)
+                    }),
+                    h('span', { style: 'margin-left: 5px' }, isOnline ? 'Broadcasting' : 'Broadcast')
+                  ]
+                }
+            );
+          },
+        }
       ];
 
       if (isMobile.value) {
         return [
+          {
+            type: 'selection',
+            fixed: 'left',
+            width: 50,
+            renderHeader: () => h(NCheckbox, {
+              indeterminate: checkedRowKeys.value.length > 0 && checkedRowKeys.value.length < store.getEntries.length,
+              checked: checkedRowKeys.value.length === store.getEntries.length && store.getEntries.length > 0,
+              onClick: (e: MouseEvent) => {
+                e.stopPropagation();
+                if (checkedRowKeys.value.length === store.getEntries.length) {
+                  checkedRowKeys.value = [];
+                } else {
+                  checkedRowKeys.value = store.getEntries.map(item => item.id);
+                }
+              }
+            })
+          },
           {
             title: 'Station',
             key: 'combined',
@@ -125,13 +252,44 @@ export default defineComponent({
                 h('div', { style: 'font-weight: bold;' }, row.slugName),
                 h('div', {
                   style: isOnline ? 'color: blue; font-size: 0.8rem;' : 'color: #FF69B4; font-size: 0.8rem;'
-                }, isOnline ? '● ONLINE' : '○ OFFLINE')
+                }, isOnline ? '● ONLINE' : '○ OFFLINE'),
+                h('div', {
+                  style: 'cursor: pointer; font-size: 0.8rem;',
+                  onClick: (e: MouseEvent) => {
+                    e.stopPropagation();
+                    handleCopyUrl(row.url);
+                  }
+                }, 'Click to copy URL')
               ]);
             }
           },
           {
-            title: 'Country',
-            key: 'country'
+            title: 'Actions',
+            key: 'actions',
+            render: (row: SoundFragment) => {
+              const isOnline = row.status === 'ON_LINE';
+
+              return h('div', { style: 'display: flex; gap: 8px;' }, [
+                h(
+                    NButton,
+                    {
+                      size: 'small',
+                      onClick: (e) => {
+                        e.stopPropagation();
+                        startBroadcasting(row);
+                      },
+                      color: isOnline ? '#98FB98' : undefined,
+                      textColor: isOnline ? 'black' : undefined,
+                      disabled: isOnline
+                    },
+                    {
+                      default: () => h(NIcon, null, {
+                        default: () => isOnline ? h(PlayerStop) : h(PlayerPlay)
+                      })
+                    }
+                )
+              ]);
+            }
           }
         ];
       }
@@ -143,6 +301,8 @@ export default defineComponent({
       try {
         loading.value = true;
         await store.fetchAll(page, store.getPagination.pageSize);
+        await fetchAllSongNames();
+        checkedRowKeys.value = []; // Clear selection on page change
       } finally {
         loading.value = false;
       }
@@ -152,13 +312,15 @@ export default defineComponent({
       try {
         loading.value = true;
         await store.fetchAll(1, pageSize);
+        await fetchAllSongNames();
+        checkedRowKeys.value = []; // Clear selection on page size change
       } finally {
         loading.value = false;
       }
     };
 
     const handleNewClick = () => {
-      router.push({name: 'RadioStation'}).catch((err) => {
+      router.push({name: 'NewSoundFragment'}).catch((err) => {
         console.error('Navigation error:', err);
       });
     };
@@ -167,7 +329,7 @@ export default defineComponent({
       return {
         style: 'cursor: pointer;',
         onClick: () => {
-          const routeTo = {name: 'RadioStation', params: {id: row.id}};
+          const routeTo = {name: 'SoundFragment', params: {id: row.id}};
           router.push(routeTo).catch((err) => {
             console.error('Navigation error:', err);
           });
@@ -175,16 +337,42 @@ export default defineComponent({
       };
     };
 
+    async function fetchAndParsePlaylist(url: string): Promise<string | null> {
+      try {
+        const response = await fetch(url);
+        const playlistText = await response.text();
+        const lines = playlistText.split('\n');
+
+        // Find the last #EXTINF entry in the playlist
+        let lastSongName = null;
+        for (let i = 0; i < lines.length; i++) {
+          if (lines[i].startsWith('#EXTINF:')) {
+            const parts = lines[i].split(',');
+            if (parts.length > 1) {
+              lastSongName = parts[1].trim();
+            }
+          }
+        }
+
+        return lastSongName;
+      } catch (error) {
+        console.error('Failed to fetch or parse playlist:', error);
+      }
+      return null;
+    }
+
     return {
       store,
       columns,
       rowKey: (row: any) => row.id,
       isMobile,
+      currentSongName,
       handleNewClick,
       getRowProps,
       handlePageChange,
       handlePageSizeChange,
       loading,
+      checkedRowKeys
     };
   },
 });

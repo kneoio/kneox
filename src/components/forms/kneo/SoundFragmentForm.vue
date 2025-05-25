@@ -220,7 +220,7 @@ export default defineComponent({
           artist: localFormData.artist,
           genre: localFormData.genre,
           album: localFormData.album,
-          filesToUpload: fileList.value.map(f => f.id),
+          newlyUploaded: fileList.value.map(f => f.name),
         };
         await store.save(saveDTO, localFormData.id);
         message.success("Saved successfully");

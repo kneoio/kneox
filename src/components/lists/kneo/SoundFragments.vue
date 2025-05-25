@@ -38,7 +38,7 @@
 
 <script lang="ts">
 import { computed, defineComponent, h, onMounted, ref, onUnmounted } from 'vue';
-import { DataTableColumns, NButton, NButtonGroup, NDataTable, NGi, NGrid, NPageHeader, NTag } from 'naive-ui';
+import { DataTableColumns, NButton, NButtonGroup, NCheckbox, NDataTable, NGi, NGrid, NPageHeader, NTag } from 'naive-ui';
 import { useRouter } from 'vue-router';
 
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
@@ -54,6 +54,7 @@ export default defineComponent({
     const isMobile = ref(window.innerWidth < 768);
     const loading = ref(false);
     const intervalId = ref<number | null>(null);
+    const checkedRowKeys = ref<(string | number)[]>([]);
 
     async function preFetch() {
       try {
@@ -65,7 +66,6 @@ export default defineComponent({
         loading.value = false;
       }
     }
-
 
     const startPeriodicRefresh = () => {
       if (!intervalId.value) {
@@ -86,7 +86,6 @@ export default defineComponent({
       }
     };
 
-
     preFetch();
     startPeriodicRefresh();
 
@@ -102,6 +101,23 @@ export default defineComponent({
 
     const columns = computed<DataTableColumns<SoundFragment>>(() => {
       const baseColumns: DataTableColumns<SoundFragment> = [
+        {
+          type: 'selection',
+          fixed: 'left',
+          width: 50,
+          renderHeader: () => h(NCheckbox, {
+            indeterminate: checkedRowKeys.value.length > 0 && checkedRowKeys.value.length < store.getEntries.length,
+            checked: checkedRowKeys.value.length === store.getEntries.length && store.getEntries.length > 0,
+            onClick: (e: MouseEvent) => {
+              e.stopPropagation();
+              if (checkedRowKeys.value.length === store.getEntries.length) {
+                checkedRowKeys.value = [];
+              } else {
+                checkedRowKeys.value = store.getEntries.map(item => item.id);
+              }
+            }
+          })
+        },
         { title: 'Title', key: 'title' },
         { title: 'Artist', key: 'artist' },
         { title: 'Genre', key: 'genre' },
@@ -123,6 +139,7 @@ export default defineComponent({
       try {
         loading.value = true;
         await store.fetchAll(page, store.getPagination.pageSize);
+        checkedRowKeys.value = []; // Clear selection when page changes
       } finally {
         loading.value = false;
       }
@@ -132,19 +149,17 @@ export default defineComponent({
       try {
         loading.value = true;
         await store.fetchAll(1, pageSize);
+        checkedRowKeys.value = []; // Clear selection when page size changes
       } finally {
         loading.value = false;
       }
     };
 
     const handleNewClick = () => {
-      router.push({ name: 'SoundFragment' }).catch(err => {
-        console.error('Navigation error:', err);
-      });
+      router.push('/outline/soundfragments/new');
     };
 
     const getRowProps = (row: SoundFragment) => {
-      //console.log(row);
       return {
         style: 'cursor: pointer;',
         onClick: () => {
@@ -165,7 +180,8 @@ export default defineComponent({
       getRowProps,
       handlePageChange,
       handlePageSizeChange,
-      loading
+      loading,
+      checkedRowKeys
     };
   }
 });
