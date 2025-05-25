@@ -52,7 +52,7 @@ import {
   h,
 } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import {AlignJustified, List, Music, Radio, Dashboard, MoodHappy} from '@vicons/tabler'
+import {AlignJustified, List, Music, Dashboard, MoodHappy} from '@vicons/tabler'
 
 export default defineComponent({
   components: {
@@ -81,7 +81,7 @@ export default defineComponent({
     const activeMenuKey = computed(() => {
       if (route.name === 'Dashboard') return 'dashboard';
       if (route.name === 'Player') return 'player';
-      if (route.name === 'RadioStations') return 'brands';
+      if (route.name === 'RadioStations') return 'radiostations';
       if (route.name === 'SoundFragments') return 'fragments';
       return null;
     });
@@ -96,7 +96,7 @@ export default defineComponent({
         icon: () => h(Dashboard)
       },
       {
-        label: 'Test Player',
+        label: 'Player',
         key: 'player',
         icon: () => h(MoodHappy)
       },
@@ -118,7 +118,7 @@ export default defineComponent({
       },
       {
         label: 'Radio Stations',
-        key: 'brands',
+        key: 'radiostations',
         icon: () => h(List)
       }
     ];
@@ -128,12 +128,12 @@ export default defineComponent({
         isDrawerOpen.value = false;
       }
 
-      if (key === 'brands') {
-        router.push({ name: 'Brands' });
+      if (key === 'radiostations') {
+        router.push({ name: 'RadioStations' });
       } else if (key === 'dashboard') {
         router.push({ name: 'Dashboard' });
       } else if (key === 'player') {
-        router.push({ name: 'HlsStreamTester' });
+        router.push({ name: 'Player' });
       } else if (key === 'fragments') {
         router.push({ name: 'SoundFragments' });
       }

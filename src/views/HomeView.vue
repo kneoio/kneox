@@ -14,11 +14,11 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, inject, ref, onMounted, watch } from 'vue';
-import { NGrid, NGridItem, NSpin } from 'naive-ui';
+import {defineComponent, inject, onMounted, ref, watch} from 'vue';
+import {NGrid, NGridItem, NSpin} from 'naive-ui';
 import KneoHeader from "../components/common/KneoHeader.vue";
 import KneoFooter from "../components/common/KneoFooter.vue";
-import { KeycloakInstance } from 'keycloak-js';
+import {KeycloakInstance} from 'keycloak-js';
 //import { useRouter } from 'vue-router';
 
 export default defineComponent({
@@ -46,16 +46,12 @@ export default defineComponent({
       }
 
       try {
-        // Initialize Keycloak
-        const authenticated = await kc.init({
+        isAuthenticated.value = await kc.init({
           onLoad: 'login-required',
           checkLoginIframe: false
         });
-
-        isAuthenticated.value = authenticated;
         authInitialized.value = true;
 
-        // Set up token refresh
         setInterval(async () => {
           if (kc.authenticated) {
             try {

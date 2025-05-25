@@ -6,7 +6,7 @@ import RadioStations from '../components/lists/kneo/RadioStations.vue';
 import RadioStation from '../components/forms/kneo/RadioStationForm.vue';
 import SoundFragments from '../components/lists/kneo/SoundFragments.vue';
 import SoundFragment from '../components/forms/kneo/SoundFragmentForm.vue';
-import HlsStreamView from "../views/HlsStreamView.vue";
+import Player from "../views/HlsStreamView.vue";
 import Keycloak from "keycloak-js";
 
 declare module 'vue-router' {
@@ -40,12 +40,12 @@ const routes: Array<RouteRecordRaw> = [
                 component: Dashboard
             },
             {
-                path: 'brands',
-                name: 'Brands',
+                path: 'radiostations',
+                name: 'RadioStations',
                 component: RadioStations
             },
             {
-                path: 'brands/:id',
+                path: 'radiostations/:id',
                 name: 'RadioStation',
                 component: RadioStation
             },
@@ -62,8 +62,8 @@ const routes: Array<RouteRecordRaw> = [
             },
             {
                 path: '/player',
-                name: 'HlsStreamTester',
-                component: HlsStreamView
+                name: 'Player',
+                component: Player
             }
         ]
     },
