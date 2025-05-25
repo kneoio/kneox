@@ -17,12 +17,19 @@ export enum FragmentStatus {
     ARCHIVED = 13
 }
 
-export interface Brand {
+export interface RadioStation {
     id: string;
     author: string;
     regDate: string;
     lastModifier: string;
     lastModifiedDate: string;
+    status: BrandStatus;
+    country: string;
+    slugName: string;
+    url: string;
+}
+
+export interface RadioStationSave {
     status: BrandStatus;
     country: string;
     slugName: string;

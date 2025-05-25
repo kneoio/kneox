@@ -112,7 +112,7 @@ import {
   NAlert, NButton, NDataTable, NDescriptions, NDescriptionsItem, NDivider, NGi, NGrid, NSelect, NTag, NText
 } from 'naive-ui';
 import { useDashboardStore } from "../stores/kneo/dashboardStore";
-import { useBrandStore } from "../stores/kneo/brandsStore";
+import { useRadioStationStore } from "../stores/kneo/radioStationStore";
 import { useStationColumns } from "../components/dashboard/stationColumns";
 import { StationEntry } from "../types/dashboard";
 
@@ -130,7 +130,7 @@ export default defineComponent({
     ];
     const userData = inject('userData', ref({ profile: { username: 'Guest' } }));
     const dashboard = useDashboardStore();
-    const brandStore = useBrandStore();
+    const brandStore = useRadioStationStore();
     const isMobile = ref(window.innerWidth < 768);
     const isStartingBroadcast = ref(false);
 

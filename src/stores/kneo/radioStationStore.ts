@@ -2,11 +2,11 @@ import {defineStore} from 'pinia';
 import {computed, ref} from 'vue';
 import apiClient, {setupApiClient} from '../../api/apiClient';
 import {ApiFormResponse, ApiViewPageResponse} from "../../types";
-import {Brand, SoundFragmentSave} from "../../types/kneoBroadcasterTypes";
+import {RadioStation, RadioStationSave, BrandStatus} from "../../types/kneoBroadcasterTypes";
 
-export const useBrandStore = defineStore('brandStore', () => {
-    const apiViewResponse = ref<ApiViewPageResponse<Brand> | null>(null);
-    const apiFormResponse = ref<ApiFormResponse<Brand> | null>(null);
+export const useRadioStationStore = defineStore('radioStationStore', () => {
+    const apiViewResponse = ref<ApiViewPageResponse<RadioStation> | null>(null);
+    const apiFormResponse = ref<ApiFormResponse<RadioStation> | null>(null);
 
     const getEntries = computed(() => {
         return apiViewResponse.value?.viewData.entries || [];
@@ -19,10 +19,9 @@ export const useBrandStore = defineStore('brandStore', () => {
             regDate: '',
             lastModifier: '',
             lastModifiedDate: '',
-            title: '',
-            status: 0,
-            type: 'SONG',
-            source: 'LOCAL_DISC'
+            slugName: '',
+            country: '',
+            status: BrandStatus.OFF_LINE,
         };
 
         return apiFormResponse.value?.docData || defaultData;
@@ -78,15 +77,15 @@ export const useBrandStore = defineStore('brandStore', () => {
         }
     };
 
-    const updateCurrent = (data: Brand, actions: any = {}) => {
+    const updateCurrent = (data: RadioStation, actions: any = {}) => {
         apiFormResponse.value = {
             docData: data,
             actions: actions
         };
     };
 
-    const save = async (data: SoundFragmentSave, id?: string) => {
-        const response = await apiClient.post(`/soundfragments/${id}`, data);
+    const save = async (data: RadioStationSave, id?: string) => {
+        const response = await apiClient.post(`/radiostations/${id}`, data);
         if (response?.data) {
             const {docData} = response.data;
             updateCurrent(docData, {});

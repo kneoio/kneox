@@ -31,7 +31,7 @@
 <script>
 import { defineComponent, ref, inject, onMounted, computed } from 'vue';
 import HlsPlayer from "../components/HlsPlayer.vue";
-import { useBrandStore } from "../stores/kneo/brandsStore";
+
 import {
   NButton,
   NSpace,
@@ -41,6 +41,7 @@ import {
   NCard,
   NSelect
 } from 'naive-ui';
+//import {useRadioStationStore} from "../stores/kneo/radioStationStore.js";
 
 export default defineComponent({
   name: 'HlsStreamView',
@@ -55,17 +56,16 @@ export default defineComponent({
     NSelect
   },
   setup() {
-    const parentTitle = inject('parentTitle', ref(''));
     const isLoading = ref(false);
     const selectedSource = ref('');
-    const brandStore = useBrandStore();
+    const brandStore = useRadioStationStore();
 
     const formState = ref({
       url: ''
     });
 
-    const sourceOptions = computed(() => {
-      const brandOptions = brandStore.getEntries.map(brand => ({
+  /*  const sourceOptions = computed(() => {
+      const brandOptions = brandStore.brandOptions.map(brand => ({
         label: brand.slugName,
         value: `brand:${brand.slugName}`,
         url: brand.url
@@ -79,7 +79,7 @@ export default defineComponent({
           url: ''
         }
       ];
-    });
+    });*/
 
     const handleSourceChange = (value) => {
       if (value === 'custom') {
@@ -109,12 +109,6 @@ export default defineComponent({
       }
     };
 
-    onMounted(() => {
-      if (parentTitle) {
-        parentTitle.value = 'HLS Stream Tester';
-      }
-      brandStore.fetchAll();
-    });
 
     return {
       formState,

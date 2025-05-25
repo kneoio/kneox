@@ -2,7 +2,7 @@
   <n-grid cols="6" x-gap="12" y-gap="12" class="m-5">
     <n-gi span="6">
       <n-page-header subtitle="Radio Station" @back="goBack">
-        <template #title>{{ store.getCurrent.title || store.getCurrent.slugName }}</template>
+        <template #title>{{ store.getCurrent.country || store.getCurrent.slugName }}</template>
         <template #footer>
           Registered: {{ store.getCurrent.regDate }}, Last Modified: {{ store.getCurrent.lastModifiedDate }}
           <br>
@@ -23,45 +23,12 @@
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
               <n-gi>
                 <n-form-item label="Title">
-                  <n-input v-model:value="localFormData.title" style="width: 50%; max-width: 600px;"/>
+                  <n-input v-model:value="localFormData.slugName" style="width: 50%; max-width: 600px;"/>
                 </n-form-item>
               </n-gi>
               <n-gi>
-                <n-form-item label="Artist">
-                  <n-input v-model:value="localFormData.artist" style="width: 50%; max-width: 600px;"/>
-                </n-form-item>
-              </n-gi>
-              <n-gi>
-                <n-form-item label="Genre">
-                  <n-select
-                      v-model:value="localFormData.genre"
-                      :options="store.genreOptions"
-                      filterable
-                      placeholder="Select Genre"
-                      style="width: 50%; max-width: 600px;"
-                  />
-                </n-form-item>
-              </n-gi>
-              <n-gi>
-                <n-form-item label="Album">
-                  <n-input v-model:value="localFormData.album" style="width: 50%; max-width: 600px;"/>
-                </n-form-item>
-              </n-gi>
-              <n-gi>
-                <n-form-item label="Upload File">
-                  <n-upload
-                      :default-file-list="fileList"
-                      :multiple="false"
-                      :max="1"
-                      show-download-button
-                      @change="handleChange"
-                      @finish="handleFinish"
-                      style="width: 50%; max-width: 600px;"
-                      :accept="audioAcceptTypes"
-                      :custom-request="handleUpload"
-                  >
-                    <n-button>Select File</n-button>
-                  </n-upload>
+                <n-form-item label="Country">
+                  <n-input v-model:value="localFormData.country" style="width: 50%; max-width: 600px;"/>
                 </n-form-item>
               </n-gi>
             </n-grid>
@@ -92,8 +59,10 @@ import {
   useLoadingBar,
   useMessage
 } from "naive-ui";
-import {SoundFragment, SoundFragmentSave} from "../../../types/kneoBroadcasterTypes";
-import {useBrandStore} from "../../../stores/kneo/brandsStore";
+import {
+  RadioStation, BrandStatus,
+} from "../../../types/kneoBroadcasterTypes";
+import {useRadioStationStore} from "../../../stores/kneo/radioStationStore";
 
 export default defineComponent({
   name: "RadioStationForm",
@@ -115,78 +84,42 @@ export default defineComponent({
     const loadingBar = useLoadingBar();
     const message = useMessage();
     const router = useRouter();
-    const store = useBrandStore();
+    const store = useRadioStationStore();
     const route = useRoute();
     const activeTab = ref("properties");
     const fileList = ref([] as UploadFileInfo[]);
-    const localFormData = reactive<SoundFragment>({
+    const localFormData = reactive<RadioStation>({
       slugName: "",
       id: "",
       author: "",
       regDate: "",
       lastModifier: "",
       lastModifiedDate: "",
-      status: 0,
-      type: "SONG",
-      title: "",
-      artist: "",
-      genre: "",
-      album: "",
+      status: BrandStatus.OFF_LINE,
       url: "",
-      actionUrl: "",
-      uploadedFile: null,
+      country: ""
     });
-
-    const handleUpload = async ({ file, onFinish, onError, onProgress }: {
-      file: UploadFileInfo,
-      onFinish?: (file?: UploadFileInfo) => void,
-      onError?: (e: Error) => void,
-      onProgress?: (e: { percent: number }) => void
-    }) => {
-      try {
-        const uploadedFile = await store.uploadFile(file.file as File);
-        const newFile = {
-          ...file,
-          url: uploadedFile.url,
-          name: uploadedFile.fileName,
-          status: 'finished'
-        };
-        if (onFinish) onFinish(newFile);
-        return newFile;
-      } catch (error) {
-        if (onError) onError(error as Error);
-        return file;
-      }
-    };
-
-    const handleChange = (options: { file: UploadFileInfo, fileList: UploadFileInfo[] }) => {
-      localFormData.uploadedFile = options.fileList;
-    };
-
-    const handleFinish = ({ file }: { file: UploadFileInfo }) => {
-      return file;
-    };
 
     const handleSave = async () => {
       try {
         loadingBar.start();
-        const fileNames = localFormData.uploadedFile?.map((file) => file.name) || [];
-
-        const saveDTO: SoundFragmentSave = {
+        const saveDTO: RadioStation = {
+          id: localFormData.id,
+          author: localFormData.author,
+          regDate: localFormData.regDate,
+          lastModifier: localFormData.lastModifier,
+          lastModifiedDate: localFormData.lastModifiedDate,
           status: localFormData.status,
-          type: localFormData.type,
-          title: localFormData.title,
-          artist: localFormData.artist,
-          genre: localFormData.genre,
-          album: localFormData.album,
-          uploadedFile: fileNames,
+          country: localFormData.country,
+          slugName: localFormData.slugName,
+          url: localFormData.url
         };
 
         await store.save(saveDTO, localFormData.id);
-        message.success("Sound Fragment saved successfully");
-        await router.push("/soundfragments");
+        message.success("Radio Station saved successfully");
+        await router.push("/outline/radiostations");
       } catch (error) {
-        message.error("Failed to save Sound Fragment");
+        message.error("Failed to save Radio Station");
       } finally {
         loadingBar.finish();
       }
@@ -197,7 +130,7 @@ export default defineComponent({
     };
 
     const goBack = () => {
-      router.push("/soundfragments");
+      router.push("/outline/radiostations");
     };
 
     onMounted(async () => {
@@ -207,14 +140,6 @@ export default defineComponent({
         try {
           await store.fetch(id);
           Object.assign(localFormData, store.getCurrent);
-          if (store.getCurrent.url) {
-            fileList.value = [{
-              id: store.getCurrent.id || '',
-              name: store.getCurrent.title || store.getCurrent.slugName || '',
-              status: 'finished',
-              url: store.getCurrent.url,
-            }];
-          }
         } catch (error) {
           message.error('Failed to fetch sound fragment data');
         } finally {
@@ -223,19 +148,6 @@ export default defineComponent({
       }
     });
 
-    const audioAcceptTypes = [
-      '.mp3',
-      '.wav',
-      '.ogg',
-      '.flac',
-      'audio/mpeg',
-      'audio/wav',
-      'audio/ogg',
-      'audio/flac',
-      'audio/x-wav',
-      'audio/mp4',
-    ].join(',');
-
     return {
       store,
       localFormData,
@@ -243,11 +155,7 @@ export default defineComponent({
       handleArchive,
       activeTab,
       goBack,
-      handleChange,
-      handleFinish,
-      handleUpload,
-      fileList,
-      audioAcceptTypes
+      fileList
     };
   },
 });

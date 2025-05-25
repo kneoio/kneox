@@ -49,7 +49,7 @@ import {
   ref,
   computed,
   provide,
-  h,
+  h, nextTick,
 } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import {AlignJustified, List, Music, Dashboard, MoodHappy} from '@vicons/tabler'
@@ -86,20 +86,17 @@ export default defineComponent({
       return null;
     });
 
-    // Update view title based on route
-    viewTitle.value = route.name?.toString() || '';
-
     const menuOptions: MenuOption[] = [
       {
         label: 'Dashboard',
         key: 'dashboard',
         icon: () => h(Dashboard)
       },
-      {
+    /*  {
         label: 'Player',
         key: 'player',
         icon: () => h(MoodHappy)
-      },
+      },*/
       {
         key: 'divider-1',
         type: 'divider',
@@ -123,20 +120,23 @@ export default defineComponent({
       }
     ];
 
-    const handleMenuSelect = (key: string) => {
+    const handleMenuSelect = async (key: string) => {
       if (isMobile.value) {
         isDrawerOpen.value = false;
       }
 
       if (key === 'radiostations') {
-        router.push({ name: 'RadioStations' });
+        await router.push({ name: 'RadioStations' });
       } else if (key === 'dashboard') {
-        router.push({ name: 'Dashboard' });
+        await router.push({ name: 'Dashboard' });
       } else if (key === 'player') {
-        router.push({ name: 'Player' });
+        await router.push({ name: 'Player' });
       } else if (key === 'fragments') {
-        router.push({ name: 'SoundFragments' });
+        await router.push({ name: 'SoundFragments' });
       }
+
+      await nextTick();
+      viewTitle.value = route.name?.toString() || '';
     };
 
     const handleContentClick = () => {
@@ -159,12 +159,19 @@ export default defineComponent({
 
     onMounted(() => {
       window.addEventListener('resize', updateDrawerState);
-      updateDrawerState(); // Initialize on mount
+      updateDrawerState();
     });
 
     onUnmounted(() => {
       window.removeEventListener('resize', updateDrawerState);
     });
+
+    const updateViewTitle = async () => {
+      await nextTick();
+      viewTitle.value = route.meta.title as string ||
+          route.name?.toString() ||
+          '';
+    };
 
     return {
       active,
