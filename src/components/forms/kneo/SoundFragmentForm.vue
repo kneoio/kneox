@@ -58,6 +58,7 @@
                       @change="handleChange"
                       @finish="handleFinish"
                       @download="handleDownload"
+                      @preview="handleDownload"
                       style="width: 50%; max-width: 600px;"
                       :accept="audioAcceptTypes"
                       :custom-request="handleUpload"
@@ -97,6 +98,11 @@ import {
 } from "naive-ui";
 import { useSoundFragmentStore } from "../../../stores/kneo/soundFragmentsStore";
 import { FragmentStatus, FragmentType, SoundFragment, SoundFragmentSave } from "../../../types/kneoBroadcasterTypes";
+import {
+  isErrorWithResponse,
+  capitalizeFirstLetter,
+  getErrorMessage
+} from '../../helpers/errorHandling';
 
 export default defineComponent({
   name: "SoundFragmentForm",
@@ -125,7 +131,7 @@ export default defineComponent({
 
     const localFormData = reactive<SoundFragment>({
       slugName: "",
-      id: "",
+      id: null,
       author: "",
       regDate: "",
       lastModifier: "",
@@ -170,31 +176,11 @@ export default defineComponent({
     };
 
     const handleDownload = async (file: UploadFileInfo) => {
-      if (!file.id && file.url) {
-        window.open(file.url, '_blank');
-        return false;
-      }
-
-      if (!file.id) {
-        throw new Error('No download source available');
-      }
-
       const response = await store.downloadFile(localFormData.id, file.id);
-      const blobUrl = window.URL.createObjectURL(new Blob([response.data]));
-
-      const anchor = document.createElement('a');
-      anchor.href = blobUrl;
-      anchor.download = file.name || 'audio_file';
-      anchor.style.display = 'none';
-      document.body.appendChild(anchor);
-      anchor.click();
-
-      setTimeout(() => {
-        document.body.removeChild(anchor);
-        window.URL.revokeObjectURL(blobUrl);
-      }, 100);
-
-      return true;
+      const blobUrl = URL.createObjectURL(response.data);
+      window.open(blobUrl, '_blank');
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+      return false;
     };
 
     const handleChange = (data: {
@@ -225,8 +211,20 @@ export default defineComponent({
         await store.save(saveDTO, localFormData.id);
         message.success("Saved successfully");
         await router.push("/outline/soundfragments");
-      } catch (error) {
-        message.error("Save failed: " + error);
+      } catch (error: unknown) {
+        if (isErrorWithResponse(error) && error.response?.status === 400) {
+          const errorData = error.response.data as ErrorResponse;
+
+          if (errorData.errors?.length) {
+            errorData.errors.forEach(err => {
+              message.error(`${capitalizeFirstLetter(err.field)}: ${err.message}`);
+            });
+          } else {
+            message.error(errorData.message || "Validation failed");
+          }
+        } else {
+          message.error(`Save failed: ${getErrorMessage(error)}`);
+        }
       } finally {
         loadingBar.finish();
       }

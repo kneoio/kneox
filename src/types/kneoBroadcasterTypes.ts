@@ -38,7 +38,7 @@ export interface RadioStationSave {
 
 export interface SoundFragment {
     slugName: string;
-    id: string;
+    id: string | null;
     author: string;
     regDate: string;
     lastModifier: string;
