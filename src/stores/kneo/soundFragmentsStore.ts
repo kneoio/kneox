@@ -116,6 +116,12 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         });
     };
 
+    // In your soundFragmentsStore.ts
+    const deleteSoundFragment = async (id: string) => {
+        await apiClient.delete(`/soundfragments/${id}`);
+        await fetchSoundFragments(); // Refresh the list after deletion
+    };
+
     fetchGenres();
 
     return {
@@ -130,6 +136,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         fetchAll: fetchSoundFragments,
         fetch: fetchSoundFragment,
         save,
+        delete: deleteSoundFragment,
         uploadFile,
         updateCurrent,
         downloadFile,

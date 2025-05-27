@@ -12,6 +12,14 @@
     <n-gi :span="isMobile ? 1 : 6">
       <n-button-group>
         <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
+        <n-button
+            type="error"
+            :disabled="!hasSelection"
+            @click="handleDelete"
+            size="large"
+        >
+          Delete
+        </n-button>
       </n-button-group>
     </n-gi>
 
@@ -37,8 +45,18 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, h, onMounted, ref, onUnmounted } from 'vue';
-import { DataTableColumns, NButton, NButtonGroup, NCheckbox, NDataTable, NGi, NGrid, NPageHeader, NTag } from 'naive-ui';
+import { computed, defineComponent, h, onMounted, ref, onUnmounted, watch } from 'vue';
+import {
+  DataTableColumns,
+  NButton,
+  NButtonGroup,
+  NCheckbox,
+  NDataTable,
+  NGi,
+  NGrid,
+  NPageHeader,
+  useMessage
+} from 'naive-ui';
 import { useRouter } from 'vue-router';
 
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
@@ -47,7 +65,7 @@ import { SoundFragment } from "../../../types/kneoBroadcasterTypes";
 
 export default defineComponent({
   name: 'SoundFragments',
-  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, NTag, LoaderIcon },
+  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon },
   setup() {
     const router = useRouter();
     const store = useSoundFragmentStore();
@@ -55,6 +73,12 @@ export default defineComponent({
     const loading = ref(false);
     const intervalId = ref<number | null>(null);
     const checkedRowKeys = ref<(string | number)[]>([]);
+    const hasSelection = ref(false);
+    const message = useMessage();
+
+    watch(checkedRowKeys, (newVal) => {
+      hasSelection.value = newVal ? newVal.length > 0 : false;
+    }, { immediate: true, deep: true });
 
     async function preFetch() {
       try {
@@ -86,17 +110,20 @@ export default defineComponent({
       }
     };
 
+    const handleResize = () => {
+      isMobile.value = window.innerWidth < 768;
+    };
+
     preFetch();
     startPeriodicRefresh();
 
     onMounted(() => {
-      window.addEventListener('resize', () => {
-        isMobile.value = window.innerWidth < 768;
-      });
+      window.addEventListener('resize', handleResize);
     });
 
     onUnmounted(() => {
       stopPeriodicRefresh();
+      window.removeEventListener('resize', handleResize);
     });
 
     const columns = computed<DataTableColumns<SoundFragment>>(() => {
@@ -107,39 +134,79 @@ export default defineComponent({
           width: 50,
           renderHeader: () => h(NCheckbox, {
             indeterminate: checkedRowKeys.value.length > 0 && checkedRowKeys.value.length < store.getEntries.length,
-            checked: checkedRowKeys.value.length === store.getEntries.length && store.getEntries.length > 0,
-            onClick: (e: MouseEvent) => {
-              e.stopPropagation();
-              if (checkedRowKeys.value.length === store.getEntries.length) {
-                checkedRowKeys.value = [];
-              } else {
-                checkedRowKeys.value = store.getEntries.map(item => item.id);
-              }
+            checked: store.getEntries.length > 0 && checkedRowKeys.value.length === store.getEntries.length,
+            onUpdateChecked: (checked: boolean) => {
+              checkedRowKeys.value = checked ? store.getEntries.map(item => item.id) : [];
             }
-          })
+          }),
+          render: (rowData: SoundFragment) => {
+            const key = rowData.id;
+
+            if (key === undefined || key === null) {
+              return h(NCheckbox, { disabled: true });
+            }
+
+            return h('div', {
+              style: { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', pointerEvents: 'none' }
+            }, [
+              h(NCheckbox, {
+                checked: checkedRowKeys.value.includes(key),
+                onUpdateChecked: (newCheckedStatus: boolean) => {
+                  const currentKeys = checkedRowKeys.value;
+                  let newKeysArray;
+                  if (newCheckedStatus) {
+                    if (!currentKeys.includes(key)) {
+                      newKeysArray = [...currentKeys, key];
+                    } else {
+                      newKeysArray = [...currentKeys];
+                    }
+                  } else {
+                    newKeysArray = currentKeys.filter(k => k !== key);
+                  }
+                  checkedRowKeys.value = newKeysArray;
+                },
+                onClick: (e: MouseEvent) => {
+                  e.stopPropagation();
+                },
+                style: { pointerEvents: 'auto' }
+              })
+            ]);
+          }
         },
         { title: 'Title', key: 'title' },
         { title: 'Artist', key: 'artist' },
         { title: 'Genre', key: 'genre' },
-        {
-          title: 'Source',
-          key: 'source'
-        }
+        { title: 'Source', key: 'source' }
       ];
-      if (!isMobile.value) {
-        baseColumns.push(
-            { title: 'Type', key: 'type' }
-        );
-      }
 
+      if (!isMobile.value) {
+        baseColumns.push({ title: 'Type', key: 'type' });
+      }
       return baseColumns;
     });
+
+    const getRowProps = (row: SoundFragment) => {
+      return {
+        style: 'cursor: pointer;',
+        onClick: (e: MouseEvent) => {
+          const target = e.target as HTMLElement;
+          if (target.closest('.n-checkbox')) {
+            return;
+          }
+          router.push({ name: 'SoundFragment', params: { id: row.id } });
+        }
+      };
+    };
+
+    const rowKey = (row: SoundFragment): string | number => {
+      return row.id;
+    };
 
     const handlePageChange = async (page: number) => {
       try {
         loading.value = true;
         await store.fetchAll(page, store.getPagination.pageSize);
-        checkedRowKeys.value = []; // Clear selection when page changes
+        checkedRowKeys.value = [];
       } finally {
         loading.value = false;
       }
@@ -149,7 +216,7 @@ export default defineComponent({
       try {
         loading.value = true;
         await store.fetchAll(1, pageSize);
-        checkedRowKeys.value = []; // Clear selection when page size changes
+        checkedRowKeys.value = [];
       } finally {
         loading.value = false;
       }
@@ -159,29 +226,37 @@ export default defineComponent({
       router.push('/outline/soundfragments/new');
     };
 
-    const getRowProps = (row: SoundFragment) => {
-      return {
-        style: 'cursor: pointer;',
-        onClick: () => {
-          const routeTo = { name: 'SoundFragment', params: { id: row.id } };
-          router.push(routeTo).catch(err => {
-            console.error('Navigation error:', err);
-          });
-        }
-      };
+    const handleDelete = async () => {
+      if (checkedRowKeys.value.length === 0) {
+        message.info("No items selected for deletion.");
+        return;
+      }
+      try {
+        loading.value = true;
+        await Promise.all(checkedRowKeys.value.map(id => store.delete(id.toString())));
+        message.success(`Deleted ${checkedRowKeys.value.length} item(s) successfully`);
+        checkedRowKeys.value = [];
+      } catch (error) {
+        message.error('Failed to delete items');
+        // console.error('Delete error:', error);
+      } finally {
+        loading.value = false;
+      }
     };
 
     return {
       store,
       columns,
-      rowKey: (row: any) => row.id,
+      rowKey,
       isMobile,
       handleNewClick,
+      handleDelete,
       getRowProps,
       handlePageChange,
       handlePageSizeChange,
       loading,
-      checkedRowKeys
+      checkedRowKeys,
+      hasSelection
     };
   }
 });
