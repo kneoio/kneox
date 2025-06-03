@@ -19,11 +19,20 @@
             <n-button
                 size="small"
                 type="primary"
-                @click="startBroadcast(selectedBrand)"
+                @click="sendCommand(selectedBrand, 'start')"
                 :disabled="!selectedBrand"
                 :loading="isStartingBroadcast"
             >
               Start
+            </n-button>
+            <n-button
+                size="small"
+                type="warning"
+                @click="sendCommand(selectedBrand, 'feed')"
+                :disabled="!selectedBrand"
+                :loading="isStartingBroadcast"
+            >
+              Feed
             </n-button>
           </div>
           <div class="meta">
@@ -138,11 +147,11 @@ export default defineComponent({
 
     const stationColumns = useStationColumns(dashboard, isMobile);
     const selectedBrand = ref('');
-    const startBroadcast = async (brandName: string) => {
+    const sendCommand = async (brandName: string, command: string) => {
       if (!brandName) return;
       isStartingBroadcast.value = true;
       try {
-        await dashboard.triggerBroadcastAction(brandName, 'start');
+        await dashboard.triggerBroadcastAction(brandName, command);
       } finally {
         isStartingBroadcast.value = false;
       }
@@ -184,7 +193,7 @@ export default defineComponent({
       userData,
       dashboard,
       stationColumns,
-      startBroadcast,
+      sendCommand,
       formatTime,
       isMobile,
       selectedBrand,

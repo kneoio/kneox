@@ -32,7 +32,7 @@ keycloak.init({
             const profile = await keycloak.loadUserProfile();
             userData.profile = profile;
             console.log('User profile loaded', profile);
-            setupApiClient(keycloak.idToken); // The line in question
+            setupApiClient(keycloak.idToken);
             startApp();
 
             setInterval(async () => {

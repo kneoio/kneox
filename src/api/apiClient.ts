@@ -12,7 +12,7 @@ const apiClient = axios.create({
     withCredentials: true,
 });
 
-export const setupApiClient = (token: string) => {
+export const setupApiClient = (token?: string) => {
     if (token) {
         apiClient.interceptors.request.use(
             async (config) => {

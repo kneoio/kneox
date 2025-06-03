@@ -18,7 +18,7 @@
             @click="handleDelete"
             size="large"
         >
-          Delete
+          Delete ({{ checkedRowKeys.length }})
         </n-button>
       </n-button-group>
     </n-gi>
@@ -33,6 +33,7 @@
           :bordered="false"
           :row-props="getRowProps"
           :loading="loading"
+          v-model:checked-row-keys="checkedRowKeys"
           @update:page="handlePageChange"
           @update:page-size="handlePageSizeChange"
       >
@@ -73,12 +74,8 @@ export default defineComponent({
     const loading = ref(false);
     const intervalId = ref<number | null>(null);
     const checkedRowKeys = ref<(string | number)[]>([]);
-    const hasSelection = ref(false);
+    const hasSelection = computed(() => checkedRowKeys.value.length > 0);
     const message = useMessage();
-
-    watch(checkedRowKeys, (newVal) => {
-      hasSelection.value = newVal ? newVal.length > 0 : false;
-    }, { immediate: true, deep: true });
 
     async function preFetch() {
       try {
@@ -131,47 +128,7 @@ export default defineComponent({
         {
           type: 'selection',
           fixed: 'left',
-          width: 50,
-          renderHeader: () => h(NCheckbox, {
-            indeterminate: checkedRowKeys.value.length > 0 && checkedRowKeys.value.length < store.getEntries.length,
-            checked: store.getEntries.length > 0 && checkedRowKeys.value.length === store.getEntries.length,
-            onUpdateChecked: (checked: boolean) => {
-              checkedRowKeys.value = checked ? store.getEntries.map(item => item.id) : [];
-            }
-          }),
-          render: (rowData: SoundFragment) => {
-            const key = rowData.id;
-
-            if (key === undefined || key === null) {
-              return h(NCheckbox, { disabled: true });
-            }
-
-            return h('div', {
-              style: { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', pointerEvents: 'none' }
-            }, [
-              h(NCheckbox, {
-                checked: checkedRowKeys.value.includes(key),
-                onUpdateChecked: (newCheckedStatus: boolean) => {
-                  const currentKeys = checkedRowKeys.value;
-                  let newKeysArray;
-                  if (newCheckedStatus) {
-                    if (!currentKeys.includes(key)) {
-                      newKeysArray = [...currentKeys, key];
-                    } else {
-                      newKeysArray = [...currentKeys];
-                    }
-                  } else {
-                    newKeysArray = currentKeys.filter(k => k !== key);
-                  }
-                  checkedRowKeys.value = newKeysArray;
-                },
-                onClick: (e: MouseEvent) => {
-                  e.stopPropagation();
-                },
-                style: { pointerEvents: 'auto' }
-              })
-            ]);
-          }
+          width: 50
         },
         { title: 'Title', key: 'title' },
         { title: 'Artist', key: 'artist' },
@@ -190,7 +147,7 @@ export default defineComponent({
         style: 'cursor: pointer;',
         onClick: (e: MouseEvent) => {
           const target = e.target as HTMLElement;
-          if (target.closest('.n-checkbox')) {
+          if (target.closest('.n-checkbox') || target.closest('[data-n-checkbox]')) {
             return;
           }
           router.push({ name: 'SoundFragment', params: { id: row.id } });

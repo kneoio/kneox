@@ -1,7 +1,5 @@
 <template>
   <div class="flex flex-col min-h-screen">
-    <!-- Your main content goes here -->
-
     <n-layout-footer :inverted="inverted" bordered class="p-4">
       <n-grid :x-gap="12" :cols="4">
         <n-gi></n-gi>

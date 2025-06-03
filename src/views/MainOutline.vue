@@ -83,6 +83,7 @@ export default defineComponent({
       if (route.name === 'Player') return 'player';
       if (route.name === 'RadioStations') return 'radiostations';
       if (route.name === 'SoundFragments') return 'fragments';
+      if (route.name === 'Memories') return 'memories';
       return null;
     });
 
@@ -117,6 +118,11 @@ export default defineComponent({
         label: 'Radio Stations',
         key: 'radiostations',
         icon: () => h(List)
+      },
+      {
+        label: 'Memories',
+        key: 'memories',
+        icon: () => h(MoodHappy)
       }
     ];
 
@@ -133,6 +139,8 @@ export default defineComponent({
         await router.push({ name: 'Player' });
       } else if (key === 'fragments') {
         await router.push({ name: 'SoundFragments' });
+      } else if (key === 'memories') {
+        await router.push({name: 'Memories'});
       }
 
       await nextTick();

@@ -6,6 +6,8 @@ import RadioStations from '../components/lists/kneo/RadioStations.vue';
 import RadioStation from '../components/forms/kneo/RadioStationForm.vue';
 import SoundFragments from '../components/lists/kneo/SoundFragments.vue';
 import SoundFragment from '../components/forms/kneo/SoundFragmentForm.vue';
+import Memories from '../components/lists/kneo/Memories.vue';
+import Memory from '../components/forms/kneo/MemoryForm.vue';
 import Player from "../views/HlsStreamView.vue";
 import Keycloak from "keycloak-js";
 
@@ -58,6 +60,17 @@ const routes: Array<RouteRecordRaw> = [
                 path: 'soundfragments/:id',
                 name: 'SoundFragment',
                 component: SoundFragment,
+                props: true
+            },
+            {
+                path: 'memories',
+                name: 'Memories',
+                component: Memories
+            },
+            {
+                path: 'memories/:id',
+                name: 'Memory',
+                component: Memory,
                 props: true
             },
             {

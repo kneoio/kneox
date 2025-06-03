@@ -63,3 +63,22 @@ export interface SoundFragmentSave {
     album?: string;
     newlyUploaded: string[];
 }
+
+export interface Memory {
+    id: string;
+    author: number;
+    regDate: string;
+    lastModUser: number;
+    lastModDate: string;
+    brand: string;
+    memoryType: 'LISTENERS' | 'AUDIENCE_CONTEXT' | 'CONVERSATION_HISTORY' | string;
+    content: Record<string, any>;
+    archived: boolean;
+}
+
+export interface MemorySave {
+    brand: string;
+    memoryType: string;
+    content: Record<string, any>;
+    archived?: boolean;
+}
