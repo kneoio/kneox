@@ -13,7 +13,7 @@
         :class="{ 'drawer-open': isDrawerOpen }"
     >
       <div class="drawer-header">
-        <n-h2>kneox</n-h2>
+        <n-h2>IOMIX</n-h2>
       </div>
       <div class="drawer-content">
         <n-menu
@@ -35,7 +35,7 @@
       <h1 style="padding-left: 20%">
         {{ viewTitle || "" }}
       </h1>
-      <router-view />
+      <router-view/>
     </div>
   </div>
 </template>
@@ -51,8 +51,8 @@ import {
   provide,
   h, nextTick,
 } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
-import {AlignJustified, List, Music, Dashboard, MoodHappy} from '@vicons/tabler'
+import {useRouter, useRoute} from 'vue-router';
+import {AlignJustified, List, Music, Dashboard, Robot, Grain} from '@vicons/tabler'
 
 export default defineComponent({
   components: {
@@ -93,11 +93,11 @@ export default defineComponent({
         key: 'dashboard',
         icon: () => h(Dashboard)
       },
-    /*  {
-        label: 'Player',
-        key: 'player',
-        icon: () => h(MoodHappy)
-      },*/
+      /*  {
+          label: 'Player',
+          key: 'player',
+          icon: () => h(MoodHappy)
+        },*/
       {
         key: 'divider-1',
         type: 'divider',
@@ -122,7 +122,12 @@ export default defineComponent({
       {
         label: 'Memories',
         key: 'memories',
-        icon: () => h(MoodHappy)
+        icon: () => h(Grain)
+      },
+      {
+        label: 'Djs',
+        key: 'djs',
+        icon: () => h(Robot)
       }
     ];
 
@@ -132,15 +137,17 @@ export default defineComponent({
       }
 
       if (key === 'radiostations') {
-        await router.push({ name: 'RadioStations' });
+        await router.push({name: 'RadioStations'});
       } else if (key === 'dashboard') {
-        await router.push({ name: 'Dashboard' });
+        await router.push({name: 'Dashboard'});
       } else if (key === 'player') {
-        await router.push({ name: 'Player' });
+        await router.push({name: 'Player'});
       } else if (key === 'fragments') {
-        await router.push({ name: 'SoundFragments' });
+        await router.push({name: 'SoundFragments'});
       } else if (key === 'memories') {
         await router.push({name: 'Memories'});
+      } else if (key === 'djs') {
+        await router.push({name: 'Djs'});
       }
 
       await nextTick();

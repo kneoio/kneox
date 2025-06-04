@@ -2,7 +2,7 @@
   <n-layout-header :inverted="inverted" bordered>
     <n-grid x-gap="12" :cols="4">
       <n-gi>
-        <n-h1 class="title">&nbsp;&nbsp;Kneox</n-h1>
+        <n-h1 class="title">&nbsp;&nbsp;IOMIX</n-h1>
       </n-gi>
       <n-gi :offset="2">
         <div class="user-info" v-if="isAuthenticated">
