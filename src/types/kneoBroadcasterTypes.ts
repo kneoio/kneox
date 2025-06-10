@@ -82,3 +82,30 @@ export interface MemorySave {
     content: Record<string, any>;
     archived?: boolean;
 }
+
+export type LanguageCode = string; // e.g., 'en', 'pt', 'es'
+
+export interface VoiceDTO {
+    id: string; // Assuming an ID for Voice, adjust if it's just a name
+    name: string;
+    // Add other relevant properties of a VoiceDTO here if needed
+}
+
+export interface ToolDTO {
+    id: string; // Assuming an ID for Tool, adjust if it's just a name
+    name: string;
+    // Add other relevant properties of a ToolDTO here if needed
+}
+
+export interface AiAgentDTO {
+    id: string; // Assuming inherited from AbstractDTO
+    author: string; // Assuming inherited from AbstractDTO
+    regDate: string; // Assuming inherited from AbstractDTO
+    lastModifier: string; // Assuming inherited from AbstractDTO
+    lastModifiedDate: string; // Assuming inherited from AbstractDTO
+    name: string;
+    preferredLang: LanguageCode;
+    mainPrompt: string;
+    preferredVoice: VoiceDTO[];
+    enabledTools: ToolDTO[];
+}

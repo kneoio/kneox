@@ -2,7 +2,7 @@
   <n-grid :cols="isMobile ? 1 : 6" x-gap="12" y-gap="12" class="p-4">
     <n-gi>
       <n-page-header>
-        <template #title>Memories</template>
+        <template #title>AI Agents</template>
         <template #footer>
           Total: {{ store.getPagination.itemCount }}
         </template>
@@ -47,19 +47,19 @@ import {
   NGi,
   NGrid,
   NPageHeader,
-  NTag,
-  NCode
+  useMessage
 } from 'naive-ui';
 import {useRouter} from 'vue-router';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
-import {Memory} from "../../../types/kneoBroadcasterTypes";
-import {useMemoryStore} from "../../../stores/kneo/memoryStore";
+import {AiAgentDTO} from "../../../types/kneoBroadcasterTypes";
+import {useAiAgentStore} from "../../../stores/kneo/aiAgentStore";
 
 export default defineComponent({
   components: {NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon},
   setup() {
     const router = useRouter();
-    const store = useMemoryStore();
+    const message = useMessage();
+    const store = useAiAgentStore();
     const isMobile = ref(window.innerWidth < 768);
     const loading = ref(false);
     const intervalId = ref<number | null>(null);
@@ -70,7 +70,8 @@ export default defineComponent({
         loading.value = true;
         await store.fetchAll();
       } catch (error) {
-        console.error('Failed to fetch initial data:', error);
+        console.error('Failed to fetch initial AI Agent data:', error);
+        message.error('Failed to load AI Agents.');
       } finally {
         loading.value = false;
       }
@@ -82,9 +83,9 @@ export default defineComponent({
           try {
             await store.fetchAll(store.getPagination.page, store.getPagination.pageSize);
           } catch (error) {
-            console.error('Periodic refresh failed:', error);
+            console.error('Periodic refresh of AI Agents failed:', error);
           }
-        }, 30000);
+        }, 30000); // Refresh every 30 seconds, adjust as needed
       }
     };
 
@@ -105,7 +106,7 @@ export default defineComponent({
     });
 
     onUnmounted(() => {
-      stopPeriodicRefresh();
+      stopPeriodicRefresh(); // Stop periodic refresh when component is unmounted
     });
 
     const handlePageChange = async (page: number) => {
@@ -129,14 +130,14 @@ export default defineComponent({
     };
 
     const handleNewClick = () => {
-      router.push('/outline/memories/new');
+      router.push('/outline/ai_agents/new');
     };
 
-    const getRowProps = (row: Memory) => {
+    const getRowProps = (row: AiAgentDTO) => {
       return {
         style: 'cursor: pointer;',
         onClick: () => {
-          const routeTo = {name: 'Memory', params: {id: row.id}}; // Assumes a route named 'Memory'
+          const routeTo = {name: 'AiAgentForm', params: {id: row.id}};
           router.push(routeTo).catch((err) => {
             console.error('Navigation error:', err);
           });
@@ -144,45 +145,45 @@ export default defineComponent({
       };
     };
 
-    const columns = computed<DataTableColumns<Memory>>(() => {
-      const baseColumns: DataTableColumns<Memory> = [
+    const columns = computed<DataTableColumns<AiAgentDTO>>(() => {
+      const baseColumns: DataTableColumns<AiAgentDTO> = [
         {
           type: 'selection',
           fixed: 'left',
-          width: 50
+          width: 50,
+          renderHeader: () => h(NCheckbox, {
+            indeterminate: checkedRowKeys.value.length > 0 && checkedRowKeys.value.length < store.getEntries.length,
+            checked: checkedRowKeys.value.length === store.getEntries.length && store.getEntries.length > 0,
+            onClick: (e: MouseEvent) => {
+              e.stopPropagation();
+              if (checkedRowKeys.value.length === store.getEntries.length) {
+                checkedRowKeys.value = [];
+              } else {
+                checkedRowKeys.value = store.getEntries.map(item => item.id);
+              }
+            }
+          })
+        },
+        {title: 'Name', key: 'name'},
+        {title: 'Preferred Language', key: 'preferredLang'},
+        {
+          title: 'Main Prompt',
+          key: 'mainPrompt',
+          ellipsis: {tooltip: true}
         },
         {
-          title: 'Brand',
-          key: 'brand',
-          render: (row: Memory) => h(NTag, { type: 'info', bordered: false }, { default: () => row.brand })
-        },
-        {
-          title: 'Memory Type',
-          key: 'memoryType',
-          render: (row: Memory) => {
-            let tagType: 'success' | 'warning' | 'default' = 'default';
-            if (row.memoryType === 'LISTENERS') tagType = 'success';
-            if (row.memoryType === 'AUDIENCE_CONTEXT') tagType = 'warning';
-            return h(NTag, { type: tagType, bordered: false }, { default: () => row.memoryType });
+          title: 'Preferred Voice',
+          key: 'preferredVoice',
+          render: (row: AiAgentDTO) => {
+            return h('span', {}, row.preferredVoice?.map(voice => voice.name).join(', ') || 'N/A');
           }
         },
         {
-          title: 'Content',
-          key: 'content',
-          render: (row: Memory) => {
-            // Display a snippet of the JSON content
-            return h(NCode, { code: JSON.stringify(row.content).substring(0, 100) + '...', language: 'json' });
+          title: 'Enabled Tools',
+          key: 'enabledTools',
+          render: (row: AiAgentDTO) => {
+            return h('span', {}, row.enabledTools?.map(tool => tool.name).join(', ') || 'None');
           }
-        },
-        {
-          title: 'Created Date',
-          key: 'regDate',
-          render: (row: Memory) => new Date(row.regDate).toLocaleString()
-        },
-        {
-          title: 'Archived',
-          key: 'archived',
-          render: (row: Memory) => h(NCheckbox, { checked: row.archived, disabled: true })
         }
       ];
 
@@ -192,17 +193,27 @@ export default defineComponent({
             type: 'selection',
             fixed: 'left',
             width: 50,
+            renderHeader: () => h(NCheckbox, {
+              indeterminate: checkedRowKeys.value.length > 0 && checkedRowKeys.value.length < store.getEntries.length,
+              checked: checkedRowKeys.value.length === store.getEntries.length && store.getEntries.length > 0,
+              onClick: (e: MouseEvent) => {
+                e.stopPropagation();
+                if (checkedRowKeys.value.length === store.getEntries.length) {
+                  checkedRowKeys.value = [];
+                } else {
+                  checkedRowKeys.value = store.getEntries.map(item => item.id);
+                }
+              }
+            })
           },
           {
-            title: 'Memory',
+            title: 'Agent',
             key: 'combined',
-            render: (row: Memory) => {
+            render: (row: AiAgentDTO) => {
               return h('div', {}, [
-                h('div', { style: 'font-weight: bold;' }, `Brand: ${row.brand}`),
-                h('div', {style: 'font-size: 0.9rem;'}, `Type: ${row.memoryType}`),
-                h('div', {
-                  style: 'font-size: 0.8rem; color: #888;'
-                }, `Created: ${new Date(row.regDate).toLocaleDateString()}`)
+                h('div', { style: 'font-weight: bold;' }, row.name),
+                h('div', { style: 'font-size: 0.8rem;' }, `Lang: ${row.preferredLang}`),
+                h('div', { style: 'font-size: 0.8rem;' }, `Tools: ${row.enabledTools?.map(tool => tool.name).join(', ') || 'None'}`)
               ]);
             }
           }
@@ -215,7 +226,7 @@ export default defineComponent({
     return {
       store,
       columns,
-      rowKey: (row: Memory) => row.id,
+      rowKey: (row: AiAgentDTO) => row.id,
       isMobile,
       handleNewClick,
       getRowProps,

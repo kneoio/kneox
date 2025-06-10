@@ -84,6 +84,7 @@ export default defineComponent({
       if (route.name === 'RadioStations') return 'radiostations';
       if (route.name === 'SoundFragments') return 'fragments';
       if (route.name === 'Memories') return 'memories';
+      if (route.name === 'AiAgents') return 'ai_agents';
       return null;
     });
 
@@ -126,7 +127,7 @@ export default defineComponent({
       },
       {
         label: 'Djs',
-        key: 'djs',
+        key: 'ai_agents',
         icon: () => h(Robot)
       }
     ];
@@ -146,8 +147,8 @@ export default defineComponent({
         await router.push({name: 'SoundFragments'});
       } else if (key === 'memories') {
         await router.push({name: 'Memories'});
-      } else if (key === 'djs') {
-        await router.push({name: 'Djs'});
+      } else if (key === 'ai_agents') {
+        await router.push({name: 'AiAgents'});
       }
 
       await nextTick();
