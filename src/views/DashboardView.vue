@@ -123,7 +123,6 @@ import {
 import { useDashboardStore } from "../stores/kneo/dashboardStore";
 import { useRadioStationStore } from "../stores/kneo/radioStationStore";
 import { useStationColumns } from "../components/dashboard/stationColumns";
-import { StationEntry } from "../types/dashboard";
 
 export default defineComponent({
   name: 'DashboardView',
