@@ -158,7 +158,11 @@
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
               <n-gi>
                 <n-form-item label="Name">
-                  <n-input v-model:value="localFormData.profile.name" style="width: 50%; max-width: 600px;"/>
+                  <n-select
+                      v-model:value="localFormData.profile.name"
+                      :options="profileNameOptions"
+                      style="width: 50%; max-width: 600px;"
+                  />
                 </n-form-item>
               </n-gi>
               <n-gi>
@@ -166,8 +170,10 @@
                   <n-input
                       v-model:value="localFormData.profile.description"
                       type="textarea"
-                      style="width: 100%; max-width: 800px;"
+                      style="width: 100%; max-width: 800px; background-color: #f5f5f5; cursor: not-allowed;"
                       :autosize="{ minRows: 3, maxRows: 5 }"
+                      readonly
+                      disabled
                   />
                 </n-form-item>
               </n-gi>
@@ -176,13 +182,17 @@
                   <n-select
                       v-model:value="localFormData.profile.announcementFrequency"
                       :options="announcementFrequencyOptions"
-                      style="width: 50%; max-width: 600px;"
+                      style="width: 50%; max-width: 600px; background-color: #f5f5f5; cursor: not-allowed;"
+                      disabled
                   />
                 </n-form-item>
               </n-gi>
               <n-gi>
                 <n-form-item label="Explicit Content">
-                  <n-checkbox v-model:checked="localFormData.profile.explicitContent" />
+                  <n-checkbox
+                      v-model:checked="localFormData.profile.explicitContent"
+                      :disabled="true"
+                  />
                 </n-form-item>
               </n-gi>
             </n-grid>
@@ -254,7 +264,6 @@ export default defineComponent({
     const fileList = ref([] as UploadFileInfo[]);
     const lang = ref(html());
 
-    // Create computed property for editor extensions with line wrapping
     const editorExtensions = computed(() => [
       EditorView.lineWrapping
     ]);
@@ -266,6 +275,13 @@ export default defineComponent({
       { label: 'Spain', value: 'ES' },
       { label: 'China', value: 'CN' },
       { label: 'Japan', value: 'JP' }
+    ];
+
+    const profileNameOptions = [
+      { label: 'Default Radio Profile', value: 'Default Radio Profile' },
+      { label: 'Music Station Profile', value: 'Music Station Profile' },
+      { label: 'News Station Profile', value: 'News Station Profile' },
+      { label: 'Talk Radio Profile', value: 'Talk Radio Profile' }
     ];
 
     const languageOptions = [
@@ -292,7 +308,6 @@ export default defineComponent({
       { label: 'Carlos', value: 'cMFVuj5l9ALxtSGYv2WQ' }
     ];
 
-    // AI Agent options - placeholder for separate endpoint data
     const agentOptions = [
       {
         label: 'Default AI Agent',
@@ -402,18 +417,15 @@ export default defineComponent({
         try {
           await store.fetch(id);
           Object.assign(localFormData, store.getCurrent);
-          // Ensure preferredVoice is properly initialized
           if (!localFormData.aiAgent.preferredVoice || localFormData.aiAgent.preferredVoice.length === 0) {
             localFormData.aiAgent.preferredVoice = [{ id: "", name: "" }];
           }
-          // Ensure iceCastUrl, actionUrl are properly set
           if (!localFormData.iceCastUrl) {
             localFormData.iceCastUrl = "";
           }
           if (!localFormData.actionUrl) {
             localFormData.actionUrl = "";
           }
-          // Ensure aiAgent is properly initialized
           if (!localFormData.aiAgent) {
             localFormData.aiAgent = {
               id: "",
@@ -424,7 +436,6 @@ export default defineComponent({
               enabledTools: []
             };
           }
-          // Ensure profile is properly initialized
           if (!localFormData.profile) {
             localFormData.profile = {
               id: "",
@@ -451,6 +462,7 @@ export default defineComponent({
       goBack,
       fileList,
       countryOptions,
+      profileNameOptions,
       languageOptions,
       announcementFrequencyOptions,
       voiceOptions,
