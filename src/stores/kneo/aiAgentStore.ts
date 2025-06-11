@@ -1,65 +1,103 @@
-import { defineStore } from 'pinia';
-import { AiAgentDTO } from '../../types/kneoBroadcasterTypes';
-import apiClient from "../../api/apiClient";
+import {defineStore} from 'pinia';
+import {computed, ref} from 'vue';
+import apiClient, {setupApiClient} from '../../api/apiClient';
+import {ApiFormResponse, ApiViewPageResponse} from "../../types";
+import {AiAgent, AiAgentSave} from "../../types/kneoBroadcasterTypes";
 
-interface AiAgentState {
-    entries: AiAgentDTO[];
-    pagination: {
-        page: number;
-        pageSize: number;
-        itemCount: number;
-        pageCount: number;
-    };
-    loading: boolean;
-    error: string | null;
-}
+export const useAiAgentStore = defineStore('aiAgentStore', () => {
+    const apiViewResponse = ref<ApiViewPageResponse<AiAgent> | null>(null);
+    const apiFormResponse = ref<ApiFormResponse<AiAgent> | null>(null);
 
-export const useAiAgentStore = defineStore('aiAgent', {
-    state: (): AiAgentState => ({
-        entries: [],
-        pagination: {
-            page: 1,
-            pageSize: 10,
-            itemCount: 0,
-            pageCount: 0,
-        },
-        loading: false,
-        error: null,
-    }),
+    const getEntries = computed(() => {
+        return apiViewResponse.value?.viewData.entries || [];
+    });
 
-    getters: {
-        getEntries: (state) => state.entries,
-        getPagination: (state) => state.pagination,
-        isLoading: (state) => state.loading,
-        getError: (state) => state.error,
-    },
+    const getCurrent = computed(() => {
+        const defaultData: {
+            id: string;
+            author: string;
+            regDate: string;
+            lastModifier: string;
+            lastModifiedDate: string
+        } = {
+            id: '',
+            author: '',
+            regDate: '',
+            lastModifier: '',
+            lastModifiedDate: '',
+        };
 
-    actions: {
-        async fetchAll(page: number = 1, pageSize: number = 10) {
-            this.loading = true;
-            this.error = null;
-            try {
-                const response = await apiClient.get('/aiagents', {
-                    params: {
-                        page: page,
-                        size: pageSize,
-                    },
-                });
+        return apiFormResponse.value?.docData || defaultData;
+    });
 
-                const data = response.data;
-                this.entries = data.content;
-                this.pagination.page = data.number;
-                this.pagination.pageSize = data.size;
-                this.pagination.itemCount = data.totalElements;
-                this.pagination.pageCount = data.totalPages;
-
-            } catch (error: any) {
-                this.error = error.message || 'Failed to fetch AI agents';
-                console.error('AI Agent Store - fetchAll error:', error);
-                throw error;
-            } finally {
-                this.loading = false;
-            }
+    const getPagination = computed(() => {
+        if (!apiViewResponse.value) {
+            return {
+                page: 1,
+                pageSize: 10,
+                itemCount: 0,
+                pageCount: 1,
+                showSizePicker: true,
+                pageSizes: [10, 20, 30, 40]
+            };
         }
-    },
+
+        const {viewData} = apiViewResponse.value;
+        return {
+            page: viewData.pageNum,
+            pageSize: viewData.pageSize,
+            itemCount: viewData.count,
+            pageCount: viewData.maxPage,
+            showSizePicker: true,
+            pageSizes: [10, 20, 30, 40]
+        };
+    });
+
+    const fetchAiAgents = async (page = 1, pageSize = 10) => {
+        const response = await apiClient.get(`/aiagents?page=${page}&size=${pageSize}`, {});
+        if (response?.data?.payload) {
+            apiViewResponse.value = response.data.payload;
+        } else {
+            throw new Error('Invalid API response structure');
+        }
+    };
+
+    const fetchAiAgent = async (id: string) => {
+        const response = await apiClient.get(`/aiagents/${id}`);
+        if (response?.data?.payload) {
+            apiFormResponse.value = response.data.payload;
+        } else {
+            throw new Error('Invalid API response structure');
+        }
+    };
+
+    const updateCurrent = (data: AiAgent, actions: any = {}) => {
+        apiFormResponse.value = {
+            docData: data,
+            actions: actions
+        };
+    };
+
+    const save = async (data: AiAgentSave, id?: string) => {
+        const response = await apiClient.post(`/aiagents/${id}`, data);
+        if (response?.data) {
+            const {docData} = response.data;
+            updateCurrent(docData, {});
+            return docData;
+        } else {
+            throw new Error('Invalid API response structure');
+        }
+    };
+
+    return {
+        apiViewResponse,
+        apiFormResponse,
+        setupApiClient,
+        fetchAll: fetchAiAgents,
+        fetch: fetchAiAgent,
+        save,
+        getEntries,
+        getPagination,
+        getCurrent,
+    };
 });

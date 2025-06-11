@@ -2,28 +2,7 @@ import {defineStore} from 'pinia';
 import {computed, ref} from 'vue';
 import apiClient, {setupApiClient} from '../../api/apiClient';
 import {ApiFormResponse, ApiViewPageResponse} from "../../types";
-
-// Define the structure of a Memory object based on your database schema
-export interface Memory {
-    id: string;
-    author: number;
-    regDate: string;
-    lastModUser: number;
-    lastModDate: string;
-    brand: string;
-    memoryType: 'LISTENERS' | 'AUDIENCE_CONTEXT' | 'CONVERSATION_HISTORY' | string;
-    content: Record<string, any>; // JSONB content
-    archived: boolean;
-}
-
-// Define the structure for saving a memory
-export interface MemorySave {
-    brand: string;
-    memoryType: string;
-    content: Record<string, any>;
-    archived?: boolean;
-}
-
+import {Memory, MemorySave} from "../../types/kneoBroadcasterTypes";
 
 export const useMemoryStore = defineStore('memoryStore', () => {
     const apiViewResponse = ref<ApiViewPageResponse<Memory> | null>(null);

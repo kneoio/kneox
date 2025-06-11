@@ -180,9 +180,9 @@ export default defineComponent({
           render: (row: Memory) => new Date(row.regDate).toLocaleString()
         },
         {
-          title: 'Archived',
-          key: 'archived',
-          render: (row: Memory) => h(NCheckbox, { checked: row.archived, disabled: true })
+          title: 'Last  Updated Date',
+          key: 'lastModifiedDate',
+          render: (row: Memory) => new Date(row.lastModifiedDate).toLocaleString()
         }
       ];
 

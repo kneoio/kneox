@@ -2,7 +2,7 @@
   <n-grid :cols="isMobile ? 1 : 6" x-gap="12" y-gap="12" class="p-4">
     <n-gi>
       <n-page-header>
-        <template #title>AI Agents</template>
+        <template #title>AI DJs</template>
         <template #footer>
           Total: {{ store.getPagination.itemCount }}
         </template>
@@ -51,7 +51,7 @@ import {
 } from 'naive-ui';
 import {useRouter} from 'vue-router';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
-import {AiAgentDTO} from "../../../types/kneoBroadcasterTypes";
+import {AiAgent} from "../../../types/kneoBroadcasterTypes";
 import {useAiAgentStore} from "../../../stores/kneo/aiAgentStore";
 
 export default defineComponent({
@@ -133,7 +133,7 @@ export default defineComponent({
       router.push('/outline/ai_agents/new');
     };
 
-    const getRowProps = (row: AiAgentDTO) => {
+    const getRowProps = (row: AiAgent) => {
       return {
         style: 'cursor: pointer;',
         onClick: () => {
@@ -145,8 +145,8 @@ export default defineComponent({
       };
     };
 
-    const columns = computed<DataTableColumns<AiAgentDTO>>(() => {
-      const baseColumns: DataTableColumns<AiAgentDTO> = [
+    const columns = computed<DataTableColumns<AiAgent>>(() => {
+      const baseColumns: DataTableColumns<AiAgent> = [
         {
           type: 'selection',
           fixed: 'left',
@@ -174,14 +174,14 @@ export default defineComponent({
         {
           title: 'Preferred Voice',
           key: 'preferredVoice',
-          render: (row: AiAgentDTO) => {
+          render: (row: AiAgent) => {
             return h('span', {}, row.preferredVoice?.map(voice => voice.name).join(', ') || 'N/A');
           }
         },
         {
           title: 'Enabled Tools',
           key: 'enabledTools',
-          render: (row: AiAgentDTO) => {
+          render: (row: AiAgent) => {
             return h('span', {}, row.enabledTools?.map(tool => tool.name).join(', ') || 'None');
           }
         }
@@ -209,7 +209,7 @@ export default defineComponent({
           {
             title: 'Agent',
             key: 'combined',
-            render: (row: AiAgentDTO) => {
+            render: (row: AiAgent) => {
               return h('div', {}, [
                 h('div', { style: 'font-weight: bold;' }, row.name),
                 h('div', { style: 'font-size: 0.8rem;' }, `Lang: ${row.preferredLang}`),
@@ -226,7 +226,7 @@ export default defineComponent({
     return {
       store,
       columns,
-      rowKey: (row: AiAgentDTO) => row.id,
+      rowKey: (row: AiAgent) => row.id,
       isMobile,
       handleNewClick,
       getRowProps,
