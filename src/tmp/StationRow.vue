@@ -52,8 +52,6 @@ const props = defineProps({
   }
 });
 
-console.log('Station Data:', props.station);
-
 const currentFragment = computed(() => {
   return props.station.playlistManagerStats?.currentlyPlaying || null;
 });
@@ -65,9 +63,9 @@ const recentlyPlayed = computed(() => {
 });
 
 const statusText = computed(() => {
-  if (props.station.status === 'ON_LINE') return 'ONLINE';
+  if (props.station.status === 'ON_LINE') return 'ON-LINE';
   if (props.station.status === 'WARMING_UP') return 'WARMING UP';
-  return 'OFFLINE';
+  return 'OFF-LINE';
 });
 
 const statusType = computed(() => {

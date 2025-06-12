@@ -97,6 +97,25 @@ export default defineComponent({
       }
     };
 
+    const getStatusStyle = (status: string) => {
+      switch (status) {
+        case 'ON_LINE':
+          return { color: '#00aa00', text: '● ONLINE' };
+        case 'ON_LINE_WELL':
+          return { color: '#00ff00', text: '● ONLINE (WELL)' };
+        case 'WARMING_UP':
+          return { color: '#ffa500', text: '● WARMING UP' };
+        case 'WAITING_FOR_CURATOR':
+          return { color: '#ff69b4', text: '● WAITING FOR CURATOR' };
+        case 'IDLE':
+          return { color: '#888888', text: '○ IDLE' };
+        case 'SYSTEM_ERROR':
+          return { color: '#ff0000', text: '⚠ SYSTEM ERROR' };
+        case 'OFF_LINE':
+        default:
+          return { color: '#5a5a5a', text: '○ OFFLINE' };
+      }
+    };
 
     preFetch();
     startPeriodicRefresh();
@@ -176,10 +195,10 @@ export default defineComponent({
           title: 'Status',
           key: 'status',
           render: (row: RadioStation) => {
-            const isOnline = row.status === 'ON_LINE';
+            const statusInfo = getStatusStyle(row.status);
             return h('div', {
-              style: isOnline ? 'color: green;' : 'color: #5a5a5a;'
-            }, isOnline ? '● ONLINE' : '○ OFFLINE');
+              style: `color: ${statusInfo.color};`
+            }, statusInfo.text);
           }
         },
         {title: 'Name', key: 'slugName'},
@@ -227,12 +246,12 @@ export default defineComponent({
             title: 'Station',
             key: 'combined',
             render: (row: RadioStation) => {
-              const isOnline = row.status === 'ON_LINE';
+              const statusInfo = getStatusStyle(row.status);
               return h('div', {}, [
                 h('div', { style: 'font-weight: bold;' }, row.slugName),
                 h('div', {
-                  style: isOnline ? 'color: green; font-size: 0.8rem;' : 'color: #FF69B4; font-size: 0.8rem;'
-                }, isOnline ? '● ONLINE' : '○ OFFLINE'),
+                  style: `color: ${statusInfo.color}; font-size: 0.8rem;`
+                }, statusInfo.text),
                 h('div', {
                   style: 'cursor: pointer; font-size: 0.8rem;',
                   onClick: (e: MouseEvent) => {
