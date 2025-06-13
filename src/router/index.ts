@@ -1,5 +1,5 @@
-import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
-import { inject } from 'vue';
+import {createRouter, createWebHistory, RouteRecordRaw} from 'vue-router';
+import {inject} from 'vue';
 import MainOutline from '../views/MainOutline.vue';
 import Dashboard from '../views/DashboardView.vue';
 import RadioStations from '../components/lists/kneo/RadioStations.vue';
@@ -12,6 +12,7 @@ import AiAgents from '../components/lists/kneo/AiAgents.vue';
 import AiAgent from '../components/forms/kneo/AiAgentForm.vue';
 import Player from "../views/HlsStreamView.vue";
 import Keycloak from "keycloak-js";
+import apiClient from "../api/apiClient";
 
 declare module 'vue-router' {
     interface RouteMeta {
@@ -25,18 +26,18 @@ const routes: Array<RouteRecordRaw> = [
         name: 'WelcomeView',
         redirect: () => {
             window.location.href = '/welcome.html';
-            return { name: 'WelcomeView' };
+            return {name: 'WelcomeView'};
         },
-        meta: { requiresAuth: false }
+        meta: {requiresAuth: false}
     },
     {
         path: '/outline',
         component: MainOutline,
-        meta: { requiresAuth: true },
+        meta: {requiresAuth: true},
         children: [
             {
                 path: '',
-                redirect: { name: 'Dashboard' }
+                redirect: {name: 'Dashboard'}
             },
             {
                 path: 'dashboard',
@@ -94,8 +95,36 @@ const routes: Array<RouteRecordRaw> = [
         ]
     },
     {
+        path: '/api/soundfragments/files/:uuid/:name',
+        component: { render: () => null },
+        beforeEnter: async (to) => {
+            try {
+                const response = await apiClient.get(to.fullPath, {
+                    responseType: 'blob'
+                });
+                const url = URL.createObjectURL(response.data);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = to.params.name as string;
+                document.body.appendChild(a); // Required for Firefox
+                a.click();
+
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 1000);
+
+                return false;
+
+            } catch (error) {
+                console.error('Download failed:', error);
+                return { name: 'WelcomeView' };
+            }
+        }
+    },
+    {
         path: '/:catchAll(.*)*',
-        redirect: { name: 'WelcomeView' }
+        redirect: {name: 'WelcomeView'}
     }
 ];
 

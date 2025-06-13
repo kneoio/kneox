@@ -12,7 +12,7 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    manifest: true, // Ensure manifest file is generated
+    manifest: true,
     sourcemap: true,
     cssCodeSplit: true,
     rollupOptions: {

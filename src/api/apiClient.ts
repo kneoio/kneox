@@ -9,6 +9,7 @@ if (!apiServer) {
 
 const apiClient = axios.create({
     baseURL: `${apiServer}/api`,
+   // baseURL: apiServer.endsWith('/api') ? apiServer : `${apiServer}/api`,
     withCredentials: true,
 });
 

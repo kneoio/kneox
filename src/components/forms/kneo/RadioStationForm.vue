@@ -233,6 +233,7 @@ import {
   RadioStation, BrandStatus,
 } from "../../../types/kneoBroadcasterTypes";
 import {useRadioStationStore} from "../../../stores/kneo/radioStationStore";
+import {useAiAgentStore} from "../../../stores/kneo/aiAgentStore";
 
 export default defineComponent({
   name: "RadioStationForm",
@@ -259,6 +260,7 @@ export default defineComponent({
     const message = useMessage();
     const router = useRouter();
     const store = useRadioStationStore();
+    const aiAgentStore = useAiAgentStore();
     const route = useRoute();
     const activeTab = ref("properties");
     const fileList = ref([] as UploadFileInfo[]);
@@ -308,15 +310,17 @@ export default defineComponent({
       { label: 'Carlos', value: 'cMFVuj5l9ALxtSGYv2WQ' }
     ];
 
-    const agentOptions = [
-      {
-        label: 'Default AI Agent',
-        value: 'default-agent',
-        preferredLang: 'ENG',
-        mainPrompt: 'You are a helpful AI radio host assistant. Your role is to engage with listeners, provide entertainment, and maintain a positive atmosphere on the radio station.',
-        preferredVoice: { id: 'aLFUti4k8YKvtQGXv0UO', name: 'Paulo' }
-      }
-    ];
+    const agentOptions = computed(() => {
+      return aiAgentStore.getEntries.map(agent => ({
+        label: agent.name,
+        value: agent.id,
+        preferredLang: agent.preferredLang,
+        mainPrompt: agent.mainPrompt,
+        preferredVoice: agent.preferredVoice.length > 0
+            ? agent.preferredVoice[0]
+            : { id: '', name: '' }
+      }));
+    });
 
     const localFormData = reactive<RadioStation>({
       slugName: "",
@@ -348,12 +352,14 @@ export default defineComponent({
     });
 
     const updateSelectedAgent = (value: string) => {
-      const selectedAgent = agentOptions.find(agent => agent.value === value);
+      const selectedAgent = aiAgentStore.getEntries.find(agent => agent.id === value);
       if (selectedAgent) {
-        localFormData.aiAgent.name = selectedAgent.value;
+        localFormData.aiAgent.name = selectedAgent.name;
         localFormData.aiAgent.preferredLang = selectedAgent.preferredLang;
         localFormData.aiAgent.mainPrompt = selectedAgent.mainPrompt;
-        localFormData.aiAgent.preferredVoice[0] = selectedAgent.preferredVoice;
+        localFormData.aiAgent.preferredVoice = selectedAgent.preferredVoice.length > 0
+            ? [...selectedAgent.preferredVoice]
+            : [{ id: '', name: '' }];
       }
     };
 
@@ -412,11 +418,16 @@ export default defineComponent({
 
     onMounted(async () => {
       const id = route.params.id as string;
-      if (id) {
+
+      try {
         loadingBar.start();
-        try {
+        // Fetch AI agents first
+        await aiAgentStore.fetchAll(1, 100); // Fetch first page with 100 items
+
+        if (id) {
           await store.fetch(id);
           Object.assign(localFormData, store.getCurrent);
+
           if (!localFormData.aiAgent.preferredVoice || localFormData.aiAgent.preferredVoice.length === 0) {
             localFormData.aiAgent.preferredVoice = [{ id: "", name: "" }];
           }
@@ -445,11 +456,11 @@ export default defineComponent({
               explicitContent: false
             };
           }
-        } catch (error) {
-          message.error('Failed to fetch sound fragment data');
-        } finally {
-          loadingBar.finish();
         }
+      } catch (error) {
+        message.error('Failed to fetch data');
+      } finally {
+        loadingBar.finish();
       }
     });
 
