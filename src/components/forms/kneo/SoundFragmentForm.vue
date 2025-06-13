@@ -1,8 +1,8 @@
 <template>
   <n-grid cols="6" x-gap="12" y-gap="12" class="m-5">
     <n-gi span="6">
-      <n-page-header subtitle="Radio Station" @back="goBack">
-        <template #title>{{ store.getCurrent.country || store.getCurrent.slugName }}</template>
+      <n-page-header subtitle="Sound Fragment" @back="goBack">
+        <template #title>{{ store.getCurrent.title || store.getCurrent.slugName }}</template>
         <template #footer>
           Registered: {{ store.getCurrent.regDate }}, Last Modified: {{ store.getCurrent.lastModifiedDate }}
           <br>
@@ -23,168 +23,54 @@
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
               <n-gi>
                 <n-form-item label="Title">
-                  <n-input v-model:value="localFormData.slugName" style="width: 50%; max-width: 600px;"/>
+                  <n-input v-model:value="localFormData.title" style="width: 50%; max-width: 600px;"/>
                 </n-form-item>
               </n-gi>
               <n-gi>
-                <n-form-item label="Country">
+                <n-form-item label="Artist">
+                  <n-input v-model:value="localFormData.artist" style="width: 50%; max-width: 600px;"/>
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="Genre">
                   <n-select
-                      v-model:value="localFormData.country"
-                      :options="countryOptions"
+                      v-model:value="localFormData.genre"
+                      :options="store.genreOptions"
+                      filterable
+                      placeholder="Select Genre"
                       style="width: 50%; max-width: 600px;"
                   />
                 </n-form-item>
               </n-gi>
               <n-gi>
-                <n-form-item label="Stream URL">
-                  <n-input
-                      v-model:value="localFormData.url"
+                <n-form-item label="Album">
+                  <n-input v-model:value="localFormData.album" style="width: 50%; max-width: 600px;"/>
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="Upload File">
+                  <n-upload
+                      v-model:file-list="fileList"
+                      :multiple="false"
+                      :max="1"
+                      :show-download-button="true"
+                      :disabled="false"
+                      @change="handleChange"
+                      @finish="handleFinish"
+                      @download="handleDownload"
+                      @preview="handleDownload"
                       style="width: 50%; max-width: 600px;"
-                      readonly
-                  />
-                  <n-button
-                      type="primary"
-                      text
-                      @click="copyToClipboard(localFormData.url)"
-                      style="margin-left: 8px;"
+                      :accept="audioAcceptTypes"
+                      :custom-request="handleUpload"
+                      :show-remove-button="true"
                   >
-                    <template #icon>
-                      <n-icon><Copy /></n-icon>
+                    <n-button>Select File</n-button>
+                    <template #file="{ file }">
+                      <div class="upload-file" @click.stop.prevent="handleDownload(file, $event)">
+                        {{ file.name }}
+                      </div>
                     </template>
-                  </n-button>
-                </n-form-item>
-              </n-gi>
-              <n-gi>
-                <n-form-item label="Icecast URL">
-                  <n-input
-                      v-model:value="localFormData.iceCastUrl"
-                      style="width: 50%; max-width: 600px;"
-                      readonly
-                  />
-                  <n-button
-                      type="primary"
-                      text
-                      @click="copyToClipboard(localFormData.iceCastUrl)"
-                      style="margin-left: 8px;"
-                  >
-                    <template #icon>
-                      <n-icon><Copy/></n-icon>
-                    </template>
-                  </n-button>
-                </n-form-item>
-              </n-gi>
-              <n-gi>
-                <n-form-item label="Action URL">
-                  <n-input
-                      v-model:value="localFormData.actionUrl"
-                      style="width: 50%; max-width: 600px;"
-                      readonly
-                  />
-                  <n-button
-                      type="primary"
-                      text
-                      @click="copyToClipboard(localFormData.actionUrl)"
-                      style="margin-left: 8px;"
-                  >
-                    <template #icon>
-                      <n-icon><Copy /></n-icon>
-                    </template>
-                  </n-button>
-                </n-form-item>
-              </n-gi>
-            </n-grid>
-          </n-form>
-        </n-tab-pane>
-
-        <n-tab-pane name="aiAgent" tab="AI Agent">
-          <n-form label-placement="left" label-width="auto">
-            <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
-              <n-gi>
-                <n-form-item label="Name">
-                  <n-select
-                      v-model:value="localFormData.aiAgent.name"
-                      :options="agentOptions"
-                      style="width: 50%; max-width: 600px;"
-                      @update:value="updateSelectedAgent"
-                  />
-                </n-form-item>
-              </n-gi>
-              <n-gi>
-                <n-form-item label="Preferred Language">
-                  <n-input
-                      v-model:value="localFormData.aiAgent.preferredLang"
-                      style="width: 50%; max-width: 600px; background-color: #f5f5f5; cursor: not-allowed;"
-                      readonly
-                      disabled
-                  />
-                </n-form-item>
-              </n-gi>
-              <n-gi>
-                <n-form-item label="Main Prompt">
-                  <CodeMirror
-                      v-model="localFormData.aiAgent.mainPrompt"
-                      basic
-                      :lang="lang"
-                      :style="{
-                        width: '60%',
-                        height: '200px',
-                        border: '1px solid #d9d9d9',
-                        borderRadius: '3px',
-                        backgroundColor: '#f5f5f5',
-                        opacity: '0.6',
-                        cursor: 'not-allowed'
-                      }"
-                      :extensions="editorExtensions"
-                      :editable="false"
-                  />
-                </n-form-item>
-              </n-gi>
-              <n-gi>
-                <n-form-item label="Preferred Voice">
-                  <n-input
-                      v-model:value="localFormData.aiAgent.preferredVoice[0].name"
-                      style="width: 50%; max-width: 600px; background-color: #f5f5f5; cursor: not-allowed;"
-                      readonly
-                      disabled
-                  />
-                </n-form-item>
-              </n-gi>
-            </n-grid>
-          </n-form>
-        </n-tab-pane>
-
-        <n-tab-pane name="profile" tab="Profile">
-          <n-form label-placement="left" label-width="auto">
-            <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
-              <n-gi>
-                <n-form-item label="Name">
-                  <n-select
-                      v-model:value="localFormData.profile.id"
-                      :options="profileNameOptions"
-                      label-field="label"
-                      value-field="value"
-                      style="width: 50%; max-width: 600px;"
-                      @update:value="updateSelectedProfile"
-                  />
-                </n-form-item>
-              </n-gi>
-              <n-gi>
-                <n-form-item label="Description">
-                  <n-input
-                      v-model:value="localFormData.profile.description"
-                      type="textarea"
-                      style="width: 100%; max-width: 800px;"
-                      :autosize="{ minRows: 3, maxRows: 5 }"
-                      readonly
-                      disabled
-                  />
-                </n-form-item>
-              </n-gi>
-              <n-gi>
-                <n-form-item label="Explicit Content">
-                  <n-checkbox
-                      v-model:checked="localFormData.profile.explicitContent"
-                  />
+                  </n-upload>
                 </n-form-item>
               </n-gi>
             </n-grid>
@@ -196,12 +82,11 @@
 </template>
 
 <script lang="ts">
-import {defineComponent, onMounted, reactive, ref, computed} from "vue";
-import {useRoute, useRouter} from "vue-router";
+import { defineComponent, onMounted, reactive, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import {
   NButton,
   NButtonGroup,
-  NCheckbox,
   NForm,
   NFormItem,
   NGi,
@@ -212,24 +97,21 @@ import {
   NTabPane,
   NTabs,
   NUpload,
-  NIcon,
-  UploadFileInfo,
   useLoadingBar,
-  useMessage
+  useMessage,
+  type UploadFileInfo
 } from "naive-ui";
-import {Copy} from '@vicons/tabler';
-import {html} from '@codemirror/lang-html';
-import {EditorView} from '@codemirror/view';
-import CodeMirror from 'vue-codemirror6';
+import { useSoundFragmentStore } from "../../../stores/kneo/soundFragmentsStore";
+import { FragmentStatus, FragmentType, SoundFragment, SoundFragmentSave } from "../../../types/kneoBroadcasterTypes";
 import {
-  RadioStation, BrandStatus,
-} from "../../../types/kneoBroadcasterTypes";
-import {useRadioStationStore} from "../../../stores/kneo/radioStationStore";
-import {useAiAgentStore} from "../../../stores/kneo/aiAgentStore";
-import {useProfileStore} from "../../../stores/kneo/profileStore";
+  isErrorWithResponse,
+  capitalizeFirstLetter,
+  getErrorMessage
+} from '../../helpers/errorHandling';
+import { downloadSoundFragment } from '../../../utils/downloadService';
 
 export default defineComponent({
-  name: "RadioStationForm",
+  name: "SoundFragmentForm",
   components: {
     NPageHeader,
     NButtonGroup,
@@ -243,165 +125,115 @@ export default defineComponent({
     NGrid,
     NGi,
     NSelect,
-    NCheckbox,
-    NIcon,
-    Copy,
-    CodeMirror
   },
   setup() {
     const loadingBar = useLoadingBar();
     const message = useMessage();
     const router = useRouter();
-    const store = useRadioStationStore();
-    const aiAgentStore = useAiAgentStore();
-    const profileStore = useProfileStore();
     const route = useRoute();
+    const store = useSoundFragmentStore();
     const activeTab = ref("properties");
-    const fileList = ref([] as UploadFileInfo[]);
-    const lang = ref(html());
+    const fileList = ref<UploadFileInfo[]>([]);
 
-    const editorExtensions = computed(() => [
-      EditorView.lineWrapping
-    ]);
-
-    const countryOptions = [
-      { label: 'France', value: 'FR' },
-      { label: 'Portugal', value: 'PT' },
-      { label: 'Kazakhstan', value: 'KZ' },
-      { label: 'Spain', value: 'ES' },
-      { label: 'China', value: 'CN' },
-      { label: 'Japan', value: 'JP' }
-    ];
-
-    const languageOptions = [
-      { label: 'Portuguese', value: 'POR' },
-      { label: 'English', value: 'ENG' },
-      { label: 'Spanish', value: 'ESP' },
-      { label: 'French', value: 'FRA' },
-      { label: 'Russian', value: 'RUS' },
-      { label: 'Chinese', value: 'CHI' },
-      { label: 'Japanese', value: 'JPN' }
-    ];
-
-    const voiceOptions = [
-      { label: 'Paulo', value: 'aLFUti4k8YKvtQGXv0UO' },
-      { label: 'Ana', value: 'bGFUti5k9ZKwtRHXw1VP' },
-      { label: 'Carlos', value: 'cMFVuj5l9ALxtSGYv2WQ' }
-    ];
-
-    const agentOptions = computed(() => {
-      return aiAgentStore.getEntries.map(agent => ({
-        label: agent.name,
-        value: agent.id,
-        preferredLang: agent.preferredLang,
-        mainPrompt: agent.mainPrompt,
-        preferredVoice: agent.preferredVoice.length > 0
-            ? agent.preferredVoice[0]
-            : { id: '', name: '' }
-      }));
-    });
-
-    const profileNameOptions = computed(() => {
-      return profileStore.getEntries.map(profile => ({
-        label: profile.name,
-        value: profile.id,
-        description: profile.description,
-        explicitContent: profile.explicitContent
-      }));
-    });
-
-    const localFormData = reactive<RadioStation>({
+    const localFormData = reactive<SoundFragment>({
       slugName: "",
-      id: "",
+      id: null,
       author: "",
       regDate: "",
       lastModifier: "",
       lastModifiedDate: "",
-      status: BrandStatus.OFF_LINE,
+      status: FragmentStatus.UNDEFINED,
+      type: FragmentType.SONG,
+      title: "",
+      artist: "",
+      genre: "",
+      album: "",
       url: "",
-      country: "",
-      iceCastUrl: "",
       actionUrl: "",
-      aiAgent: {
-        id: "",
-        name: "",
-        preferredLang: "",
-        mainPrompt: "",
-        preferredVoice: [{ id: "", name: "" }],
-        enabledTools: []
-      },
-      profile: {
-        id: "",
-        name: "",
-        description: "",
-        explicitContent: false
-      }
+      uploadedFiles: []
     });
 
-    const updateSelectedAgent = (value: string) => {
-      const selectedAgent = aiAgentStore.getEntries.find(agent => agent.id === value);
-      if (selectedAgent) {
-        localFormData.aiAgent.name = selectedAgent.name;
-        localFormData.aiAgent.preferredLang = selectedAgent.preferredLang;
-        localFormData.aiAgent.mainPrompt = selectedAgent.mainPrompt;
-        localFormData.aiAgent.preferredVoice = selectedAgent.preferredVoice.length > 0
-            ? [...selectedAgent.preferredVoice]
-            : [{ id: '', name: '' }];
-      }
-    };
+    watch(
+        () => store.getCurrent?.uploadedFiles,
+        (files) => {
+          fileList.value = files || [];
+        },
+        { immediate: true }
+    );
 
-    const updateSelectedProfile = (value: string) => {
-      const selectedProfile = profileStore.getEntries.find(profile => profile.id === value);
-      if (selectedProfile) {
-        localFormData.profile = {
-          id: selectedProfile.id,
-          name: selectedProfile.name,
-          description: selectedProfile.description,
-          explicitContent: selectedProfile.explicitContent
+    const handleUpload = async ({ file, onFinish, onError }: {
+      file: UploadFileInfo,
+      onFinish?: (file?: UploadFileInfo) => void,
+      onError?: (e: Error) => void,
+    }) => {
+      try {
+        const response = await store.uploadFile(localFormData.id, file.file as File);
+        const newFile = {
+          ...file,
+          ...response,
+          status: 'finished'
         };
+        if (onFinish) onFinish(newFile);
+        return newFile;
+      } catch (error) {
+        if (onError) onError(error as Error);
+        throw error;
       }
     };
 
-    const updatePreferredVoice = (value: string) => {
-      const selectedVoice = voiceOptions.find(voice => voice.value === value);
-      if (selectedVoice) {
-        localFormData.aiAgent.preferredVoice[0] = {
-          id: selectedVoice.value,
-          name: selectedVoice.label
-        };
+    const handleDownload = async (file: UploadFileInfo) => {
+      try {
+        await downloadSoundFragment(localFormData.id, file.id || 'download');
+        message.success('Download started');
+      } catch (error) {
+        console.error('Download failed:', error);
+        message.error(`Download failed: ${getErrorMessage(error)}`);
       }
+      return false;
     };
 
-    const copyToClipboard = (text: string) => {
-      navigator.clipboard.writeText(text)
-          .then(() => message.success('Copied to clipboard!'))
-          .catch(() => message.error('Failed to copy'));
+    const handleChange = (data: {
+      file: UploadFileInfo;
+      fileList: UploadFileInfo[];
+    }) => {
+      fileList.value = data.fileList;
+    };
+
+    const handleFinish = ({ file }: {
+      file: UploadFileInfo;
+    }) => {
+      return file;
     };
 
     const handleSave = async () => {
       try {
         loadingBar.start();
-        const saveDTO: RadioStation = {
-          id: localFormData.id,
-          author: localFormData.author,
-          regDate: localFormData.regDate,
-          lastModifier: localFormData.lastModifier,
-          lastModifiedDate: localFormData.lastModifiedDate,
+        const saveDTO: SoundFragmentSave = {
           status: localFormData.status,
-          country: localFormData.country,
-          slugName: localFormData.slugName,
-          url: localFormData.url,
-          iceCastUrl: localFormData.iceCastUrl,
-          actionUrl: localFormData.actionUrl,
-          aiAgent: localFormData.aiAgent,
-          profile: localFormData.profile
+          type: localFormData.type,
+          title: localFormData.title,
+          artist: localFormData.artist,
+          genre: localFormData.genre,
+          album: localFormData.album,
+          newlyUploaded: fileList.value.map(f => f.name),
         };
-
         await store.save(saveDTO, localFormData.id);
-        message.success("Radio Station saved successfully");
-        await router.push("/outline/radiostations");
-      } catch (error) {
-        message.error("Failed to save Radio Station");
+        message.success("Saved successfully");
+        await router.push("/outline/soundfragments");
+      } catch (error: unknown) {
+        if (isErrorWithResponse(error) && error.response?.status === 400) {
+          const errorData = error.response.data as ErrorResponse;
+
+          if (errorData.errors?.length) {
+            errorData.errors.forEach(err => {
+              message.error(`${capitalizeFirstLetter(err.field)}: ${err.message}`);
+            });
+          } else {
+            message.error(errorData.message || "Validation failed");
+          }
+        } else {
+          message.error(`Save failed: ${getErrorMessage(error)}`);
+        }
       } finally {
         loadingBar.finish();
       }
@@ -412,57 +244,36 @@ export default defineComponent({
     };
 
     const goBack = () => {
-      router.push("/outline/radiostations");
+      router.push("/outline/soundfragments");
     };
 
     onMounted(async () => {
       const id = route.params.id as string;
-
-      try {
+      if (id) {
         loadingBar.start();
-        await Promise.all([
-          aiAgentStore.fetchAll(1, 100),
-          profileStore.fetchAll(1, 100)
-        ]);
-
-        if (id) {
+        try {
           await store.fetch(id);
           Object.assign(localFormData, store.getCurrent);
-
-          if (!localFormData.aiAgent.preferredVoice || localFormData.aiAgent.preferredVoice.length === 0) {
-            localFormData.aiAgent.preferredVoice = [{ id: "", name: "" }];
-          }
-          if (!localFormData.iceCastUrl) {
-            localFormData.iceCastUrl = "";
-          }
-          if (!localFormData.actionUrl) {
-            localFormData.actionUrl = "";
-          }
-          if (!localFormData.aiAgent) {
-            localFormData.aiAgent = {
-              id: "",
-              name: "",
-              preferredLang: "",
-              mainPrompt: "",
-              preferredVoice: [{ id: "", name: "" }],
-              enabledTools: []
-            };
-          }
-          if (!localFormData.profile) {
-            localFormData.profile = {
-              id: "",
-              name: "",
-              description: "",
-              explicitContent: false
-            };
-          }
+        } catch (error) {
+          message.error('Failed to load data');
+        } finally {
+          loadingBar.finish();
         }
-      } catch (error) {
-        message.error('Failed to fetch data');
-      } finally {
-        loadingBar.finish();
       }
     });
+
+    const audioAcceptTypes = [
+      '.mp3',
+      '.wav',
+      '.ogg',
+      '.flac',
+      'audio/mpeg',
+      'audio/wav',
+      'audio/ogg',
+      'audio/flac',
+      'audio/x-wav',
+      'audio/mp4',
+    ].join(',');
 
     return {
       store,
@@ -471,18 +282,12 @@ export default defineComponent({
       handleArchive,
       activeTab,
       goBack,
+      handleChange,
+      handleFinish,
+      handleUpload,
+      handleDownload,
       fileList,
-      countryOptions,
-      profileNameOptions,
-      languageOptions,
-      voiceOptions,
-      agentOptions,
-      updateSelectedAgent,
-      updateSelectedProfile,
-      updatePreferredVoice,
-      copyToClipboard,
-      lang,
-      editorExtensions
+      audioAcceptTypes
     };
   },
 });
