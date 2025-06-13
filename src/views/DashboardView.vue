@@ -25,15 +25,6 @@
             >
               Start
             </n-button>
-            <n-button
-                size="small"
-                type="warning"
-                @click="sendCommand(selectedBrand, 'feed')"
-                :disabled="!selectedBrand"
-                :loading="isStartingBroadcast"
-            >
-              Feed
-            </n-button>
           </div>
           <div class="meta">
             <n-text v-if="dashboard.lastUpdate" depth="3" class="text-sm">
@@ -144,7 +135,6 @@ export default defineComponent({
 
     const formatTime = (date: Date) => date.toLocaleTimeString();
 
-    const stationColumns = useStationColumns(dashboard, isMobile);
     const selectedBrand = ref('');
     const sendCommand = async (brandName: string, command: string) => {
       if (!brandName) return;
@@ -155,6 +145,9 @@ export default defineComponent({
         isStartingBroadcast.value = false;
       }
     };
+
+    // Pass sendCommand to stationColumns
+    const stationColumns = useStationColumns(dashboard, isMobile, sendCommand);
 
     const brandOptions = computed(() => brandStore.getEntries.map(brand => ({
       label: brand.slugName,
