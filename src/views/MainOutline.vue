@@ -123,7 +123,7 @@ export default defineComponent({
         case 'WAITING_FOR_CURATOR':
           return '#ff69b4';
         case 'IDLE':
-          return '#888888';
+          return '#bd621c';
         case 'SYSTEM_ERROR':
           return '#ff0000';
         case 'OFF_LINE':
