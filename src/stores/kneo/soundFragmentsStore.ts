@@ -7,9 +7,11 @@ import type { SoundFragment, SoundFragmentSave } from "../../types/kneoBroadcast
 export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
     const apiViewResponse = ref<ApiViewPageResponse<SoundFragment> | null>(null);
     const apiFormResponse = ref<ApiFormResponse<SoundFragment> | null>(null);
+    const availableSoundFragments = ref<SoundFragment[]>([]);
     const genreOptions = ref<Array<{label: string, value: string}>>([]);
 
     const getEntries = computed(() => apiViewResponse.value?.viewData.entries || []);
+    const getAvailableSoundFragments = computed(() => availableSoundFragments.value);
     const getCurrent = computed(() => apiFormResponse.value?.docData || {
         id: '',
         slugName: '',
@@ -18,9 +20,8 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         lastModifier: '',
         lastModifiedDate: '',
         title: '',
-        status: 0,
         type: 'SONG',
-        source: 'LOCAL_DISC',
+        source: 'USERS_UPLOAD',
         artist: '',
         genre: '',
         album: '',
@@ -49,22 +50,6 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         };
     });
 
-    const statusTypeMap = {
-        0: 'default',
-        100: 'info',
-        101: 'warning',
-        102: 'success',
-        103: 'success',
-        104: 'default',
-        105: 'error'
-    };
-
-    const getTypeOptions = computed(() => [
-        { label: "song", value: "SONG" },
-        { label: "podcast", value: "PODCAST" },
-        { label: "audiobook", value: "AUDIOBOOK" }
-    ]);
-
     const fetchGenres = async () => {
         const response = await apiClient.get('/genres');
         if (!response?.data?.payload) throw new Error('Invalid API response');
@@ -82,6 +67,13 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         const response = await apiClient.get(`/soundfragments?page=${page}&size=${pageSize}`);
         if (!response?.data?.payload) throw new Error('Invalid API response');
         apiViewResponse.value = response.data.payload;
+    };
+
+    const fetchAvailableSoundFragments = async (brand: string) => {
+        const response = await apiClient.get(`/soundfragments/available-soundfragments?brand=${brand}`);
+        if (!response?.data?.payload) throw new Error('Invalid API response');
+        availableSoundFragments.value = response.data.payload;
+        return availableSoundFragments.value;
     };
 
     const fetchSoundFragment = async (id: string) => {
@@ -116,10 +108,9 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         });
     };
 
-    // In your soundFragmentsStore.ts
     const deleteSoundFragment = async (id: string) => {
         await apiClient.delete(`/soundfragments/${id}`);
-        await fetchSoundFragments(); // Refresh the list after deletion
+        await fetchSoundFragments();
     };
 
     fetchGenres();
@@ -127,13 +118,14 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
     return {
         apiViewResponse,
         apiFormResponse,
+        availableSoundFragments,
         getEntries,
+        getAvailableSoundFragments,
         getCurrent,
         getPagination,
-        getTypeOptions,
         genreOptions,
-        statusTypeMap,
         fetchAll: fetchSoundFragments,
+        fetchAvailable: fetchAvailableSoundFragments,
         fetch: fetchSoundFragment,
         save,
         delete: deleteSoundFragment,

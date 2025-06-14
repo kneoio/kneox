@@ -142,7 +142,6 @@ export default defineComponent({
       regDate: "",
       lastModifier: "",
       lastModifiedDate: "",
-      status: FragmentStatus.UNDEFINED,
       type: FragmentType.SONG,
       title: "",
       artist: "",
@@ -209,7 +208,6 @@ export default defineComponent({
       try {
         loadingBar.start();
         const saveDTO: SoundFragmentSave = {
-          status: localFormData.status,
           type: localFormData.type,
           title: localFormData.title,
           artist: localFormData.artist,

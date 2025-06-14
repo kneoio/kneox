@@ -9,14 +9,6 @@ export enum BrandStatus {
     ON_LINE,
 }
 
-export enum FragmentStatus {
-    UNDEFINED = -13,
-    NOT_PROCESSED = 10,
-    CONVERTED = 11,
-    PLAYED = 12,
-    ARCHIVED = 13
-}
-
 export interface Profile {
     id: string;
     author?: string;
@@ -66,7 +58,6 @@ export interface SoundFragment {
     regDate: string;
     lastModifier: string;
     lastModifiedDate: string;
-    status: FragmentStatus;
     type: FragmentType;
     title?: string;
     artist?: string;
@@ -78,7 +69,6 @@ export interface SoundFragment {
 }
 
 export interface SoundFragmentSave {
-    status: FragmentStatus;
     type: FragmentType;
     title?: string;
     artist?: string;

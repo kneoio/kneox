@@ -17,7 +17,7 @@
       </div>
       <div class="drawer-content">
         <n-menu
-            :options="menuOptions"
+            :options="dynamicMenuOptions"
             :value="activeMenuKey"
             @update:value="handleMenuSelect"
         />
@@ -49,10 +49,14 @@ import {
   ref,
   computed,
   provide,
-  h, nextTick,
+  h,
+  nextTick,
+  watchEffect,
 } from 'vue';
 import {useRouter, useRoute} from 'vue-router';
-import {AlignJustified, List, Music, Dashboard, Robot, Grain, UserCircle} from '@vicons/tabler'
+import {AlignJustified, List, Music, Dashboard, Robot, Grain, UserCircle, Radio} from '@vicons/tabler'
+import {useRadioStationStore} from "../stores/kneo/radioStationStore";
+import {RadioStation} from "../types/kneoBroadcasterTypes";
 
 export default defineComponent({
   components: {
@@ -69,14 +73,30 @@ export default defineComponent({
 
     const router = useRouter();
     const route = useRoute();
+    const radioStationStore = useRadioStationStore();
 
     const isMobile = ref(window.innerWidth <= 768);
     const isDrawerOpen = ref(!isMobile.value);
     const drawerWidth = ref(300);
     const active = ref(window.innerWidth > 768);
     const viewTitle = ref<string | null>(null);
+    const radioStations = ref<RadioStation[]>([]);
+    const isLoadingStations = ref(false);
 
     provide('parentTitle', viewTitle);
+
+    const fetchRadioStations = async () => {
+      try {
+        isLoadingStations.value = true;
+        await radioStationStore.fetchAll();
+        radioStations.value = radioStationStore.getEntries || [];
+      } catch (error) {
+        console.error('Failed to fetch radio stations:', error);
+        radioStations.value = [];
+      } finally {
+        isLoadingStations.value = false;
+      }
+    };
 
     const activeMenuKey = computed(() => {
       if (route.name === 'Dashboard') return 'dashboard';
@@ -86,64 +106,115 @@ export default defineComponent({
       if (route.name === 'Memories') return 'memories';
       if (route.name === 'AiAgents') return 'ai_agents';
       if (route.name === 'Profiles') return 'profiles';
+      if (route.name === 'RadioStation' && route.params.id) {
+        return `radiostation-${route.params.id}`;
+      }
       return null;
     });
 
-    const menuOptions: MenuOption[] = [
-      {
-        label: 'Dashboard',
-        key: 'dashboard',
-        icon: () => h(Dashboard)
-      },
-      /*  {
-          label: 'Player',
-          key: 'player',
-          icon: () => h(MoodHappy)
-        },*/
-      {
-        key: 'divider-1',
-        type: 'divider',
-        props: {
-          style: {
-            marginLeft: '32px',
-            marginBottom: '10px',
-            color: '#ffb700',
+    const getStatusColor = (status: string) => {
+      switch (status) {
+        case 'ON_LINE':
+          return '#00aa00';
+        case 'ON_LINE_WELL':
+          return '#00ff00';
+        case 'WARMING_UP':
+          return '#ffa500';
+        case 'WAITING_FOR_CURATOR':
+          return '#ff69b4';
+        case 'IDLE':
+          return '#888888';
+        case 'SYSTEM_ERROR':
+          return '#ff0000';
+        case 'OFF_LINE':
+        default:
+          return '#5a5a5a';
+      }
+    };
+
+    const dynamicMenuOptions = computed<MenuOption[]>(() => {
+      const baseOptions: MenuOption[] = [
+        {
+          label: 'Dashboard',
+          key: 'dashboard',
+          icon: () => h(Dashboard)
+        },
+        {
+          key: 'divider-1',
+          type: 'divider',
+          props: {
+            style: {
+              marginLeft: '32px',
+              marginBottom: '10px',
+              color: '#ffb700',
+            }
           }
         }
-      },
-      {
-        label: 'Sound Fragments',
-        key: 'fragments',
-        icon: () => h(Music)
-      },
-      {
-        label: 'Radio Stations',
+      ];
+
+      // Create individual radio station options
+      const radioStationOptions: MenuOption[] = radioStations.value.map((station: RadioStation) => ({
+        label: () => h('div', {
+          style: 'display: flex; align-items: center; gap: 8px;'
+        }, [
+          h('div', {
+            style: `width: 8px; height: 8px; border-radius: 50%; background-color: ${getStatusColor(station.status)};`
+          }),
+          h('span', {}, station.slugName),
+          h('span', {
+            style: 'font-size: 0.75rem; color: #666; margin-left: auto;'
+          }, station.country || '')
+        ]),
+        key: `radiostation-${station.id}`,
+        icon: () => h(Radio, { size: 16 })
+      }));
+
+      const allStationsOption: MenuOption = {
+        label: 'All Stations',
         key: 'radiostations',
         icon: () => h(List)
-      },
-      {
-        label: 'Profiles',
-        key: 'profiles',
-        icon: () => h(UserCircle)
-      },
-      {
-        label: 'Memories',
-        key: 'memories',
-        icon: () => h(Grain)
-      },
-      {
-        label: 'Djs',
-        key: 'ai_agents',
-        icon: () => h(Robot)
-      }
-    ];
+      };
+
+      const remainingOptions: MenuOption[] = [
+        {
+          label: 'Sound Fragments',
+          key: 'fragments',
+          icon: () => h(Music)
+        },
+        {
+          label: 'Profiles',
+          key: 'profiles',
+          icon: () => h(UserCircle)
+        },
+        {
+          label: 'Memories',
+          key: 'memories',
+          icon: () => h(Grain)
+        },
+        {
+          label: 'Djs',
+          key: 'ai_agents',
+          icon: () => h(Robot)
+        }
+      ];
+
+      return [
+        ...baseOptions,
+        ...radioStationOptions,
+        ...(radioStationOptions.length > 0 ? [allStationsOption] : []),
+        ...remainingOptions
+      ];
+    });
 
     const handleMenuSelect = async (key: string) => {
       if (isMobile.value) {
         isDrawerOpen.value = false;
       }
 
-      if (key === 'radiostations') {
+      if (key.startsWith('radiostation-')) {
+        const stationId = key.replace('radiostation-', '');
+        await router.push({name: 'RadioStation', params: {id: stationId}});
+      } else if (key === 'radiostations') {
         await router.push({name: 'RadioStations'});
       } else if (key === 'dashboard') {
         await router.push({name: 'Dashboard'});
@@ -184,22 +255,36 @@ export default defineComponent({
     onMounted(() => {
       window.addEventListener('resize', updateDrawerState);
       updateDrawerState();
+      fetchRadioStations();
     });
 
     onUnmounted(() => {
       window.removeEventListener('resize', updateDrawerState);
     });
 
-    const updateViewTitle = async () => {
-      await nextTick();
-      viewTitle.value = route.meta.title as string ||
-          route.name?.toString() ||
-          '';
-    };
+    // Watch for changes in radio stations and refetch periodically
+    watchEffect(() => {
+      if (radioStationStore.getEntries) {
+        radioStations.value = radioStationStore.getEntries;
+      }
+    });
+
+    // Set up periodic refresh for radio stations
+    onMounted(() => {
+      const intervalId = setInterval(() => {
+        if (!isLoadingStations.value) {
+          fetchRadioStations();
+        }
+      }, 30000); // Refresh every 30 seconds
+
+      onUnmounted(() => {
+        clearInterval(intervalId);
+      });
+    });
 
     return {
       active,
-      menuOptions,
+      dynamicMenuOptions,
       toggleDrawer,
       isMobile,
       viewTitle,
@@ -208,7 +293,8 @@ export default defineComponent({
       handleMenuSelect,
       handleContentClick,
       drawerWidth,
-      AlignJustified
+      AlignJustified,
+      isLoadingStations
     };
   }
 });
