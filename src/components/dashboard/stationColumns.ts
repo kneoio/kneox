@@ -220,7 +220,6 @@ export const useStationColumns = (
                                 managedByInfo,
                                 playlistManagerStats: stationDetails.playlistManagerStats || {}
                             },
-                            // Pass action handlers to mobile row
                             onFeed: () => handleCommand(row.brandName, 'feed'),
                             onStop: () => handleCommand(row.brandName, 'stop'),
                             loading: stationLoading,
