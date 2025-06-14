@@ -64,7 +64,7 @@
                   <n-button
                       type="primary"
                       text
-                      @click="copyToClipboard(localFormData.iceCastUrl)"
+                      @click="copyToClipboard(localFormData.iceCastUrl || '')"
                       style="margin-left: 8px;"
                   >
                     <template #icon>
@@ -83,7 +83,7 @@
                   <n-button
                       type="primary"
                       text
-                      @click="copyToClipboard(localFormData.actionUrl)"
+                      @click="copyToClipboard(localFormData.actionUrl || '')"
                       style="margin-left: 8px;"
                   >
                     <template #icon>
@@ -102,27 +102,26 @@
               <n-gi>
                 <n-form-item label="Name">
                   <n-select
-                      v-model:value="localFormData.aiAgent.name"
+                      v-model:value="localFormData.aiAgentId"
                       :options="agentOptions"
                       style="width: 50%; max-width: 600px;"
-                      @update:value="updateSelectedAgent"
                   />
                 </n-form-item>
               </n-gi>
-              <n-gi>
+              <n-gi v-if="selectedAgent">
                 <n-form-item label="Preferred Language">
                   <n-input
-                      v-model:value="localFormData.aiAgent.preferredLang"
+                      :value="selectedAgent.preferredLang"
                       style="width: 50%; max-width: 600px; background-color: #f5f5f5; cursor: not-allowed;"
                       readonly
                       disabled
                   />
                 </n-form-item>
               </n-gi>
-              <n-gi>
+              <n-gi v-if="selectedAgent">
                 <n-form-item label="Main Prompt">
                   <CodeMirror
-                      v-model="localFormData.aiAgent.mainPrompt"
+                      :modelValue="selectedAgent.mainPrompt"
                       basic
                       :lang="lang"
                       :style="{
@@ -135,14 +134,14 @@
                         cursor: 'not-allowed'
                       }"
                       :extensions="editorExtensions"
-                      :editable="false"
+                      :disabled="true"
                   />
                 </n-form-item>
               </n-gi>
-              <n-gi>
+              <n-gi v-if="selectedAgent">
                 <n-form-item label="Preferred Voice">
                   <n-input
-                      v-model:value="localFormData.aiAgent.preferredVoice[0].name"
+                      :value="selectedAgent.preferredVoice[0]?.name"
                       style="width: 50%; max-width: 600px; background-color: #f5f5f5; cursor: not-allowed;"
                       readonly
                       disabled
@@ -159,38 +158,28 @@
               <n-gi>
                 <n-form-item label="Name">
                   <n-select
-                      v-model:value="localFormData.profile.name"
-                      :options="profileNameOptions"
+                      v-model:value="localFormData.profileId"
+                      :options="profileOptions"
                       style="width: 50%; max-width: 600px;"
                   />
                 </n-form-item>
               </n-gi>
-              <n-gi>
+              <n-gi v-if="selectedProfile">
                 <n-form-item label="Description">
                   <n-input
-                      v-model:value="localFormData.profile.description"
+                      :value="selectedProfile.description"
                       type="textarea"
-                      style="width: 100%; max-width: 800px; background-color: #f5f5f5; cursor: not-allowed;"
                       :autosize="{ minRows: 3, maxRows: 5 }"
-                      readonly
-                      disabled
-                  />
-                </n-form-item>
-              </n-gi>
-              <n-gi>
-                <n-form-item label="Announcement Frequency">
-                  <n-select
-                      v-model:value="localFormData.profile.announcementFrequency"
-                      :options="announcementFrequencyOptions"
                       style="width: 50%; max-width: 600px; background-color: #f5f5f5; cursor: not-allowed;"
                       disabled
                   />
                 </n-form-item>
               </n-gi>
-              <n-gi>
+
+              <n-gi v-if="selectedProfile">
                 <n-form-item label="Explicit Content">
                   <n-checkbox
-                      v-model:checked="localFormData.profile.explicitContent"
+                      :checked="selectedProfile.explicitContent"
                       :disabled="true"
                   />
                 </n-form-item>
@@ -204,8 +193,8 @@
 </template>
 
 <script lang="ts">
-import {defineComponent, onMounted, reactive, ref, computed} from "vue";
-import {useRoute, useRouter} from "vue-router";
+import { defineComponent, onMounted, reactive, ref, computed } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import {
   NButton,
   NButtonGroup,
@@ -225,15 +214,20 @@ import {
   useLoadingBar,
   useMessage
 } from "naive-ui";
-import {Copy} from '@vicons/tabler';
-import {html} from '@codemirror/lang-html';
-import {EditorView} from '@codemirror/view';
+import { Copy } from '@vicons/tabler';
+import { html } from '@codemirror/lang-html';
+import { EditorView } from '@codemirror/view';
 import CodeMirror from 'vue-codemirror6';
 import {
-  RadioStation, BrandStatus,
+  RadioStation,
+  BrandStatus,
+  RadioStationSave,
+  AiAgent,
+  Profile
 } from "../../../types/kneoBroadcasterTypes";
-import {useRadioStationStore} from "../../../stores/kneo/radioStationStore";
-import {useAiAgentStore} from "../../../stores/kneo/aiAgentStore";
+import { useRadioStationStore } from "../../../stores/kneo/radioStationStore";
+import { useAiAgentStore } from "../../../stores/kneo/aiAgentStore";
+import { useProfileStore } from "../../../stores/kneo/profileStore";
 
 export default defineComponent({
   name: "RadioStationForm",
@@ -261,119 +255,70 @@ export default defineComponent({
     const router = useRouter();
     const store = useRadioStationStore();
     const aiAgentStore = useAiAgentStore();
+    const profileStore = useProfileStore();
     const route = useRoute();
     const activeTab = ref("properties");
-    const fileList = ref([] as UploadFileInfo[]);
+    const fileList = ref<UploadFileInfo[]>([]);
     const lang = ref(html());
 
     const editorExtensions = computed(() => [
       EditorView.lineWrapping
     ]);
 
-    const countryOptions = [
-      { label: 'France', value: 'FR' },
-      { label: 'Portugal', value: 'PT' },
-      { label: 'Kazakhstan', value: 'KZ' },
-      { label: 'Spain', value: 'ES' },
-      { label: 'China', value: 'CN' },
-      { label: 'Japan', value: 'JP' }
-    ];
-
-    const profileNameOptions = [
-      { label: 'Default Radio Profile', value: 'Default Radio Profile' },
-      { label: 'Music Station Profile', value: 'Music Station Profile' },
-      { label: 'News Station Profile', value: 'News Station Profile' },
-      { label: 'Talk Radio Profile', value: 'Talk Radio Profile' }
-    ];
-
-    const languageOptions = [
-      { label: 'Portuguese', value: 'POR' },
-      { label: 'English', value: 'ENG' },
-      { label: 'Spanish', value: 'ESP' },
-      { label: 'French', value: 'FRA' },
-      { label: 'Russian', value: 'RUS' },
-      { label: 'Chinese', value: 'CHI' },
-      { label: 'Japanese', value: 'JPN' }
-    ];
-
-    const announcementFrequencyOptions = [
-      { label: 'Very Low', value: 'very_low' },
-      { label: 'Low', value: 'low' },
-      { label: 'Medium', value: 'medium' },
-      { label: 'Medium High', value: 'medium_high' },
-      { label: 'High', value: 'high' }
-    ];
-
-    const voiceOptions = [
-      { label: 'Paulo', value: 'aLFUti4k8YKvtQGXv0UO' },
-      { label: 'Ana', value: 'bGFUti5k9ZKwtRHXw1VP' },
-      { label: 'Carlos', value: 'cMFVuj5l9ALxtSGYv2WQ' }
-    ];
-
-    const agentOptions = computed(() => {
-      return aiAgentStore.getEntries.map(agent => ({
-        label: agent.name,
-        value: agent.id,
-        preferredLang: agent.preferredLang,
-        mainPrompt: agent.mainPrompt,
-        preferredVoice: agent.preferredVoice.length > 0
-            ? agent.preferredVoice[0]
-            : { id: '', name: '' }
-      }));
-    });
-
-    const localFormData = reactive<RadioStation>({
-      slugName: "",
+    const localFormData = reactive<Partial<RadioStation>>({
       id: "",
       author: "",
       regDate: "",
       lastModifier: "",
       lastModifiedDate: "",
       status: BrandStatus.OFF_LINE,
-      url: "",
       country: "",
+      slugName: "",
+      url: "",
       iceCastUrl: "",
       actionUrl: "",
-      aiAgent: {
-        id: "",
-        name: "",
-        preferredLang: "",
-        mainPrompt: "",
-        preferredVoice: [{ id: "", name: "" }],
-        enabledTools: []
-      },
-      profile: {
-        id: "",
-        name: "",
-        description: "",
-        announcementFrequency: "medium",
-        explicitContent: false
-      }
+      aiAgentId: undefined,
+      profileId: undefined
     });
 
-    const updateSelectedAgent = (value: string) => {
-      const selectedAgent = aiAgentStore.getEntries.find(agent => agent.id === value);
-      if (selectedAgent) {
-        localFormData.aiAgent.name = selectedAgent.name;
-        localFormData.aiAgent.preferredLang = selectedAgent.preferredLang;
-        localFormData.aiAgent.mainPrompt = selectedAgent.mainPrompt;
-        localFormData.aiAgent.preferredVoice = selectedAgent.preferredVoice.length > 0
-            ? [...selectedAgent.preferredVoice]
-            : [{ id: '', name: '' }];
-      }
-    };
+    const selectedAgent = computed(() => {
+      if (!localFormData.aiAgentId) return null;
+      return aiAgentStore.getEntries.find(a => a.id === localFormData.aiAgentId);
+    });
 
-    const updatePreferredVoice = (value: string) => {
-      const selectedVoice = voiceOptions.find(voice => voice.value === value);
-      if (selectedVoice) {
-        localFormData.aiAgent.preferredVoice[0] = {
-          id: selectedVoice.value,
-          name: selectedVoice.label
-        };
-      }
-    };
+    const selectedProfile = computed(() => {
+      if (!localFormData.profileId) return null;
+      return profileStore.getEntries.find(p => p.id === localFormData.profileId);
+    });
 
-    const copyToClipboard = (text: string) => {
+    const countryOptions = [
+      { label: "United States", value: "US" },
+      { label: "United Kingdom", value: "GB" },
+      { label: "Germany", value: "DE" },
+      { label: "France", value: "FR" }
+    ];
+
+    const agentOptions = computed(() => {
+      return aiAgentStore.getEntries.map(agent => ({
+        label: agent.name,
+        value: agent.id
+      }));
+    });
+
+    const profileOptions = computed(() => {
+      return profileStore.getEntries.map(profile => ({
+        label: profile.name,
+        value: profile.id
+      }));
+    });
+
+
+
+    const copyToClipboard = (text: string | undefined) => {
+      if (!text) {
+        message.error('Nothing to copy');
+        return;
+      }
       navigator.clipboard.writeText(text)
           .then(() => message.success('Copied to clipboard!'))
           .catch(() => message.error('Failed to copy'));
@@ -382,23 +327,15 @@ export default defineComponent({
     const handleSave = async () => {
       try {
         loadingBar.start();
-        const saveDTO: RadioStation = {
-          id: localFormData.id,
-          author: localFormData.author,
-          regDate: localFormData.regDate,
-          lastModifier: localFormData.lastModifier,
-          lastModifiedDate: localFormData.lastModifiedDate,
-          status: localFormData.status,
-          country: localFormData.country,
-          slugName: localFormData.slugName,
-          url: localFormData.url,
-          iceCastUrl: localFormData.iceCastUrl,
-          actionUrl: localFormData.actionUrl,
-          aiAgent: localFormData.aiAgent,
-          profile: localFormData.profile
+        const saveDTO: RadioStationSave = {
+          country: localFormData.country || "",
+          slugName: localFormData.slugName || "",
+          url: localFormData.url || "",    
+          aiAgentId: localFormData.aiAgentId,
+          profileId: localFormData.profileId
         };
 
-        await store.save(saveDTO, localFormData.id);
+        await store.save(saveDTO, localFormData.id as string);
         message.success("Radio Station saved successfully");
         await router.push("/outline/radiostations");
       } catch (error) {
@@ -421,43 +358,15 @@ export default defineComponent({
 
       try {
         loadingBar.start();
-        // Fetch AI agents first
-        await aiAgentStore.fetchAll(1, 100); // Fetch first page with 100 items
+        await aiAgentStore.fetchAll(1, 100);
+        await profileStore.fetchAll(1, 100);
 
-        if (id) {
+        if (id && id !== 'new') {
           await store.fetch(id);
           Object.assign(localFormData, store.getCurrent);
-
-          if (!localFormData.aiAgent.preferredVoice || localFormData.aiAgent.preferredVoice.length === 0) {
-            localFormData.aiAgent.preferredVoice = [{ id: "", name: "" }];
-          }
-          if (!localFormData.iceCastUrl) {
-            localFormData.iceCastUrl = "";
-          }
-          if (!localFormData.actionUrl) {
-            localFormData.actionUrl = "";
-          }
-          if (!localFormData.aiAgent) {
-            localFormData.aiAgent = {
-              id: "",
-              name: "",
-              preferredLang: "",
-              mainPrompt: "",
-              preferredVoice: [{ id: "", name: "" }],
-              enabledTools: []
-            };
-          }
-          if (!localFormData.profile) {
-            localFormData.profile = {
-              id: "",
-              name: "",
-              description: "",
-              announcementFrequency: "medium",
-              explicitContent: false
-            };
-          }
         }
       } catch (error) {
+        console.error("Failed to fetch data:", error);
         message.error('Failed to fetch data');
       } finally {
         loadingBar.finish();
@@ -473,17 +382,14 @@ export default defineComponent({
       goBack,
       fileList,
       countryOptions,
-      profileNameOptions,
-      languageOptions,
-      announcementFrequencyOptions,
-      voiceOptions,
       agentOptions,
-      updateSelectedAgent,
-      updatePreferredVoice,
+      profileOptions,
+      selectedAgent,
+      selectedProfile,
       copyToClipboard,
       lang,
       editorExtensions
     };
-  },
+  }
 });
 </script>

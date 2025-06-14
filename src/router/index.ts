@@ -7,9 +7,11 @@ import RadioStation from '../components/forms/kneo/RadioStationForm.vue';
 import SoundFragments from '../components/lists/kneo/SoundFragments.vue';
 import SoundFragment from '../components/forms/kneo/SoundFragmentForm.vue';
 import Memories from '../components/lists/kneo/Memories.vue';
-import Memory from '../components/forms/kneo/MemoryForm.vue';
+import MemoryForm from '../components/forms/kneo/MemoryForm.vue';
 import AiAgents from '../components/lists/kneo/AiAgents.vue';
-import AiAgent from '../components/forms/kneo/AiAgentForm.vue';
+import AiAgentForm from '../components/forms/kneo/AiAgentForm.vue';
+import Profiles from '../components/lists/kneo/Profiles.vue';
+import ProfileForm from '../components/forms/kneo/ProfileForm.vue';
 import Player from "../views/HlsStreamView.vue";
 import Keycloak from "keycloak-js";
 import apiClient from "../api/apiClient";
@@ -72,8 +74,8 @@ const routes: Array<RouteRecordRaw> = [
             },
             {
                 path: 'memories/:id',
-                name: 'Memory',
-                component: Memory,
+                name: 'MemoryForm',
+                component: MemoryForm,
                 props: true
             },
             {
@@ -83,8 +85,19 @@ const routes: Array<RouteRecordRaw> = [
             },
             {
                 path: 'ai_agents/:id',
-                name: 'AiAgent',
-                component: AiAgent,
+                name: 'AiAgentForm',
+                component: AiAgentForm,
+                props: true
+            },
+            {
+                path: 'profiles',
+                name: 'Profiles',
+                component: Profiles
+            },
+            {
+                path: 'profiles/:id',
+                name: 'ProfileForm',
+                component: ProfileForm,
                 props: true
             },
             {

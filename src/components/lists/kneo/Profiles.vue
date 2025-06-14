@@ -2,7 +2,7 @@
   <n-grid :cols="isMobile ? 1 : 6" x-gap="12" y-gap="12" class="p-4">
     <n-gi>
       <n-page-header>
-        <template #title>Memories</template>
+        <template #title>Profiles</template>
         <template #footer>
           Total: {{ store.getPagination.itemCount }}
         </template>
@@ -41,24 +41,24 @@ import {computed, defineComponent, h, onMounted, onUnmounted, ref} from 'vue';
 import {
   DataTableColumns,
   NButton,
-  NButtonGroup,  
+  NButtonGroup,
   NDataTable,
   NGi,
   NGrid,
   NPageHeader,
-  NTag,
-  NCode
+  useMessage
 } from 'naive-ui';
 import {useRouter} from 'vue-router';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
-import {Memory} from "../../../types/kneoBroadcasterTypes";
-import {useMemoryStore} from "../../../stores/kneo/memoryStore";
+import {Profile} from "../../../types/kneoBroadcasterTypes";
+import {useProfileStore} from "../../../stores/kneo/profileStore";
 
 export default defineComponent({
   components: {NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon},
   setup() {
     const router = useRouter();
-    const store = useMemoryStore();
+    const message = useMessage();
+    const store = useProfileStore();
     const isMobile = ref(window.innerWidth < 768);
     const loading = ref(false);
     const intervalId = ref<number | null>(null);
@@ -69,7 +69,8 @@ export default defineComponent({
         loading.value = true;
         await store.fetchAll();
       } catch (error) {
-        console.error('Failed to fetch initial data:', error);
+        console.error('Failed to fetch initial Profile data:', error);
+        message.error('Failed to load Profiles.');
       } finally {
         loading.value = false;
       }
@@ -81,9 +82,9 @@ export default defineComponent({
           try {
             await store.fetchAll(store.getPagination.page, store.getPagination.pageSize);
           } catch (error) {
-            console.error('Periodic refresh failed:', error);
+            console.error('Periodic refresh of Profiles failed:', error);
           }
-        }, 30000);
+        }, 30000); // Refresh every 30 seconds, adjust as needed
       }
     };
 
@@ -104,7 +105,7 @@ export default defineComponent({
     });
 
     onUnmounted(() => {
-      stopPeriodicRefresh();
+      stopPeriodicRefresh(); // Stop periodic refresh when component is unmounted
     });
 
     const handlePageChange = async (page: number) => {
@@ -128,14 +129,14 @@ export default defineComponent({
     };
 
     const handleNewClick = () => {
-      router.push('/outline/memories/new');
+      router.push('/outline/profiles/new');
     };
 
-    const getRowProps = (row: Memory) => {
+    const getRowProps = (row: Profile) => {
       return {
         style: 'cursor: pointer;',
         onClick: () => {
-          const routeTo = {name: 'MemoryForm', params: {id: row.id}}; // Assumes a route named 'Memory'
+          const routeTo = {name: 'ProfileForm', params: {id: row.id}};
           router.push(routeTo).catch((err) => {
             console.error('Navigation error:', err);
           });
@@ -143,45 +144,25 @@ export default defineComponent({
       };
     };
 
-    const columns = computed<DataTableColumns<Memory>>(() => {
-      const baseColumns: DataTableColumns<Memory> = [
+    const columns = computed<DataTableColumns<Profile>>(() => {
+      const baseColumns: DataTableColumns<Profile> = [
         {
           type: 'selection',
           fixed: 'left',
           width: 50
         },
+        {title: 'Name', key: 'name'},
         {
-          title: 'Brand',
-          key: 'brand',
-          render: (row: Memory) => h(NTag, { type: 'info', bordered: false }, { default: () => row.brand })
+            title: 'Description',
+            key: 'description',
+            ellipsis: {tooltip: true}
         },
         {
-          title: 'Memory Type',
-          key: 'memoryType',
-          render: (row: Memory) => {
-            let tagType: 'success' | 'warning' | 'default' = 'default';
-            if (row.memoryType === 'LISTENERS') tagType = 'success';
-            if (row.memoryType === 'AUDIENCE_CONTEXT') tagType = 'warning';
-            return h(NTag, { type: tagType, bordered: false }, { default: () => row.memoryType });
-          }
-        },
-        {
-          title: 'Content',
-          key: 'content',
-          render: (row: Memory) => {
-            // Display a snippet of the JSON content
-            return h(NCode, { code: JSON.stringify(row.content).substring(0, 100) + '...', language: 'json' });
-          }
-        },
-        {
-          title: 'Created Date',
-          key: 'regDate',
-          render: (row: Memory) => new Date(row.regDate).toLocaleString()
-        },
-        {
-          title: 'Last  Updated Date',
-          key: 'lastModifiedDate',
-          render: (row: Memory) => new Date(row.lastModifiedDate).toLocaleString()
+            title: 'Explicit Content',
+            key: 'explicitContent',
+            render: (row: Profile) => {
+                return h('span', {}, row.explicitContent ? 'Yes' : 'No');
+            }
         }
       ];
 
@@ -190,18 +171,15 @@ export default defineComponent({
           {
             type: 'selection',
             fixed: 'left',
-            width: 50,
+            width: 50
           },
           {
-            title: 'Memory',
+            title: 'Profile',
             key: 'combined',
-            render: (row: Memory) => {
+            render: (row: Profile) => {
               return h('div', {}, [
-                h('div', { style: 'font-weight: bold;' }, `Brand: ${row.brand}`),
-                h('div', {style: 'font-size: 0.9rem;'}, `Type: ${row.memoryType}`),
-                h('div', {
-                  style: 'font-size: 0.8rem; color: #888;'
-                }, `Created: ${new Date(row.regDate).toLocaleDateString()}`)
+                h('div', { style: 'font-weight: bold;' }, row.name),
+                h('div', { style: 'font-size: 0.8rem;' }, `Explicit: ${row.explicitContent ? 'Yes' : 'No'}`),
               ]);
             }
           }
@@ -214,7 +192,7 @@ export default defineComponent({
     return {
       store,
       columns,
-      rowKey: (row: Memory) => row.id,
+      rowKey: (row: Profile) => row.id,
       isMobile,
       handleNewClick,
       getRowProps,

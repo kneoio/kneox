@@ -52,7 +52,7 @@ import {
   h, nextTick,
 } from 'vue';
 import {useRouter, useRoute} from 'vue-router';
-import {AlignJustified, List, Music, Dashboard, Robot, Grain} from '@vicons/tabler'
+import {AlignJustified, List, Music, Dashboard, Robot, Grain, UserCircle} from '@vicons/tabler'
 
 export default defineComponent({
   components: {
@@ -85,6 +85,7 @@ export default defineComponent({
       if (route.name === 'SoundFragments') return 'fragments';
       if (route.name === 'Memories') return 'memories';
       if (route.name === 'AiAgents') return 'ai_agents';
+      if (route.name === 'Profiles') return 'profiles';
       return null;
     });
 
@@ -121,6 +122,11 @@ export default defineComponent({
         icon: () => h(List)
       },
       {
+        label: 'Profiles',
+        key: 'profiles',
+        icon: () => h(UserCircle)
+      },
+      {
         label: 'Memories',
         key: 'memories',
         icon: () => h(Grain)
@@ -149,6 +155,8 @@ export default defineComponent({
         await router.push({name: 'Memories'});
       } else if (key === 'ai_agents') {
         await router.push({name: 'AiAgents'});
+      } else if (key === 'profiles') {
+        await router.push({name: 'Profiles'});
       }
 
       await nextTick();

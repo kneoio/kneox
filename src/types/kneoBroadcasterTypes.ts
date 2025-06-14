@@ -17,6 +17,23 @@ export enum FragmentStatus {
     ARCHIVED = 13
 }
 
+export interface Profile {
+    id: string;
+    author?: string;
+    regDate?: string;
+    lastModifier?: string;
+    lastModifiedDate?: string;
+    name: string;
+    description: string;
+    explicitContent: boolean;
+}
+
+export interface ProfileSave {    
+    name: string;
+    description: string;
+    explicitContent: boolean;
+}
+
 export interface RadioStation {
     id: string;
     author: string;
@@ -27,6 +44,10 @@ export interface RadioStation {
     country: string;
     slugName: string;
     url: string;
+    iceCastUrl?: string;
+    actionUrl: string;
+    aiAgentId?: string;
+    profileId?: string;
 }
 
 export interface RadioStationSave {
@@ -34,6 +55,8 @@ export interface RadioStationSave {
     country: string;
     slugName: string;
     url: string;
+    aiAgentId?: string;
+    profileId?: string;
 }
 
 export interface SoundFragment {
