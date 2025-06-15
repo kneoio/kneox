@@ -133,3 +133,40 @@ export interface AiAgentSave {
     preferredVoice: Voice[];
     enabledTools: Tool[];
 }
+
+// Types for Listeners Feature
+
+export interface LocalizedName {
+  [key: string]: string;
+}
+
+export interface ListenerEntry {
+  id: string;
+  author: string;
+  regDate: string;
+  lastModifier: string;
+  lastModifiedDate: string;
+  localizedName: LocalizedName;
+  userId: number;
+  country: string;
+  nickName: LocalizedName;
+  slugName: string;
+  archived: number;
+}
+
+export interface ListenerViewData {
+  count: number;
+  pageNum: number;
+  maxPage: number;
+  pageSize: number;
+  entries: ListenerEntry[];
+}
+
+export interface ListenerSave {
+  localizedName?: LocalizedName;
+  nickName?: LocalizedName;
+  country?: string;
+  slugName?: string;
+  archived?: number;
+  userId?: number; // Assuming userId might be set on creation or editable
+}

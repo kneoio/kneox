@@ -54,7 +54,7 @@ import {Profile} from "../../../types/kneoBroadcasterTypes";
 import {useEnvironmentProfileStore} from "../../../stores/kneo/environmentProfileStore";
 
 export default defineComponent({
-  name: 'EnvironmentProfiles', // Updated component name
+  name: 'EnvironmentProfiles', 
   components: {NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon},
   setup() {
     const router = useRouter();

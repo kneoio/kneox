@@ -58,6 +58,10 @@ import { AlignJustified, List, Music, Dashboard, Robot, Grain, Radio, Users, Log
 import {useRadioStationStore} from "../stores/kneo/radioStationStore";
 import {RadioStation, BrandStatus} from "../types/kneoBroadcasterTypes";
 import keycloakInst from '../keycloakFactory.js';
+import SoundFragments from '../components/lists/kneo/SoundFragments.vue';
+import StationPlaylist from "../components/lists/kneo/StationPlaylist.vue";
+import Listeners from "../components/lists/kneo/Listeners.vue";
+import DashboardView from "./DashboardView.vue";
 
 export default defineComponent({
   components: {
@@ -68,7 +72,11 @@ export default defineComponent({
     NMenu,
     NSelect,
     NIcon,
-    NH2
+    NH2,
+    SoundFragments,
+    StationPlaylist,
+    Listeners,
+    DashboardView
   },
   setup() {
 
@@ -241,6 +249,8 @@ export default defineComponent({
         ...remainingOptions
       ];
     });
+
+
 
     const handleMenuSelect = async (key: string) => {
       if (isMobile.value) {

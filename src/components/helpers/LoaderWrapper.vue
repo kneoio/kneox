@@ -31,10 +31,11 @@ export default {
 }
 
 .path {
+  stroke: #4285f4; /* Default fallback stroke color */
   stroke-dasharray: 90, 150;
   stroke-dashoffset: 0;
   transform-origin: center;
-  animation: dash 1.5s ease-in-out infinite, color 6s ease-in-out infinite;
+  animation: dash 1.5s ease-in-out infinite, kneoLoaderColorAnimation 6s ease-in-out infinite;
 }
 
 @keyframes rotate {
@@ -58,7 +59,7 @@ export default {
   }
 }
 
-@keyframes color {
+@keyframes kneoLoaderColorAnimation {
   100%,
   0% {
     stroke: #4285f4;

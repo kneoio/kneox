@@ -1,10 +1,11 @@
 import {createRouter, createWebHistory, RouteRecordRaw} from 'vue-router';
-import {inject} from 'vue';
 import MainOutline from '../views/MainOutline.vue';
 import DashboardView from '../views/DashboardView.vue';
 import StationDetail from '../components/forms/kneo/StationDetail.vue';
-import ListenersView from '../views/ListenersView.vue';
+
 import StationPlaylistView from '../components/lists/kneo/StationPlaylist.vue';
+import Listeners from '../components/lists/kneo/Listeners.vue';
+import ListenerForm from '../components/forms/kneo/ListenerForm.vue';
 import RadioStations from '../components/lists/kneo/RadioStations.vue';
 import RadioStation from '../components/forms/kneo/RadioStationForm.vue';
 import SoundFragments from '../components/lists/kneo/SoundFragments.vue';
@@ -14,7 +15,7 @@ import MemoryForm from '../components/forms/kneo/MemoryForm.vue';
 import AiAgents from '../components/lists/kneo/AiAgents.vue';
 import AiAgentForm from '../components/forms/kneo/AiAgentForm.vue';
 import EnvironmentProfiles from '../components/lists/kneo/EnvironmentProfiles.vue';
-import ProfileForm from '../components/forms/kneo/ProfileForm.vue';
+import ProfileForm from '../components/forms/kneo/EnvironmentProfileForm.vue';
 import WelcomeView from '../views/WelcomeView.vue';
 import Player from "../views/HlsStreamView.vue";
 import Keycloak from "keycloak-js";
@@ -72,7 +73,19 @@ const routes: Array<RouteRecordRaw> = [
             {
                 path: 'station/:brandName/listeners',
                 name: 'StationListeners',
-                component: ListenersView,
+                component: Listeners,
+                props: true,
+            },
+            {
+                path: 'station/:brandName/listeners/new',
+                name: 'NewListener',
+                component: ListenerForm,
+                props: true,
+            },
+            {
+                path: 'station/:brandName/listeners/:listenerId',
+                name: 'EditListener',
+                component: ListenerForm,
                 props: true,
             },
             {

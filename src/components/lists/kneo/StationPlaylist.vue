@@ -1,9 +1,7 @@
 <template>
   <div class="station-playlist-view p-4">
     <n-page-header>
-      <template #title>
-        <n-h1>Playlist for {{ brandName }}</n-h1>
-      </template>
+      <template #title>Playlist for {{ brandName }}</template>
       <template #footer>
         <span v-if="getAvailablePagination">Total: {{ getAvailablePagination.itemCount }}</span>
       </template>
@@ -22,7 +20,6 @@
     </n-button-group>
 
     <n-data-table
-        v-if="loading || getAvailableSoundFragments.length > 0"
         :columns="columns"
         :row-key="rowKey"
         :data="getAvailableSoundFragments"
@@ -32,9 +29,11 @@
         :row-props="getRowProps"
         :checked-row-keys="checkedRowKeys"
         @update:checked-row-keys="handleCheckedRowKeysChange"
-        class="mt-4"
-    />
-    <n-empty v-else description="No available sound fragments for this station." class="mt-4" />
+    >
+        <template #loading>
+          <loader-icon />
+        </template>
+    </n-data-table>
 
     <n-pagination
         v-if="getAvailablePagination && getAvailablePagination.itemCount > 0"
@@ -54,9 +53,10 @@
 import { defineComponent, ref, onMounted, watch, computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
-import { NPageHeader, NH1, NDataTable, NEmpty, useMessage, DataTableColumns, NPagination, NButtonGroup, NButton } from 'naive-ui';
+import { NPageHeader, NDataTable, NEmpty, useMessage, DataTableColumns, NPagination, NButtonGroup, NButton } from 'naive-ui';
 import { useSoundFragmentStore } from '../../../stores/kneo/soundFragmentStore';
 import { SoundFragment } from '../../../types/kneoBroadcasterTypes';
+import LoaderIcon from '../../helpers/LoaderWrapper.vue';
 
 const columns: DataTableColumns<SoundFragment> = [
   { type: 'selection' },
@@ -81,12 +81,12 @@ export default defineComponent({
   name: 'StationPlaylistView',
   components: {
     NPageHeader,
-    NH1,
     NDataTable,
     NEmpty,
     NPagination,
     NButtonGroup,
     NButton,
+    LoaderIcon,
   },
   props: {
     brandName: {
@@ -100,7 +100,7 @@ export default defineComponent({
     const store = useSoundFragmentStore();
     const { getAvailableSoundFragments, getAvailablePagination } = storeToRefs(store);
 
-    const loading = ref(false);
+    const loading = ref(true);
     const checkedRowKeys = ref<Array<string | number>>([]);
     const hasSelection = computed(() => checkedRowKeys.value.length > 0);
 
@@ -120,14 +120,15 @@ export default defineComponent({
     };
 
     const fetchAvailableFragments = async (page?: number, pageSize?: number) => {
-      if (!props.brandName) return;
+      if (!props.brandName) {
+        return;
+      }
       loading.value = true;
       try {
         const currentPage = page || getAvailablePagination.value?.page || 1;
         const currentPageSize = pageSize || getAvailablePagination.value?.pageSize || 10;
         await store.fetchAvailable(props.brandName, currentPage, currentPageSize);
       } catch (error) {
-        console.error('Error fetching available sound fragments:', error);
         message.error('Failed to fetch available sound fragments.');
       } finally {
         loading.value = false;
@@ -143,7 +144,6 @@ export default defineComponent({
     };
 
     onMounted(() => {
-      fetchAvailableFragments();
     });
 
     watch(() => props.brandName, (newBrandName) => {
