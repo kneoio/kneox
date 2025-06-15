@@ -120,21 +120,21 @@ export default defineComponent({
       return null;
     });
 
-    const getStatusColor = (status: string) => {
+    const getStatusColor = (status: BrandStatus) => {
       switch (status) {
-        case 'ON_LINE':
+        case BrandStatus.ON_LINE:
           return '#00aa00';
-        case 'ON_LINE_WELL':
+        case BrandStatus.ON_LINE_WELL:
           return '#00ff00';
-        case 'WARMING_UP':
+        case BrandStatus.WARMING_UP:
           return '#ffa500';
-        case 'WAITING_FOR_CURATOR':
+        case BrandStatus.WAITING_FOR_CURATOR:
           return '#ff69b4';
-        case 'IDLE':
+        case BrandStatus.IDLE:
           return '#bd621c';
-        case 'SYSTEM_ERROR':
+        case BrandStatus.SYSTEM_ERROR:
           return '#ff0000';
-        case 'OFF_LINE':
+        case BrandStatus.OFF_LINE:
         default:
           return '#5a5a5a';
       }
@@ -166,7 +166,7 @@ export default defineComponent({
           style: 'display: flex; align-items: center; gap: 8px;'
         }, [
           h('div', {
-            style: `width: 8px; height: 8px; border-radius: 50%; background-color: ${getStatusColor(BrandStatus[station.status])};`
+            style: `width: 8px; height: 8px; border-radius: 50%; background-color: ${getStatusColor(station.status)};`
           }),
           h('span', {}, station.slugName),
           h('span', {
