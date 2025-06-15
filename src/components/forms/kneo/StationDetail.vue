@@ -29,12 +29,12 @@
 
 <script lang="ts">
 import { defineComponent, ref, onMounted, onUnmounted, watch } from 'vue';
-import { useDashboardStore } from '../stores/kneo/dashboardStore';
+import { useDashboardStore } from '../../../stores/kneo/dashboardStore'; // Adjusted import path
 import { NPageHeader, NCard, NGrid, NGi, NButton, NSpace, NSpin } from 'naive-ui';
-import type { StationDetails } from '../types/dashboard';
+import type { StationDetails } from '../../../types/dashboard'; // Adjusted import path
 
 export default defineComponent({
-  name: 'StationDetailView',
+  name: 'StationDetail', // Renamed component
   components: {
     NPageHeader,
     NCard,

@@ -2,7 +2,9 @@ import {createRouter, createWebHistory, RouteRecordRaw} from 'vue-router';
 import {inject} from 'vue';
 import MainOutline from '../views/MainOutline.vue';
 import DashboardView from '../views/DashboardView.vue';
-import StationDetailView from '../views/StationDetailView.vue';
+import StationDetail from '../components/forms/kneo/StationDetail.vue';
+import ListenersView from '../views/ListenersView.vue';
+import StationPlaylistView from '../views/StationPlaylistView.vue';
 import RadioStations from '../components/lists/kneo/RadioStations.vue';
 import RadioStation from '../components/forms/kneo/RadioStationForm.vue';
 import SoundFragments from '../components/lists/kneo/SoundFragments.vue';
@@ -51,9 +53,21 @@ const routes: Array<RouteRecordRaw> = [
             {
                 path: 'station/:brandName',
                 name: 'StationDetail',
-                component: StationDetailView,
+                component: StationDetail,
                 props: true,
                 meta: {requiresAuth: true, titleKey: 'Station Details'},
+            },
+            {
+                path: 'station/:brandName/playlist',
+                name: 'StationPlaylist',
+                component: StationPlaylistView,
+                props: true,
+            },
+            {
+                path: 'station/:brandName/listeners',
+                name: 'StationListeners',
+                component: ListenersView,
+                props: true,
             },
             {
                 path: 'radiostations',

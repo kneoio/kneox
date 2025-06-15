@@ -107,7 +107,13 @@ export default defineComponent({
       if (route.name === 'AiAgents') return 'ai_agents';
       if (route.name === 'Profiles') return 'profiles';
       if (route.name === 'StationDetail' && route.params.brandName) {
-        return `radiostation-${route.params.brandName}`;
+        return `station-${route.params.brandName}-dashboard`;
+      }
+      if (route.name === 'StationPlaylist' && route.params.brandName) {
+        return `station-${route.params.brandName}-playlist`;
+      }
+      if (route.name === 'StationListeners' && route.params.brandName) {
+        return `station-${route.params.brandName}-listeners`;
       }
       return null;
     });
@@ -166,7 +172,21 @@ export default defineComponent({
           }, station.country || '')
         ]),
         key: `radiostation-${station.slugName}`,
-        icon: () => h(Radio, { size: 16 })
+        icon: () => h(Radio, { size: 16 }),
+        children: [
+          {
+            label: 'Dashboard',
+            key: `station-${station.slugName}-dashboard`
+          },
+          {
+            label: 'Playlist',
+            key: `station-${station.slugName}-playlist`
+          },
+          {
+            label: 'Listeners',
+            key: `station-${station.slugName}-listeners`
+          }
+        ]
       }));
 
       const allStationsOption: MenuOption = {
@@ -211,9 +231,15 @@ export default defineComponent({
         isDrawerOpen.value = false;
       }
 
-      if (key.startsWith('radiostation-')) {
-        const brandName = key.replace('radiostation-', '');
+      if (key.startsWith('station-') && key.endsWith('-dashboard')) {
+        const brandName = key.replace('station-', '').replace('-dashboard', '');
         await router.push({name: 'StationDetail', params: {brandName: brandName}});
+      } else if (key.startsWith('station-') && key.endsWith('-playlist')) {
+        const brandName = key.replace('station-', '').replace('-playlist', '');
+        await router.push({ name: 'StationPlaylist', params: { brandName: brandName } });
+      } else if (key.startsWith('station-') && key.endsWith('-listeners')) {
+        const brandName = key.replace('station-', '').replace('-listeners', '');
+        await router.push({ name: 'StationListeners', params: { brandName: brandName } });
       } else if (key === 'radiostations') {
         await router.push({name: 'RadioStations'});
       } else if (key === 'dashboard') {
