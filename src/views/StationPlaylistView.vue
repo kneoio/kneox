@@ -40,8 +40,7 @@
 
 <script lang="ts">
 import { defineComponent, ref, onMounted, watch } from 'vue';
-import { NPageHeader, NH1, NDataTable, NEmpty, useMessage } from 'naive-ui';
-import { TableBaseColumn } from 'naive-ui/es/data-table/src/interface';
+import { NPageHeader, NH1, NDataTable, NEmpty, useMessage, DataTableColumns } from 'naive-ui';
 // import { usePlaylistStore } // Assuming a store for playlist data might be created
 
 // Define a type for playlist items (example)
@@ -53,6 +52,28 @@ interface PlaylistItem {
   duration: string;
   // Add other relevant fields
 }
+
+// Define columns outside setup to avoid potential reactivity/inference issues
+const columns: DataTableColumns<PlaylistItem> = [
+  { type: 'selection' },
+  {
+    title: 'Title',
+    key: 'title',
+    sorter: (a: PlaylistItem, b: PlaylistItem) => a.title.localeCompare(b.title),
+  },
+  {
+    title: 'Artist',
+    key: 'artist',
+    sorter: (a: PlaylistItem, b: PlaylistItem) => a.artist.localeCompare(b.artist),
+  },
+  {
+    title: 'Album',
+    key: 'album',
+    sorter: (a: PlaylistItem, b: PlaylistItem) => a.album.localeCompare(b.album),
+  },
+  { title: 'Duration', key: 'duration' },
+  // Add more columns as needed
+];
 
 export default defineComponent({
   name: 'StationPlaylistView',
@@ -78,15 +99,7 @@ export default defineComponent({
     const playlistItems = ref<PlaylistItem[]>([]);
     const checkedRowKeys = ref<Array<string | number>>([]);
 
-    // Example columns - adjust based on actual playlist data structure
-    const columns: TableBaseColumn<PlaylistItem>[] = [
-      { type: 'selection' },
-      { title: 'Title', key: 'title', sorter: true },
-      { title: 'Artist', key: 'artist', sorter: true },
-      { title: 'Album', key: 'album', sorter: true },
-      { title: 'Duration', key: 'duration' },
-      // Add more columns as needed
-    ];
+
 
     const rowKey = (row: PlaylistItem) => row.id;
 

@@ -182,7 +182,8 @@ export function setupRouterGuard() {
         throw new Error('Keycloak instance not provided');
     }
 
-    router.beforeEach(async (to) => {
+    router.beforeEach(async (to, from) => {
+        console.log(`Navigating from ${from.path} to ${to.path}`);
         // Skip auth check for welcome page
         if (to.name === 'WelcomeView') {
             return true;

@@ -54,9 +54,10 @@ import {
   watchEffect,
 } from 'vue';
 import {useRouter, useRoute} from 'vue-router';
-import { AlignJustified, List, Music, Dashboard, Robot, Grain, UserCircle, Radio, Users, Home } from '@vicons/tabler';
+import { AlignJustified, List, Music, Dashboard, Robot, Grain, UserCircle, Radio, Users, Logout } from '@vicons/tabler';
 import {useRadioStationStore} from "../stores/kneo/radioStationStore";
 import {RadioStation, BrandStatus} from "../types/kneoBroadcasterTypes";
+import keycloakInst from '../keycloakFactory.js';
 
 export default defineComponent({
   components: {
@@ -99,7 +100,7 @@ export default defineComponent({
     };
 
     const activeMenuKey = computed(() => {
-      if (route.name === 'Welcome') return 'home';
+      
       if (route.name === 'Dashboard') return 'dashboard';
       if (route.name === 'Player') return 'player';
       if (route.name === 'RadioStations') return 'radiostations';
@@ -227,9 +228,9 @@ export default defineComponent({
           key: 'd1'
         },
         {
-          label: () => h('span', { style: 'color: #2080f0; font-weight: 500;' }, 'Back to Home'),
-          key: 'home',
-          icon: () => h(Home)
+          label: 'Logout',
+          key: 'logout',
+          icon: () => h(Logout)
         }
       ];
 
@@ -257,8 +258,8 @@ export default defineComponent({
         await router.push({ name: 'StationListeners', params: { brandName: brandName } });
       } else if (key === 'radiostations') {
         await router.push({name: 'RadioStations'});
-      } else if (key === 'home') {
-        await router.push({ name: 'Welcome' });
+      } else if (key === 'logout') {
+        keycloakInst.logout({ redirectUri: window.location.origin });
       } else if (key === 'djs') {
         await router.push({name: 'Profiles'});
       } else if (key === 'dashboard') {
