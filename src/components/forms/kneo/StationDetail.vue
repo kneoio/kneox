@@ -1,11 +1,11 @@
 <template>
   <div class="offline-container p-4">
-    <n-button @click="handleStart" :loading="isStartingStation" :disabled="!isButtonEnabled" type="primary">Start</n-button>
+    <n-button @click="handleStart" :loading="isStartingStation" :disabled="isOnline" type="primary">Start</n-button>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed } from 'vue';
+import { defineComponent, ref, computed, watch } from 'vue';
 import { useDashboardStore } from '../../../stores/kneo/dashboardStore'; // Adjusted import path
 import { NButton } from 'naive-ui';
 
@@ -23,19 +23,8 @@ export default defineComponent({
   setup(props) {
     const dashboardStore = useDashboardStore();
     const isStartingStation = ref(false);
-
-    const isButtonEnabled = computed(() => {
-      const stationInfo = dashboardStore.stationsList.find(s => s.brandName === props.brandName);
-      if (!stationInfo) {
-        return true; 
-      } else {
-        return false; 
-      } 
-    });
-
-    
-
-
+    const isOnline = ref(false);
+     
     const handleStart = async () => {
       if (!props.brandName) return;
       isStartingStation.value = true;
@@ -48,10 +37,14 @@ export default defineComponent({
       }
     };
 
+    watch(() => dashboardStore.stationsList, (newStations) => {
+      newStations.forEach(station => dashboardStore.ensureStationConnected(station.brandName));
+    }, { immediate: true });
+
     return {
       handleStart,
       isStartingStation,
-      isButtonEnabled
+      isOnline
     };
   },
 });
