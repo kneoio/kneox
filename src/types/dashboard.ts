@@ -1,6 +1,7 @@
 
 export interface StationEntry {
     brandName: string;
+    status: string;
 }
 
 export interface Station {
