@@ -1,0 +1,19 @@
+/* Custom Keycloak Login Theme Styles - Kneo Theme */
+
+body.login-pf {
+    background-color: #f0f2f5; /* Example: Light grey background */
+}
+
+/* You can add more specific styles below */
+
+/* Example: Style the login form box */
+/* #kc-form-login {
+    border: 1px solid #cccccc;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+} */
+
+/* Example: Style the login button */
+/* #kc-login {
+    background-color: #007bff; /* Your app's primary color */
+/*    border-color: #007bff;
+} */
