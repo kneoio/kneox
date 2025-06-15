@@ -56,7 +56,7 @@ import {
 import {useRouter, useRoute} from 'vue-router';
 import {AlignJustified, List, Music, Dashboard, Robot, Grain, UserCircle, Radio} from '@vicons/tabler'
 import {useRadioStationStore} from "../stores/kneo/radioStationStore";
-import {RadioStation} from "../types/kneoBroadcasterTypes";
+import {RadioStation, BrandStatus} from "../types/kneoBroadcasterTypes";
 
 export default defineComponent({
   components: {
@@ -106,8 +106,8 @@ export default defineComponent({
       if (route.name === 'Memories') return 'memories';
       if (route.name === 'AiAgents') return 'ai_agents';
       if (route.name === 'Profiles') return 'profiles';
-      if (route.name === 'RadioStation' && route.params.id) {
-        return `radiostation-${route.params.id}`;
+      if (route.name === 'StationDetail' && route.params.brandName) {
+        return `radiostation-${route.params.brandName}`;
       }
       return null;
     });
@@ -158,14 +158,14 @@ export default defineComponent({
           style: 'display: flex; align-items: center; gap: 8px;'
         }, [
           h('div', {
-            style: `width: 8px; height: 8px; border-radius: 50%; background-color: ${getStatusColor(station.status)};`
+            style: `width: 8px; height: 8px; border-radius: 50%; background-color: ${getStatusColor(BrandStatus[station.status])};`
           }),
           h('span', {}, station.slugName),
           h('span', {
             style: 'font-size: 0.75rem; color: #666; margin-left: auto;'
           }, station.country || '')
         ]),
-        key: `radiostation-${station.id}`,
+        key: `radiostation-${station.slugName}`,
         icon: () => h(Radio, { size: 16 })
       }));
 
@@ -212,8 +212,8 @@ export default defineComponent({
       }
 
       if (key.startsWith('radiostation-')) {
-        const stationId = key.replace('radiostation-', '');
-        await router.push({name: 'RadioStation', params: {id: stationId}});
+        const brandName = key.replace('radiostation-', '');
+        await router.push({name: 'StationDetail', params: {brandName: brandName}});
       } else if (key === 'radiostations') {
         await router.push({name: 'RadioStations'});
       } else if (key === 'dashboard') {
@@ -262,14 +262,12 @@ export default defineComponent({
       window.removeEventListener('resize', updateDrawerState);
     });
 
-    // Watch for changes in radio stations and refetch periodically
     watchEffect(() => {
       if (radioStationStore.getEntries) {
         radioStations.value = radioStationStore.getEntries;
       }
     });
 
-    // Set up periodic refresh for radio stations
     onMounted(() => {
       const intervalId = setInterval(() => {
         if (!isLoadingStations.value) {

@@ -2,6 +2,7 @@ import { computed, h, ref } from 'vue';
 import { NTag, NButton, NSpace } from 'naive-ui';
 import DesktopRow from "./DesktopRow.vue";
 import MobileRow from "./MobileRow.vue";
+import type { StationDetails } from '../../types/dashboard';
 
 // Define type for NTag component's type prop
 type NTagType = 'success' | 'warning' | 'error' | 'default' | 'info';
@@ -39,7 +40,7 @@ interface StationRow {
 
 export const useStationColumns = (
     dashboardStore: {
-        getStationDetails: (row: StationRow) => StationRow | undefined;
+        getStationDetails: (brandName: string) => StationDetails | null;
     },
     isMobile: { value: boolean },
     sendCommand: (brandName: string, command: string) => Promise<void>
@@ -207,7 +208,8 @@ export const useStationColumns = (
                     title: 'Station',
                     key: 'combined',
                     render: (row: StationRow) => {
-                        const stationDetails = dashboardStore.getStationDetails(row) || row;
+                        const details = dashboardStore.getStationDetails(row.brandName);
+                        const stationDataForMobileRow = details ? { ...row, ...details } : { ...row };
                         const statusInfo = getStatusInfo(row.status);
                         const managedByInfo = getManagedByInfo(row.managedBy);
                         const stationLoading = loadingStates.value[row.brandName] || { feed: false, stop: false };
@@ -215,10 +217,10 @@ export const useStationColumns = (
 
                         return h(MobileRow, {
                             row: {
-                                ...row,
+                                ...stationDataForMobileRow,
                                 statusInfo,
                                 managedByInfo,
-                                playlistManagerStats: stationDetails.playlistManagerStats || {}
+                                // playlistManagerStats should now be part of stationDataForMobileRow if details were found
                             },
                             onFeed: () => handleCommand(row.brandName, 'feed'),
                             onStop: () => handleCommand(row.brandName, 'stop'),

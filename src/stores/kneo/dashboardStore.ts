@@ -103,9 +103,21 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
             totalStations: 0,
             onlineStations: 0,
             minimumSegments: 0,
+            warmingStations: 0,
+            offlineStations: 0,
             slidingWindowSize: 0,
+            fileMaintenanceStats: {
+                totalSpaceBytes: 0,
+                availableSpaceBytes: 0,
+                spaceFreedBytes: 0,
+                filesDeleted: 0,
+                directoriesDeleted: 0
+            },
             stations: [],
-            timelines: []
+            timelines: [],
+            configurationStats: {
+                configDetails: {}
+            }
         };
     });
 

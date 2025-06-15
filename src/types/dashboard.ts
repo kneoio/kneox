@@ -12,13 +12,29 @@ export interface Station {
     currentFragment?: string;
 }
 
+export interface ConfigDetails {
+    configDetails: Record<string, string>;
+}
+
+export interface FileMaintenanceStats {
+    totalSpaceBytes: number;
+    availableSpaceBytes: number;
+    spaceFreedBytes: number;
+    filesDeleted: number;
+    directoriesDeleted: number;
+}
+
 export interface DashboardStats {
     totalStations: number;
     onlineStations: number;
+    warmingStations: number;
+    offlineStations: number;
     minimumSegments: number;
     slidingWindowSize: number;
     stations: StationEntry[];
     timelines: PeriodicTask[];
+    configurationStats: ConfigDetails;
+    fileMaintenanceStats: FileMaintenanceStats;
 }
 
 export interface PeriodicTask {

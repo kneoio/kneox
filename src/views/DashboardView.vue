@@ -114,6 +114,7 @@ import {
 import { useDashboardStore } from "../stores/kneo/dashboardStore";
 import { useRadioStationStore } from "../stores/kneo/radioStationStore";
 import { useStationColumns } from "../components/dashboard/stationColumns";
+import type { StationEntry } from '../types/dashboard';
 
 export default defineComponent({
   name: 'DashboardView',
@@ -146,7 +147,6 @@ export default defineComponent({
       }
     };
 
-    // Pass sendCommand to stationColumns
     const stationColumns = useStationColumns(dashboard, isMobile, sendCommand);
 
     const brandOptions = computed(() => brandStore.getEntries.map(brand => ({
