@@ -15,6 +15,7 @@ import AiAgents from '../components/lists/kneo/AiAgents.vue';
 import AiAgentForm from '../components/forms/kneo/AiAgentForm.vue';
 import Profiles from '../components/lists/kneo/Profiles.vue';
 import ProfileForm from '../components/forms/kneo/ProfileForm.vue';
+import WelcomeView from '../views/WelcomeView.vue';
 import Player from "../views/HlsStreamView.vue";
 import Keycloak from "keycloak-js";
 import apiClient from "../api/apiClient";
@@ -26,6 +27,11 @@ declare module 'vue-router' {
 }
 
 const routes: Array<RouteRecordRaw> = [
+    {
+        path: '/',
+        name: 'Welcome',
+        component: WelcomeView,
+    },
     {
         path: '/welcome',
         name: 'WelcomeView',
