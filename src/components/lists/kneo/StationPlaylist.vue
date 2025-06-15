@@ -9,6 +9,18 @@
       </template>
     </n-page-header>
 
+    <n-button-group class="mt-4">
+      <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
+      <n-button
+          type="error"
+          :disabled="!hasSelection"
+          @click="handleDelete"
+          size="large"
+      >
+        Delete ({{ checkedRowKeys.length }})
+      </n-button>
+    </n-button-group>
+
     <n-data-table
         v-if="loading || getAvailableSoundFragments.length > 0"
         :columns="columns"
@@ -17,6 +29,7 @@
         :loading="loading"
         :remote="true"
         :pagination="false"
+        :row-props="getRowProps"
         :checked-row-keys="checkedRowKeys"
         @update:checked-row-keys="handleCheckedRowKeysChange"
         class="mt-4"
@@ -38,9 +51,10 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, watch } from 'vue';
+import { defineComponent, ref, onMounted, watch, computed } from 'vue';
 import { storeToRefs } from 'pinia';
-import { NPageHeader, NH1, NDataTable, NEmpty, useMessage, DataTableColumns, NPagination } from 'naive-ui';
+import { useRouter } from 'vue-router';
+import { NPageHeader, NH1, NDataTable, NEmpty, useMessage, DataTableColumns, NPagination, NButtonGroup, NButton } from 'naive-ui';
 import { useSoundFragmentStore } from '../../../stores/kneo/soundFragmentStore';
 import { SoundFragment } from '../../../types/kneoBroadcasterTypes';
 
@@ -71,6 +85,8 @@ export default defineComponent({
     NDataTable,
     NEmpty,
     NPagination,
+    NButtonGroup,
+    NButton,
   },
   props: {
     brandName: {
@@ -78,15 +94,30 @@ export default defineComponent({
       required: true,
     },
   },
-  setup(props: { brandName: string }) { 
+  setup(props: { brandName: string }) {
+    const router = useRouter();
     const message = useMessage();
     const store = useSoundFragmentStore();
     const { getAvailableSoundFragments, getAvailablePagination } = storeToRefs(store);
 
     const loading = ref(false);
     const checkedRowKeys = ref<Array<string | number>>([]);
+    const hasSelection = computed(() => checkedRowKeys.value.length > 0);
 
     const rowKey = (row: SoundFragment) => row.id ?? row.slugName;
+
+    const getRowProps = (row: SoundFragment) => {
+      return {
+        style: 'cursor: pointer;',
+        onClick: (e: MouseEvent) => {
+          const target = e.target as HTMLElement;
+          if (target.closest('.n-checkbox') || target.closest('[data-n-checkbox]')) {
+            return;
+          }
+          router.push({ name: 'SoundFragment', params: { id: row.id } });
+        }
+      };
+    };
 
     const fetchAvailableFragments = async (page?: number, pageSize?: number) => {
       if (!props.brandName) return;
@@ -125,16 +156,42 @@ export default defineComponent({
       checkedRowKeys.value = keys;
     };
 
+    const handleNewClick = () => {
+      router.push('/outline/soundfragments/new');
+    };
+
+    const handleDelete = async () => {
+      if (checkedRowKeys.value.length === 0) {
+        message.info("No items selected for deletion.");
+        return;
+      }
+      try {
+        loading.value = true;
+        await Promise.all(checkedRowKeys.value.map(id => store.delete(id.toString())));
+        message.success(`Deleted ${checkedRowKeys.value.length} item(s) successfully`);
+        checkedRowKeys.value = [];
+        await fetchAvailableFragments(getAvailablePagination.value?.page, getAvailablePagination.value?.pageSize);
+      } catch (error) {
+        message.error('Failed to delete items');
+      } finally {
+        loading.value = false;
+      }
+    };
+
     return {
       loading,
       getAvailableSoundFragments,
       getAvailablePagination,
       columns,
       rowKey,
+      getRowProps,
       checkedRowKeys,
+      hasSelection,
       handleCheckedRowKeysChange,
       handlePageChange,
       handlePageSizeChange,
+      handleNewClick,
+      handleDelete,
     };
   },
 });

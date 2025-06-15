@@ -102,7 +102,7 @@ import {
   type UploadFileInfo
 } from "naive-ui";
 import { useSoundFragmentStore } from "../../../stores/kneo/soundFragmentStore";
-import { FragmentStatus, FragmentType, SoundFragment, SoundFragmentSave } from "../../../types/kneoBroadcasterTypes";
+import { FragmentType, SoundFragment, SoundFragmentSave } from "../../../types/kneoBroadcasterTypes";
 import {
   isErrorWithResponse,
   capitalizeFirstLetter,
@@ -166,7 +166,7 @@ export default defineComponent({
       onError?: (e: Error) => void,
     }) => {
       try {
-        const response = await store.uploadFile(localFormData.id, file.file as File);
+        const response = await store.uploadFile(localFormData.slugName, file.file as File);
         const newFile = {
           ...file,
           ...response,
@@ -182,7 +182,7 @@ export default defineComponent({
 
     const handleDownload = async (file: UploadFileInfo) => {
       try {
-        await downloadSoundFragment(localFormData.id, file.id || 'download');
+        await downloadSoundFragment(localFormData.slugName, file.id || 'download');
         message.success('Download started');
       } catch (error) {
         console.error('Download failed:', error);
@@ -242,7 +242,7 @@ export default defineComponent({
     };
 
     const goBack = () => {
-      router.push("/outline/soundfragments");
+      router.back();
     };
 
     onMounted(async () => {

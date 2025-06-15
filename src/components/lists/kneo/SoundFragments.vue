@@ -194,6 +194,7 @@ export default defineComponent({
         await Promise.all(checkedRowKeys.value.map(id => store.delete(id.toString())));
         message.success(`Deleted ${checkedRowKeys.value.length} item(s) successfully`);
         checkedRowKeys.value = [];
+        await store.fetchAll(store.getPagination.page, store.getPagination.pageSize);
       } catch (error) {
         message.error('Failed to delete items');
         // console.error('Delete error:', error);
