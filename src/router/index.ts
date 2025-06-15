@@ -175,11 +175,10 @@ const router = createRouter({
     routes
 });
 
-export function setupRouterGuard() {
-    const keycloak = inject<Keycloak>('keycloak');
-
+export function setupRouterGuard(keycloak: Keycloak) {
     if (!keycloak) {
-        throw new Error('Keycloak instance not provided');
+        // This check might be redundant if TypeScript enforces the argument, but good for safety.
+        throw new Error('Keycloak instance was not provided to setupRouterGuard');
     }
 
     router.beforeEach(async (to, from) => {
@@ -190,11 +189,12 @@ export function setupRouterGuard() {
         }
 
         if (to.matched.some(record => record.meta.requiresAuth)) {
+            console.log(`Router Guard: Checking protected route. keycloak.authenticated = ${keycloak.authenticated}`);
             try {
                 if (!keycloak.authenticated) {
-                    await keycloak.init({
-                        onLoad: 'login-required',
-                        checkLoginIframe: false
+                    console.log('User not authenticated, redirecting to login for protected route.');
+                    return keycloak.login({
+                        redirectUri: window.location.origin + to.fullPath // Use to.fullPath for accuracy
                     });
                 }
 

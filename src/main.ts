@@ -1,7 +1,7 @@
 import { createApp, reactive } from 'vue';
 import App from "./App.vue";
 import keycloakInst from "./keycloakFactory";
-import router from "./router";
+import router, { setupRouterGuard } from "./router";
 import IconWrapper from "./components/helpers/IconWrapper.vue";
 import './assets/tailwind.css';
 import { createPinia } from 'pinia';
@@ -26,45 +26,47 @@ keycloak.init({
     pkceMethod: 'S256',
     scope: 'openid offline_access'
 }).then(async (authenticated: boolean) => {
-    console.log('authenticated: ', authenticated)
+    console.log('Initial authentication status: ', authenticated);
     if (authenticated) {
         try {
             const profile = await keycloak.loadUserProfile();
             userData.profile = profile;
             console.log('User profile loaded', profile);
-            setupApiClient(keycloak.idToken);
-            startApp();
+            setupApiClient(keycloak.idToken); // Setup API client with token
 
+            // Token refresh interval
             setInterval(async () => {
                 try {
-                    const refreshed = await keycloak.updateToken(70); // Added await here as updateToken is often promise-based
+                    const refreshed = await keycloak.updateToken(70);
                     if (refreshed) {
                         console.log('Token was successfully refreshed');
-                        setupApiClient(keycloak.idToken);
+                        setupApiClient(keycloak.idToken); // Re-setup API client with new token
                     } else {
                         console.log('Token is still valid');
                     }
                 } catch (error) {
-                    console.error('Failed to refresh token, attempting login', error); // Changed message slightly
-                    // It's generally better to attempt a login or handle this state rather than just logging out without warning
-                    // Depending on the error, a full login might be needed.
-                    // keycloak.logout(); // Or attempt login again if preferred.
-                    await keycloak.login({ prompt: 'login' }); // Example: force new login
+                    console.error('Failed to refresh token, attempting login', error);
+                    keycloak.login(); // Force login on refresh failure
                 }
-            }, 60000); // 60 seconds
+            }, 60000); // Check every 60 seconds
 
         } catch (error) {
-            console.error('Failed to load user profile', error);
-            //  keycloak.logout(); // Redirect to login on failure - This was commented out
+            console.error('Failed to load user profile or setup API client post-authentication', error);
+            // Decide if app should start or show an error page
         }
     } else {
-        console.warn('Not authenticated - redirecting to login');
-        await keycloak.login({ prompt: 'login' });
+        console.log('User is not authenticated initially.');
+        // API client might be set up without a token for public endpoints, or not at all
+        // setupApiClient(); // Or setupApiClient(null) if it supports unauthenticated state
     }
+    // Always start the app to allow access to public routes
+    startApp();
 
-}).catch(async (error: any) => {
-    console.error('Failed to initialize Keycloak - redirecting to login', error);
-    await keycloak.login({prompt: 'login'});
+}).catch(error => {
+    console.error('Keycloak initialization failed catastrophically', error);
+    // Potentially start app with an error message or limited functionality
+    // For example, you could navigate to an error page or show a global notification
+    startApp(); // Attempt to start the app to show public content or an error state
 });
 
 function startApp() {
@@ -74,5 +76,6 @@ function startApp() {
     app.provide('userData', userData);
     app.use(createPinia());
     app.use(router);
+    setupRouterGuard(keycloak); // Initialize router guards and pass keycloak instance
     app.mount('#app');
 }
