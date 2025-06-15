@@ -101,7 +101,7 @@ import {
   useMessage,
   type UploadFileInfo
 } from "naive-ui";
-import { useSoundFragmentStore } from "../../../stores/kneo/soundFragmentsStore";
+import { useSoundFragmentStore } from "../../../stores/kneo/soundFragmentStore";
 import { FragmentStatus, FragmentType, SoundFragment, SoundFragmentSave } from "../../../types/kneoBroadcasterTypes";
 import {
   isErrorWithResponse,

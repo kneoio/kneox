@@ -28,13 +28,13 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, onUnmounted, watch } from 'vue';
+import { defineComponent, ref, onMounted, watch } from 'vue';
 import { useDashboardStore } from '../../../stores/kneo/dashboardStore'; // Adjusted import path
 import { NPageHeader, NCard, NGrid, NGi, NButton, NSpace, NSpin } from 'naive-ui';
 import type { StationDetails } from '../../../types/dashboard'; // Adjusted import path
 
 export default defineComponent({
-  name: 'StationDetail', // Renamed component
+  name: 'StationDetail', 
   components: {
     NPageHeader,
     NCard,
@@ -57,32 +57,23 @@ export default defineComponent({
 
     const fetchStationData = () => {
       dashboardStore.ensureStationConnected(props.brandName);
-      // Data will be updated via WebSocket, so we watch the store's stationResponse
     };
 
     watch(() => dashboardStore.stationResponse[props.brandName], (newDetails) => {
       if (newDetails && newDetails.payload && newDetails.payload.station) {
         station.value = newDetails.payload.station;
-      } else {
-        // Potentially fetch if not found or connection was lost
-        // dashboardStore.fetchStation(props.brandName); 
       }
     }, { immediate: true, deep: true });
 
     onMounted(() => {
-      dashboardStore.connect(); // Ensure main dashboard connection is active
+      dashboardStore.connect(); 
       fetchStationData();
-      // Initialize station.value if data is already in store from a previous connection
       const initialDetails = dashboardStore.getStationDetails(props.brandName);
       if (initialDetails) {
         station.value = initialDetails;
       }
     });
 
-    onUnmounted(() => {
-      // Decide if we disconnect the specific station or keep it connected
-      // dashboardStore.disconnectStation(props.brandName);
-    });
 
     const handleFeed = async () => {
       isActionLoading.value.feed = true;

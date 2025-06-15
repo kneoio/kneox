@@ -7,11 +7,12 @@ import type { SoundFragment, SoundFragmentSave } from "../../types/kneoBroadcast
 export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
     const apiViewResponse = ref<ApiViewPageResponse<SoundFragment> | null>(null);
     const apiFormResponse = ref<ApiFormResponse<SoundFragment> | null>(null);
-    const availableSoundFragments = ref<SoundFragment[]>([]);
+    const availableApiViewResponse = ref<ApiViewPageResponse<SoundFragment> | null>(null); // New ref for paginated available fragments
     const genreOptions = ref<Array<{label: string, value: string}>>([]);
 
     const getEntries = computed(() => apiViewResponse.value?.viewData.entries || []);
-    const getAvailableSoundFragments = computed(() => availableSoundFragments.value);
+    // Updated to derive from availableApiViewResponse, assuming API returns ApiViewPageResponse<SoundFragment>
+    const getAvailableSoundFragments = computed(() => availableApiViewResponse.value?.viewData.entries || []);
     const getCurrent = computed(() => apiFormResponse.value?.docData || {
         id: '',
         slugName: '',
@@ -50,6 +51,27 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         };
     });
 
+    // New pagination computed for available sound fragments
+    const getAvailablePagination = computed(() => {
+        if (!availableApiViewResponse.value?.viewData) return {
+            page: 1,
+            pageSize: 10,
+            itemCount: 0,
+            pageCount: 1,
+            showSizePicker: true,
+            pageSizes: [10, 20, 30, 40]
+        };
+
+        return {
+            page: availableApiViewResponse.value.viewData.pageNum,
+            pageSize: availableApiViewResponse.value.viewData.pageSize,
+            itemCount: availableApiViewResponse.value.viewData.count,
+            pageCount: availableApiViewResponse.value.viewData.maxPage,
+            showSizePicker: true,
+            pageSizes: [10, 20, 30, 40]
+        };
+    });
+
     const fetchGenres = async () => {
         const response = await apiClient.get('/genres');
         if (!response?.data?.payload) throw new Error('Invalid API response');
@@ -65,15 +87,29 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
 
     const fetchSoundFragments = async (page = 1, pageSize = 10) => {
         const response = await apiClient.get(`/soundfragments?page=${page}&size=${pageSize}`);
-        if (!response?.data?.payload) throw new Error('Invalid API response');
+        // Expects flat structure, as it was working before for SoundFragments.vue
+        if (!response?.data?.payload) throw new Error('Invalid API response for sound fragments');
         apiViewResponse.value = response.data.payload;
     };
 
-    const fetchAvailableSoundFragments = async (brand: string) => {
-        const response = await apiClient.get(`/soundfragments/available-soundfragments?brand=${brand}`);
-        if (!response?.data?.payload) throw new Error('Invalid API response');
-        availableSoundFragments.value = response.data.payload;
-        return availableSoundFragments.value;
+    // Updated to accept pagination parameters and store in availableApiViewResponse
+    const fetchAvailableSoundFragments = async (brand: string, page = 1, pageSize = 10) => {
+        const response = await apiClient.get(`/soundfragments/available-soundfragments?brand=${brand}&page=${page}&size=${pageSize}`);
+        if (!response?.data?.payload?.viewData?.entries) throw new Error('Invalid API response structure for available sound fragments');
+
+        const rawPayload = response.data.payload;
+        // Each entry in this response is { id, soundFragmentDTO, playedByBrandCount, lastTimePlayedByBrand }
+        // We are primarily interested in soundFragmentDTO for the table display as SoundFragment
+        // If playedByBrandCount etc. are needed directly on SoundFragment, the type and mapping would need adjustment.
+        const transformedEntries = rawPayload.viewData.entries.map((entry: any) => entry.soundFragmentDTO);
+
+        availableApiViewResponse.value = {
+            ...rawPayload,
+            viewData: {
+                ...rawPayload.viewData,
+                entries: transformedEntries,
+            },
+        };
     };
 
     const fetchSoundFragment = async (id: string) => {
@@ -118,14 +154,15 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
     return {
         apiViewResponse,
         apiFormResponse,
-        availableSoundFragments,
+        availableApiViewResponse, // Expose new response object
         getEntries,
-        getAvailableSoundFragments,
+        getAvailableSoundFragments, // Updated computed
         getCurrent,
         getPagination,
+        getAvailablePagination, // New computed for available items pagination
         genreOptions,
         fetchAll: fetchSoundFragments,
-        fetchAvailable: fetchAvailableSoundFragments,
+        fetchAvailable: fetchAvailableSoundFragments, // Alias points to updated function
         fetch: fetchSoundFragment,
         save,
         delete: deleteSoundFragment,

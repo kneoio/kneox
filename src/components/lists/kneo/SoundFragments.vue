@@ -61,8 +61,9 @@ import {
 import { useRouter } from 'vue-router';
 
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
-import { useSoundFragmentStore } from "../../../stores/kneo/soundFragmentsStore";
+
 import { SoundFragment } from "../../../types/kneoBroadcasterTypes";
+import { useSoundFragmentStore } from '../../../stores/kneo/soundFragmentStore';
 
 export default defineComponent({
   name: 'SoundFragments',

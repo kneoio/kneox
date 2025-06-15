@@ -4,7 +4,7 @@ import MainOutline from '../views/MainOutline.vue';
 import DashboardView from '../views/DashboardView.vue';
 import StationDetail from '../components/forms/kneo/StationDetail.vue';
 import ListenersView from '../views/ListenersView.vue';
-import StationPlaylistView from '../views/StationPlaylistView.vue';
+import StationPlaylistView from '../components/lists/kneo/StationPlaylist.vue';
 import RadioStations from '../components/lists/kneo/RadioStations.vue';
 import RadioStation from '../components/forms/kneo/RadioStationForm.vue';
 import SoundFragments from '../components/lists/kneo/SoundFragments.vue';
@@ -13,7 +13,7 @@ import Memories from '../components/lists/kneo/Memories.vue';
 import MemoryForm from '../components/forms/kneo/MemoryForm.vue';
 import AiAgents from '../components/lists/kneo/AiAgents.vue';
 import AiAgentForm from '../components/forms/kneo/AiAgentForm.vue';
-import Profiles from '../components/lists/kneo/Profiles.vue';
+import EnvironmentProfiles from '../components/lists/kneo/EnvironmentProfiles.vue';
 import ProfileForm from '../components/forms/kneo/ProfileForm.vue';
 import WelcomeView from '../views/WelcomeView.vue';
 import Player from "../views/HlsStreamView.vue";
@@ -120,8 +120,8 @@ const routes: Array<RouteRecordRaw> = [
             },
             {
                 path: 'profiles',
-                name: 'Profiles',
-                component: Profiles
+                name: 'EnvironmentProfiles',
+                component: EnvironmentProfiles
             },
             {
                 path: 'profiles/:id',

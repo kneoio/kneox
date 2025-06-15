@@ -54,7 +54,7 @@ import {
   watchEffect,
 } from 'vue';
 import {useRouter, useRoute} from 'vue-router';
-import { AlignJustified, List, Music, Dashboard, Robot, Grain, UserCircle, Radio, Users, Logout } from '@vicons/tabler';
+import { AlignJustified, List, Music, Dashboard, Robot, Grain, Radio, Users, Logout, BrandAirtable } from '@vicons/tabler';
 import {useRadioStationStore} from "../stores/kneo/radioStationStore";
 import {RadioStation, BrandStatus} from "../types/kneoBroadcasterTypes";
 import keycloakInst from '../keycloakFactory.js';
@@ -107,7 +107,7 @@ export default defineComponent({
       if (route.name === 'SoundFragments') return 'fragments';
       if (route.name === 'Memories') return 'memories';
       if (route.name === 'AiAgents') return 'ai_agents';
-      if (route.name === 'Profiles') return 'profiles';
+      if (route.name === 'EnvironmentProfiles') return 'environment_profiles';
       if (route.name === 'StationDetail' && route.params.brandName) {
         return `station-${route.params.brandName}-dashboard`;
       }
@@ -204,9 +204,9 @@ export default defineComponent({
           icon: () => h(Music)
         },
         {
-          label: 'Profiles',
-          key: 'profiles',
-          icon: () => h(UserCircle)
+          label: 'Environment Profiles',
+          key: 'environment_profiles',
+          icon: () => h(BrandAirtable)
         },
         {
           label: 'Memories',
@@ -261,7 +261,7 @@ export default defineComponent({
       } else if (key === 'logout') {
         keycloakInst.logout({ redirectUri: window.location.origin });
       } else if (key === 'djs') {
-        await router.push({name: 'Profiles'});
+        await router.push({name: 'EnvironmentProfiles'});
       } else if (key === 'dashboard') {
         await router.push({name: 'Dashboard'});
       } else if (key === 'player') {
@@ -272,8 +272,8 @@ export default defineComponent({
         await router.push({name: 'Memories'});
       } else if (key === 'ai_agents') {
         await router.push({name: 'AiAgents'});
-      } else if (key === 'profiles') {
-        await router.push({name: 'Profiles'});
+      } else if (key === 'environment_profiles') {
+        await router.push({name: 'EnvironmentProfiles'});
       }
 
       await nextTick();
