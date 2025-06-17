@@ -4,39 +4,41 @@
       <n-page-header>
         <template #title>Listeners for {{ brandName }}</template>
         <template #footer>
-          Total: {{ store.getPagination.itemCount }}
+          Total: {{ totalCount }}
         </template>
       </n-page-header>
     </n-gi>
+
     <n-gi>
-        <n-button-group>
-            <n-button type="primary" size="large" @click="navigateToCreateListener">New</n-button>
-        </n-button-group>
+      <n-button-group>
+        <n-button type="primary" size="large" @click="navigateToCreateListener">New</n-button>
+      </n-button-group>
     </n-gi>
+
     <n-gi>
-        <n-data-table
+      <n-data-table
           remote
           :columns="columns"
           :row-key="rowKey"
-          :data="store.getEntries"
-          :pagination="store.getPagination"
+          :data="tableData"
+          :pagination="paginationConfig"
           :bordered="false"
           :loading="loading"
           :row-props="getRowProps"
           v-model:checked-row-keys="checkedRowKeys"
           @update:page="handlePageChange"
           @update:page-size="handlePageSizeChange"
-        >
-          <template #loading>
-            <loader-icon />
-          </template>
-        </n-data-table>
+      >
+        <template #loading>
+          <loader-icon />
+        </template>
+      </n-data-table>
     </n-gi>
   </n-grid>
 </template>
 
 <script lang="ts">
-import { defineComponent, h, onMounted, ref, watch } from 'vue';
+import { defineComponent, onMounted, ref, watch, computed } from 'vue';
 import {
   DataTableColumns,
   NDataTable,
@@ -69,33 +71,107 @@ export default defineComponent({
     const loading = ref(false);
     const checkedRowKeys = ref<Array<string | number>>([]);
 
+    const tableData = computed(() => {
+      const storeData = store.getEntries;
+      if (Array.isArray(storeData)) {
+        return storeData;
+      }
+      if (storeData?.payload?.viewData?.entries) {
+        return storeData.payload.viewData.entries;
+      }
+      if (storeData?.viewData?.entries) {
+        return storeData.viewData.entries;
+      }
+      if (storeData?.entries) {
+        return storeData.entries;
+      }
+      return [];
+    });
+
+    const totalCount = computed(() => {
+      const storeData = store.getEntries;
+      if (storeData?.payload?.viewData?.count !== undefined) {
+        return storeData.payload.viewData.count;
+      }
+      if (storeData?.viewData?.count !== undefined) {
+        return storeData.viewData.count;
+      }
+      if (storeData?.count !== undefined) {
+        return storeData.count;
+      }
+      return store.getPagination?.itemCount || 0;
+    });
+
+    const paginationConfig = computed(() => {
+      const storeData = store.getEntries;
+      let pageInfo = {};
+
+      if (storeData?.payload?.viewData) {
+        const viewData = storeData.payload.viewData;
+        pageInfo = {
+          page: viewData.pageNum || 1,
+          pageSize: viewData.pageSize || 10,
+          itemCount: viewData.count || 0,
+          pageCount: viewData.maxPage || 1,
+        };
+      } else if (storeData?.viewData) {
+        const viewData = storeData.viewData;
+        pageInfo = {
+          page: viewData.pageNum || 1,
+          pageSize: viewData.pageSize || 10,
+          itemCount: viewData.count || 0,
+          pageCount: viewData.maxPage || 1,
+        };
+      } else {
+        pageInfo = store.getPagination || {
+          page: 1,
+          pageSize: 10,
+          itemCount: 0,
+          pageCount: 1,
+        };
+      }
+
+      return {
+        ...pageInfo,
+        showSizePicker: true,
+        pageSizes: [10, 20, 50, 100],
+      };
+    });
+
     const columns: DataTableColumns<ListenerEntry> = [
       { type: 'selection' },
-      { title: 'Nickname', key: 'nickName.en' },
-      { title: 'Country', key: 'country' },
-      { title: 'Registered', key: 'regDate' },
       {
-        title: 'Archived',
-        key: 'archived',
-        render: (row: ListenerEntry) => (row.archived ? 'Yes' : 'No'),
+        title: 'Nickname',
+        key: 'listener.nickName.en',
+        render: (row: ListenerEntry) => {
+          return row.listener?.nickName?.en ||
+              row.nickName?.en ||
+              'N/A';
+        }
       },
       {
-        title: 'Actions',
-        key: 'actions',
-        render(row: ListenerEntry) {
-          return h(
-            NButton,
-            {
-              size: 'small',
-              onClick: () => navigateToEditListener(row.id),
-            },
-            { default: () => 'Edit' }
-          );
-        },
+        title: 'Country',
+        key: 'listener.country',
+        render: (row: ListenerEntry) => {
+          return row.listener?.country ||
+              row.country ||
+              'N/A';
+        }
       },
+      {
+        title: 'Registered',
+        key: 'brandListener.regDate',
+        render: (row: ListenerEntry) => {
+          return row.listener?.regDate ||
+              row.regDate ||
+              'N/A';
+        }
+      }
     ];
 
-    const rowKey = (row: ListenerEntry): string => row.id;
+    const rowKey = (row: ListenerEntry): string => {
+      return row.listener?.id || row.id;
+    };
 
     const fetchData = async (page = 1, pageSize = 10) => {
       if (!props.brandName) return;
@@ -110,7 +186,7 @@ export default defineComponent({
     };
 
     const handlePageChange = (page: number) => {
-      fetchData(page, store.getPagination.pageSize);
+      fetchData(page, paginationConfig.value.pageSize);
     };
 
     const handlePageSizeChange = (pageSize: number) => {
@@ -129,7 +205,8 @@ export default defineComponent({
       return {
         style: 'cursor: pointer;',
         onClick: () => {
-          navigateToEditListener(row.id);
+          const id = row.brandListener?.id || row.id;
+          navigateToEditListener(id);
         }
       };
     };
@@ -150,10 +227,13 @@ export default defineComponent({
       rowKey,
       loading,
       checkedRowKeys,
+      tableData,
+      totalCount,
+      paginationConfig,
       handlePageChange,
       handlePageSizeChange,
       navigateToCreateListener,
-      getRowProps, // Expose getRowProps
+      getRowProps,
     };
   }
 });

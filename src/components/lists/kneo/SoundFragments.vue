@@ -46,12 +46,11 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, h, onMounted, ref, onUnmounted, watch } from 'vue';
+import { computed, defineComponent,  onMounted, ref, onUnmounted } from 'vue';
 import {
   DataTableColumns,
   NButton,
   NButtonGroup,
-  NCheckbox,
   NDataTable,
   NGi,
   NGrid,
@@ -97,7 +96,7 @@ export default defineComponent({
           } catch (error) {
             console.error('Periodic refresh failed:', error);
           }
-        }, 30000); // Refresh every 30 seconds
+        }, 30000);
       }
     };
 

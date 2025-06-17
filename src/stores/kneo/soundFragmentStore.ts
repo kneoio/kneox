@@ -11,7 +11,6 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
     const genreOptions = ref<Array<{label: string, value: string}>>([]);
 
     const getEntries = computed(() => apiViewResponse.value?.viewData.entries || []);
-    // Updated to derive from availableApiViewResponse, assuming API returns ApiViewPageResponse<SoundFragment>
     const getAvailableSoundFragments = computed(() => availableApiViewResponse.value?.viewData.entries || []);
     const getCurrent = computed(() => apiFormResponse.value?.docData || {
         id: '',
@@ -87,21 +86,16 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
 
     const fetchSoundFragments = async (page = 1, pageSize = 10) => {
         const response = await apiClient.get(`/soundfragments?page=${page}&size=${pageSize}`);
-        // Expects flat structure, as it was working before for SoundFragments.vue
         if (!response?.data?.payload) throw new Error('Invalid API response for sound fragments');
         apiViewResponse.value = response.data.payload;
     };
 
-    // Updated to accept pagination parameters and store in availableApiViewResponse
     const fetchAvailableSoundFragments = async (brand: string, page = 1, pageSize = 10) => {
         const response = await apiClient.get(`/soundfragments/available-soundfragments?brand=${brand}&page=${page}&size=${pageSize}`);
         if (!response?.data?.payload?.viewData?.entries) throw new Error('Invalid API response structure for available sound fragments');
 
         const rawPayload = response.data.payload;
-        // Each entry in this response is { id, soundFragmentDTO, playedByBrandCount, lastTimePlayedByBrand }
-        // We are primarily interested in soundFragmentDTO for the table display as SoundFragment
-        // If playedByBrandCount etc. are needed directly on SoundFragment, the type and mapping would need adjustment.
-        const transformedEntries = rawPayload.viewData.entries.map((entry: any) => entry.soundFragmentDTO);
+        const transformedEntries = rawPayload.viewData.entries.map((entry: any) => entry.soundfragment);
 
         availableApiViewResponse.value = {
             ...rawPayload,
@@ -153,15 +147,15 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
     return {
         apiViewResponse,
         apiFormResponse,
-        availableApiViewResponse, // Expose new response object
+        availableApiViewResponse,
         getEntries,
-        getAvailableSoundFragments, // Updated computed
+        getAvailableSoundFragments,
         getCurrent,
         getPagination,
-        getAvailablePagination, // New computed for available items pagination
+        getAvailablePagination,
         genreOptions,
         fetchAll: fetchSoundFragments,
-        fetchAvailable: fetchAvailableSoundFragments, // Alias points to updated function
+        fetchAvailable: fetchAvailableSoundFragments,
         fetch: fetchSoundFragment,
         save,
         delete: deleteSoundFragment,

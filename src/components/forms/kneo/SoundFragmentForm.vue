@@ -48,6 +48,18 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
+                <n-form-item label="Represented In">
+                  <n-select
+                      v-model:value="localFormData.representedInBrands"
+                      :options="radioStationOptions"
+                      filterable
+                      multiple
+                      placeholder="Select Radio Stations"
+                      style="width: 50%; max-width: 600px;"
+                  />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
                 <n-form-item label="Upload File">
                   <n-upload
                       v-model:file-list="fileList"
@@ -82,7 +94,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, reactive, ref, watch } from "vue";
+import { defineComponent, onMounted, reactive, ref, watch, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
   NButton,
@@ -102,6 +114,7 @@ import {
   type UploadFileInfo
 } from "naive-ui";
 import { useSoundFragmentStore } from "../../../stores/kneo/soundFragmentStore";
+import { useRadioStationStore } from "../../../stores/kneo/radioStationStore";
 import { FragmentType, SoundFragment, SoundFragmentSave } from "../../../types/kneoBroadcasterTypes";
 import {
   isErrorWithResponse,
@@ -132,6 +145,7 @@ export default defineComponent({
     const router = useRouter();
     const route = useRoute();
     const store = useSoundFragmentStore();
+    const radioStationStore = useRadioStationStore();
     const activeTab = ref("properties");
     const fileList = ref<UploadFileInfo[]>([]);
 
@@ -149,7 +163,16 @@ export default defineComponent({
       album: "",
       url: "",
       actionUrl: "",
+      defaultBrandId: "",
+      representedInBrands: [],
       uploadedFiles: []
+    });
+
+    const radioStationOptions = computed(() => {
+      return radioStationStore.getEntries.map(station => ({
+        label: station.slugName,
+        value: station.id
+      }));
     });
 
     watch(
@@ -213,6 +236,7 @@ export default defineComponent({
           artist: localFormData.artist,
           genre: localFormData.genre,
           album: localFormData.album,
+          representedInBrands: localFormData.representedInBrands,
           newlyUploaded: fileList.value.map(f => f.name),
         };
         await store.save(saveDTO, localFormData.id);
@@ -247,16 +271,17 @@ export default defineComponent({
 
     onMounted(async () => {
       const id = route.params.id as string;
-      if (id) {
-        loadingBar.start();
-        try {
+      loadingBar.start();
+      try {
+        await radioStationStore.fetchAll();
+        if (id) {
           await store.fetch(id);
           Object.assign(localFormData, store.getCurrent);
-        } catch (error) {
-          message.error('Failed to load data');
-        } finally {
-          loadingBar.finish();
         }
+      } catch (error) {
+        message.error('Failed to load data');
+      } finally {
+        loadingBar.finish();
       }
     });
 
@@ -285,7 +310,8 @@ export default defineComponent({
       handleUpload,
       handleDownload,
       fileList,
-      audioAcceptTypes
+      audioAcceptTypes,
+      radioStationOptions
     };
   },
 });

@@ -1,59 +1,65 @@
 <template>
-  <div class="station-playlist-view p-4">
-    <n-page-header>
-      <template #title>Playlist for {{ brandName }}</template>
-      <template #footer>
-        <span v-if="getAvailablePagination">Total: {{ getAvailablePagination.itemCount }}</span>
-      </template>
-    </n-page-header>
+  <n-grid :cols="1" x-gap="12" y-gap="12" class="p-4">
+    <n-gi>
+      <n-page-header>
+        <template #title>Playlist for {{ brandName }}</template>
+        <template #footer>
+          <span v-if="getAvailablePagination">Total: {{ getAvailablePagination.itemCount }}</span>
+        </template>
+      </n-page-header>
+    </n-gi>
 
-    <n-button-group class="mt-4">
-      <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
-      <n-button
-          type="error"
-          :disabled="!hasSelection"
-          @click="handleDelete"
-          size="large"
+    <n-gi>
+      <n-button-group>
+        <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
+        <n-button
+            type="error"
+            :disabled="!hasSelection"
+            @click="handleDelete"
+            size="large"
+        >
+          Delete ({{ checkedRowKeys.length }})
+        </n-button>
+      </n-button-group>
+    </n-gi>
+
+    <n-gi>
+      <n-data-table
+          :columns="columns"
+          :row-key="rowKey"
+          :data="getAvailableSoundFragments"
+          :loading="loading"
+          :remote="true"
+          :pagination="false"
+          :row-props="getRowProps"
+          :checked-row-keys="checkedRowKeys"
+          @update:checked-row-keys="handleCheckedRowKeysChange"
       >
-        Delete ({{ checkedRowKeys.length }})
-      </n-button>
-    </n-button-group>
-
-    <n-data-table
-        :columns="columns"
-        :row-key="rowKey"
-        :data="getAvailableSoundFragments"
-        :loading="loading"
-        :remote="true"
-        :pagination="false"
-        :row-props="getRowProps"
-        :checked-row-keys="checkedRowKeys"
-        @update:checked-row-keys="handleCheckedRowKeysChange"
-    >
         <template #loading>
           <loader-icon />
         </template>
-    </n-data-table>
+      </n-data-table>
 
-    <n-pagination
-        v-if="getAvailablePagination && getAvailablePagination.itemCount > 0"
-        class="mt-4 justify-end"
-        :page="getAvailablePagination.page"
-        :page-size="getAvailablePagination.pageSize"
-        :item-count="getAvailablePagination.itemCount"
-        :page-sizes="getAvailablePagination.pageSizes"
-        show-size-picker
-        @update:page="handlePageChange"
-        @update:page-size="handlePageSizeChange"
-    />
-  </div>
+      <n-pagination
+          v-if="getAvailablePagination && getAvailablePagination.itemCount > 0"
+          class="mt-4 justify-end"
+          :page="getAvailablePagination.page"
+          :page-size="getAvailablePagination.pageSize"
+          :item-count="getAvailablePagination.itemCount"
+          :page-sizes="getAvailablePagination.pageSizes"
+          show-size-picker
+          @update:page="handlePageChange"
+          @update:page-size="handlePageSizeChange"
+      />
+    </n-gi>
+  </n-grid>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref, onMounted, watch, computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
-import { NPageHeader, NDataTable, NEmpty, useMessage, DataTableColumns, NPagination, NButtonGroup, NButton } from 'naive-ui';
+import { NPageHeader, NDataTable, NEmpty, useMessage, DataTableColumns, NPagination, NButtonGroup, NButton, NGi, NGrid } from 'naive-ui';
 import { useSoundFragmentStore } from '../../../stores/kneo/soundFragmentStore';
 import { SoundFragment } from '../../../types/kneoBroadcasterTypes';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
@@ -62,23 +68,20 @@ const columns: DataTableColumns<SoundFragment> = [
   { type: 'selection' },
   {
     title: 'Title',
-    key: 'title',
-    sorter: (a: SoundFragment, b: SoundFragment) => a.title.localeCompare(b.title),
+    key: 'title'
   },
   {
     title: 'Artist',
-    key: 'artist',
-    sorter: (a: SoundFragment, b: SoundFragment) => (a.artist || '').localeCompare(b.artist || ''),
+    key: 'artist'
   },
   {
     title: 'Album',
-    key: 'album',
-    sorter: (a: SoundFragment, b: SoundFragment) => (a.album || '').localeCompare(b.album || ''),
+    key: 'album'
   }
 ];
 
 export default defineComponent({
-  name: 'StationPlaylistView',
+  name: 'StationPlaylist',
   components: {
     NPageHeader,
     NDataTable,
@@ -86,6 +89,8 @@ export default defineComponent({
     NPagination,
     NButtonGroup,
     NButton,
+    NGi,
+    NGrid,
     LoaderIcon,
   },
   props: {
@@ -140,7 +145,7 @@ export default defineComponent({
     };
 
     const handlePageSizeChange = (newPageSize: number) => {
-      fetchAvailableFragments(1, newPageSize); // Reset to page 1
+      fetchAvailableFragments(1, newPageSize);
     };
 
     onMounted(() => {
@@ -148,7 +153,7 @@ export default defineComponent({
 
     watch(() => props.brandName, (newBrandName) => {
       if (newBrandName) {
-        fetchAvailableFragments(1); // Reset to page 1 for new brand
+        fetchAvailableFragments(1);
       }
     }, { immediate: true });
 
@@ -198,4 +203,7 @@ export default defineComponent({
 </script>
 
 <style scoped>
+.p-4 {
+  padding: 1rem;
+}
 </style>

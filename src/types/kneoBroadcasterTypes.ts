@@ -70,6 +70,8 @@ export interface SoundFragment {
     album?: string;
     url: string;
     actionUrl: string;
+    defaultBrandId: string;
+    representedInBrands: string[];
     uploadedFiles: UploadFileInfo[];
 }
 
@@ -79,6 +81,7 @@ export interface SoundFragmentSave {
     artist?: string;
     genre?: string;
     album?: string;
+    representedInBrands: string[];
     newlyUploaded: string[];
 }
 
