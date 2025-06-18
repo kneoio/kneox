@@ -148,6 +148,7 @@ export default defineComponent({
     const radioStationStore = useRadioStationStore();
     const activeTab = ref("properties");
     const fileList = ref<UploadFileInfo[]>([]);
+    const uploadedFileNames = ref<string[]>([]);
 
     const localFormData = reactive<SoundFragment>({
       slugName: "",
@@ -189,15 +190,24 @@ export default defineComponent({
       onError?: (e: Error) => void,
     }) => {
       try {
-        const response = await store.uploadFile(localFormData.slugName, file.file as File);
+        const entityId = localFormData.id || "temp";
+        const response = await store.uploadFile(entityId, file.file as File);
+
+        // Track uploaded file name for later save
+        uploadedFileNames.value.push(file.name);
+
         const newFile = {
           ...file,
-          ...response,
+          id: response.id || file.name,
+          url: response.fileUrl || response.url,
           status: 'finished'
         };
+
         if (onFinish) onFinish(newFile);
+        message.success(`File "${file.name}" uploaded successfully`);
         return newFile;
       } catch (error) {
+        message.error(`Upload failed: ${getErrorMessage(error)}`);
         if (onError) onError(error as Error);
         throw error;
       }
@@ -205,7 +215,8 @@ export default defineComponent({
 
     const handleDownload = async (file: UploadFileInfo) => {
       try {
-        await downloadSoundFragment(localFormData.slugName, file.id || 'download');
+        const entityId = localFormData.id || "temp";
+        await downloadSoundFragment(entityId, file.id || file.name || 'download');
         message.success('Download started');
       } catch (error) {
         console.error('Download failed:', error);
@@ -237,8 +248,9 @@ export default defineComponent({
           genre: localFormData.genre,
           album: localFormData.album,
           representedInBrands: localFormData.representedInBrands,
-          newlyUploaded: fileList.value.map(f => f.name),
+          newlyUploaded: uploadedFileNames.value, // Send uploaded file names
         };
+
         await store.save(saveDTO, localFormData.id);
         message.success("Saved successfully");
         await router.push("/outline/soundfragments");
@@ -274,9 +286,11 @@ export default defineComponent({
       loadingBar.start();
       try {
         await radioStationStore.fetchAll();
-        if (id) {
+        if (id && id !== 'new') {
           await store.fetch(id);
           Object.assign(localFormData, store.getCurrent);
+          // Clear uploaded files list for existing records
+          uploadedFileNames.value = [];
         }
       } catch (error) {
         message.error('Failed to load data');

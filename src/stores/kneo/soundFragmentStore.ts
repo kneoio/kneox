@@ -7,7 +7,7 @@ import type { SoundFragment, SoundFragmentSave } from "../../types/kneoBroadcast
 export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
     const apiViewResponse = ref<ApiViewPageResponse<SoundFragment> | null>(null);
     const apiFormResponse = ref<ApiFormResponse<SoundFragment> | null>(null);
-    const availableApiViewResponse = ref<ApiViewPageResponse<SoundFragment> | null>(null); // New ref for paginated available fragments
+    const availableApiViewResponse = ref<ApiViewPageResponse<SoundFragment> | null>(null);
     const genreOptions = ref<Array<{label: string, value: string}>>([]);
 
     const getEntries = computed(() => apiViewResponse.value?.viewData.entries || []);
@@ -15,7 +15,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
     const getCurrent = computed(() => apiFormResponse.value?.docData || {
         id: '',
         slugName: '',
-        author: 0,
+        author: '',
         regDate: '',
         lastModifier: '',
         lastModifiedDate: '',
@@ -50,7 +50,6 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         };
     });
 
-    // New pagination computed for available sound fragments
     const getAvailablePagination = computed(() => {
         if (!availableApiViewResponse.value?.viewData) return {
             page: 1,
@@ -113,11 +112,33 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
     };
 
     const uploadFile = async (id: string, file: File) => {
+        const maxSizeBytes = 50 * 1024 * 1024; // 50MB
+
+        if (file.size > maxSizeBytes) {
+            throw new Error(`File too large. Maximum size is ${maxSizeBytes / 1024 / 1024}MB`);
+        }
+
         const formData = new FormData();
         formData.append('file', file);
+
         const response = await apiClient.post('/soundfragments/files/' + id, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
+            headers: { 'Content-Type': 'multipart/form-data' },
+            timeout: 600000, // 10 minutes
+            maxContentLength: 60 * 1024 * 1024,
+            maxBodyLength: 60 * 1024 * 1024,
+            onUploadProgress: (progressEvent) => {
+                console.log('Uploaded:', progressEvent.loaded, 'bytes');
+
+                if (progressEvent.total) {
+                    console.log('Total:', progressEvent.total, 'bytes');
+                    console.log('Progress:', Math.round(progressEvent.loaded / progressEvent.total * 100), '%');
+                } else {
+                    console.log('Total (from file):', file.size, 'bytes');
+                    console.log('Progress:', Math.round(progressEvent.loaded / file.size * 100), '%');
+                }
+            }
         });
+
         return response.data;
     };
 
