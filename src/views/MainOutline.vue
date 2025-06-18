@@ -222,11 +222,6 @@ export default defineComponent({
           icon: () => h(Grain)
         },
         {
-          label: 'DJs',
-          key: 'djs',
-          icon: () => h(Users)
-        },
-        {
           label: 'AiAgents',
           key: 'ai_agents',
           icon: () => h(Robot)

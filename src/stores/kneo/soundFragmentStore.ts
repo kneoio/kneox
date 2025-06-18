@@ -127,13 +127,13 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
             maxContentLength: 60 * 1024 * 1024,
             maxBodyLength: 60 * 1024 * 1024,
             onUploadProgress: (progressEvent) => {
-                console.log('Uploaded:', progressEvent.loaded, 'bytes');
+                console.log('Uploaded:', (progressEvent.loaded / 1024 / 1024).toFixed(2), 'MB');
 
                 if (progressEvent.total) {
-                    console.log('Total:', progressEvent.total, 'bytes');
+                    console.log('Total:', (progressEvent.total / 1024 / 1024).toFixed(2), 'MB');
                     console.log('Progress:', Math.round(progressEvent.loaded / progressEvent.total * 100), '%');
                 } else {
-                    console.log('Total (from file):', file.size, 'bytes');
+                    console.log('Total (from file):', (file.size / 1024 / 1024).toFixed(2), 'MB');
                     console.log('Progress:', Math.round(progressEvent.loaded / file.size * 100), '%');
                 }
             }
