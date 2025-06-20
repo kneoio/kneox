@@ -38,6 +38,7 @@ export interface RadioStation {
     lastModifier: string;
     lastModifiedDate: string;
     status: BrandStatus;
+    title: string;
     country: string;
     slugName: string;
     url: string;
@@ -48,10 +49,8 @@ export interface RadioStation {
 }
 
 export interface RadioStationSave {
-    status: BrandStatus;
+    title: string;
     country: string;
-    slugName: string;
-    url: string;
     aiAgentId?: string;
     profileId?: string;
 }

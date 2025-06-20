@@ -272,6 +272,7 @@ export default defineComponent({
       lastModifier: "",
       lastModifiedDate: "",
       status: BrandStatus.OFF_LINE,
+      title: "",
       country: "",
       slugName: "",
       url: "",
@@ -328,9 +329,8 @@ export default defineComponent({
       try {
         loadingBar.start();
         const saveDTO: RadioStationSave = {
+          title: localFormData.title || "",
           country: localFormData.country || "",
-          slugName: localFormData.slugName || "",
-          url: localFormData.url || "",    
           aiAgentId: localFormData.aiAgentId,
           profileId: localFormData.profileId
         };
