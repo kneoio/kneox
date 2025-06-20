@@ -22,8 +22,28 @@
           <n-form label-placement="left" label-width="auto">
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
               <n-gi>
-                <n-form-item label="Title">
-                  <n-input v-model:value="localFormData.slugName" style="width: 50%; max-width: 600px;"/>
+                <n-form-item label="Localized Names">
+                  <n-dynamic-input
+                      v-model:value="localizedNameArray"
+                      :on-create="createLocalizedName"
+                      style="width: 50%; max-width: 600px;"
+                  >
+                    <template #default="{ value, index }">
+                      <n-space align="center" style="width: 100%;">
+                        <n-select
+                            v-model:value="value.language"
+                            :options="languageOptions"
+                            placeholder="Language"
+                            style="width: 120px;"
+                        />
+                        <n-input
+                            v-model:value="value.name"
+                            placeholder="Name"
+                            style="flex: 1;"
+                        />
+                      </n-space>
+                    </template>
+                  </n-dynamic-input>
                 </n-form-item>
               </n-gi>
               <n-gi>
@@ -36,16 +56,32 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
-                <n-form-item label="Stream URL">
+                <n-form-item label="Description">
                   <n-input
-                      v-model:value="localFormData.url"
+                      v-model:value="localFormData.description"
+                      type="textarea"
+                      :autosize="{ minRows: 3, maxRows: 6 }"
                       style="width: 50%; max-width: 600px;"
-                      readonly
                   />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="Color">
+                  <n-color-picker
+                      v-model:value="localFormData.color"
+                      style="width: 200px;"
+                  />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="HLS URL">
+                  <n-text style="width: 50%; max-width: 600px; font-family: monospace;">
+                    {{ localFormData.hlsUrl }}
+                  </n-text>
                   <n-button
                       type="primary"
                       text
-                      @click="copyToClipboard(localFormData.url)"
+                      @click="copyToClipboard(localFormData.hlsUrl)"
                       style="margin-left: 8px;"
                   >
                     <template #icon>
@@ -56,11 +92,9 @@
               </n-gi>
               <n-gi>
                 <n-form-item label="Icecast URL">
-                  <n-input
-                      v-model:value="localFormData.iceCastUrl"
-                      style="width: 50%; max-width: 600px;"
-                      readonly
-                  />
+                  <n-text style="width: 50%; max-width: 600px; font-family: monospace;">
+                    {{ localFormData.iceCastUrl }}
+                  </n-text>
                   <n-button
                       type="primary"
                       text
@@ -74,16 +108,14 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
-                <n-form-item label="Action URL">
-                  <n-input
-                      v-model:value="localFormData.actionUrl"
-                      style="width: 50%; max-width: 600px;"
-                      readonly
-                  />
+                <n-form-item label="Mixpla URL">
+                  <n-text style="width: 50%; max-width: 600px; font-family: monospace;">
+                    {{ localFormData.mixplaUrl }}
+                  </n-text>
                   <n-button
                       type="primary"
                       text
-                      @click="copyToClipboard(localFormData.actionUrl || '')"
+                      @click="copyToClipboard(localFormData.mixplaUrl || '')"
                       style="margin-left: 8px;"
                   >
                     <template #icon>
@@ -199,6 +231,8 @@ import {
   NButton,
   NButtonGroup,
   NCheckbox,
+  NColorPicker,
+  NDynamicInput,
   NForm,
   NFormItem,
   NGi,
@@ -206,8 +240,10 @@ import {
   NInput,
   NPageHeader,
   NSelect,
+  NSpace,
   NTabPane,
   NTabs,
+  NText,
   NUpload,
   NIcon,
   UploadFileInfo,
@@ -234,10 +270,14 @@ export default defineComponent({
   components: {
     NPageHeader,
     NButtonGroup,
+    NColorPicker,
+    NDynamicInput,
     NForm,
     NFormItem,
     NInput,
     NButton,
+    NSpace,
+    NText,
     NUpload,
     NTabs,
     NTabPane,
@@ -272,14 +312,43 @@ export default defineComponent({
       lastModifier: "",
       lastModifiedDate: "",
       status: BrandStatus.OFF_LINE,
-      title: "",
-      country: "",
       slugName: "",
-      url: "",
+      localizedName: {
+        en: "",
+        pt: "",
+        kk: ""
+      },
+      country: "",
+      description: "",
+      color: "#FF9800",
+      hlsUrl: "",
       iceCastUrl: "",
-      actionUrl: "",
+      mixplaUrl: "",
       aiAgentId: undefined,
       profileId: undefined
+    });
+
+    const localizedNameArray = computed({
+      get: () => {
+        if (!localFormData.localizedName) return [];
+        return Object.entries(localFormData.localizedName).map(([language, name]) => ({
+          language,
+          name
+        }));
+      },
+      set: (value) => {
+        localFormData.localizedName = {};
+        value.forEach(item => {
+          if (item.language && localFormData.localizedName) {
+            localFormData.localizedName[item.language] = item.name || "";
+          }
+        });
+      }
+    });
+
+    const createLocalizedName = () => ({
+      language: "",
+      name: ""
     });
 
     const selectedAgent = computed(() => {
@@ -296,7 +365,22 @@ export default defineComponent({
       { label: "United States", value: "US" },
       { label: "United Kingdom", value: "GB" },
       { label: "Germany", value: "DE" },
-      { label: "France", value: "FR" }
+      { label: "France", value: "FR" },
+      { label: "Latvia", value: "LV" },
+      { label: "Spain", value: "ES" },
+      { label: "Portugal", value: "PT" },
+      { label: "Kazakhstan", value: "KZ" }
+    ];
+
+    const languageOptions = [
+      { label: "English", value: "en" },
+      { label: "Portuguese", value: "pt" },
+      { label: "Kazakh", value: "kk" },
+      { label: "Spanish", value: "es" },
+      { label: "French", value: "fr" },
+      { label: "German", value: "de" },
+      { label: "Russian", value: "ru" },
+      { label: "Latvian", value: "lv" }
     ];
 
     const agentOptions = computed(() => {
@@ -313,8 +397,6 @@ export default defineComponent({
       }));
     });
 
-
-
     const copyToClipboard = (text: string | undefined) => {
       if (!text) {
         message.error('Nothing to copy');
@@ -329,8 +411,10 @@ export default defineComponent({
       try {
         loadingBar.start();
         const saveDTO: RadioStationSave = {
-          title: localFormData.title || "",
+          localizedName: localFormData.localizedName || {},
           country: localFormData.country || "",
+          description: localFormData.description || "",
+          color: localFormData.color || "#FF9800",
           aiAgentId: localFormData.aiAgentId,
           profileId: localFormData.profileId
         };
@@ -364,6 +448,10 @@ export default defineComponent({
         if (id && id !== 'new') {
           await store.fetch(id);
           Object.assign(localFormData, store.getCurrent);
+
+          if (!localFormData.localizedName || Object.keys(localFormData.localizedName).length === 0) {
+            localFormData.localizedName = { en: "" };
+          }
         }
       } catch (error) {
         console.error("Failed to fetch data:", error);
@@ -388,7 +476,10 @@ export default defineComponent({
       selectedProfile,
       copyToClipboard,
       lang,
-      editorExtensions
+      editorExtensions,
+      localizedNameArray,
+      createLocalizedName,
+      languageOptions
     };
   }
 });
