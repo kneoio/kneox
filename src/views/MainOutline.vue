@@ -13,7 +13,7 @@
         :class="{ 'drawer-open': isDrawerOpen }"
     >
       <div class="drawer-header">
-        <n-h2>IOMIX</n-h2><n-h6 style="color: #6c757d; font-size: small">1.2</n-h6>
+        <n-space><n-h2>IOMIX</n-h2><n-h6 style="color:#6c757d; font-size: small">1.2</n-h6></n-space>
       </div>
       <div class="drawer-content">
         <n-menu
@@ -41,7 +41,7 @@
 </template>
 
 <script lang="ts">
-import {NFlex, NButton, NDrawer, NDrawerContent, NMenu, NSelect, NIcon, NH2, MenuOption} from 'naive-ui';
+import {NFlex, NButton, NDrawer, NDrawerContent, NMenu, NSelect, NIcon, NH2, NH6, NSpace, MenuOption} from 'naive-ui';
 import {
   defineComponent,
   onMounted,
@@ -54,7 +54,7 @@ import {
   watchEffect,
 } from 'vue';
 import {useRouter, useRoute} from 'vue-router';
-import { AlignJustified, List, Music, Dashboard, Robot, Grain, Radio, Users, Logout, BrandAirtable } from '@vicons/tabler';
+import { AlignJustified, List, Music, Dashboard, Robot, Grain, Radio, Logout, BrandAirtable } from '@vicons/tabler';
 import {useRadioStationStore} from "../stores/kneo/radioStationStore";
 import {RadioStation, BrandStatus} from "../types/kneoBroadcasterTypes";
 import keycloakInst from '../keycloakFactory.js';
@@ -73,6 +73,8 @@ export default defineComponent({
     NSelect,
     NIcon,
     NH2,
+    NH6,
+    NSpace,
     SoundFragments,
     StationPlaylist,
     Listeners,
