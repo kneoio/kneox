@@ -80,6 +80,12 @@
                     <template #file="{ file }">
                       <div class="upload-file" @click.stop.prevent="handleDownload(file, $event)">
                         {{ file.name }}
+                        <n-progress
+                            v-if="file.status === 'uploading'"
+                            :percentage="file.percentage || 0"
+                            :show-indicator="true"
+                            style="margin-top: 8px;"
+                        />
                       </div>
                     </template>
                   </n-upload>
@@ -105,6 +111,7 @@ import {
   NGrid,
   NInput,
   NPageHeader,
+  NProgress,
   NSelect,
   NTabPane,
   NTabs,
@@ -121,7 +128,6 @@ import {
   capitalizeFirstLetter,
   getErrorMessage
 } from '../../helpers/errorHandling';
-import { downloadSoundFragment } from '../../../utils/downloadService';
 
 export default defineComponent({
   name: "SoundFragmentForm",
@@ -138,6 +144,7 @@ export default defineComponent({
     NGrid,
     NGi,
     NSelect,
+    NProgress,
   },
   setup() {
     const loadingBar = useLoadingBar();
@@ -184,29 +191,40 @@ export default defineComponent({
         { immediate: true }
     );
 
-    const handleUpload = async ({ file, onFinish, onError }: {
+    const handleUpload = async ({ file, onFinish, onError, onProgress }: {
       file: UploadFileInfo,
       onFinish?: (file?: UploadFileInfo) => void,
       onError?: (e: Error) => void,
+      onProgress?: (e: { percent: number }) => void,
     }) => {
       try {
         const entityId = localFormData.id || "temp";
-        const response = await store.uploadFile(entityId, file.file as File);
 
-        // Track uploaded file name for later save
+        file.status = 'uploading';
+        file.percentage = 0;
+
+        const response = await store.uploadFile(entityId, file.file as File, (percentage: number) => {
+          if (onProgress) {
+            onProgress({ percent: percentage });
+          }
+          file.percentage = percentage;
+        });
+
         uploadedFileNames.value.push(file.name);
 
         const newFile = {
           ...file,
           id: response.id || file.name,
           url: response.fileUrl || response.url,
-          status: 'finished'
+          status: 'finished' as const,
+          percentage: 100
         };
 
         if (onFinish) onFinish(newFile);
         message.success(`File "${file.name}" uploaded successfully`);
         return newFile;
       } catch (error) {
+        file.status = 'error';
         message.error(`Upload failed: ${getErrorMessage(error)}`);
         if (onError) onError(error as Error);
         throw error;
@@ -216,11 +234,26 @@ export default defineComponent({
     const handleDownload = async (file: UploadFileInfo) => {
       try {
         const entityId = localFormData.id || "temp";
-        await downloadSoundFragment(entityId, file.id || file.name || 'download');
-        message.success('Download started');
+        const fileKey = file.id || file.name || 'download';
+        const fileName = file.name; // Pass the original filename
+
+        loadingBar.start();
+
+        await store.downloadFileWithProgress(
+            entityId,
+            fileKey,
+            fileName,
+            (percentage: number) => {
+              // loadingBar progress indication ??
+            }
+        );
+
+        loadingBar.finish();
+        message.success('Download completed');
       } catch (error) {
         console.error('Download failed:', error);
         message.error(`Download failed: ${getErrorMessage(error)}`);
+        loadingBar.error();
       }
       return false;
     };
@@ -248,7 +281,7 @@ export default defineComponent({
           genre: localFormData.genre,
           album: localFormData.album,
           representedInBrands: localFormData.representedInBrands,
-          newlyUploaded: uploadedFileNames.value, // Send uploaded file names
+          newlyUploaded: uploadedFileNames.value,
         };
 
         await store.save(saveDTO, localFormData.id);
@@ -289,7 +322,6 @@ export default defineComponent({
         if (id && id !== 'new') {
           await store.fetch(id);
           Object.assign(localFormData, store.getCurrent);
-          // Clear uploaded files list for existing records
           uploadedFileNames.value = [];
         }
       } catch (error) {
@@ -299,6 +331,7 @@ export default defineComponent({
       }
     });
 
+    //TODO To store
     const audioAcceptTypes = [
       '.mp3',
       '.wav',

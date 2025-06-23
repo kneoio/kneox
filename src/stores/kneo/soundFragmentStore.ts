@@ -3,6 +3,7 @@ import { computed, ref } from 'vue';
 import apiClient from '../../api/apiClient';
 import type { ApiFormResponse, ApiViewPageResponse } from "../../types";
 import type { SoundFragment, SoundFragmentSave } from "../../types/kneoBroadcasterTypes";
+import {downloadSoundFragmentWithProgress } from "../../utils/downloadService"
 
 export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
     const apiViewResponse = ref<ApiViewPageResponse<SoundFragment> | null>(null);
@@ -111,8 +112,8 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         apiFormResponse.value = response.data.payload;
     };
 
-    const uploadFile = async (id: string, file: File) => {
-        const maxSizeBytes = 100 * 1024 * 1024; // Increased to 100MB to match backend
+    const uploadFile = async (id: string, file: File, onProgress?: (percentage: number) => void) => {
+        const maxSizeBytes = 100 * 1024 * 1024; // 100MB
 
         if (file.size > maxSizeBytes) {
             throw new Error(`File too large. Maximum size is ${maxSizeBytes / 1024 / 1024}MB`);
@@ -121,25 +122,46 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         const formData = new FormData();
         formData.append('file', file);
 
+        // Start upload and get uploadId
         const response = await apiClient.post('/soundfragments/files/' + id, formData, {
-            // Remove Content-Type header - let browser set it with boundary
             timeout: 600000, // 10 minutes
-            maxContentLength: 120 * 1024 * 1024, // Increased to 120MB for multipart overhead
-            maxBodyLength: 120 * 1024 * 1024,    // Increased to 120MB for multipart overhead
-            onUploadProgress: (progressEvent) => {
-                console.log('Uploaded:', (progressEvent.loaded / 1024 / 1024).toFixed(2), 'MB');
-
-                if (progressEvent.total) {
-                    console.log('Total:', (progressEvent.total / 1024 / 1024).toFixed(2), 'MB');
-                    console.log('Progress:', Math.round(progressEvent.loaded / progressEvent.total * 100), '%');
-                } else {
-                    console.log('Total (from file):', (file.size / 1024 / 1024).toFixed(2), 'MB');
-                    console.log('Progress:', Math.round(progressEvent.loaded / file.size * 100), '%');
-                }
-            }
+            maxContentLength: 120 * 1024 * 1024,
+            maxBodyLength: 120 * 1024 * 1024,
         });
 
-        return response.data;
+        const uploadData = response.data;
+        const uploadId = uploadData.id;
+
+        // Start polling for progress if we have an uploadId and callback
+        if (uploadId && onProgress) {
+            pollUploadProgress(uploadId, onProgress);
+        }
+
+        return uploadData;
+    };
+
+    const pollUploadProgress = async (uploadId: string, onProgress: (percentage: number) => void) => {
+        const pollInterval = setInterval(async () => {
+            try {
+                const progressResponse = await apiClient.get(`/soundfragments/upload-progress/${uploadId}`);
+                const progress = progressResponse.data;
+
+                // Update progress
+                onProgress(progress.percentage);
+
+                // Stop polling when completed or failed
+                if (progress.status === 'completed' || progress.status === 'failed') {
+                    clearInterval(pollInterval);
+
+                    if (progress.status === 'failed') {
+                        throw new Error(progress.errorMessage || 'Upload failed');
+                    }
+                }
+            } catch (error) {
+                clearInterval(pollInterval);
+                console.error('Progress polling failed:', error);
+            }
+        }, 1000); // Poll every second
     };
 
     const updateCurrent = (data: SoundFragment, actions: any = {}) => {
@@ -157,6 +179,10 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         return await apiClient.get(`/soundfragments/files/${id}/${fileId}`, {
             responseType: 'blob'
         });
+    };
+
+    const downloadFileWithProgress = async (id: string, fileId: string, fileName?: string, onProgress?: (percentage: number) => void) => {
+        return await downloadSoundFragmentWithProgress(id, fileId, fileName, onProgress);
     };
 
     const deleteSoundFragment = async (id: string) => {
@@ -183,6 +209,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         uploadFile,
         updateCurrent,
         downloadFile,
+        downloadFileWithProgress,
         fetchGenres
     };
 });
