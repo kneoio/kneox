@@ -140,6 +140,32 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         return uploadData;
     };
 
+    const uploadTempFile = async (file: File, onProgress?: (percentage: number) => void) => {
+        const maxSizeBytes = 100 * 1024 * 1024; // 100MB
+
+        if (file.size > maxSizeBytes) {
+            throw new Error(`File too large. Maximum size is ${maxSizeBytes / 1024 / 1024}MB`);
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        // Use the temporary upload endpoint for new fragments
+        const response = await apiClient.post('/akee/soundfragments/upload', formData, {
+            timeout: 600000, // 10 minutes
+            maxContentLength: 120 * 1024 * 1024,
+            maxBodyLength: 120 * 1024 * 1024,
+            onUploadProgress: (progressEvent) => {
+                if (onProgress && progressEvent.total) {
+                    const percentage = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                    onProgress(percentage);
+                }
+            }
+        });
+
+        return response.data; // Should contain { tempFileId, originalName }
+    };
+
     const pollUploadProgress = async (uploadId: string, onProgress: (percentage: number) => void) => {
         const pollInterval = setInterval(async () => {
             try {
@@ -207,6 +233,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         save,
         delete: deleteSoundFragment,
         uploadFile,
+        uploadTempFile,
         updateCurrent,
         downloadFile,
         downloadFileWithProgress,

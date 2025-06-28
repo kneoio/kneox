@@ -82,6 +82,7 @@ export interface SoundFragmentSave {
     album?: string;
     representedInBrands: string[];
     newlyUploaded: string[];
+    tempFileIds?: string[];
 }
 
 export interface Memory {

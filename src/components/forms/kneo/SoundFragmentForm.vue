@@ -156,6 +156,7 @@ export default defineComponent({
     const activeTab = ref("properties");
     const fileList = ref<UploadFileInfo[]>([]);
     const uploadedFileNames = ref<string[]>([]);
+    const tempFileIds = ref<string[]>([]);
 
     const localFormData = reactive<SoundFragment>({
       slugName: "",
@@ -198,23 +199,38 @@ export default defineComponent({
       onProgress?: (e: { percent: number }) => void,
     }) => {
       try {
-        const entityId = localFormData.id || "temp";
-
+        const isNewFragment = !localFormData.id || localFormData.id === 'new';
+        
         file.status = 'uploading';
         file.percentage = 0;
 
-        const response = await store.uploadFile(entityId, file.file as File, (percentage: number) => {
-          if (onProgress) {
-            onProgress({ percent: percentage });
-          }
-          file.percentage = percentage;
-        });
+        let response;
+        if (isNewFragment) {
+          // Use temporary upload for new fragments
+          response = await store.uploadTempFile(file.file as File, (percentage: number) => {
+            if (onProgress) {
+              onProgress({ percent: percentage });
+            }
+            file.percentage = percentage;
+          });
+          
+          // Store temp file ID for later use when saving
+          tempFileIds.value.push(response.tempFileId);
+        } else {
+          // Use existing upload method for existing fragments
+          response = await store.uploadFile(localFormData.id!, file.file as File, (percentage: number) => {
+            if (onProgress) {
+              onProgress({ percent: percentage });
+            }
+            file.percentage = percentage;
+          });
+        }
 
         uploadedFileNames.value.push(file.name);
 
         const newFile = {
           ...file,
-          id: response.id || file.name,
+          id: response.tempFileId || response.id || file.name,
           url: response.fileUrl || response.url,
           status: 'finished' as const,
           percentage: 100
@@ -282,6 +298,7 @@ export default defineComponent({
           album: localFormData.album,
           representedInBrands: localFormData.representedInBrands,
           newlyUploaded: uploadedFileNames.value,
+          tempFileIds: tempFileIds.value, // Include temp file IDs for new fragments
         };
 
         await store.save(saveDTO, localFormData.id);
@@ -323,6 +340,11 @@ export default defineComponent({
           await store.fetch(id);
           Object.assign(localFormData, store.getCurrent);
           uploadedFileNames.value = [];
+          tempFileIds.value = [];
+        } else {
+          // Reset for new fragments
+          uploadedFileNames.value = [];
+          tempFileIds.value = [];
         }
       } catch (error) {
         message.error('Failed to load data');
