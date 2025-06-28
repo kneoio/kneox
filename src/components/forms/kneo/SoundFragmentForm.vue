@@ -100,8 +100,8 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, reactive, ref, watch, computed } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import {defineComponent, onMounted, reactive, ref, watch, computed} from "vue";
+import {useRoute, useRouter} from "vue-router";
 import {
   NButton,
   NButtonGroup,
@@ -120,9 +120,9 @@ import {
   useMessage,
   type UploadFileInfo
 } from "naive-ui";
-import { useSoundFragmentStore } from "../../../stores/kneo/soundFragmentStore";
-import { useRadioStationStore } from "../../../stores/kneo/radioStationStore";
-import { FragmentType, SoundFragment, SoundFragmentSave } from "../../../types/kneoBroadcasterTypes";
+import {useSoundFragmentStore} from "../../../stores/kneo/soundFragmentStore";
+import {useRadioStationStore} from "../../../stores/kneo/radioStationStore";
+import {FragmentType, SoundFragment, SoundFragmentSave} from "../../../types/kneoBroadcasterTypes";
 import {
   isErrorWithResponse,
   capitalizeFirstLetter,
@@ -188,10 +188,10 @@ export default defineComponent({
         (files) => {
           fileList.value = files || [];
         },
-        { immediate: true }
+        {immediate: true}
     );
 
-    const handleUpload = async ({ file, onFinish, onError, onProgress }: {
+    const handleUpload = async ({file, onFinish, onError, onProgress}: {
       file: UploadFileInfo,
       onFinish?: (file?: UploadFileInfo) => void,
       onError?: (e: Error) => void,
@@ -205,7 +205,7 @@ export default defineComponent({
 
         const response = await store.uploadFile(entityId, file.file as File, (percentage: number) => {
           if (onProgress) {
-            onProgress({ percent: percentage });
+            onProgress({percent: percentage});
           }
           file.percentage = percentage;
         });
@@ -265,7 +265,7 @@ export default defineComponent({
       fileList.value = data.fileList;
     };
 
-    const handleFinish = ({ file }: {
+    const handleFinish = ({file}: {
       file: UploadFileInfo;
     }) => {
       return file;
@@ -319,11 +319,9 @@ export default defineComponent({
       loadingBar.start();
       try {
         await radioStationStore.fetchAll();
-        if (id && id !== 'new') {
-          await store.fetch(id);
-          Object.assign(localFormData, store.getCurrent);
-          uploadedFileNames.value = [];
-        }
+        await store.fetch(id);
+        Object.assign(localFormData, store.getCurrent);
+        uploadedFileNames.value = [];
       } catch (error) {
         message.error('Failed to load data');
       } finally {
