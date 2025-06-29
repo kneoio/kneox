@@ -233,7 +233,13 @@ export default defineComponent({
           key: 'd1'
         },
         {
-          label: 'Logout',
+          label: () => h('div', { style: 'display: flex; flex-direction: column;' }, [
+            h('div', 'Logout'),
+            h('div', { 
+              style: 'font-size: 0.75rem; color: #666; margin-top: 2px;',
+              title: keycloakInst.tokenParsed?.email || keycloakInst.tokenParsed?.preferred_username || ''
+            }, keycloakInst.tokenParsed?.preferred_username || '')
+          ]),
           key: 'logout',
           icon: () => h(Logout)
         }
