@@ -77,6 +77,12 @@ const columns: DataTableColumns<SoundFragment> = [
   {
     title: 'Album',
     key: 'album'
+  },
+  {
+    title: 'Played Count',
+    key: 'playedByBrandCount',
+    width: 120,
+    render: (row: any) => row.playedByBrandCount ?? 0
   }
 ];
 

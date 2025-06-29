@@ -81,9 +81,7 @@ import {
   useMessage
 } from 'naive-ui';
 import { useRouter } from 'vue-router';
-
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
-
 import { SoundFragment } from "../../../types/kneoBroadcasterTypes";
 import { useSoundFragmentStore } from '../../../stores/kneo/soundFragmentStore';
 
@@ -181,7 +179,7 @@ export default defineComponent({
     };
 
     const rowKey = (row: SoundFragment): string | number => {
-      return row.id;
+      return row.id ?? row.slugName;
     };
 
     const fetchData = async (page = store.getPagination.page, pageSize = store.getPagination.pageSize) => {
@@ -197,11 +195,9 @@ export default defineComponent({
     };
 
     const handleSearch = () => {
-      // Reset to first page when searching
       fetchData(1, store.getPagination.pageSize);
     };
 
-    // Debounce search input
     watch(searchQuery, (newVal, oldVal) => {
       if (newVal !== oldVal) {
         if (debounceTimer.value) {
@@ -240,7 +236,6 @@ export default defineComponent({
         await fetchData(store.getPagination.page, store.getPagination.pageSize);
       } catch (error) {
         message.error('Failed to delete items');
-        // console.error('Delete error:', error);
       } finally {
         loading.value = false;
       }
