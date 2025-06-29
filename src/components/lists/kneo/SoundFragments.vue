@@ -9,8 +9,8 @@
       </n-page-header>
     </n-gi>
 
-    <n-gi :span="isMobile ? 1 : 6">
-      <n-button-group>
+    <n-gi :span="isMobile ? 1 : 6" class="flex items-center">
+      <n-button-group class="mr-4">
         <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
         <n-button
             type="error"
@@ -21,6 +21,27 @@
           Delete ({{ checkedRowKeys.length }})
         </n-button>
       </n-button-group>
+
+      <n-input
+          v-model:value="searchQuery"
+          placeholder="Search..."
+          clearable
+          size="large"
+          style="width: 250px"
+          @keydown.enter="handleSearch"
+          @clear="handleSearch"
+      >
+        <template #suffix>
+          <n-button text @click="handleSearch">
+            <n-icon>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </n-icon>
+          </n-button>
+        </template>
+      </n-input>
     </n-gi>
 
     <n-gi :span="isMobile ? 1 : 6">
@@ -46,7 +67,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent,  onMounted, ref, onUnmounted } from 'vue';
+import { computed, defineComponent, onMounted, ref, onUnmounted, watch } from 'vue';
 import {
   DataTableColumns,
   NButton,
@@ -54,6 +75,8 @@ import {
   NDataTable,
   NGi,
   NGrid,
+  NIcon,
+  NInput,
   NPageHeader,
   useMessage
 } from 'naive-ui';
@@ -66,7 +89,7 @@ import { useSoundFragmentStore } from '../../../stores/kneo/soundFragmentStore';
 
 export default defineComponent({
   name: 'SoundFragments',
-  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon },
+  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, NIcon, NInput },
   setup() {
     const router = useRouter();
     const store = useSoundFragmentStore();
@@ -76,6 +99,8 @@ export default defineComponent({
     const checkedRowKeys = ref<(string | number)[]>([]);
     const hasSelection = computed(() => checkedRowKeys.value.length > 0);
     const message = useMessage();
+    const searchQuery = ref('');
+    const debounceTimer = ref<number | null>(null);
 
     async function preFetch() {
       try {
@@ -92,7 +117,7 @@ export default defineComponent({
       if (!intervalId.value) {
         intervalId.value = window.setInterval(async () => {
           try {
-            await store.fetchAll(store.getPagination.page, store.getPagination.pageSize);
+            await fetchData(store.getPagination.page, store.getPagination.pageSize);
           } catch (error) {
             console.error('Periodic refresh failed:', error);
           }
@@ -159,24 +184,43 @@ export default defineComponent({
       return row.id;
     };
 
-    const handlePageChange = async (page: number) => {
+    const fetchData = async (page = store.getPagination.page, pageSize = store.getPagination.pageSize) => {
       try {
         loading.value = true;
-        await store.fetchAll(page, store.getPagination.pageSize);
-        checkedRowKeys.value = [];
+        await store.fetchAll(page, pageSize, searchQuery.value);
+      } catch (error) {
+        console.error('Failed to fetch data:', error);
+        message.error('Failed to load sound fragments');
       } finally {
         loading.value = false;
       }
     };
 
-    const handlePageSizeChange = async (pageSize: number) => {
-      try {
-        loading.value = true;
-        await store.fetchAll(1, pageSize);
-        checkedRowKeys.value = [];
-      } finally {
-        loading.value = false;
+    const handleSearch = () => {
+      // Reset to first page when searching
+      fetchData(1, store.getPagination.pageSize);
+    };
+
+    // Debounce search input
+    watch(searchQuery, (newVal, oldVal) => {
+      if (newVal !== oldVal) {
+        if (debounceTimer.value) {
+          clearTimeout(debounceTimer.value);
+        }
+        debounceTimer.value = window.setTimeout(() => {
+          handleSearch();
+        }, 500);
       }
+    });
+
+    const handlePageChange = async (page: number) => {
+      await fetchData(page, store.getPagination.pageSize);
+      checkedRowKeys.value = [];
+    };
+
+    const handlePageSizeChange = async (pageSize: number) => {
+      await fetchData(1, pageSize);
+      checkedRowKeys.value = [];
     };
 
     const handleNewClick = () => {
@@ -193,7 +237,7 @@ export default defineComponent({
         await Promise.all(checkedRowKeys.value.map(id => store.delete(id.toString())));
         message.success(`Deleted ${checkedRowKeys.value.length} item(s) successfully`);
         checkedRowKeys.value = [];
-        await store.fetchAll(store.getPagination.page, store.getPagination.pageSize);
+        await fetchData(store.getPagination.page, store.getPagination.pageSize);
       } catch (error) {
         message.error('Failed to delete items');
         // console.error('Delete error:', error);
@@ -207,6 +251,8 @@ export default defineComponent({
       columns,
       rowKey,
       isMobile,
+      searchQuery,
+      handleSearch,
       handleNewClick,
       handleDelete,
       getRowProps,
@@ -223,5 +269,9 @@ export default defineComponent({
 <style scoped>
 .p-4 {
   padding: 1rem;
+}
+
+:deep(.n-base-selection) {
+  min-width: 200px;
 }
 </style>

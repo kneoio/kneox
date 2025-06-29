@@ -84,8 +84,12 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
                 a.label.localeCompare(b.label));
     };
 
-    const fetchSoundFragments = async (page = 1, pageSize = 10) => {
-        const response = await apiClient.get(`/soundfragments?page=${page}&size=${pageSize}`);
+    const fetchSoundFragments = async (page = 1, pageSize = 10, searchQuery = '') => {
+        let url = `/soundfragments?page=${page}&size=${pageSize}`;
+        if (searchQuery) {
+            url = `/soundfragments/search?q=${encodeURIComponent(searchQuery)}&page=${page}&size=${pageSize}`;
+        }
+        const response = await apiClient.get(url);
         if (!response?.data?.payload) throw new Error('Invalid API response for sound fragments');
         apiViewResponse.value = response.data.payload;
     };
@@ -122,48 +126,53 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         const formData = new FormData();
         formData.append('file', file);
 
-        // Start upload and get uploadId
-        const response = await apiClient.post('/soundfragments/files/' + id, formData, {
-            timeout: 600000, // 10 minutes
-            maxContentLength: 120 * 1024 * 1024,
-            maxBodyLength: 120 * 1024 * 1024,
-        });
+        try {
+            // Start upload and get uploadId
+            const response = await apiClient.post('/soundfragments/files/' + id, formData, {
+                timeout: 600000, // 10 minutes
+                maxContentLength: 120 * 1024 * 1024,
+                maxBodyLength: 120 * 1024 * 1024,
+            });
 
-        const uploadData = response.data;
-        const uploadId = uploadData.id;
+            const uploadData = response.data;
+            const uploadId = uploadData.id;
 
-        // Start polling for progress if we have an uploadId and callback
-        if (uploadId && onProgress) {
-            pollUploadProgress(uploadId, onProgress);
-        }
-
-        return uploadData;
-    };
-
-    const uploadTempFile = async (file: File, onProgress?: (percentage: number) => void) => {
-        const maxSizeBytes = 100 * 1024 * 1024; // 100MB
-
-        if (file.size > maxSizeBytes) {
-            throw new Error(`File too large. Maximum size is ${maxSizeBytes / 1024 / 1024}MB`);
-        }
-
-        const formData = new FormData();
-        formData.append('file', file);
-
-        // Use the temporary upload endpoint for new fragments
-        const response = await apiClient.post('/akee/soundfragments/upload', formData, {
-            timeout: 600000, // 10 minutes
-            maxContentLength: 120 * 1024 * 1024,
-            maxBodyLength: 120 * 1024 * 1024,
-            onUploadProgress: (progressEvent) => {
-                if (onProgress && progressEvent.total) {
-                    const percentage = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                    onProgress(percentage);
-                }
+            // Start polling for progress if we have an uploadId and callback
+            if (uploadId && onProgress) {
+                pollUploadProgress(uploadId, onProgress);
             }
-        });
 
-        return response.data; // Should contain { tempFileId, originalName }
+            return uploadData;
+        } catch (error: any) {
+            // Handle specific HTTP errors
+            if (error.response) {
+                const status = error.response.status;
+                const errorData = error.response.data;
+
+                switch (status) {
+                    case 413:
+                        throw new Error('File size exceeds server limits. Please choose a smaller file.');
+                    case 415:
+                        throw new Error('Unsupported file type. Only audio files are allowed.');
+                    case 400:
+                        const message = typeof errorData === 'string' ? errorData :
+                            (errorData?.error?.message || errorData?.message || 'Invalid file upload request');
+                        throw new Error(message);
+                    case 403:
+                        throw new Error('You do not have permission to upload files');
+                    case 500:
+                        throw new Error('Server error occurred during upload. Please try again.');
+                    default:
+                        throw new Error(`Upload failed: ${errorData?.error?.message || errorData?.message || `HTTP ${status}`}`);
+                }
+            } else if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+                throw new Error('Upload timeout. Please try with a smaller file or check your connection.');
+            } else if (error.message.includes('Network Error')) {
+                throw new Error('Network error. Please check your connection and try again.');
+            } else {
+                throw new Error(`Upload failed: ${error.message || 'Unknown error'}`);
+            }
+        }
     };
 
     const pollUploadProgress = async (uploadId: string, onProgress: (percentage: number) => void) => {
@@ -176,16 +185,18 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
                 onProgress(progress.percentage);
 
                 // Stop polling when completed or failed
-                if (progress.status === 'completed' || progress.status === 'failed') {
+                if (progress.status === 'finished' || progress.status === 'error') {
                     clearInterval(pollInterval);
 
-                    if (progress.status === 'failed') {
-                        throw new Error(progress.errorMessage || 'Upload failed');
+                    if (progress.status === 'error') {
+                        throw new Error('Upload processing failed on server');
                     }
                 }
-            } catch (error) {
+            } catch (error: any) {
                 clearInterval(pollInterval);
                 console.error('Progress polling failed:', error);
+                // Don't throw here as the main upload might have succeeded
+                // but progress polling failed
             }
         }, 1000); // Poll every second
     };
@@ -233,7 +244,6 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         save,
         delete: deleteSoundFragment,
         uploadFile,
-        uploadTempFile,
         updateCurrent,
         downloadFile,
         downloadFileWithProgress,
