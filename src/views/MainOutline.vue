@@ -13,7 +13,7 @@
         :class="{ 'drawer-open': isDrawerOpen }"
     >
       <div class="drawer-header">
-        <n-space><n-h2>IOMIX</n-h2><n-h6 style="color:#6c757d; font-size: small">1.3</n-h6></n-space>
+        <n-space><n-h2>IOMIX</n-h2><n-h6 style="color:#6c757d; font-size: small">1.4</n-h6></n-space>
       </div>
       <div class="drawer-content">
         <n-menu
@@ -54,7 +54,7 @@ import {
   watchEffect,
 } from 'vue';
 import {useRouter, useRoute} from 'vue-router';
-import { AlignJustified, List, Music, Dashboard, Robot, Grain, Radio, Logout, BrandAirtable } from '@vicons/tabler';
+import { AlignJustified, List, Music, Dashboard, Robot, Grain, Radio, Logout, BrandAirtable, Headphones } from '@vicons/tabler';
 import {useRadioStationStore} from "../stores/kneo/radioStationStore";
 import {RadioStation, BrandStatus} from "../types/kneoBroadcasterTypes";
 import keycloakInst from '../keycloakFactory.js';
@@ -211,7 +211,7 @@ export default defineComponent({
         {
           label: 'Listeners',
           key: 'listeners',
-          icon: () => h(List)
+          icon: () => h(Headphones)
         },
         {
           label: 'Sound Fragments',
@@ -253,6 +253,17 @@ export default defineComponent({
       return [
         ...baseOptions,
         ...radioStationOptions,
+        {
+          key: 'divider-2',
+          type: 'divider',
+          props: {
+            style: {
+              marginLeft: '32px',
+              marginBottom: '10px',
+              color: '#ffb700',
+            }
+          }
+        },
         allStationsOption,
         ...remainingOptions
       ];

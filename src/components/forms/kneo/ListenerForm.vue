@@ -39,7 +39,7 @@
                     <n-input
                         v-model:value="value.name"
                         placeholder="Name"
-                        style="flex: 1;"
+                        style="flex: 2;"
                     />
                   </n-space>
                 </template>
@@ -182,8 +182,8 @@ export default defineComponent({
       }));
     });
 
-    const localizedNameArray = ref([]);
-    const nickNameArray = ref([]);
+    const localizedNameArray = ref<{ language: string; name: string }[]>([]);
+    const nickNameArray = ref<{ language: string; name: string }[]>([]);
 
     watch(localizedNameArray, (newValue) => {
       localFormData.localizedName = {};

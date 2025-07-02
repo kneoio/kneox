@@ -114,7 +114,6 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         formData.append('file', file);
 
         try {
-            // Start upload and get uploadId
             const response = await apiClient.post('/soundfragments/files/' + id, formData, {
                 timeout: 600000, // 10 minutes
                 maxContentLength: 120 * 1024 * 1024,
@@ -124,14 +123,12 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
             const uploadData = response.data;
             const uploadId = uploadData.id;
 
-            // Start polling for progress if we have an uploadId and callback
             if (uploadId && onProgress) {
                 pollUploadProgress(uploadId, onProgress);
             }
 
             return uploadData;
         } catch (error: any) {
-            // Handle specific HTTP errors
             if (error.response) {
                 const status = error.response.status;
                 const errorData = error.response.data;
@@ -168,10 +165,8 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
                 const progressResponse = await apiClient.get(`/soundfragments/upload-progress/${uploadId}`);
                 const progress = progressResponse.data;
 
-                // Update progress
                 onProgress(progress.percentage);
 
-                // Stop polling when completed or failed
                 if (progress.status === 'finished' || progress.status === 'error') {
                     clearInterval(pollInterval);
 
@@ -182,8 +177,6 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
             } catch (error: any) {
                 clearInterval(pollInterval);
                 console.error('Progress polling failed:', error);
-                // Don't throw here as the main upload might have succeeded
-                // but progress polling failed
             }
         }, 1000); // Poll every second
     };
