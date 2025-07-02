@@ -83,7 +83,7 @@
           <n-gi>
             <n-form-item label="Listener of" path="listenerOf">
               <n-select v-model:value="localFormData.listenerOf" :options="radioStationOptions" filterable
-                multiple placeholder="Select Radio Stations" style="width: 50%; max-width: 600px;" />
+                        multiple placeholder="Select Radio Stations" style="width: 50%; max-width: 600px;" />
             </n-form-item>
           </n-gi>
         </n-grid>
@@ -182,41 +182,26 @@ export default defineComponent({
       }));
     });
 
-    const localizedNameArray = computed({
-      get: () => {
-        if (!localFormData.localizedName) return [];
-        return Object.entries(localFormData.localizedName).map(([language, name]) => ({
-          language,
-          name
-        }));
-      },
-      set: (value) => {
-        localFormData.localizedName = {};
-        value.forEach(item => {
-          if (item.language && localFormData.localizedName) {
-            localFormData.localizedName[item.language] = item.name || "";
-          }
-        });
-      }
-    });
+    const localizedNameArray = ref([]);
+    const nickNameArray = ref([]);
 
-    const nickNameArray = computed({
-      get: () => {
-        if (!localFormData.nickName) return [];
-        return Object.entries(localFormData.nickName).map(([language, name]) => ({
-          language,
-          name
-        }));
-      },
-      set: (value) => {
-        localFormData.nickName = {};
-        value.forEach(item => {
-          if (item.language && localFormData.nickName) {
-            localFormData.nickName[item.language] = item.name || "";
-          }
-        });
-      }
-    });
+    watch(localizedNameArray, (newValue) => {
+      localFormData.localizedName = {};
+      newValue.forEach(item => {
+        if (item.language && item.language.trim() !== '') {
+          localFormData.localizedName[item.language] = item.name || "";
+        }
+      });
+    }, { deep: true });
+
+    watch(nickNameArray, (newValue) => {
+      localFormData.nickName = {};
+      newValue.forEach(item => {
+        if (item.language && item.language.trim() !== '') {
+          localFormData.nickName[item.language] = item.name || "";
+        }
+      });
+    }, { deep: true });
 
     const createLocalizedName = () => ({
       language: "",
@@ -231,15 +216,21 @@ export default defineComponent({
     watch(() => store.getCurrent, (currentListener) => {
       if (currentListener && currentListener.id) {
         Object.assign(localFormData, currentListener);
-        if (!localFormData.nickName) localFormData.nickName = { en: '' }; // Ensure nickName is initialized
+        if (!localFormData.nickName) localFormData.nickName = { en: '' };
         if (!localFormData.localizedName) localFormData.localizedName = { en: '' };
-      } else {
-        // Reset for new form
-        Object.assign(localFormData, {
-          id: null, author: "", regDate: "", lastModifier: "", lastModifiedDate: "",
-          localizedName: { en: "" }, country: "", nickName: { en: "" },
-          archived: 0, listenerOf: [],
-        });
+
+        if (localFormData.localizedName) {
+          localizedNameArray.value = Object.entries(localFormData.localizedName).map(([language, name]) => ({
+            language,
+            name
+          }));
+        }
+        if (localFormData.nickName) {
+          nickNameArray.value = Object.entries(localFormData.nickName).map(([language, name]) => ({
+            language,
+            name
+          }));
+        }
       }
     }, { immediate: true, deep: true });
 
@@ -250,16 +241,21 @@ export default defineComponent({
         const dataToSave: ListenerSave = {
           nickName: localFormData.nickName,
           country: localFormData.country,
-          localizedName: localFormData.localizedName, // Assuming this should also be saved
+          localizedName: localFormData.localizedName,
           archived: localFormData.archived,
           listenerOf: localFormData.listenerOf,
         };
 
+        console.log('Data to save:', dataToSave);
+        console.log('Current localFormData:', localFormData);
+        console.log('localizedNameArray:', localizedNameArray.value);
+        console.log('nickNameArray:', nickNameArray.value);
+
         await store.saveListener(dataToSave, localFormData.id);
         message.success("Listener saved successfully");
-        router.push("/outline/station/" + route.params.brandName + "/listeners"); // Adjust as needed
+        router.push("/outline/station/" + route.params.brandName + "/listeners");
       } catch (error: unknown) {
-         if (isErrorWithResponse(error) && error.response?.status === 400) {
+        if (isErrorWithResponse(error) && error.response?.status === 400) {
           const errorData = error.response.data as { message?: string; errors?: { field: string; message: string }[] };
           if (errorData.errors?.length) {
             errorData.errors.forEach(err => {
@@ -291,13 +287,11 @@ export default defineComponent({
       try {
         // Always fetch radio stations for the dropdown
         await radioStationStore.fetchAll();
-        
+
         if (listenerId && listenerId !== 'new') {
           await store.fetchListener(listenerId);
-          // Data assignment is handled by the watcher
         } else {
-          // Reset form for new listener, handled by watcher's initial run
-          store.apiFormResponse = null; // Clear any existing form data in store
+          store.apiFormResponse = null;
         }
       } catch (error) {
         message.error('Failed to load data');
