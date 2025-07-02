@@ -56,6 +56,17 @@ export const useListenersStore = defineStore('listenersStore', () => {
         }
     };
 
+    const fetchAllListeners = async (page = 1, pageSize = 10) => {
+        try {
+            const response = await apiClient.get(`/listeners?page=${page}&size=${pageSize}`);
+            if (!response?.data?.payload) throw new Error('Invalid API response for all listeners');
+            apiViewResponse.value = response.data.payload;
+        } catch (error) {
+            console.error('Failed to fetch all listeners:', error);
+            apiViewResponse.value = null;
+        }
+    };
+
     const fetchListener = async (id: string) => {
         try {
             const response = await apiClient.get(`/listeners/${id}`);
@@ -90,6 +101,7 @@ export const useListenersStore = defineStore('listenersStore', () => {
         getCurrent,
         getPagination,
         fetchListeners,
+        fetchAllListeners,
         fetchListener,
         saveListener,
     };

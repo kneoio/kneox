@@ -264,6 +264,7 @@ import {
 import { useRadioStationStore } from "../../../stores/kneo/radioStationStore";
 import { useAiAgentStore } from "../../../stores/kneo/aiAgentStore";
 import { useProfileStore } from "../../../stores/kneo/profileStore";
+import { useReferencesStore } from "../../../stores/kneo/referencesStore";
 
 export default defineComponent({
   name: "RadioStationForm",
@@ -296,6 +297,7 @@ export default defineComponent({
     const store = useRadioStationStore();
     const aiAgentStore = useAiAgentStore();
     const profileStore = useProfileStore();
+    const referencesStore = useReferencesStore();
     const route = useRoute();
     const activeTab = ref("properties");
     const fileList = ref<UploadFileInfo[]>([]);
@@ -361,27 +363,7 @@ export default defineComponent({
       return profileStore.getEntries.find(p => p.id === localFormData.profileId);
     });
 
-    const countryOptions = [
-      { label: "United States", value: "US" },
-      { label: "United Kingdom", value: "GB" },
-      { label: "Germany", value: "DE" },
-      { label: "France", value: "FR" },
-      { label: "Latvia", value: "LV" },
-      { label: "Spain", value: "ES" },
-      { label: "Portugal", value: "PT" },
-      { label: "Kazakhstan", value: "KZ" }
-    ];
 
-    const languageOptions = [
-      { label: "English", value: "en" },
-      { label: "Portuguese", value: "pt" },
-      { label: "Kazakh", value: "kk" },
-      { label: "Spanish", value: "es" },
-      { label: "French", value: "fr" },
-      { label: "German", value: "de" },
-      { label: "Russian", value: "ru" },
-      { label: "Latvian", value: "lv" }
-    ];
 
     const agentOptions = computed(() => {
       return aiAgentStore.getEntries.map(agent => ({
@@ -467,19 +449,19 @@ export default defineComponent({
       handleSave,
       handleArchive,
       activeTab,
-      goBack,
       fileList,
-      countryOptions,
+      lang,
+      editorExtensions,
+      localizedNameArray,
+      createLocalizedName,
+      countryOptions: referencesStore.countryOptions,
+      languageOptions: referencesStore.languageOptions,
       agentOptions,
       profileOptions,
       selectedAgent,
       selectedProfile,
       copyToClipboard,
-      lang,
-      editorExtensions,
-      localizedNameArray,
-      createLocalizedName,
-      languageOptions
+      goBack
     };
   }
 });

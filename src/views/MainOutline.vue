@@ -209,6 +209,11 @@ export default defineComponent({
 
       const remainingOptions: MenuOption[] = [
         {
+          label: 'Listeners',
+          key: 'listeners',
+          icon: () => h(List)
+        },
+        {
           label: 'Sound Fragments',
           key: 'fragments',
           icon: () => h(Music)
@@ -271,6 +276,8 @@ export default defineComponent({
         await router.push({ name: 'StationListeners', params: { brandName: brandName } });
       } else if (key === 'radiostations') {
         await router.push({name: 'RadioStations'});
+      } else if (key === 'listeners') {
+        await router.push({name: 'Listeners'});
       } else if (key === 'logout') {
         keycloakInst.logout({ redirectUri: window.location.origin });
       } else if (key === 'djs') {

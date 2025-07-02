@@ -1,8 +1,8 @@
 <template>
   <n-grid cols="6" x-gap="12" y-gap="12" class="m-5">
     <n-gi span="6">
-      <n-page-header subtitle="Sound Fragment" @back="goBack">
-        <template #title>{{ store.getCurrent.title || store.getCurrent.slugName }}</template>
+      <n-page-header :subtitle="formTitle" @back="goBack">
+        <template #title>{{ localFormData.title || 'New Sound Fragment' }}</template>
         <template #footer>
           Registered: {{ store.getCurrent.regDate }}, Last Modified: {{ store.getCurrent.lastModifiedDate }}
           <br>
@@ -33,7 +33,7 @@
               </n-gi>
               <n-gi>
                 <n-form-item label="Genre">
-                  <n-select v-model:value="localFormData.genre" :options="store.genreOptions" filterable
+                  <n-select v-model:value="localFormData.genre" :options="referencesStore.genreOptions" filterable
                     placeholder="Select Genre" style="width: 50%; max-width: 600px;" />
                 </n-form-item>
               </n-gi>
@@ -96,6 +96,7 @@ import {
 } from "naive-ui";
 import { useSoundFragmentStore } from "../../../stores/kneo/soundFragmentStore";
 import { useRadioStationStore } from "../../../stores/kneo/radioStationStore";
+import { useReferencesStore } from "../../../stores/kneo/referencesStore";
 import { FragmentType, SoundFragment, SoundFragmentSave } from "../../../types/kneoBroadcasterTypes";
 import {
   isErrorWithResponse,
@@ -127,6 +128,7 @@ export default defineComponent( {
     const route = useRoute();
     const store = useSoundFragmentStore();
     const radioStationStore = useRadioStationStore();
+    const referencesStore = useReferencesStore();
     const activeTab = ref( "properties" );
     const fileList = ref<UploadFileInfo[]>( [] );
     const uploadedFileNames = ref<string[]>( [] );
@@ -157,6 +159,8 @@ export default defineComponent( {
         value: station.id
       } ) );
     } );
+
+    const formTitle = computed(() => localFormData.id ? 'Edit Sound Fragment' : 'Create New Sound Fragment');
 
     watch(
       () => store.getCurrent?.uploadedFiles,
@@ -299,21 +303,38 @@ export default defineComponent( {
       router.back();
     };
 
-    onMounted( async () => {
-      const id = route.params.id as string;
-      loadingBar.start();
-      try {
-        await radioStationStore.fetchAll();
-        await store.fetch( id );
-        Object.assign( localFormData, store.getCurrent );
-        uploadedFileNames.value = [];
-        tempFileIds.value = [];
-      } catch ( error ) {
-        message.error( 'Failed to load data' );
-      } finally {
-        loadingBar.finish();
-      }
-    } );
+    onMounted(async () => {
+        const id = route.params.id as string;
+        if (id && id !== 'new') {
+            try {
+                loadingBar.start();
+                await store.fetch(id);
+                Object.assign(localFormData, store.getCurrent);
+
+                if (localFormData.uploadedFiles?.length) {
+                    fileList.value = localFormData.uploadedFiles.map(f => ({
+                        id: f.name,
+                        name: f.name,
+                        status: 'finished' as const,
+                        url: f.url
+                    }));
+                    uploadedFileNames.value = localFormData.uploadedFiles.map(f => f.name);
+                }
+            } catch (error) {
+                console.error("Failed to fetch sound fragment:", error);
+                message.error('Failed to fetch sound fragment');
+            } finally {
+                loadingBar.finish();
+            }
+        }
+
+        try {
+            await radioStationStore.fetchAll(1, 100);
+            await referencesStore.fetchGenres();
+        } catch (error) {
+            console.error("Failed to fetch data:", error);
+        }
+    });
 
     const audioAcceptTypes = [
       '.mp3',
@@ -341,7 +362,9 @@ export default defineComponent( {
       handleDownload,
       fileList,
       audioAcceptTypes,
-      radioStationOptions
+      radioStationOptions,
+      formTitle,
+      referencesStore
     };
   },
 } );

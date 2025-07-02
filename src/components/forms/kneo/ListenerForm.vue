@@ -2,7 +2,7 @@
   <n-grid cols="6" x-gap="12" y-gap="12" class="m-5">
     <n-gi span="6">
       <n-page-header :subtitle="formTitle" @back="goBack">
-        <template #title>{{ localFormData.nickName?.en || localFormData.slugName || 'New Listener' }}</template>
+        <template #title>{{ localFormData.nickName?.en || 'New Listener' }}</template>
         <template #footer>
           <span v-if="localFormData.id">
             Registered: {{ localFormData.regDate }}, Last Modified: {{ localFormData.lastModifiedDate }}
@@ -22,23 +22,68 @@
       <n-form label-placement="left" label-width="auto" :model="localFormData">
         <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
           <n-gi>
-            <n-form-item label="Nickname (English)" path="nickName.en">
-              <n-input v-model:value="localFormData.nickName.en" style="width: 50%; max-width: 600px;"/>
+            <n-form-item label="Localized Names">
+              <n-dynamic-input
+                  v-model:value="localizedNameArray"
+                  :on-create="createLocalizedName"
+                  style="width: 50%; max-width: 600px;"
+              >
+                <template #default="{ value }">
+                  <n-space align="center" style="width: 100%;">
+                    <n-select
+                        v-model:value="value.language"
+                        :options="languageOptions"
+                        placeholder="Language"
+                        style="width: 120px;"
+                    />
+                    <n-input
+                        v-model:value="value.name"
+                        placeholder="Name"
+                        style="flex: 1;"
+                    />
+                  </n-space>
+                </template>
+              </n-dynamic-input>
+            </n-form-item>
+          </n-gi>
+          <n-gi>
+            <n-form-item label="Nick Names">
+              <n-dynamic-input
+                  v-model:value="nickNameArray"
+                  :on-create="createNickName"
+                  style="width: 50%; max-width: 600px;"
+              >
+                <template #default="{ value }">
+                  <n-space align="center" style="width: 100%;">
+                    <n-select
+                        v-model:value="value.language"
+                        :options="languageOptions"
+                        placeholder="Language"
+                        style="width: 120px;"
+                    />
+                    <n-input
+                        v-model:value="value.name"
+                        placeholder="Nick Name"
+                        style="flex: 1;"
+                    />
+                  </n-space>
+                </template>
+              </n-dynamic-input>
             </n-form-item>
           </n-gi>
           <n-gi>
             <n-form-item label="Country" path="country">
-              <n-input v-model:value="localFormData.country" style="width: 50%; max-width: 600px;"/>
+              <n-select
+                  v-model:value="localFormData.country"
+                  :options="countryOptions"
+                  style="width: 50%; max-width: 600px;"
+              />
             </n-form-item>
           </n-gi>
           <n-gi>
-            <n-form-item label="Slug Name" path="slugName">
-              <n-input v-model:value="localFormData.slugName" style="width: 50%; max-width: 600px;" :disabled="!!localFormData.id"/>
-            </n-form-item>
-          </n-gi>
-           <n-gi v-if="!localFormData.id">
-            <n-form-item label="User ID" path="userId">
-              <n-input-number v-model:value="localFormData.userId" style="width: 50%; max-width: 600px;" />
+            <n-form-item label="Listener of" path="listenerOf">
+              <n-select v-model:value="localFormData.listenerOf" :options="radioStationOptions" filterable
+                multiple placeholder="Select Radio Stations" style="width: 50%; max-width: 600px;" />
             </n-form-item>
           </n-gi>
         </n-grid>
@@ -53,6 +98,7 @@ import { useRoute, useRouter } from "vue-router";
 import {
   NButton,
   NButtonGroup,
+  NDynamicInput,
   NForm,
   NFormItem,
   NGi,
@@ -60,10 +106,14 @@ import {
   NInput,
   NInputNumber,
   NPageHeader,
+  NSelect,
+  NSpace,
   useLoadingBar,
   useMessage,
 } from "naive-ui";
 import { useListenersStore } from "../../../stores/kneo/listenersStore";
+import { useRadioStationStore } from "../../../stores/kneo/radioStationStore";
+import { useReferencesStore } from "../../../stores/kneo/referencesStore";
 import { ListenerSave, LocalizedName } from "../../../types/kneoBroadcasterTypes";
 import {
   isErrorWithResponse,
@@ -78,11 +128,10 @@ interface LocalListenerFormData {
   lastModifier: string;
   lastModifiedDate: string;
   localizedName: LocalizedName;
-  userId: number | null;
   country: string;
   nickName: LocalizedName;
-  slugName: string;
   archived: number;
+  listenerOf: string[];
 }
 
 export default defineComponent({
@@ -90,6 +139,7 @@ export default defineComponent({
   components: {
     NPageHeader,
     NButtonGroup,
+    NDynamicInput,
     NForm,
     NFormItem,
     NInput,
@@ -97,11 +147,15 @@ export default defineComponent({
     NButton,
     NGrid,
     NGi,
+    NSelect,
+    NSpace,
   },
   setup() {
     const router = useRouter();
     const route = useRoute();
     const store = useListenersStore();
+    const radioStationStore = useRadioStationStore();
+    const referencesStore = useReferencesStore();
     const message = useMessage();
     const loadingBar = useLoadingBar();
     const isSaving = ref(false);
@@ -113,14 +167,66 @@ export default defineComponent({
       lastModifier: "",
       lastModifiedDate: "",
       localizedName: { en: "" },
-      userId: null,
       country: "",
       nickName: { en: "" },
-      slugName: "",
       archived: 0,
+      listenerOf: [],
     });
 
     const formTitle = computed(() => localFormData.id ? 'Edit Listener' : 'Create New Listener');
+
+    const radioStationOptions = computed(() => {
+      return radioStationStore.getEntries.map(station => ({
+        label: station.slugName,
+        value: station.id
+      }));
+    });
+
+    const localizedNameArray = computed({
+      get: () => {
+        if (!localFormData.localizedName) return [];
+        return Object.entries(localFormData.localizedName).map(([language, name]) => ({
+          language,
+          name
+        }));
+      },
+      set: (value) => {
+        localFormData.localizedName = {};
+        value.forEach(item => {
+          if (item.language && localFormData.localizedName) {
+            localFormData.localizedName[item.language] = item.name || "";
+          }
+        });
+      }
+    });
+
+    const nickNameArray = computed({
+      get: () => {
+        if (!localFormData.nickName) return [];
+        return Object.entries(localFormData.nickName).map(([language, name]) => ({
+          language,
+          name
+        }));
+      },
+      set: (value) => {
+        localFormData.nickName = {};
+        value.forEach(item => {
+          if (item.language && localFormData.nickName) {
+            localFormData.nickName[item.language] = item.name || "";
+          }
+        });
+      }
+    });
+
+    const createLocalizedName = () => ({
+      language: "",
+      name: ""
+    });
+
+    const createNickName = () => ({
+      language: "",
+      name: ""
+    });
 
     watch(() => store.getCurrent, (currentListener) => {
       if (currentListener && currentListener.id) {
@@ -131,8 +237,8 @@ export default defineComponent({
         // Reset for new form
         Object.assign(localFormData, {
           id: null, author: "", regDate: "", lastModifier: "", lastModifiedDate: "",
-          localizedName: { en: "" }, userId: null, country: "", nickName: { en: "" },
-          slugName: "", archived: 0,
+          localizedName: { en: "" }, country: "", nickName: { en: "" },
+          archived: 0, listenerOf: [],
         });
       }
     }, { immediate: true, deep: true });
@@ -144,13 +250,10 @@ export default defineComponent({
         const dataToSave: ListenerSave = {
           nickName: localFormData.nickName,
           country: localFormData.country,
-          slugName: localFormData.slugName,
           localizedName: localFormData.localizedName, // Assuming this should also be saved
           archived: localFormData.archived,
+          listenerOf: localFormData.listenerOf,
         };
-        if (!localFormData.id && localFormData.userId !== null) { // Only include userId for new entries
-          dataToSave.userId = localFormData.userId;
-        }
 
         await store.saveListener(dataToSave, localFormData.id);
         message.success("Listener saved successfully");
@@ -184,19 +287,22 @@ export default defineComponent({
 
     onMounted(async () => {
       const listenerId = route.params.listenerId as string;
-      if (listenerId && listenerId !== 'new') {
-        loadingBar.start();
-        try {
+      loadingBar.start();
+      try {
+        // Always fetch radio stations for the dropdown
+        await radioStationStore.fetchAll();
+        
+        if (listenerId && listenerId !== 'new') {
           await store.fetchListener(listenerId);
           // Data assignment is handled by the watcher
-        } catch (error) {
-          message.error('Failed to load listener data');
-        } finally {
-          loadingBar.finish();
+        } else {
+          // Reset form for new listener, handled by watcher's initial run
+          store.apiFormResponse = null; // Clear any existing form data in store
         }
-      } else {
-        // Reset form for new listener, handled by watcher's initial run
-        store.apiFormResponse = null; // Clear any existing form data in store
+      } catch (error) {
+        message.error('Failed to load data');
+      } finally {
+        loadingBar.finish();
       }
     });
 
@@ -208,6 +314,13 @@ export default defineComponent({
       goBack,
       formTitle,
       isSaving,
+      radioStationOptions,
+      localizedNameArray,
+      nickNameArray,
+      createLocalizedName,
+      createNickName,
+      languageOptions: referencesStore.languageOptions,
+      countryOptions: referencesStore.countryOptions,
     };
   },
 });

@@ -9,7 +9,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
     const apiViewResponse = ref<ApiViewPageResponse<SoundFragment> | null>(null);
     const apiFormResponse = ref<ApiFormResponse<SoundFragment> | null>(null);
     const availableApiViewResponse = ref<ApiViewPageResponse<SoundFragment> | null>(null);
-    const genreOptions = ref<Array<{label: string, value: string}>>([]);
+
 
     const getEntries = computed(() => apiViewResponse.value?.viewData.entries || []);
     const getAvailableSoundFragments = computed(() => availableApiViewResponse.value?.viewData.entries || []);
@@ -70,19 +70,6 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
             pageSizes: [10, 20, 30, 40]
         };
     });
-
-    const fetchGenres = async () => {
-        const response = await apiClient.get('/genres');
-        if (!response?.data?.payload) throw new Error('Invalid API response');
-
-        genreOptions.value = response.data.payload.viewData.entries
-            .map((entry: any) => ({
-                label: entry.identifier,
-                value: entry.identifier
-            }))
-            .sort((a: {label: string}, b: {label: string}) =>
-                a.label.localeCompare(b.label));
-    };
 
     const fetchSoundFragments = async (page = 1, pageSize = 10, searchQuery = '') => {
         let url = `/soundfragments?page=${page}&size=${pageSize}`;
@@ -226,7 +213,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         await apiClient.delete(`/soundfragments/${id}`);
     };
 
-    fetchGenres();
+
 
     return {
         apiViewResponse,
@@ -237,7 +224,6 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         getCurrent,
         getPagination,
         getAvailablePagination,
-        genreOptions,
         fetchAll: fetchSoundFragments,
         fetchAvailable: fetchAvailableSoundFragments,
         fetch: fetchSoundFragment,
@@ -246,7 +232,6 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         uploadFile,
         updateCurrent,
         downloadFile,
-        downloadFileWithProgress,
-        fetchGenres
+        downloadFileWithProgress
     };
 });

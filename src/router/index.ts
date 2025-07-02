@@ -89,6 +89,22 @@ const routes: Array<RouteRecordRaw> = [
                 props: true,
             },
             {
+                path: 'listeners',
+                name: 'Listeners',
+                component: Listeners
+            },
+            {
+                path: 'listeners/new',
+                name: 'NewListenerCommon',
+                component: ListenerForm
+            },
+            {
+                path: 'listeners/:listenerId',
+                name: 'EditListenerCommon',
+                component: ListenerForm,
+                props: true
+            },
+            {
                 path: 'radiostations',
                 name: 'RadioStations',
                 component: RadioStations

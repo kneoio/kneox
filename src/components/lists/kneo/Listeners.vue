@@ -2,7 +2,7 @@
   <n-grid :cols="1" x-gap="12" y-gap="12" class="p-4">
     <n-gi>
       <n-page-header>
-        <template #title>Listeners for {{ brandName }}</template>
+        <template #title>{{ brandName ? `Listeners for ${brandName}` : 'All Listeners' }}</template>
         <template #footer>
           Total: {{ totalCount }}
         </template>
@@ -61,7 +61,7 @@ export default defineComponent({
   props: {
     brandName: {
       type: String,
-      required: true,
+      required: false,
     },
   },
   setup(props) {
@@ -174,10 +174,13 @@ export default defineComponent({
     };
 
     const fetchData = async (page = 1, pageSize = 10) => {
-      if (!props.brandName) return;
       try {
         loading.value = true;
-        await store.fetchListeners(props.brandName, page, pageSize);
+        if (props.brandName) {
+          await store.fetchListeners(props.brandName, page, pageSize);
+        } else {
+          await store.fetchAllListeners(page, pageSize);
+        }
       } catch (error) {
         console.error('Failed to fetch listeners:', error);
       } finally {
@@ -194,11 +197,19 @@ export default defineComponent({
     };
 
     const navigateToCreateListener = () => {
-      router.push({ name: 'NewListener', params: { brandName: props.brandName } });
+      if (props.brandName) {
+        router.push({ name: 'NewListener', params: { brandName: props.brandName } });
+      } else {
+        router.push({ name: 'NewListenerCommon' });
+      }
     };
 
     const navigateToEditListener = (listenerId: string) => {
-      router.push({ name: 'EditListener', params: { brandName: props.brandName, listenerId } });
+      if (props.brandName) {
+        router.push({ name: 'EditListener', params: { brandName: props.brandName, listenerId } });
+      } else {
+        router.push({ name: 'EditListenerCommon', params: { listenerId } });
+      }
     };
 
     const getRowProps = (row: ListenerEntry) => {
@@ -211,10 +222,8 @@ export default defineComponent({
       };
     };
 
-    watch(() => props.brandName, (newBrandName) => {
-      if (newBrandName) {
-        fetchData();
-      }
+    watch(() => props.brandName, () => {
+      fetchData();
     }, { immediate: true });
 
     onMounted(() => {

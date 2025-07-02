@@ -125,16 +125,20 @@ export interface AiAgent {
     name: string;
     preferredLang: LanguageCode;
     mainPrompt: string;
+    fillerPrompt: string[];
     preferredVoice: Voice[];
     enabledTools: Tool[];
+    talkativity: number;
 }
 
 export interface AiAgentSave {
     name: string;
     preferredLang: LanguageCode;
     mainPrompt: string;
+    fillerPrompt: string[];
     preferredVoice: Voice[];
     enabledTools: Tool[];
+    talkativity: number;
 }
 
 // Types for Listeners Feature
@@ -172,4 +176,5 @@ export interface ListenerSave {
   slugName?: string;
   archived?: number;
   userId?: number; // Assuming userId might be set on creation or editable
+  listenerOf?: string[]; // Array of radio station IDs this listener is associated with
 }

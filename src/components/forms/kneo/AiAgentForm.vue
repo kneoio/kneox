@@ -1,7 +1,7 @@
 <template>
   <n-grid cols="6" x-gap="12" y-gap="12" class="m-5">
     <n-gi span="6">
-      <n-page-header subtitle="AI Agent" @back="goBack">
+      <n-page-header :subtitle="formTitle" @back="goBack">
         <template #title>{{ localFormData.name || 'New AI Agent' }}</template>
         <template #footer>
           Registered: {{ localFormData.regDate }}, Last Modified: {{ localFormData.lastModifiedDate }}
@@ -180,6 +180,8 @@ export default defineComponent({
       { label: 'German', value: 'de' }
     ];
 
+    const formTitle = computed(() => localFormData.id ? 'Edit AI Agent' : 'Create New AI Agent');
+
     const localFormData = reactive<Partial<AiAgent>>({
       id: "",
       author: "",
@@ -194,6 +196,8 @@ export default defineComponent({
       enabledTools: [],
       talkativity: 0.3
     });
+
+    const createFillerItem = () => "";
 
     const createVoiceItem = () => ({
       id: "",
@@ -255,6 +259,8 @@ export default defineComponent({
     return {
       localFormData,
       langOptions,
+      formTitle,
+      createFillerItem,
       createVoiceItem,
       createToolItem,
       handleSave,

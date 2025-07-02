@@ -1,7 +1,7 @@
 <template>
   <n-grid cols="6" x-gap="12" y-gap="12" class="m-5">
     <n-gi span="6">
-      <n-page-header subtitle="Profile" @back="goBack">
+      <n-page-header :subtitle="formTitle" @back="goBack">
         <template #title>{{ localFormData.name || 'New Profile' }}</template>
         <template #footer>
           Registered: {{ localFormData.regDate }}, Last Modified: {{ localFormData.lastModifiedDate }}
@@ -50,7 +50,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, reactive, ref } from "vue";
+import { defineComponent, onMounted, reactive, ref, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
   NButton,
@@ -92,6 +92,8 @@ export default defineComponent({
     const store = useProfileStore();
     const route = useRoute();
     const activeTab = ref('properties');
+
+    const formTitle = computed(() => localFormData.id ? 'Edit Profile' : 'Create New Profile');
 
     const localFormData = reactive<Partial<Profile>>({
       id: "",
@@ -143,6 +145,7 @@ export default defineComponent({
 
     return {
       localFormData,
+      formTitle,
       handleSave,
       handleArchive,
       goBack,
