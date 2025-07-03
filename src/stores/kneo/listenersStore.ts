@@ -80,7 +80,7 @@ export const useListenersStore = defineStore('listenersStore', () => {
 
     const saveListener = async (data: ListenerSave, id: string | null) => {
         try {
-            const response = await apiClient.post(`/listeners/${id || ''}/`, data);
+            const response = await apiClient.post(`/listeners/${id || ''}`, data);
             if (!response?.data?.payload) throw new Error('Invalid API response when saving listener');
             apiFormResponse.value = response.data.payload;
             if (apiViewResponse.value?.viewData) {
