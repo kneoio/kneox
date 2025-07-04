@@ -253,7 +253,11 @@ export default defineComponent({
 
         await store.saveListener(dataToSave, localFormData.id);
         message.success("Listener saved successfully");
-        router.push("/outline/station/" + route.params.brandName + "/listeners");
+        if (route.params.brandName) {
+          router.push("/outline/station/" + route.params.brandName + "/listeners");
+        } else {
+          router.push("/outline/listeners");
+        }
       } catch (error: unknown) {
         if (isErrorWithResponse(error) && error.response?.status === 400) {
           const errorData = error.response.data as { message?: string; errors?: { field: string; message: string }[] };
@@ -290,11 +294,54 @@ export default defineComponent({
 
         if (listenerId && listenerId !== 'new') {
           await store.fetchListener(listenerId);
+          // Directly assign fetched data to localFormData
+          Object.assign(localFormData, store.getCurrent);
+          
+          // Initialize arrays if they don't exist
+          if (!localFormData.nickName) localFormData.nickName = { en: '' };
+          if (!localFormData.localizedName) localFormData.localizedName = { en: '' };
+
+          // Update the dynamic input arrays
+          if (localFormData.localizedName) {
+            localizedNameArray.value = Object.entries(localFormData.localizedName).map(([language, name]) => ({
+              language,
+              name
+            }));
+          }
+          if (localFormData.nickName) {
+            nickNameArray.value = Object.entries(localFormData.nickName).map(([language, name]) => ({
+              language,
+              name
+            }));
+          }
         } else {
           store.apiFormResponse = null;
         }
       } catch (error) {
-        message.error('Failed to load data');
+        console.error('Failed to fetch listener:', error);
+        
+        // Check if it's a 404 error (listener not found)
+        if (isErrorWithResponse(error) && error.response?.status === 404) {
+          message.warning('Listener not found. Opening empty form.');
+          // Reset form data to empty state
+          Object.assign(localFormData, {
+            id: undefined,
+            nickName: { en: '' },
+            localizedName: { en: '' },
+            country: undefined,
+            listenerOf: [],
+            archived: false,
+            regDate: undefined,
+            lastModifiedDate: undefined,
+            author: undefined,
+            lastModifier: undefined
+          });
+          // Reset arrays
+          localizedNameArray.value = [{ language: 'en', name: '' }];
+          nickNameArray.value = [{ language: 'en', name: '' }];
+        } else {
+          message.error('Failed to load listener data');
+        }
       } finally {
         loadingBar.finish();
       }

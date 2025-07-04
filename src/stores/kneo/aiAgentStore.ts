@@ -89,6 +89,10 @@ export const useAiAgentStore = defineStore('aiAgentStore', () => {
         }
     };
 
+    const deleteAiAgent = async (id: string) => {
+        await apiClient.delete(`/aiagents/${id}`);
+    };
+
     return {
         apiViewResponse,
         apiFormResponse,
@@ -96,6 +100,7 @@ export const useAiAgentStore = defineStore('aiAgentStore', () => {
         fetchAll: fetchAiAgents,
         fetch: fetchAiAgent,
         save,
+        deleteAiAgent,
         getEntries,
         getPagination,
         getCurrent,

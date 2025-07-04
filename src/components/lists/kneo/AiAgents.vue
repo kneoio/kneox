@@ -12,6 +12,14 @@
     <n-gi :span="isMobile ? 1 : 6">
       <n-button-group>
         <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
+        <n-button
+            type="error"
+            :disabled="!hasSelection"
+            @click="handleDelete"
+            size="large"
+        >
+          Delete ({{ checkedRowKeys.length }})
+        </n-button>
       </n-button-group>
     </n-gi>
 
@@ -129,14 +137,43 @@ export default defineComponent({
       }
     };
 
+    const hasSelection = computed(() => {
+      return checkedRowKeys.value.length > 0;
+    });
+
     const handleNewClick = () => {
       router.push('/outline/ai_agents/new');
+    };
+
+    const handleDelete = async () => {
+      if (checkedRowKeys.value.length === 0) {
+        message.warning('Please select AI Agents to delete.');
+        return;
+      }
+
+      try {
+        loading.value = true;
+        const deletePromises = checkedRowKeys.value.map(id => store.deleteAiAgent(id as string));
+        await Promise.all(deletePromises);
+        message.success(`${checkedRowKeys.value.length} AI Agent(s) deleted successfully.`);
+        checkedRowKeys.value = [];
+        await store.fetchAll(store.getPagination.page, store.getPagination.pageSize);
+      } catch (error) {
+        console.error('Failed to delete AI Agents:', error);
+        message.error('Failed to delete AI Agents.');
+      } finally {
+        loading.value = false;
+      }
     };
 
     const getRowProps = (row: AiAgent) => {
       return {
         style: 'cursor: pointer;',
-        onClick: () => {
+        onClick: (e: MouseEvent) => {
+          const target = e.target as HTMLElement;
+          if (target.closest('.n-checkbox') || target.closest('[data-n-checkbox]')) {
+            return;
+          }
           const routeTo = {name: 'AiAgentForm', params: {id: row.id}};
           router.push(routeTo).catch((err) => {
             console.error('Navigation error:', err);
@@ -229,6 +266,8 @@ export default defineComponent({
       rowKey: (row: AiAgent) => row.id,
       isMobile,
       handleNewClick,
+      handleDelete,
+      hasSelection,
       getRowProps,
       handlePageChange,
       handlePageSizeChange,

@@ -39,6 +39,7 @@ export interface RadioStation {
     lastModifiedDate: string;
     status: BrandStatus;
     title: string;
+    localizedName: Record<string, string>;
     country: string;
     slugName: string;
     url: string;

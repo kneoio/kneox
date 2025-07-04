@@ -95,6 +95,10 @@ export const useRadioStationStore = defineStore('radioStationStore', () => {
         }
     };
 
+    const deleteRadioStation = async (id: string) => {
+        await apiClient.delete(`/radiostations/${id}`);
+    };
+
     return {
         apiViewResponse,
         apiFormResponse,
@@ -103,6 +107,7 @@ export const useRadioStationStore = defineStore('radioStationStore', () => {
         fetch: fetchRadioStation,
         fetchStatus,
         save,
+        deleteRadioStation,
         getEntries,
         getPagination,
         getCurrent,

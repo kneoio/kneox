@@ -68,29 +68,20 @@ export const useListenersStore = defineStore('listenersStore', () => {
     };
 
     const fetchListener = async (id: string) => {
-        try {
-            const response = await apiClient.get(`/listeners/${id}`);
-            if (!response?.data?.payload) throw new Error('Invalid API response for a single listener');
-            apiFormResponse.value = response.data.payload;
-        } catch (error) {
-            console.error(`Failed to fetch listener ${id}:`, error);
-            apiFormResponse.value = null;
-        }
+        const response = await apiClient.get(`/listeners/${id}`);
+        if (!response?.data?.payload) throw new Error('Invalid API response for a single listener');
+        apiFormResponse.value = response.data.payload;
     };
 
     const saveListener = async (data: ListenerSave, id: string | null) => {
-        try {
-            const response = await apiClient.post(`/listeners/${id || ''}`, data);
-            if (!response?.data?.payload) throw new Error('Invalid API response when saving listener');
-            apiFormResponse.value = response.data.payload;
-            if (apiViewResponse.value?.viewData) {
-                 await fetchListeners(apiViewResponse.value.viewData.entries[0]?.slugName || '', apiViewResponse.value.viewData.pageNum, apiViewResponse.value.viewData.pageSize);
-            }
-            return apiFormResponse.value;
-        } catch (error) {
-            console.error('Failed to save listener:', error);
-            throw error;
-        }
+        const response = await apiClient.post(`/listeners/${id || ''}`, data);
+        if (!response?.data) throw new Error('Invalid API response');
+        apiFormResponse.value = response.data;
+        return apiFormResponse.value;
+    };
+
+    const deleteListener = async (id: string) => {
+        await apiClient.delete(`/listeners/${id}`);
     };
 
     return {
@@ -103,5 +94,6 @@ export const useListenersStore = defineStore('listenersStore', () => {
         fetchAllListeners,
         fetchListener,
         saveListener,
+        deleteListener,
     };
 });

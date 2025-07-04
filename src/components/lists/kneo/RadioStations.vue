@@ -12,6 +12,14 @@
     <n-gi :span="isMobile ? 1 : 6">
       <n-button-group>
         <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
+        <n-button
+            type="error"
+            :disabled="!hasSelection"
+            @click="handleDelete"
+            size="large"
+        >
+          Delete ({{ checkedRowKeys.length }})
+        </n-button>
       </n-button-group>
     </n-gi>
 
@@ -25,6 +33,7 @@
           :bordered="false"
           :row-props="getRowProps"
           :loading="loading"
+          v-model:checked-row-keys="checkedRowKeys"
           @update:page="handlePageChange"
           @update:page-size="handlePageSizeChange"
       >
@@ -66,6 +75,7 @@ export default defineComponent({
     const intervalId = ref<number | null>(null);
     const currentSongName = inject<Ref<string | null>>('parentTitle');
     const checkedRowKeys = ref<(string | number)[]>([]);
+    const hasSelection = computed(() => checkedRowKeys.value.length > 0);
 
     async function preFetch() {
       try {
@@ -163,13 +173,35 @@ export default defineComponent({
     const getRowProps = (row: RadioStation) => {
       return {
         style: 'cursor: pointer;',
-        onClick: () => {
+        onClick: (e: MouseEvent) => {
+          const target = e.target as HTMLElement;
+          if (target.closest('.n-checkbox') || target.closest('[data-n-checkbox]')) {
+            return;
+          }
           const routeTo = {name: 'RadioStation', params: {id: row.id}};
           router.push(routeTo).catch((err) => {
             console.error('Navigation error:', err);
           });
         },
       };
+    };
+
+    const handleDelete = async () => {
+      if (checkedRowKeys.value.length === 0) {
+        message.info("No items selected for deletion.");
+        return;
+      }
+      try {
+        loading.value = true;
+        await Promise.all(checkedRowKeys.value.map(id => store.deleteRadioStation(id.toString())));
+        message.success(`Deleted ${checkedRowKeys.value.length} item(s) successfully`);
+        checkedRowKeys.value = [];
+        await store.fetchAll(store.getPagination.page, store.getPagination.pageSize);
+      } catch (error) {
+        message.error('Failed to delete items');
+      } finally {
+        loading.value = false;
+      }
     };
 
     const columns = computed<DataTableColumns<RadioStation>>(() => {
@@ -279,7 +311,9 @@ export default defineComponent({
       handlePageChange,
       handlePageSizeChange,
       loading,
-      checkedRowKeys
+      checkedRowKeys,
+      hasSelection,
+      handleDelete
     };
   },
 });

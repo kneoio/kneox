@@ -270,12 +270,16 @@ export default defineComponent( {
           album: localFormData.album,
           representedInBrands: localFormData.representedInBrands,
           newlyUploaded: uploadedFileNames.value,
-          tempFileIds: tempFileIds.value, // Include temp file IDs for new fragments
+          tempFileIds: tempFileIds.value
         };
 
         await store.save( saveDTO, localFormData.id );
         message.success( "Saved successfully" );
-        await router.push( "/outline/soundfragments" );
+        if (route.params.brandName) {
+          await router.push("/outline/station/" + route.params.brandName + "/soundfragments");
+        } else {
+          await router.push("/outline/soundfragments");
+        }
       } catch ( error: unknown ) {
         if ( isErrorWithResponse( error ) && error.response?.status === 400 ) {
           const errorData = error.response.data as ErrorResponse;

@@ -12,6 +12,14 @@
     <n-gi>
       <n-button-group>
         <n-button type="primary" size="large" @click="navigateToCreateListener">New</n-button>
+        <n-button
+            type="error"
+            :disabled="!hasSelection"
+            @click="handleDelete"
+            size="large"
+        >
+          Delete ({{ checkedRowKeys.length }})
+        </n-button>
       </n-button-group>
     </n-gi>
 
@@ -47,11 +55,10 @@ import {
   NPageHeader,
   NButton,
   NButtonGroup,
+  useMessage,
 } from 'naive-ui';
 import { useRouter } from 'vue-router';
-
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
-
 import { ListenerEntry } from "../../../types/kneoBroadcasterTypes";
 import { useListenersStore } from '../../../stores/kneo/listenersStore';
 
@@ -67,9 +74,11 @@ export default defineComponent({
   setup(props) {
     const store = useListenersStore();
     const router = useRouter();
+    const message = useMessage();
 
     const loading = ref(false);
     const checkedRowKeys = ref<Array<string | number>>([]);
+    const hasSelection = computed(() => checkedRowKeys.value.length > 0);
 
     const tableData = computed(() => {
       const storeData = store.getEntries;
@@ -215,11 +224,33 @@ export default defineComponent({
     const getRowProps = (row: ListenerEntry) => {
       return {
         style: 'cursor: pointer;',
-        onClick: () => {
+        onClick: (e: MouseEvent) => {
+          const target = e.target as HTMLElement;
+          if (target.closest('.n-checkbox') || target.closest('[data-n-checkbox]')) {
+            return;
+          }
           const id = row.brandListener?.id || row.id;
           navigateToEditListener(id);
         }
       };
+    };
+
+    const handleDelete = async () => {
+      if (checkedRowKeys.value.length === 0) {
+        message.info("No items selected for deletion.");
+        return;
+      }
+      try {
+        loading.value = true;
+        await Promise.all(checkedRowKeys.value.map(id => store.deleteListener(id.toString())));
+        message.success(`Deleted ${checkedRowKeys.value.length} item(s) successfully`);
+        checkedRowKeys.value = [];
+        await fetchData();
+      } catch (error) {
+        message.error('Failed to delete items');
+      } finally {
+        loading.value = false;
+      }
     };
 
     watch(() => props.brandName, () => {
@@ -236,6 +267,7 @@ export default defineComponent({
       rowKey,
       loading,
       checkedRowKeys,
+      hasSelection,
       tableData,
       totalCount,
       paginationConfig,
@@ -243,6 +275,7 @@ export default defineComponent({
       handlePageSizeChange,
       navigateToCreateListener,
       getRowProps,
+      handleDelete,
     };
   }
 });
