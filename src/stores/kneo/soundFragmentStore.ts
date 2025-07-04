@@ -206,6 +206,12 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         await apiClient.delete(`/soundfragments/${id}`);
     };
 
+    const fetchAccessList = async (id: string) => {
+        const response = await apiClient.get(`/soundfragments/${id}/access`);
+        if (!response?.data) throw new Error('Invalid API response');
+        return response.data;
+    };
+
 
 
     return {
@@ -225,6 +231,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         uploadFile,
         updateCurrent,
         downloadFile,
-        downloadFileWithProgress
+        downloadFileWithProgress,
+        fetchAccessList
     };
 });

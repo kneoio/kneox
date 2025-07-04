@@ -219,13 +219,16 @@
             </n-grid>
           </n-form>
         </n-tab-pane>
+        <n-tab-pane name="acl" tab="ACL">
+          <AclTable :acl-data="aclData" :loading="aclLoading" />
+        </n-tab-pane>
       </n-tabs>
     </n-gi>
-  </n-grid>
+</n-grid>
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, reactive, ref, computed } from "vue";
+import { defineComponent, onMounted, reactive, ref, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
   NButton,
@@ -265,6 +268,7 @@ import { useRadioStationStore } from "../../../stores/kneo/radioStationStore";
 import { useAiAgentStore } from "../../../stores/kneo/aiAgentStore";
 import { useProfileStore } from "../../../stores/kneo/profileStore";
 import { useReferencesStore } from "../../../stores/kneo/referencesStore";
+import AclTable from '../../common/AclTable.vue';
 
 export default defineComponent({
   name: "RadioStationForm",
@@ -288,7 +292,8 @@ export default defineComponent({
     NCheckbox,
     NIcon,
     Copy,
-    CodeMirror
+    CodeMirror,
+    AclTable
   },
   setup() {
     const loadingBar = useLoadingBar();
@@ -306,6 +311,9 @@ export default defineComponent({
     const editorExtensions = computed(() => [
       EditorView.lineWrapping
     ]);
+
+    const aclData = ref([]);
+    const aclLoading = ref(false);
 
     const localFormData = reactive<Partial<RadioStation>>({
       id: "",
@@ -419,6 +427,28 @@ export default defineComponent({
       router.push("/outline/radiostations");
     };
 
+    const fetchAclData = async () => {
+      const id = localFormData.id;
+      if (id) {
+        try {
+          aclLoading.value = true;
+          const data = await store.fetchAccessList(id);
+          aclData.value = data;
+        } catch (error) {
+          console.error('Failed to fetch ACL data:', error);
+          message.error('Failed to fetch ACL data');
+        } finally {
+          aclLoading.value = false;
+        }
+      }
+    };
+
+    watch(activeTab, (newTab) => {
+      if (newTab === 'acl' && localFormData.id) {
+        fetchAclData();
+      }
+    });
+
     onMounted(async () => {
       const id = route.params.id as string;
 
@@ -461,7 +491,9 @@ export default defineComponent({
       selectedAgent,
       selectedProfile,
       copyToClipboard,
-      goBack
+      goBack,
+      aclData,
+      aclLoading
     };
   }
 });

@@ -19,75 +19,82 @@
       </n-button-group>
     </n-gi>
     <n-gi span="6">
-      <n-form label-placement="left" label-width="auto" :model="localFormData">
-        <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
-          <n-gi>
-            <n-form-item label="Localized Names">
-              <n-dynamic-input
-                  v-model:value="localizedNameArray"
-                  :on-create="createLocalizedName"
-                  style="width: 50%; max-width: 600px;"
-              >
-                <template #default="{ value }">
-                  <n-space align="center" style="width: 100%;">
-                    <n-select
-                        v-model:value="value.language"
-                        :options="languageOptions"
-                        placeholder="Language"
-                        style="width: 120px;"
-                    />
-                    <n-input
-                        v-model:value="value.name"
-                        placeholder="Name"
-                        style="flex: 2;"
-                    />
-                  </n-space>
-                </template>
-              </n-dynamic-input>
-            </n-form-item>
-          </n-gi>
-          <n-gi>
-            <n-form-item label="Nick Names">
-              <n-dynamic-input
-                  v-model:value="nickNameArray"
-                  :on-create="createNickName"
-                  style="width: 50%; max-width: 600px;"
-              >
-                <template #default="{ value }">
-                  <n-space align="center" style="width: 100%;">
-                    <n-select
-                        v-model:value="value.language"
-                        :options="languageOptions"
-                        placeholder="Language"
-                        style="width: 120px;"
-                    />
-                    <n-input
-                        v-model:value="value.name"
-                        placeholder="Nick Name"
-                        style="flex: 1;"
-                    />
-                  </n-space>
-                </template>
-              </n-dynamic-input>
-            </n-form-item>
-          </n-gi>
-          <n-gi>
-            <n-form-item label="Country" path="country">
-              <n-select
-                  v-model:value="localFormData.country"
-                  :options="countryOptions"
-                  style="width: 50%; max-width: 600px;"
-              />
-            </n-form-item>
-          </n-gi>
-          <n-gi>
-            <n-form-item label="Listener of" path="listenerOf">
-              <n-select v-model:value="localFormData.listenerOf" :options="radioStationOptions" filterable
-                        multiple placeholder="Select Radio Stations" style="width: 50%; max-width: 600px;" />
-            </n-form-item>
-          </n-gi>
-        </n-grid>
-      </n-form>
+      <n-tabs v-model:value="activeTab">
+        <n-tab-pane name="properties" tab="Main properties">
+          <n-form label-placement="left" label-width="auto" :model="localFormData">
+            <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
+              <n-gi>
+                <n-form-item label="Localized Names">
+                  <n-dynamic-input
+                      v-model:value="localizedNameArray"
+                      :on-create="createLocalizedName"
+                      style="width: 50%; max-width: 600px;"
+                  >
+                    <template #default="{ value }">
+                      <n-space align="center" style="width: 100%;">
+                        <n-select
+                            v-model:value="value.language"
+                            :options="languageOptions"
+                            placeholder="Language"
+                            style="width: 120px;"
+                        />
+                        <n-input
+                            v-model:value="value.name"
+                            placeholder="Name"
+                            style="flex: 2;"
+                        />
+                      </n-space>
+                    </template>
+                  </n-dynamic-input>
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="Nick Names">
+                  <n-dynamic-input
+                      v-model:value="nickNameArray"
+                      :on-create="createNickName"
+                      style="width: 50%; max-width: 600px;"
+                  >
+                    <template #default="{ value }">
+                      <n-space align="center" style="width: 100%;">
+                        <n-select
+                            v-model:value="value.language"
+                            :options="languageOptions"
+                            placeholder="Language"
+                            style="width: 120px;"
+                        />
+                        <n-input
+                            v-model:value="value.name"
+                            placeholder="Nick Name"
+                            style="flex: 1;"
+                        />
+                      </n-space>
+                    </template>
+                  </n-dynamic-input>
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="Country" path="country">
+                  <n-select
+                      v-model:value="localFormData.country"
+                      :options="countryOptions"
+                      style="width: 50%; max-width: 600px;"
+                  />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="Listener of" path="listenerOf">
+                  <n-select v-model:value="localFormData.listenerOf" :options="radioStationOptions" filterable
+                            multiple placeholder="Select Radio Stations" style="width: 50%; max-width: 600px;" />
+                </n-form-item>
+              </n-gi>
+            </n-grid>
+          </n-form>
+        </n-tab-pane>
+        <n-tab-pane name="acl" tab="ACL">
+          <acl-table :acl-data="aclData" :loading="aclLoading" />
+        </n-tab-pane>
+      </n-tabs>
     </n-gi>
   </n-grid>
 </template>
@@ -108,9 +115,12 @@ import {
   NPageHeader,
   NSelect,
   NSpace,
+  NTabs,
+  NTabPane,
   useLoadingBar,
   useMessage,
 } from "naive-ui";
+import AclTable from '../../common/AclTable.vue';
 import { useListenersStore } from "../../../stores/kneo/listenersStore";
 import { useRadioStationStore } from "../../../stores/kneo/radioStationStore";
 import { useReferencesStore } from "../../../stores/kneo/referencesStore";
@@ -149,6 +159,9 @@ export default defineComponent({
     NGi,
     NSelect,
     NSpace,
+    NTabs,
+    NTabPane,
+    AclTable,
   },
   setup() {
     const router = useRouter();
@@ -184,6 +197,9 @@ export default defineComponent({
 
     const localizedNameArray = ref<{ language: string; name: string }[]>([]);
     const nickNameArray = ref<{ language: string; name: string }[]>([]);
+    const activeTab = ref('properties');
+    const aclData = ref<any[]>([]);
+    const aclLoading = ref(false);
 
     watch(localizedNameArray, (newValue) => {
       localFormData.localizedName = {};
@@ -284,6 +300,34 @@ export default defineComponent({
     const goBack = () => {
       router.back();
     };
+    
+    // ACL fetch function
+    const fetchAclData = async () => {
+      const id = route.params.id as string;
+      if (!id || id === 'new') {
+        aclData.value = [];
+        return;
+      }
+      
+      try {
+        aclLoading.value = true;
+        const response = await store.fetchAccessList(id);
+        aclData.value = response.accessList || [];
+      } catch (error) {
+        console.error('Failed to fetch ACL data:', error);
+        message.error('Failed to fetch access control list');
+        aclData.value = [];
+      } finally {
+        aclLoading.value = false;
+      }
+    };
+    
+    // Watch for tab changes to load ACL data
+    watch(activeTab, (newTab) => {
+      if (newTab === 'acl') {
+        fetchAclData();
+      }
+    });
 
     onMounted(async () => {
       const id = route.params.id as string;
@@ -346,6 +390,9 @@ export default defineComponent({
       createNickName,
       languageOptions: referencesStore.languageOptions,
       countryOptions: referencesStore.countryOptions,
+      activeTab,
+      aclData,
+      aclLoading,
     };
   },
 });

@@ -112,6 +112,12 @@ export const useProfileStore = defineStore('profileStore', () => {
         return response?.data;
     };
 
+    const fetchAccessList = async (id: string) => {
+        const response = await apiClient.get(`/profiles/${id}/access`);
+        if (!response?.data) throw new Error('Invalid API response');
+        return response.data;
+    };
+
     return {
         apiViewResponse,
         apiFormResponse,
@@ -123,6 +129,7 @@ export const useProfileStore = defineStore('profileStore', () => {
         getEntries,
         getPagination,
         getCurrent,
-        updateCurrent
+        updateCurrent,
+        fetchAccessList
     };
 });

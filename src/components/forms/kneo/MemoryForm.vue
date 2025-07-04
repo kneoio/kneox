@@ -18,7 +18,7 @@
     </n-gi>
     <n-gi span="6">
       <n-tabs v-model:value="activeTab" type="line" animated>
-        <n-tab-pane name="properties" tab="Properties">
+        <n-tab-pane name="properties" tab="Main properties">
           <n-form label-placement="left" label-width="auto" class="py-4">
             <n-grid :cols="1" x-gap="12" y-gap="12">
               <n-gi>
@@ -54,13 +54,16 @@
             </n-grid>
           </n-form>
         </n-tab-pane>
+        <n-tab-pane name="acl" tab="ACL">
+          <acl-table :acl-data="aclData" :loading="aclLoading" />
+        </n-tab-pane>
       </n-tabs>
     </n-gi>
   </n-grid>
 </template>
 
 <script lang="ts">
-import {defineComponent, onMounted, reactive, ref} from "vue";
+import {defineComponent, onMounted, reactive, ref, watch} from "vue";
 import {useRoute, useRouter} from "vue-router";
 import {
   NButton,
@@ -78,6 +81,7 @@ import {
   useLoadingBar,
   useMessage
 } from "naive-ui";
+import AclTable from '../../common/AclTable.vue';
 import {Memory, MemorySave} from "../../../types/kneoBroadcasterTypes"; // Adjust path as needed
 import {useMemoryStore} from "../../../stores/kneo/memoryStore"; // Adjust path as needed
 
@@ -95,7 +99,8 @@ export default defineComponent({
     NGrid,
     NGi,
     NSelect,
-    NCheckbox
+    NCheckbox,
+    AclTable
   },
   setup() {
     const loadingBar = useLoadingBar();
@@ -107,6 +112,10 @@ export default defineComponent({
 
     // Separate ref for the JSON content string to bind to the textarea
     const localContentString = ref("");
+    
+    // ACL-related reactive properties
+    const aclData = ref<any[]>([]);
+    const aclLoading = ref(false);
 
     // Use a reactive object for the main form data
     const localFormData = reactive<Partial<Memory>>({
@@ -167,6 +176,34 @@ export default defineComponent({
     const goBack = () => {
       router.push("/outline/memories");
     };
+    
+    // ACL fetch function
+    const fetchAclData = async () => {
+      const id = route.params.id as string;
+      if (!id || id === 'new') {
+        aclData.value = [];
+        return;
+      }
+      
+      try {
+        aclLoading.value = true;
+        const response = await store.fetchAccessList(id);
+        aclData.value = response.accessList || [];
+      } catch (error) {
+        console.error('Failed to fetch ACL data:', error);
+        message.error('Failed to fetch access control list');
+        aclData.value = [];
+      } finally {
+        aclLoading.value = false;
+      }
+    };
+    
+    // Watch for tab changes to load ACL data
+    watch(activeTab, (newTab) => {
+      if (newTab === 'acl') {
+        fetchAclData();
+      }
+    });
 
     onMounted(async () => {
       const id = route.params.id as string;
@@ -198,6 +235,8 @@ export default defineComponent({
       activeTab,
       goBack,
       memoryTypeOptions,
+      aclData,
+      aclLoading,
     };
   },
 });

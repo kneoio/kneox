@@ -99,6 +99,12 @@ export const useRadioStationStore = defineStore('radioStationStore', () => {
         await apiClient.delete(`/radiostations/${id}`);
     };
 
+    const fetchAccessList = async (id: string) => {
+        const response = await apiClient.get(`/radiostations/${id}/access`);
+        if (!response?.data) throw new Error('Invalid API response');
+        return response.data;
+    };
+
     return {
         apiViewResponse,
         apiFormResponse,
@@ -111,5 +117,6 @@ export const useRadioStationStore = defineStore('radioStationStore', () => {
         getEntries,
         getPagination,
         getCurrent,
+        fetchAccessList,
     };
 });

@@ -17,8 +17,10 @@
       </n-button-group>
     </n-gi>
     <n-gi span="6">
-      <n-form label-placement="left" label-width="auto">
-        <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
+      <n-tabs v-model:value="activeTab">
+        <n-tab-pane name="properties" tab="Main properties">
+          <n-form label-placement="left" label-width="auto">
+            <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
           <n-gi>
             <n-form-item label="Name">
               <n-input v-model:value="localFormData.name" style="width: 50%; max-width: 600px;"/>
@@ -110,54 +112,45 @@
               <span style="margin-left: 12px;">{{ localFormData.talkativity }}</span>
             </n-form-item>
           </n-gi>
-        </n-grid>
-      </n-form>
+            </n-grid>
+          </n-form>
+        </n-tab-pane>
+        <n-tab-pane name="acl" tab="ACL">
+          <acl-table :acl-data="aclData" :loading="aclLoading" />
+        </n-tab-pane>
+      </n-tabs>
     </n-gi>
   </n-grid>
 </template>
 
 <script lang="ts">
-import {computed, defineComponent, onMounted, reactive, ref} from "vue";
+import {computed, defineComponent, onMounted, reactive, ref, watch} from "vue";
 import {useRoute, useRouter} from "vue-router";
-import {
-  NButton,
-  NButtonGroup,
-  NForm,
-  NFormItem,
-  NGi,
-  NGrid,
-  NInput,
-  NPageHeader,
-  NSelect,
-  NDynamicTags,
-  NDynamicInput,
-  NSlider,
-  useLoadingBar,
-  useMessage
-} from "naive-ui";
-import {html} from '@codemirror/lang-html';
-import {EditorView} from '@codemirror/view';
+import {NDynamicInput, NButton, NButtonGroup, NGrid, NGi, NForm, NFormItem, NInput, NSlider, NSelect, NTabs, NTabPane} from 'naive-ui';
+import {useLoadingBar, useMessage} from 'naive-ui';
+import {AiAgent, AiAgentSave} from '../../../types/kneoBroadcasterTypes';
+import {useAiAgentStore} from '../../../stores/kneo/aiAgentStore';
+import {html} from "@codemirror/lang-html";
+import {EditorView} from "@codemirror/view";
 import CodeMirror from 'vue-codemirror6';
-import {
-  AiAgent, AiAgentSave
-} from "../../../types/kneoBroadcasterTypes";
-import {useAiAgentStore} from "../../../stores/kneo/aiAgentStore";
+import AclTable from '../../common/AclTable.vue';
 
 export default defineComponent({
   name: "AiAgentForm",
   components: {
-    NPageHeader,
+    NDynamicInput,
+    NButton,
     NButtonGroup,
+    NGrid,
+    NGi,
     NForm,
     NFormItem,
     NInput,
-    NSelect,
-    NDynamicTags,
-    NDynamicInput,
     NSlider,
-    NButton,
-    NGrid,
-    NGi,
+    NSelect,
+    NTabs,
+    NTabPane,
+    AclTable,
     CodeMirror
   },
   setup() {
@@ -170,6 +163,10 @@ export default defineComponent({
     const editorExtensions = computed(() => [
       EditorView.lineWrapping
     ]);
+
+    const activeTab = ref('properties');
+    const aclData = ref([]);
+    const aclLoading = ref(false);
 
     const langOptions = [
       { label: 'English', value: 'en' },
@@ -240,6 +237,28 @@ export default defineComponent({
       router.push("/outline/ai_agents");
     };
 
+    const fetchAclData = async () => {
+      const id = localFormData.id;
+      if (id) {
+        try {
+          aclLoading.value = true;
+          const data = await store.fetchAccessList(id);
+          aclData.value = data;
+        } catch (error) {
+          console.error('Failed to fetch ACL data:', error);
+          message.error('Failed to fetch ACL data');
+        } finally {
+          aclLoading.value = false;
+        }
+      }
+    };
+
+    watch(activeTab, (newTab) => {
+      if (newTab === 'acl' && localFormData.id) {
+        fetchAclData();
+      }
+    });
+
     onMounted(async () => {
       const id = route.params.id as string;
       if (id && id !== 'new') {
@@ -266,7 +285,10 @@ export default defineComponent({
       handleSave,
       goBack,
       editorExtensions,
-      lang
+      lang,
+      activeTab,
+      aclData,
+      aclLoading
     };
   }
 });

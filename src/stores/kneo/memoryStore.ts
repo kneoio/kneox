@@ -90,6 +90,12 @@ export const useMemoryStore = defineStore('memoryStore', () => {
         }
     };
 
+    const fetchAccessList = async (id: string) => {
+        const response = await apiClient.get(`/memories/${id}/access`);
+        if (!response?.data) throw new Error('Invalid API response');
+        return response.data;
+    };
+
     return {
         apiViewResponse,
         apiFormResponse,
@@ -100,5 +106,6 @@ export const useMemoryStore = defineStore('memoryStore', () => {
         getEntries,
         getPagination,
         getCurrent,
+        fetchAccessList,
     };
 });

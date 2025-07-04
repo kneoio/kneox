@@ -18,7 +18,7 @@
     </n-gi>
     <n-gi span="6">
       <n-tabs v-model:value="activeTab">
-        <n-tab-pane name="properties" tab="Properties">
+        <n-tab-pane name="properties" tab="Main properties">
           <n-form label-placement="left" label-width="auto">
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
               <n-gi>
@@ -68,6 +68,9 @@
             </n-grid>
           </n-form>
         </n-tab-pane>
+        <n-tab-pane name="acl" tab="ACL">
+          <acl-table :acl-data="aclData" :loading="aclLoading" />
+        </n-tab-pane>
       </n-tabs>
     </n-gi>
   </n-grid>
@@ -79,10 +82,12 @@ import { useRoute, useRouter } from "vue-router";
 import {
   NButton,
   NButtonGroup,
+  NDataTable,
   NForm,
   NFormItem,
   NGi,
   NGrid,
+  NIcon,
   NInput,
   NPageHeader,
   NProgress,
@@ -94,6 +99,7 @@ import {
   useMessage,
   type UploadFileInfo
 } from "naive-ui";
+import AclTable from '../../common/AclTable.vue';
 import { useSoundFragmentStore } from "../../../stores/kneo/soundFragmentStore";
 import { useRadioStationStore } from "../../../stores/kneo/radioStationStore";
 import { useReferencesStore } from "../../../stores/kneo/referencesStore";
@@ -120,6 +126,9 @@ export default defineComponent( {
     NGi,
     NSelect,
     NProgress,
+    NDataTable,
+    NIcon,
+    AclTable,
   },
   setup() {
     const loadingBar = useLoadingBar();
@@ -133,6 +142,10 @@ export default defineComponent( {
     const fileList = ref<UploadFileInfo[]>( [] );
     const uploadedFileNames = ref<string[]>( [] );
     const tempFileIds = ref<string[]>( [] );
+
+    // ACL-related reactive properties
+    const aclData = ref<any[]>( [] );
+    const aclLoading = ref( false );
 
     const localFormData = reactive<SoundFragment>( {
       slugName: "",
@@ -306,7 +319,35 @@ export default defineComponent( {
     const goBack = () => {
       router.back();
     };
+    
+    // ACL fetch function
+    const fetchAclData = async () => {
+      const id = route.params.id as string;
+      if (!id || id === 'new') {
+        aclData.value = [];
+        return;
+      }
+      
+      try {
+        aclLoading.value = true;
+        const response = await store.fetchAccessList(id);
+        aclData.value = response.accessList || [];
+      } catch (error) {
+        console.error('Failed to fetch ACL data:', error);
+        message.error('Failed to fetch access control list');
+        aclData.value = [];
+      } finally {
+        aclLoading.value = false;
+      }
+    };
 
+    // Watch for tab changes to load ACL data
+    watch(activeTab, (newTab) => {
+      if (newTab === 'acl') {
+        fetchAclData();
+      }
+    });
+    
     onMounted(async () => {
         const id = route.params.id as string;
         if (id && id !== 'new') {
@@ -368,7 +409,9 @@ export default defineComponent( {
       audioAcceptTypes,
       radioStationOptions,
       formTitle,
-      referencesStore
+      referencesStore,
+      aclData,
+      aclLoading
     };
   },
 } );

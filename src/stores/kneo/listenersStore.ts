@@ -84,6 +84,12 @@ export const useListenersStore = defineStore('listenersStore', () => {
         await apiClient.delete(`/listeners/${id}`);
     };
 
+    const fetchAccessList = async (id: string) => {
+        const response = await apiClient.get(`/listeners/${id}/access`);
+        if (!response?.data) throw new Error('Invalid API response');
+        return response.data;
+    };
+
     return {
         apiViewResponse,
         apiFormResponse,
@@ -95,5 +101,6 @@ export const useListenersStore = defineStore('listenersStore', () => {
         fetchListener,
         saveListener,
         deleteListener,
+        fetchAccessList,
     };
 });

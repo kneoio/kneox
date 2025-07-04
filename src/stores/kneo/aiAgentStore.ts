@@ -93,6 +93,12 @@ export const useAiAgentStore = defineStore('aiAgentStore', () => {
         await apiClient.delete(`/aiagents/${id}`);
     };
 
+    const fetchAccessList = async (id: string) => {
+        const response = await apiClient.get(`/aiagents/${id}/access`);
+        if (!response?.data) throw new Error('Invalid API response');
+        return response.data;
+    };
+
     return {
         apiViewResponse,
         apiFormResponse,
@@ -104,5 +110,6 @@ export const useAiAgentStore = defineStore('aiAgentStore', () => {
         getEntries,
         getPagination,
         getCurrent,
+        fetchAccessList,
     };
 });
