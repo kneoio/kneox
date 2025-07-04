@@ -94,13 +94,8 @@ const routes: Array<RouteRecordRaw> = [
                 component: Listeners
             },
             {
-                path: 'listeners/new',
-                name: 'NewListenerCommon',
-                component: ListenerForm
-            },
-            {
-                path: 'listeners/:listenerId',
-                name: 'EditListenerCommon',
+                path: 'listeners/:id',
+                name: 'Listener',
                 component: ListenerForm,
                 props: true
             },

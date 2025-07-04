@@ -2,7 +2,7 @@
   <n-grid cols="6" x-gap="12" y-gap="12" class="m-5">
     <n-gi span="6">
       <n-page-header :subtitle="formTitle" @back="goBack">
-        <template #title>{{ localFormData.nickName?.en || 'New Listener' }}</template>
+        <template #title>{{ localFormData.localizedName?.en || 'New Listener' }}</template>
         <template #footer>
           <span v-if="localFormData.id">
             Registered: {{ localFormData.regDate }}, Last Modified: {{ localFormData.lastModifiedDate }}
@@ -14,7 +14,7 @@
     </n-gi>
     <n-gi class="mt-2" span="6">
       <n-button-group>
-        <n-button type="primary" @click="handleSave" size="large" :loading="isSaving">Save</n-button>
+        <n-button type="primary" @click="handleSave" size="large">Save</n-button>
         <n-button type="default" @click="handleArchive" size="large" :disabled="!localFormData.id">Archive</n-button>
       </n-button-group>
     </n-gi>
@@ -286,20 +286,15 @@ export default defineComponent({
     };
 
     onMounted(async () => {
-      const listenerId = route.params.listenerId as string;
-      loadingBar.start();
+      const id = route.params.id as string;
+      
       try {
-        // Always fetch radio stations for the dropdown
-        await radioStationStore.fetchAll();
-
-        if (listenerId && listenerId !== 'new') {
-          await store.fetchListener(listenerId);
-          // Directly assign fetched data to localFormData
+        loadingBar.start();
+        
+        if (id && id !== 'new') {
+          // Fetch existing listener
+          await store.fetchListener(id);
           Object.assign(localFormData, store.getCurrent);
-          
-          // Initialize arrays if they don't exist
-          if (!localFormData.nickName) localFormData.nickName = { en: '' };
-          if (!localFormData.localizedName) localFormData.localizedName = { en: '' };
 
           // Update the dynamic input arrays
           if (localFormData.localizedName) {
@@ -315,35 +310,24 @@ export default defineComponent({
             }));
           }
         } else {
-          store.apiFormResponse = null;
+          // For new listeners, clear the form state by getting fresh empty state
+          Object.assign(localFormData, store.getCurrent);
+          
+          // Initialize with empty arrays
+          localizedNameArray.value = [{ language: 'en', name: '' }];
+          nickNameArray.value = [{ language: 'en', name: '' }];
         }
       } catch (error) {
         console.error('Failed to fetch listener:', error);
-        
-        // Check if it's a 404 error (listener not found)
-        if (isErrorWithResponse(error) && error.response?.status === 404) {
-          message.warning('Listener not found. Opening empty form.');
-          // Reset form data to empty state
-          Object.assign(localFormData, {
-            id: undefined,
-            nickName: { en: '' },
-            localizedName: { en: '' },
-            country: undefined,
-            listenerOf: [],
-            archived: false,
-            regDate: undefined,
-            lastModifiedDate: undefined,
-            author: undefined,
-            lastModifier: undefined
-          });
-          // Reset arrays
-          localizedNameArray.value = [{ language: 'en', name: '' }];
-          nickNameArray.value = [{ language: 'en', name: '' }];
-        } else {
-          message.error('Failed to load listener data');
-        }
+        message.error('Failed to fetch listener');
       } finally {
         loadingBar.finish();
+      }
+
+      try {
+        await radioStationStore.fetchAll();
+      } catch (error) {
+        console.error('Failed to fetch data:', error);
       }
     });
 

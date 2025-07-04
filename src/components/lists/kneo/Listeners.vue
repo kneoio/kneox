@@ -1,17 +1,17 @@
 <template>
-  <n-grid :cols="1" x-gap="12" y-gap="12" class="p-4">
+  <n-grid :cols="isMobile ? 1 : 6" x-gap="12" y-gap="12" class="p-4">
     <n-gi>
       <n-page-header>
         <template #title>{{ brandName ? `Listeners for ${brandName}` : 'All Listeners' }}</template>
         <template #footer>
-          Total: {{ totalCount }}
+          Total: {{ store.getPagination.itemCount }}
         </template>
       </n-page-header>
     </n-gi>
 
-    <n-gi>
-      <n-button-group>
-        <n-button type="primary" size="large" @click="navigateToCreateListener">New</n-button>
+    <n-gi :span="isMobile ? 1 : 6" class="flex items-center">
+      <n-button-group class="mr-4">
+        <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
         <n-button
             type="error"
             :disabled="!hasSelection"
@@ -21,15 +21,36 @@
           Delete ({{ checkedRowKeys.length }})
         </n-button>
       </n-button-group>
+
+      <n-input
+          v-model:value="searchQuery"
+          placeholder="Search..."
+          clearable
+          size="large"
+          style="width: 250px"
+          @keydown.enter="handleSearch"
+          @clear="handleSearch"
+      >
+        <template #suffix>
+          <n-button text @click="handleSearch">
+            <n-icon>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </n-icon>
+          </n-button>
+        </template>
+      </n-input>
     </n-gi>
 
-    <n-gi>
+    <n-gi :span="isMobile ? 1 : 6">
       <n-data-table
           remote
           :columns="columns"
           :row-key="rowKey"
-          :data="tableData"
-          :pagination="paginationConfig"
+          :data="store.getEntries"
+          :pagination="store.getPagination"
           :bordered="false"
           :loading="loading"
           :row-props="getRowProps"
@@ -46,16 +67,18 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, ref, watch, computed } from 'vue';
+import { computed, defineComponent, onMounted, ref, onUnmounted, watch } from 'vue';
 import {
   DataTableColumns,
+  NButton,
+  NButtonGroup,
   NDataTable,
   NGi,
   NGrid,
+  NIcon,
+  NInput,
   NPageHeader,
-  NButton,
-  NButtonGroup,
-  useMessage,
+  useMessage
 } from 'naive-ui';
 import { useRouter } from 'vue-router';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
@@ -64,7 +87,7 @@ import { useListenersStore } from '../../../stores/kneo/listenersStore';
 
 export default defineComponent({
   name: 'Listeners',
-  components: { NPageHeader, NDataTable, NGi, NGrid, LoaderIcon, NButton, NButtonGroup },
+  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, NIcon, NInput },
   props: {
     brandName: {
       type: String,
@@ -74,115 +97,66 @@ export default defineComponent({
   setup(props) {
     const store = useListenersStore();
     const router = useRouter();
-    const message = useMessage();
-
+    const isMobile = ref(window.innerWidth < 768);
     const loading = ref(false);
-    const checkedRowKeys = ref<Array<string | number>>([]);
+    const intervalId = ref<number | null>(null);
+    const checkedRowKeys = ref<(string | number)[]>([]);
     const hasSelection = computed(() => checkedRowKeys.value.length > 0);
-
-    const tableData = computed(() => {
-      const storeData = store.getEntries;
-      if (Array.isArray(storeData)) {
-        return storeData;
-      }
-      if (storeData?.payload?.viewData?.entries) {
-        return storeData.payload.viewData.entries;
-      }
-      if (storeData?.viewData?.entries) {
-        return storeData.viewData.entries;
-      }
-      if (storeData?.entries) {
-        return storeData.entries;
-      }
-      return [];
-    });
-
-    const totalCount = computed(() => {
-      const storeData = store.getEntries;
-      if (storeData?.payload?.viewData?.count !== undefined) {
-        return storeData.payload.viewData.count;
-      }
-      if (storeData?.viewData?.count !== undefined) {
-        return storeData.viewData.count;
-      }
-      if (storeData?.count !== undefined) {
-        return storeData.count;
-      }
-      return store.getPagination?.itemCount || 0;
-    });
-
-    const paginationConfig = computed(() => {
-      const storeData = store.getEntries;
-      let pageInfo = {};
-
-      if (storeData?.payload?.viewData) {
-        const viewData = storeData.payload.viewData;
-        pageInfo = {
-          page: viewData.pageNum || 1,
-          pageSize: viewData.pageSize || 10,
-          itemCount: viewData.count || 0,
-          pageCount: viewData.maxPage || 1,
-        };
-      } else if (storeData?.viewData) {
-        const viewData = storeData.viewData;
-        pageInfo = {
-          page: viewData.pageNum || 1,
-          pageSize: viewData.pageSize || 10,
-          itemCount: viewData.count || 0,
-          pageCount: viewData.maxPage || 1,
-        };
-      } else {
-        pageInfo = store.getPagination || {
-          page: 1,
-          pageSize: 10,
-          itemCount: 0,
-          pageCount: 1,
-        };
-      }
-
-      return {
-        ...pageInfo,
-        showSizePicker: true,
-        pageSizes: [10, 20, 50, 100],
-      };
-    });
+    const message = useMessage();
+    const searchQuery = ref('');
+    const debounceTimer = ref<number | null>(null);
 
     const columns: DataTableColumns<ListenerEntry> = [
       { type: 'selection' },
-      {
-        title: 'Nickname',
-        key: 'listener.nickName.en',
-        render: (row: ListenerEntry) => {
-          return row.listener?.nickName?.en ||
-              row.nickName?.en ||
-              'N/A';
-        }
-      },
-      {
-        title: 'Country',
-        key: 'listener.country',
-        render: (row: ListenerEntry) => {
-          return row.listener?.country ||
-              row.country ||
-              'N/A';
-        }
-      },
-      {
-        title: 'Registered',
-        key: 'brandListener.regDate',
-        render: (row: ListenerEntry) => {
-          return row.listener?.regDate ||
-              row.regDate ||
-              'N/A';
-        }
-      }
+      { title: 'Localized Name', key: 'localizedName.en' },
+      { title: 'Nickname', key: 'nickName.en' },
+      { title: 'Country', key: 'country' },
+      { title: 'Registered', key: 'regDate' }
     ];
 
     const rowKey = (row: ListenerEntry): string => {
-      return row.listener?.id || row.id;
+      return row.id;
     };
 
-    const fetchData = async (page = 1, pageSize = 10) => {
+    async function preFetch() {
+      try {
+        loading.value = true;
+        if (props.brandName) {
+          await store.fetchListeners(props.brandName);
+        } else {
+          await store.fetchAllListeners();
+        }
+      } catch (error) {
+        console.error('Failed to fetch initial data:', error);
+      } finally {
+        loading.value = false;
+      }
+    }
+
+    const startPeriodicRefresh = () => {
+      if (!intervalId.value) {
+        intervalId.value = window.setInterval(async () => {
+          try {
+            await fetchData(store.getPagination.page, store.getPagination.pageSize);
+          } catch (error) {
+            console.error('Periodic refresh failed:', error);
+          }
+        }, 30000);
+      }
+    };
+
+    const stopPeriodicRefresh = () => {
+      if (intervalId.value) {
+        clearInterval(intervalId.value);
+        intervalId.value = null;
+      }
+    };
+
+    const handleResize = () => {
+      isMobile.value = window.innerWidth < 768;
+    };
+
+    const fetchData = async (page = store.getPagination.page, pageSize = store.getPagination.pageSize) => {
       try {
         loading.value = true;
         if (props.brandName) {
@@ -192,33 +166,31 @@ export default defineComponent({
         }
       } catch (error) {
         console.error('Failed to fetch listeners:', error);
+        message.error('Failed to load listeners');
       } finally {
         loading.value = false;
       }
     };
 
-    const handlePageChange = (page: number) => {
-      fetchData(page, paginationConfig.value.pageSize);
+    const handleSearch = () => {
+      fetchData(1, store.getPagination.pageSize);
     };
 
-    const handlePageSizeChange = (pageSize: number) => {
-      fetchData(1, pageSize);
+    preFetch();
+    startPeriodicRefresh();
+
+    const handlePageChange = async (page: number) => {
+      await fetchData(page, store.getPagination.pageSize);
+      checkedRowKeys.value = [];
     };
 
-    const navigateToCreateListener = () => {
-      if (props.brandName) {
-        router.push({ name: 'NewListener', params: { brandName: props.brandName } });
-      } else {
-        router.push({ name: 'NewListenerCommon' });
-      }
+    const handlePageSizeChange = async (pageSize: number) => {
+      await fetchData(1, pageSize);
+      checkedRowKeys.value = [];
     };
 
-    const navigateToEditListener = (listenerId: string) => {
-      if (props.brandName) {
-        router.push({ name: 'EditListener', params: { brandName: props.brandName, listenerId } });
-      } else {
-        router.push({ name: 'EditListenerCommon', params: { listenerId } });
-      }
+    const handleNewClick = () => {
+      router.push('/outline/listeners/new');
     };
 
     const getRowProps = (row: ListenerEntry) => {
@@ -229,8 +201,7 @@ export default defineComponent({
           if (target.closest('.n-checkbox') || target.closest('[data-n-checkbox]')) {
             return;
           }
-          const id = row.brandListener?.id || row.id;
-          navigateToEditListener(id);
+          router.push({ name: 'Listener', params: { id: row.id } });
         }
       };
     };
@@ -245,7 +216,7 @@ export default defineComponent({
         await Promise.all(checkedRowKeys.value.map(id => store.deleteListener(id.toString())));
         message.success(`Deleted ${checkedRowKeys.value.length} item(s) successfully`);
         checkedRowKeys.value = [];
-        await fetchData();
+        await fetchData(store.getPagination.page, store.getPagination.pageSize);
       } catch (error) {
         message.error('Failed to delete items');
       } finally {
@@ -253,29 +224,45 @@ export default defineComponent({
       }
     };
 
+    onMounted(() => {
+      window.addEventListener('resize', handleResize);
+    });
+
+    onUnmounted(() => {
+      stopPeriodicRefresh();
+      window.removeEventListener('resize', handleResize);
+    });
+
+    watch(searchQuery, (newVal, oldVal) => {
+      if (newVal !== oldVal) {
+        if (debounceTimer.value) {
+          clearTimeout(debounceTimer.value);
+        }
+        debounceTimer.value = window.setTimeout(() => {
+          handleSearch();
+        }, 500);
+      }
+    });
+
     watch(() => props.brandName, () => {
       fetchData();
     }, { immediate: true });
-
-    onMounted(() => {
-      fetchData();
-    });
 
     return {
       store,
       columns,
       rowKey,
-      loading,
-      checkedRowKeys,
-      hasSelection,
-      tableData,
-      totalCount,
-      paginationConfig,
+      isMobile,
+      searchQuery,
+      handleSearch,
+      handleNewClick,
+      handleDelete,
+      getRowProps,
       handlePageChange,
       handlePageSizeChange,
-      navigateToCreateListener,
-      getRowProps,
-      handleDelete,
+      loading,
+      checkedRowKeys,
+      hasSelection
     };
   }
 });
