@@ -67,8 +67,8 @@ import {
   useLoadingBar,
   useMessage
 } from "naive-ui";
-import { Profile, ProfileSave } from "../../../types/kneoBroadcasterTypes";
-import { useProfileStore } from "../../../stores/kneo/profileStore";
+import { Profile } from "../../../types/kneoBroadcasterTypes";
+import { useProfileStore, ProfileDTO } from "../../../stores/kneo/profileStore";
 
 export default defineComponent({
   name: "ProfileForm",
@@ -109,7 +109,7 @@ export default defineComponent({
     const handleSave = async () => {
       try {
         loadingBar.start();
-        await store.save(localFormData as ProfileSave, localFormData.id as string);
+        await store.save(localFormData as ProfileDTO, localFormData.id as string);
         message.success("Profile saved successfully");
         await router.push("/outline/profiles");
       } catch (error) {

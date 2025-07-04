@@ -41,17 +41,23 @@ export interface RadioStation {
     title: string;
     localizedName: Record<string, string>;
     country: string;
+    description: string;
+    color: string;
     slugName: string;
     url: string;
+    hlsUrl: string;
     iceCastUrl?: string;
+    mixplaUrl?: string;
     actionUrl: string;
     aiAgentId?: string;
     profileId?: string;
 }
 
 export interface RadioStationSave {
-    title: string;
+    localizedName: Record<string, string>;
     country: string;
+    description: string;
+    color: string;
     aiAgentId?: string;
     profileId?: string;
 }
