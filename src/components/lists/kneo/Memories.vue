@@ -9,9 +9,17 @@
       </n-page-header>
     </n-gi>
 
-    <n-gi :span="isMobile ? 1 : 6">
-      <n-button-group>
+    <n-gi :span="isMobile ? 1 : 6" class="flex items-center">
+      <n-button-group class="mr-4">
         <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
+        <n-button
+            type="error"
+            :disabled="!hasSelection"
+            @click="handleDelete"
+            size="large"
+        >
+          Delete ({{ checkedRowKeys.length }})
+        </n-button>
       </n-button-group>
     </n-gi>
 
@@ -25,6 +33,7 @@
           :bordered="false"
           :row-props="getRowProps"
           :loading="loading"
+          v-model:checked-row-keys="checkedRowKeys"
           @update:page="handlePageChange"
           @update:page-size="handlePageSizeChange"
       >
@@ -41,13 +50,14 @@ import {computed, defineComponent, h, onMounted, onUnmounted, ref} from 'vue';
 import {
   DataTableColumns,
   NButton,
-  NButtonGroup,  
+  NButtonGroup,
   NDataTable,
   NGi,
   NGrid,
   NPageHeader,
   NTag,
-  NCode
+  NCode,
+  useMessage
 } from 'naive-ui';
 import {useRouter} from 'vue-router';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
@@ -59,10 +69,12 @@ export default defineComponent({
   setup() {
     const router = useRouter();
     const store = useMemoryStore();
+    const message = useMessage();
     const isMobile = ref(window.innerWidth < 768);
     const loading = ref(false);
     const intervalId = ref<number | null>(null);
     const checkedRowKeys = ref<(string | number)[]>([]);
+    const hasSelection = computed(() => checkedRowKeys.value.length > 0);
 
     async function preFetch() {
       try {
@@ -131,10 +143,32 @@ export default defineComponent({
       router.push('/outline/memories/new');
     };
 
+    const handleDelete = async () => {
+      if (checkedRowKeys.value.length === 0) {
+        message.info("No items selected for deletion.");
+        return;
+      }
+      try {
+        loading.value = true;
+        await Promise.all(checkedRowKeys.value.map(id => store.delete(id.toString())));
+        message.success(`Deleted ${checkedRowKeys.value.length} item(s) successfully`);
+        checkedRowKeys.value = [];
+        await store.fetchAll(store.getPagination.page, store.getPagination.pageSize);
+      } catch (error) {
+        message.error('Failed to delete items');
+      } finally {
+        loading.value = false;
+      }
+    };
+
     const getRowProps = (row: Memory) => {
       return {
         style: 'cursor: pointer;',
-        onClick: () => {
+        onClick: (e: MouseEvent) => {
+          const target = e.target as HTMLElement;
+          if (target.closest('.n-checkbox') || target.closest('[data-n-checkbox]')) {
+            return;
+          }
           const routeTo = {name: 'MemoryForm', params: {id: row.id}}; // Assumes a route named 'Memory'
           router.push(routeTo).catch((err) => {
             console.error('Navigation error:', err);
@@ -169,7 +203,6 @@ export default defineComponent({
           title: 'Content',
           key: 'content',
           render: (row: Memory) => {
-            // Display a snippet of the JSON content
             return h(NCode, { code: JSON.stringify(row.content).substring(0, 100) + '...', language: 'json' });
           }
         },
@@ -180,8 +213,8 @@ export default defineComponent({
         },
         {
           title: 'Last  Updated Date',
-          key: 'lastModifiedDate',
-          render: (row: Memory) => new Date(row.lastModifiedDate).toLocaleString()
+          key: 'lastModDate',
+          render: (row: Memory) => new Date(row.lastModDate).toLocaleString()
         }
       ];
 
@@ -217,11 +250,13 @@ export default defineComponent({
       rowKey: (row: Memory) => row.id,
       isMobile,
       handleNewClick,
+      handleDelete,
       getRowProps,
       handlePageChange,
       handlePageSizeChange,
       loading,
-      checkedRowKeys
+      checkedRowKeys,
+      hasSelection
     };
   },
 });

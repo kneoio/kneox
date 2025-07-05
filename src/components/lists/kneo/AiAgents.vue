@@ -187,19 +187,7 @@ export default defineComponent({
         {
           type: 'selection',
           fixed: 'left',
-          width: 50,
-          renderHeader: () => h(NCheckbox, {
-            indeterminate: checkedRowKeys.value.length > 0 && checkedRowKeys.value.length < store.getEntries.length,
-            checked: checkedRowKeys.value.length === store.getEntries.length && store.getEntries.length > 0,
-            onClick: (e: MouseEvent) => {
-              e.stopPropagation();
-              if (checkedRowKeys.value.length === store.getEntries.length) {
-                checkedRowKeys.value = [];
-              } else {
-                checkedRowKeys.value = store.getEntries.map(item => item.id);
-              }
-            }
-          })
+          width: 50
         },
         {title: 'Name', key: 'name'},
         {title: 'Preferred Language', key: 'preferredLang'},

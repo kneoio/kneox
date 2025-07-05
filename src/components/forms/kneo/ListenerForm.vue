@@ -336,11 +336,9 @@ export default defineComponent({
         loadingBar.start();
         
         if (id && id !== 'new') {
-          // Fetch existing listener
           await store.fetchListener(id);
           Object.assign(localFormData, store.getCurrent);
 
-          // Update the dynamic input arrays
           if (localFormData.localizedName) {
             localizedNameArray.value = Object.entries(localFormData.localizedName).map(([language, name]) => ({
               language,
@@ -354,12 +352,7 @@ export default defineComponent({
             }));
           }
         } else {
-          // For new listeners, clear the form state by getting fresh empty state
           Object.assign(localFormData, store.getCurrent);
-          
-          // Initialize with empty arrays
-          localizedNameArray.value = [{ language: 'en', name: '' }];
-          nickNameArray.value = [{ language: 'en', name: '' }];
         }
       } catch (error) {
         console.error('Failed to fetch listener:', error);

@@ -460,10 +460,6 @@ export default defineComponent({
         if (id && id !== 'new') {
           await store.fetch(id);
           Object.assign(localFormData, store.getCurrent);
-
-          if (!localFormData.localizedName || Object.keys(localFormData.localizedName).length === 0) {
-            localFormData.localizedName = { en: "" };
-          }
         }
       } catch (error) {
         console.error("Failed to fetch data:", error);

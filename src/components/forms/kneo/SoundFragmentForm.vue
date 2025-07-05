@@ -56,7 +56,7 @@
                     :custom-request="handleUpload" :show-remove-button="true">
                     <n-button>Select File</n-button>
                     <template #file=" { file } ">
-                      <div class="upload-file" @click.stop.prevent="handleDownload( file, $event )">
+                      <div class="upload-file" @click.stop.prevent="handleDownload( file )">
                         {{ file.name }}
                         <n-progress v-if=" file.status === 'uploading' " :percentage="file.percentage || 0"
                           :show-indicator="true" style="margin-top: 8px;" />

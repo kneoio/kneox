@@ -52,7 +52,6 @@ export const useMemoryStore = defineStore('memoryStore', () => {
     });
 
     const fetchMemories = async (page = 1, pageSize = 10) => {
-        // Use the /memories endpoint
         const response = await apiClient.get(`/memories?page=${page}&size=${pageSize}`, {});
         if (response?.data?.payload) {
             apiViewResponse.value = response.data.payload;
@@ -62,7 +61,6 @@ export const useMemoryStore = defineStore('memoryStore', () => {
     };
 
     const fetchMemory = async (id: string) => {
-        // Use the /memories endpoint
         const response = await apiClient.get(`/memories/${id}`);
         if (response?.data?.payload) {
             apiFormResponse.value = response.data.payload;
@@ -79,7 +77,6 @@ export const useMemoryStore = defineStore('memoryStore', () => {
     };
 
     const save = async (data: MemorySave, id?: string) => {
-        // Use the /memories endpoint
         const response = await apiClient.post(`/memories/${id}`, data);
         if (response?.data) {
             const {docData} = response.data;
@@ -88,6 +85,10 @@ export const useMemoryStore = defineStore('memoryStore', () => {
         } else {
             throw new Error('Invalid API response structure');
         }
+    };
+
+    const deleteMemory = async (id: string) => {
+        await apiClient.delete(`/memories/${id}`);
     };
 
     const fetchAccessList = async (id: string) => {
@@ -103,6 +104,7 @@ export const useMemoryStore = defineStore('memoryStore', () => {
         fetchAll: fetchMemories,
         fetch: fetchMemory,
         save,
+        delete: deleteMemory,
         getEntries,
         getPagination,
         getCurrent,
