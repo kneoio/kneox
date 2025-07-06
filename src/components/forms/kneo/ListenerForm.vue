@@ -125,11 +125,7 @@ import { useListenersStore } from "../../../stores/kneo/listenersStore";
 import { useRadioStationStore } from "../../../stores/kneo/radioStationStore";
 import { useReferencesStore } from "../../../stores/kneo/referencesStore";
 import { ListenerSave, LocalizedName } from "../../../types/kneoBroadcasterTypes";
-import {
-  isErrorWithResponse,
-  capitalizeFirstLetter,
-  getErrorMessage
-} from '../../helpers/errorHandling';
+import { handleFormSaveError } from '../../../utils/errorHandling';
 
 interface LocalListenerFormData {
   id: string | null;
@@ -275,18 +271,7 @@ export default defineComponent({
           router.push("/outline/listeners");
         }
       } catch (error: unknown) {
-        if (isErrorWithResponse(error) && error.response?.status === 400) {
-          const errorData = error.response.data as { message?: string; errors?: { field: string; message: string }[] };
-          if (errorData.errors?.length) {
-            errorData.errors.forEach(err => {
-              message.error(`${capitalizeFirstLetter(err.field)}: ${err.message}`);
-            });
-          } else {
-            message.error(errorData.message || "Validation failed");
-          }
-        } else {
-          message.error(`Save failed: ${getErrorMessage(error)}`);
-        }
+        handleFormSaveError(error, message, 'Save failed');
       } finally {
         isSaving.value = false;
         loadingBar.finish();

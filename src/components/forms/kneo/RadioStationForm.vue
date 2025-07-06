@@ -74,6 +74,26 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
+                <n-form-item label="Time Zone">
+                  <n-select
+                      v-model:value="localFormData.timeZone"
+                      :options="timezones"
+                      placeholder="Select Time Zone"
+                      style="width: 50%; max-width: 600px;"
+                  />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="Managed By">
+                  <n-select
+                      v-model:value="localFormData.managedBy"
+                      :options="managedByOptions"
+                      placeholder="Select Management Type"
+                      style="width: 50%; max-width: 600px;"
+                  />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
                 <n-form-item label="HLS URL">
                   <n-text style="width: 50%; max-width: 600px; font-family: monospace;">
                     {{ localFormData.hlsUrl }}
@@ -262,12 +282,14 @@ import {
   BrandStatus,
   RadioStationSave,
   AiAgent,
-  Profile
+  Profile,
+  ManagedBy
 } from "../../../types/kneoBroadcasterTypes";
 import { useRadioStationStore } from "../../../stores/kneo/radioStationStore";
 import { useAiAgentStore } from "../../../stores/kneo/aiAgentStore";
 import { useProfileStore } from "../../../stores/kneo/profileStore";
-import { useReferencesStore } from "../../../stores/kneo/referencesStore";
+import { useReferencesStore } from '../../../stores/kneo/referencesStore';
+import { handleFormSaveError } from '../../../utils/errorHandling';
 import AclTable from '../../common/AclTable.vue';
 
 export default defineComponent({
@@ -315,6 +337,19 @@ export default defineComponent({
     const aclData = ref([]);
     const aclLoading = ref(false);
 
+    const timezones = [
+      { value: "UTC", label: "UTC" },
+      { value: "Europe/London", label: "London (GMT)" },
+      { value: "America/New_York", label: "New York (EST)" },
+      { value: "Asia/Tokyo", label: "Tokyo (JST)" }
+    ];
+
+    const managedByOptions = [
+      { value: ManagedBy.ITSELF, label: "Itself" },
+      { value: ManagedBy.AI_AGENT, label: "AI Agent" },
+      { value: ManagedBy.MIX, label: "Mix" }
+    ];
+
     const localFormData = reactive<Partial<RadioStation>>({
       id: "",
       author: "",
@@ -335,7 +370,9 @@ export default defineComponent({
       iceCastUrl: "",
       mixplaUrl: "",
       aiAgentId: undefined,
-      profileId: undefined
+      profileId: undefined,
+      timeZone: "",
+      managedBy: undefined
     });
 
     const localizedNameArray = computed({
@@ -406,14 +443,16 @@ export default defineComponent({
           description: localFormData.description || "",
           color: localFormData.color || "#FF9800",
           aiAgentId: localFormData.aiAgentId,
-          profileId: localFormData.profileId
+          profileId: localFormData.profileId,
+          timeZone: localFormData.timeZone,
+          managedBy: localFormData.managedBy
         };
 
         await store.save(saveDTO, localFormData.id as string);
         message.success("Radio Station saved successfully");
         await router.push("/outline/radiostations");
       } catch (error) {
-        message.error("Failed to save Radio Station");
+        handleFormSaveError(error, message, 'Failed to save Radio Station');
       } finally {
         loadingBar.finish();
       }
@@ -428,18 +467,22 @@ export default defineComponent({
     };
 
     const fetchAclData = async () => {
-      const id = localFormData.id;
-      if (id) {
-        try {
-          aclLoading.value = true;
-          const data = await store.fetchAccessList(id);
-          aclData.value = data;
-        } catch (error) {
-          console.error('Failed to fetch ACL data:', error);
-          message.error('Failed to fetch ACL data');
-        } finally {
-          aclLoading.value = false;
-        }
+      const id = route.params.id as string;
+      if (!id || id === 'new') {
+        aclData.value = [];
+        return;
+      }
+      
+      try {
+        aclLoading.value = true;
+        const response = await store.fetchAccessList(id);
+        aclData.value = response.accessList || [];
+      } catch (error) {
+        console.error('Failed to fetch ACL data:', error);
+        message.error('Failed to fetch access control list');
+        aclData.value = [];
+      } finally {
+        aclLoading.value = false;
       }
     };
 
@@ -489,7 +532,9 @@ export default defineComponent({
       copyToClipboard,
       goBack,
       aclData,
-      aclLoading
+      aclLoading,
+      timezones,
+      managedByOptions
     };
   }
 });

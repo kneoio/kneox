@@ -97,6 +97,12 @@ export const useMemoryStore = defineStore('memoryStore', () => {
         return response.data;
     };
 
+    const initListenersMemory = async (brand: string) => {
+        const response = await apiClient.put(`/memories/init-listeners/${brand}`);
+        if (!response?.data) throw new Error('Invalid API response');
+        return response.data;
+    };
+
     return {
         apiViewResponse,
         apiFormResponse,
@@ -109,5 +115,6 @@ export const useMemoryStore = defineStore('memoryStore', () => {
         getPagination,
         getCurrent,
         fetchAccessList,
+        initListenersMemory,
     };
 });

@@ -11,7 +11,7 @@
 
     <n-gi :span="isMobile ? 1 : 6" class="flex items-center">
       <n-button-group class="mr-4">
-        <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
+        <n-button @click="handleInitListeners" type="primary" size="large">Init Listeners</n-button>
         <n-button
             type="error"
             :disabled="!hasSelection"
@@ -139,8 +139,20 @@ export default defineComponent({
       }
     };
 
-    const handleNewClick = () => {
-      router.push('/outline/memories/new');
+    const handleInitListeners = async () => {
+      try {
+        loading.value = true;
+        // You may need to replace 'default-brand' with the actual brand logic
+        await store.initListenersMemory('aizoo');
+        message.success('Listeners memory initialized successfully');
+        // Refresh the memories list to show the new memory
+        await store.fetchAll(store.getPagination.page, store.getPagination.pageSize);
+      } catch (error) {
+        console.error('Failed to initialize listeners memory:', error);
+        message.error('Failed to initialize listeners memory');
+      } finally {
+        loading.value = false;
+      }
     };
 
     const handleDelete = async () => {
@@ -249,7 +261,7 @@ export default defineComponent({
       columns,
       rowKey: (row: Memory) => row.id,
       isMobile,
-      handleNewClick,
+      handleInitListeners,
       handleDelete,
       getRowProps,
       handlePageChange,

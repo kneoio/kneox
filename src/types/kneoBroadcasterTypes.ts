@@ -14,6 +14,12 @@ export enum BrandStatus {
     SYSTEM_ERROR = "SYSTEM_ERROR",
 }
 
+export enum ManagedBy {
+    ITSELF = "ITSELF",
+    AI_AGENT = "AI_AGENT",
+    MIX = "MIX"
+}
+
 export interface Profile {
     id: string;
     author?: string;
@@ -51,6 +57,8 @@ export interface RadioStation {
     actionUrl: string;
     aiAgentId?: string;
     profileId?: string;
+    timeZone?: string;
+    managedBy?: ManagedBy;
 }
 
 export interface RadioStationSave {
@@ -60,6 +68,8 @@ export interface RadioStationSave {
     color: string;
     aiAgentId?: string;
     profileId?: string;
+    timeZone?: string;
+    managedBy?: ManagedBy;
 }
 
 export interface SoundFragment {
