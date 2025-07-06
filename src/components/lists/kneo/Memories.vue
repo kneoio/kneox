@@ -226,7 +226,7 @@ export default defineComponent({
         {
           title: 'Last  Updated Date',
           key: 'lastModDate',
-          render: (row: Memory) => new Date(row.lastModDate).toLocaleString()
+          render: (row: Memory) => new Date(row.lastModifiedDate).toLocaleString()
         }
       ];
 

@@ -107,7 +107,7 @@ export interface Memory {
     author: number;
     regDate: string;
     lastModUser: number;
-    lastModDate: string;
+    lastModifiedDate: string;
     brand: string;
     memoryType: 'LISTENERS' | 'AUDIENCE_CONTEXT' | 'CONVERSATION_HISTORY' | string;
     content: Record<string, any>;
