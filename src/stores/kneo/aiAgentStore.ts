@@ -78,8 +78,8 @@ export const useAiAgentStore = defineStore('aiAgentStore', () => {
         };
     };
 
-    const save = async (data: AiAgentSave, id?: string) => {
-        const response = await apiClient.post(`/aiagents/${id}`, data);
+    const save = async (data: AiAgentSave, id: string | null) => {
+        const response = await apiClient.post(`/aiagents/${id || ''}`, data);        
         if (response?.data) {
             const {docData} = response.data;
             updateCurrent(docData, {});

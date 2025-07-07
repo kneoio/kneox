@@ -36,6 +36,29 @@
             </n-form-item>
           </n-gi>
           <n-gi>
+            <n-form-item label="Enabled Tools">
+              <n-dynamic-input
+                  v-model:value="localFormData.enabledTools"
+                  :on-create="createToolItem"
+                  style="width: 60%;"
+              >
+                <template #default="{ value, index }">
+                  <n-grid cols="3" x-gap="12">
+                    <n-gi>
+                      <n-input v-model:value="value.name" placeholder="Tool Name" />
+                    </n-gi>
+                    <n-gi>
+                      <n-input v-model:value="value.variableName" placeholder="Variable Name" />
+                    </n-gi>
+                    <n-gi>
+                      <n-input v-model:value="value.description" placeholder="Description" />
+                    </n-gi>
+                  </n-grid>
+                </template>
+              </n-dynamic-input>
+            </n-form-item>
+          </n-gi>
+          <n-gi>
             <n-form-item label="Main Prompt">
               <CodeMirror
                   v-model="localFormData.mainPrompt"
@@ -76,29 +99,7 @@
               </n-dynamic-input>
             </n-form-item>
           </n-gi>
-          <n-gi>
-            <n-form-item label="Enabled Tools">
-              <n-dynamic-input
-                  v-model:value="localFormData.enabledTools"
-                  :on-create="createToolItem"
-                  style="width: 60%;"
-              >
-                <template #default="{ value, index }">
-                  <n-grid cols="3" x-gap="12">
-                    <n-gi>
-                      <n-input v-model:value="value.name" placeholder="Tool Name" />
-                    </n-gi>
-                    <n-gi>
-                      <n-input v-model:value="value.variableName" placeholder="Variable Name" />
-                    </n-gi>
-                    <n-gi>
-                      <n-input v-model:value="value.description" placeholder="Description" />
-                    </n-gi>
-                  </n-grid>
-                </template>
-              </n-dynamic-input>
-            </n-form-item>
-          </n-gi>
+
           <n-gi>
             <n-form-item label="Talkativity">
               <n-slider
@@ -223,7 +224,7 @@ export default defineComponent({
           talkativity: localFormData.talkativity || 0.3
         };
 
-        const id = localFormData.id ? localFormData.id : undefined;
+        const id = localFormData.id ? localFormData.id : null;
         await store.save(payload, id);
 
         message.success("AI Agent saved successfully");
@@ -267,17 +268,15 @@ export default defineComponent({
 
     onMounted(async () => {
       const id = route.params.id as string;
-      if (id && id !== 'new') {
-        try {
-          loadingBar.start();
-          await store.fetch(id);
-          Object.assign(localFormData, store.getCurrent);
-        } catch (error) {
-          console.error("Failed to fetch AI Agent:", error);
-          message.error('Failed to fetch AI Agent');
-        } finally {
-          loadingBar.finish();
-        }
+      try {
+        loadingBar.start();
+        await store.fetch(id);
+        Object.assign(localFormData, store.getCurrent);
+      } catch (error) {
+        console.error("Failed to fetch AI Agent:", error);
+        message.error('Failed to fetch AI Agent');
+      } finally {
+        loadingBar.finish();
       }
     });
 

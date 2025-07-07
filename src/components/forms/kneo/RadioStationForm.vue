@@ -66,7 +66,8 @@
               </n-gi>
               <n-gi>
                 <n-form-item label="HLS URL">
-                  <n-text style="width: 50%; max-width: 600px; font-family: monospace;">
+                  <n-text style="width: 50%; max-width: 600px; font-family: monospace; cursor: pointer; color: #1890ff;" 
+                    @click="openUrl( localFormData.hlsUrl )">
                     {{ localFormData.hlsUrl }}
                   </n-text>
                   <n-button type="primary" text @click="copyToClipboard( localFormData.hlsUrl )"
@@ -81,7 +82,8 @@
               </n-gi>
               <n-gi>
                 <n-form-item label="Icecast URL">
-                  <n-text style="width: 50%; max-width: 600px; font-family: monospace;">
+                  <n-text style="width: 50%; max-width: 600px; font-family: monospace; cursor: pointer; color: #1890ff;" 
+                    @click="openUrl( localFormData.iceCastUrl )">
                     {{ localFormData.iceCastUrl }}
                   </n-text>
                   <n-button type="primary" text @click="copyToClipboard( localFormData.iceCastUrl || '' )"
@@ -96,7 +98,8 @@
               </n-gi>
               <n-gi>
                 <n-form-item label="Mixpla URL">
-                  <n-text style="width: 50%; max-width: 600px; font-family: monospace;">
+                  <n-text style="width: 50%; max-width: 600px; font-family: monospace; cursor: pointer; color: #1890ff;" 
+                    @click="openUrl( localFormData.mixplaUrl )">
                     {{ localFormData.mixplaUrl }}
                   </n-text>
                   <n-button type="primary" text @click="copyToClipboard( localFormData.mixplaUrl || '' )"
@@ -211,7 +214,7 @@ import {
   useLoadingBar,
   useMessage
 } from "naive-ui";
-import { Copy } from '@vicons/tabler';
+import { Copy, ExternalLink } from '@vicons/tabler';
 import { html } from '@codemirror/lang-html';
 import { EditorView } from '@codemirror/view';
 import CodeMirror from 'vue-codemirror6';
@@ -367,14 +370,22 @@ export default defineComponent( {
         .catch( () => message.error( 'Failed to copy' ) );
     };
 
+    const openUrl = ( url: string | undefined ) => {
+      if ( !url ) {
+        message.error( 'No URL to open' );
+        return;
+      }
+      window.open( url, '_blank' );
+    };
+
     const handleSave = async () => {
       try {
         loadingBar.start();
         const saveDTO: RadioStationSave = {
-          localizedName: localFormData.localizedName || {},
+          localizedName: localFormData.localizedName ?? {},
           country: localFormData.country || "",
           description: localFormData.description || "",
-          color: localFormData.color || "#FF9800",
+          color: localFormData.color || "",
           aiAgentId: localFormData.aiAgentId,
           profileId: localFormData.profileId,
           timeZone: localFormData.timeZone,
@@ -468,6 +479,7 @@ export default defineComponent( {
       selectedAgent,
       selectedProfile,
       copyToClipboard,
+      openUrl,
       goBack,
       aclData,
       aclLoading,

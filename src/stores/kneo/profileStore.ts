@@ -3,6 +3,7 @@ import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 import apiClient, { setupApiClient } from '../../api/apiClient';
 import { ApiFormResponse, ApiViewPageResponse } from "../../types";
+import { ProfileSave } from '../../types/kneoBroadcasterTypes';
 
 export interface Genre {
     id: string;
@@ -21,15 +22,15 @@ export interface ProfileDTO {
     lastModifiedDate: string;
 }
 
-export const useProfileStore = defineStore('profileStore', () => {
-    const apiViewResponse = ref<ApiViewPageResponse<ProfileDTO> | null>(null);
-    const apiFormResponse = ref<ApiFormResponse<ProfileDTO> | null>(null);
+export const useProfileStore = defineStore( 'profileStore', () => {
+    const apiViewResponse = ref<ApiViewPageResponse<ProfileDTO> | null>( null );
+    const apiFormResponse = ref<ApiFormResponse<ProfileDTO> | null>( null );
 
-    const getEntries = computed(() => {
+    const getEntries = computed( () => {
         return apiViewResponse.value?.viewData.entries || [];
-    });
+    } );
 
-    const getCurrent = computed(() => {
+    const getCurrent = computed( () => {
         const defaultData: ProfileDTO = {
             id: '',
             name: '',
@@ -43,10 +44,10 @@ export const useProfileStore = defineStore('profileStore', () => {
         };
 
         return apiFormResponse.value?.docData || defaultData;
-    });
+    } );
 
-    const getPagination = computed(() => {
-        if (!apiViewResponse.value) {
+    const getPagination = computed( () => {
+        if ( !apiViewResponse.value ) {
             return {
                 page: 1,
                 pageSize: 10,
@@ -66,55 +67,50 @@ export const useProfileStore = defineStore('profileStore', () => {
             showSizePicker: true,
             pageSizes: [10, 20, 30, 40]
         };
-    });
+    } );
 
-    const fetchProfiles = async (page = 1, pageSize = 10) => {
-        const response = await apiClient.get(`/profiles?page=${page}&size=${pageSize}`);
-        if (response?.data?.payload) {
+    const fetchProfiles = async ( page = 1, pageSize = 10 ) => {
+        const response = await apiClient.get( `/profiles?page=${page}&size=${pageSize}` );
+        if ( response?.data?.payload ) {
             apiViewResponse.value = response.data.payload;
         } else {
-            throw new Error('Invalid API response structure');
+            throw new Error( 'Invalid API response structure' );
         }
     };
 
-    const fetchProfile = async (id: string) => {
-        const response = await apiClient.get(`/profiles/${id}`);
-        if (response?.data?.payload) {
+    const fetchProfile = async ( id: string ) => {
+        const response = await apiClient.get( `/profiles/${id}` );
+        if ( response?.data?.payload ) {
             apiFormResponse.value = response.data.payload;
         } else {
-            throw new Error('Invalid API response structure');
+            throw new Error( 'Invalid API response structure' );
         }
     };
 
-    const updateCurrent = (data: ProfileDTO, actions: any = {}) => {
+    const updateCurrent = ( data: ProfileDTO, actions: any = {} ) => {
         apiFormResponse.value = {
             docData: data,
             actions: actions
         };
     };
 
-    const save = async (data: ProfileDTO, id?: string) => {
-        const url = id ? `/profiles/${id}` : '/profiles';
-        const method = id ? 'put' : 'post';
 
-        const response = await apiClient[method](url, data);
-        if (response?.data) {
-            const { docData } = response.data;
-            updateCurrent(docData, {});
-            return docData;
-        } else {
-            throw new Error('Invalid API response structure');
-        }
+    const save = async ( data: ProfileSave, id: string | null ) => {
+        const response = await apiClient.post( `/profiles/${id || ''}`, data );
+        if ( !response?.data ) throw new Error( 'Invalid API response' );
+        apiFormResponse.value = response.data;
+        return apiFormResponse.value;
     };
 
-    const deleteProfile = async (id: string) => {
-        const response = await apiClient.delete(`/profiles/${id}`);
+
+    const deleteProfile = async ( id: string ) => {
+        const response = await apiClient.delete( `/profiles/${id}` );
         return response?.data;
     };
 
-    const fetchAccessList = async (id: string) => {
-        const response = await apiClient.get(`/profiles/${id}/access`);
-        if (!response?.data) throw new Error('Invalid API response');
+    const fetchAccessList = async ( id: string ) => {
+        const response = await apiClient.get( `/profiles/${id}/access` );
+        if ( !response?.data ) throw new Error( 'Invalid API response' );
         return response.data;
     };
 
@@ -132,4 +128,4 @@ export const useProfileStore = defineStore('profileStore', () => {
         updateCurrent,
         fetchAccessList
     };
-});
+} );

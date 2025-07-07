@@ -76,17 +76,6 @@ export const useMemoryStore = defineStore('memoryStore', () => {
         };
     };
 
-    const save = async (data: MemorySave, id?: string) => {
-        const response = await apiClient.post(`/memories/${id}`, data);
-        if (response?.data) {
-            const {docData} = response.data;
-            updateCurrent(docData, {});
-            return docData;
-        } else {
-            throw new Error('Invalid API response structure');
-        }
-    };
-
     const deleteMemory = async (id: string) => {
         await apiClient.delete(`/memories/${id}`);
     };
@@ -109,7 +98,6 @@ export const useMemoryStore = defineStore('memoryStore', () => {
         setupApiClient,
         fetchAll: fetchMemories,
         fetch: fetchMemory,
-        save,
         delete: deleteMemory,
         getEntries,
         getPagination,
