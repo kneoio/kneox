@@ -126,7 +126,7 @@
 <script lang="ts">
 import {computed, defineComponent, onMounted, reactive, ref, watch} from "vue";
 import {useRoute, useRouter} from "vue-router";
-import {NDynamicInput, NButton, NButtonGroup, NGrid, NGi, NForm, NFormItem, NInput, NSlider, NSelect, NTabs, NTabPane} from 'naive-ui';
+import {NDynamicInput, NButton, NButtonGroup, NDynamicTags, NForm, NFormItem, NGi, NGrid, NInput, NPageHeader, NSlider, NSelect, NTabs, NTabPane} from 'naive-ui';
 import {useLoadingBar, useMessage} from 'naive-ui';
 import {AiAgent, AiAgentSave} from "../../../types/kneoBroadcasterTypes";
 import { handleFormSaveError } from '../../../utils/errorHandling';
@@ -140,6 +140,7 @@ export default defineComponent({
   name: "AiAgentForm",
   components: {
     NDynamicInput,
+    NDynamicTags,
     NButton,
     NButtonGroup,
     NGrid,
@@ -147,6 +148,7 @@ export default defineComponent({
     NForm,
     NFormItem,
     NInput,
+    NPageHeader,
     NSlider,
     NSelect,
     NTabs,

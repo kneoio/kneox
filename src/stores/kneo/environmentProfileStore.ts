@@ -9,7 +9,7 @@ export interface Genre {
     name: string;
 }
 
-export interface ProfileDTO { // Consider renaming ProfileDTO to EnvironmentProfileDTO if it's specific to this store
+export interface EnvironmentProfileDTO { 
     id: string;
     name: string;
     description: string;
@@ -22,15 +22,15 @@ export interface ProfileDTO { // Consider renaming ProfileDTO to EnvironmentProf
 }
 
 export const useEnvironmentProfileStore = defineStore('environmentProfileStore', () => {
-    const apiViewResponse = ref<ApiViewPageResponse<ProfileDTO> | null>(null);
-    const apiFormResponse = ref<ApiFormResponse<ProfileDTO> | null>(null);
+    const apiViewResponse = ref<ApiViewPageResponse<EnvironmentProfileDTO> | null>(null);
+    const apiFormResponse = ref<ApiFormResponse<EnvironmentProfileDTO> | null>(null);
 
     const getEntries = computed(() => {
         return apiViewResponse.value?.viewData.entries || [];
     });
 
     const getCurrent = computed(() => {
-        const defaultData: ProfileDTO = {
+        const defaultData: EnvironmentProfileDTO = {
             id: '',
             name: '',
             description: '',
@@ -86,18 +86,17 @@ export const useEnvironmentProfileStore = defineStore('environmentProfileStore',
         }
     };
 
-    const updateCurrent = (data: ProfileDTO, actions: any = {}) => {
+    const updateCurrent = (data: EnvironmentProfileDTO, actions: any = {}) => {
         apiFormResponse.value = {
             docData: data,
             actions: actions
         };
     };
 
-    const saveEnvironmentProfile = async (data: ProfileDTO, id?: string) => {
+    const saveEnvironmentProfile = async (data: EnvironmentProfileDTO, id?: string) => {
         const url = id ? `/profiles/${id}` : '/profiles';
-        const method = id ? 'put' : 'post';
 
-        const response = await apiClient[method](url, data);
+        const response = await apiClient['post'](url, data);
         if (response?.data) {
             const { docData } = response.data;
             updateCurrent(docData, {});

@@ -158,7 +158,7 @@ export default defineComponent({
     };
 
     const handleNewClick = () => {
-      router.push('/outline/environment-profiles/new'); // Updated route path
+      router.push('/outline/profiles/new');
     };
 
     const getRowProps = (row: Profile) => {

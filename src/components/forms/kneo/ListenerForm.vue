@@ -286,7 +286,6 @@ export default defineComponent({
       router.back();
     };
     
-    // ACL fetch function
     const fetchAclData = async () => {
       const id = route.params.id as string;
       if (!id || id === 'new') {
@@ -307,7 +306,6 @@ export default defineComponent({
       }
     };
     
-    // Watch for tab changes to load ACL data
     watch(activeTab, (newTab) => {
       if (newTab === 'acl') {
         fetchAclData();
@@ -320,24 +318,20 @@ export default defineComponent({
       try {
         loadingBar.start();
         
-        if (id && id !== 'new') {
-          await store.fetchListener(id);
-          Object.assign(localFormData, store.getCurrent);
+        await store.fetchListener(id);
+        Object.assign(localFormData, store.getCurrent);
 
-          if (localFormData.localizedName) {
-            localizedNameArray.value = Object.entries(localFormData.localizedName).map(([language, name]) => ({
-              language,
-              name
-            }));
-          }
-          if (localFormData.nickName) {
-            nickNameArray.value = Object.entries(localFormData.nickName).map(([language, name]) => ({
-              language,
-              name
-            }));
-          }
-        } else {
-          Object.assign(localFormData, store.getCurrent);
+        if (localFormData.localizedName) {
+          localizedNameArray.value = Object.entries(localFormData.localizedName).map(([language, name]) => ({
+            language,
+            name
+          }));
+        }
+        if (localFormData.nickName) {
+          nickNameArray.value = Object.entries(localFormData.nickName).map(([language, name]) => ({
+            language,
+            name
+          }));
         }
       } catch (error) {
         console.error('Failed to fetch listener:', error);

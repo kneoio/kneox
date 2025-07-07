@@ -23,24 +23,13 @@
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
               <n-gi>
                 <n-form-item label="Localized Names">
-                  <n-dynamic-input
-                      v-model:value="localizedNameArray"
-                      :on-create="createLocalizedName"
-                      style="width: 50%; max-width: 600px;"
-                  >
-                    <template #default="{ value, index }">
+                  <n-dynamic-input v-model:value="localizedNameArray" :on-create="createLocalizedName"
+                    style="width: 50%; max-width: 600px;">
+                    <template #default=" { value, index } ">
                       <n-space align="center" style="width: 100%;">
-                        <n-select
-                            v-model:value="value.language"
-                            :options="languageOptions"
-                            placeholder="Language"
-                            style="width: 120px;"
-                        />
-                        <n-input
-                            v-model:value="value.name"
-                            placeholder="Name"
-                            style="flex: 1;"
-                        />
+                        <n-select v-model:value="value.language" :options="languageOptions" placeholder="Language"
+                          style="width: 120px;" />
+                        <n-input v-model:value="value.name" placeholder="Name" style="flex: 1;" />
                       </n-space>
                     </template>
                   </n-dynamic-input>
@@ -48,49 +37,31 @@
               </n-gi>
               <n-gi>
                 <n-form-item label="Country">
-                  <n-select
-                      v-model:value="localFormData.country"
-                      :options="countryOptions"
-                      style="width: 50%; max-width: 600px;"
-                  />
+                  <n-select v-model:value="localFormData.country" :options="countryOptions"
+                    style="width: 50%; max-width: 600px;" />
                 </n-form-item>
               </n-gi>
               <n-gi>
                 <n-form-item label="Description">
-                  <n-input
-                      v-model:value="localFormData.description"
-                      type="textarea"
-                      :autosize="{ minRows: 3, maxRows: 6 }"
-                      style="width: 50%; max-width: 600px;"
-                  />
+                  <n-input v-model:value="localFormData.description" type="textarea"
+                    :autosize="{ minRows: 3, maxRows: 6 }" style="width: 50%; max-width: 600px;" />
                 </n-form-item>
               </n-gi>
               <n-gi>
                 <n-form-item label="Color">
-                  <n-color-picker
-                      v-model:value="localFormData.color"
-                      style="width: 200px;"
-                  />
+                  <n-color-picker v-model:value="localFormData.color" style="width: 200px;" />
                 </n-form-item>
               </n-gi>
               <n-gi>
                 <n-form-item label="Time Zone">
-                  <n-select
-                      v-model:value="localFormData.timeZone"
-                      :options="timezones"
-                      placeholder="Select Time Zone"
-                      style="width: 50%; max-width: 600px;"
-                  />
+                  <n-select v-model:value="localFormData.timeZone" :options="timezones" placeholder="Select Time Zone"
+                    style="width: 50%; max-width: 600px;" />
                 </n-form-item>
               </n-gi>
               <n-gi>
                 <n-form-item label="Managed By">
-                  <n-select
-                      v-model:value="localFormData.managedBy"
-                      :options="managedByOptions"
-                      placeholder="Select Management Type"
-                      style="width: 50%; max-width: 600px;"
-                  />
+                  <n-select v-model:value="localFormData.managedBy" :options="managedByOptions"
+                    placeholder="Select Management Type" style="width: 50%; max-width: 600px;" />
                 </n-form-item>
               </n-gi>
               <n-gi>
@@ -98,14 +69,12 @@
                   <n-text style="width: 50%; max-width: 600px; font-family: monospace;">
                     {{ localFormData.hlsUrl }}
                   </n-text>
-                  <n-button
-                      type="primary"
-                      text
-                      @click="copyToClipboard(localFormData.hlsUrl)"
-                      style="margin-left: 8px;"
-                  >
+                  <n-button type="primary" text @click="copyToClipboard( localFormData.hlsUrl )"
+                    style="margin-left: 8px;">
                     <template #icon>
-                      <n-icon><Copy /></n-icon>
+                      <n-icon>
+                        <Copy />
+                      </n-icon>
                     </template>
                   </n-button>
                 </n-form-item>
@@ -115,14 +84,12 @@
                   <n-text style="width: 50%; max-width: 600px; font-family: monospace;">
                     {{ localFormData.iceCastUrl }}
                   </n-text>
-                  <n-button
-                      type="primary"
-                      text
-                      @click="copyToClipboard(localFormData.iceCastUrl || '')"
-                      style="margin-left: 8px;"
-                  >
+                  <n-button type="primary" text @click="copyToClipboard( localFormData.iceCastUrl || '' )"
+                    style="margin-left: 8px;">
                     <template #icon>
-                      <n-icon><Copy/></n-icon>
+                      <n-icon>
+                        <Copy />
+                      </n-icon>
                     </template>
                   </n-button>
                 </n-form-item>
@@ -132,14 +99,12 @@
                   <n-text style="width: 50%; max-width: 600px; font-family: monospace;">
                     {{ localFormData.mixplaUrl }}
                   </n-text>
-                  <n-button
-                      type="primary"
-                      text
-                      @click="copyToClipboard(localFormData.mixplaUrl || '')"
-                      style="margin-left: 8px;"
-                  >
+                  <n-button type="primary" text @click="copyToClipboard( localFormData.mixplaUrl || '' )"
+                    style="margin-left: 8px;">
                     <template #icon>
-                      <n-icon><Copy /></n-icon>
+                      <n-icon>
+                        <Copy />
+                      </n-icon>
                     </template>
                   </n-button>
                 </n-form-item>
@@ -153,51 +118,35 @@
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
               <n-gi>
                 <n-form-item label="Name">
-                  <n-select
-                      v-model:value="localFormData.aiAgentId"
-                      :options="agentOptions"
-                      style="width: 50%; max-width: 600px;"
-                  />
+                  <n-select v-model:value="localFormData.aiAgentId" :options="agentOptions"
+                    style="width: 50%; max-width: 600px;" />
                 </n-form-item>
               </n-gi>
-              <n-gi v-if="selectedAgent">
+              <n-gi v-if=" selectedAgent ">
                 <n-form-item label="Preferred Language">
-                  <n-input
-                      :value="selectedAgent.preferredLang"
-                      style="width: 50%; max-width: 600px; background-color: #f5f5f5; cursor: not-allowed;"
-                      readonly
-                      disabled
-                  />
+                  <n-input :value="selectedAgent.preferredLang"
+                    style="width: 50%; max-width: 600px; background-color: #f5f5f5; cursor: not-allowed;" readonly
+                    disabled />
                 </n-form-item>
               </n-gi>
-              <n-gi v-if="selectedAgent">
+              <n-gi v-if=" selectedAgent ">
                 <n-form-item label="Main Prompt">
-                  <CodeMirror
-                      :modelValue="selectedAgent.mainPrompt"
-                      basic
-                      :lang="lang"
-                      :style="{
-                        width: '60%',
-                        height: '200px',
-                        border: '1px solid #d9d9d9',
-                        borderRadius: '3px',
-                        backgroundColor: '#f5f5f5',
-                        opacity: '0.6',
-                        cursor: 'not-allowed'
-                      }"
-                      :extensions="editorExtensions"
-                      :disabled="true"
-                  />
+                  <CodeMirror :modelValue="selectedAgent.mainPrompt" basic :lang="lang" :style="{
+                    width: '60%',
+                    height: '200px',
+                    border: '1px solid #d9d9d9',
+                    borderRadius: '3px',
+                    backgroundColor: '#f5f5f5',
+                    opacity: '0.6',
+                    cursor: 'not-allowed'
+                  }" :extensions="editorExtensions" :disabled="true" />
                 </n-form-item>
               </n-gi>
-              <n-gi v-if="selectedAgent">
+              <n-gi v-if=" selectedAgent ">
                 <n-form-item label="Preferred Voice">
-                  <n-input
-                      :value="selectedAgent.preferredVoice[0]?.name"
-                      style="width: 50%; max-width: 600px; background-color: #f5f5f5; cursor: not-allowed;"
-                      readonly
-                      disabled
-                  />
+                  <n-input :value="selectedAgent.preferredVoice[0]?.name"
+                    style="width: 50%; max-width: 600px; background-color: #f5f5f5; cursor: not-allowed;" readonly
+                    disabled />
                 </n-form-item>
               </n-gi>
             </n-grid>
@@ -209,31 +158,20 @@
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
               <n-gi>
                 <n-form-item label="Name">
-                  <n-select
-                      v-model:value="localFormData.profileId"
-                      :options="profileOptions"
-                      style="width: 50%; max-width: 600px;"
-                  />
+                  <n-select v-model:value="localFormData.profileId" :options="profileOptions"
+                    style="width: 50%; max-width: 600px;" />
                 </n-form-item>
               </n-gi>
-              <n-gi v-if="selectedProfile">
+              <n-gi v-if=" selectedProfile ">
                 <n-form-item label="Description">
-                  <n-input
-                      :value="selectedProfile.description"
-                      type="textarea"
-                      :autosize="{ minRows: 3, maxRows: 5 }"
-                      style="width: 50%; max-width: 600px; background-color: #f5f5f5; cursor: not-allowed;"
-                      disabled
-                  />
+                  <n-input :value="selectedProfile.description" type="textarea" :autosize="{ minRows: 3, maxRows: 5 }"
+                    style="width: 50%; max-width: 600px; background-color: #f5f5f5; cursor: not-allowed;" disabled />
                 </n-form-item>
               </n-gi>
 
-              <n-gi v-if="selectedProfile">
+              <n-gi v-if=" selectedProfile ">
                 <n-form-item label="Explicit Content">
-                  <n-checkbox
-                      :checked="selectedProfile.explicitContent"
-                      :disabled="true"
-                  />
+                  <n-checkbox :checked="selectedProfile.explicitContent" :disabled="true" />
                 </n-form-item>
               </n-gi>
             </n-grid>
@@ -244,7 +182,7 @@
         </n-tab-pane>
       </n-tabs>
     </n-gi>
-</n-grid>
+  </n-grid>
 </template>
 
 <script lang="ts">
@@ -292,7 +230,7 @@ import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 import { handleFormSaveError } from '../../../utils/errorHandling';
 import AclTable from '../../common/AclTable.vue';
 
-export default defineComponent({
+export default defineComponent( {
   name: "RadioStationForm",
   components: {
     NPageHeader,
@@ -326,16 +264,16 @@ export default defineComponent({
     const profileStore = useProfileStore();
     const referencesStore = useReferencesStore();
     const route = useRoute();
-    const activeTab = ref("properties");
-    const fileList = ref<UploadFileInfo[]>([]);
-    const lang = ref(html());
+    const activeTab = ref( "properties" );
+    const fileList = ref<UploadFileInfo[]>( [] );
+    const lang = ref( html() );
 
-    const editorExtensions = computed(() => [
+    const editorExtensions = computed( () => [
       EditorView.lineWrapping
-    ]);
+    ] );
 
-    const aclData = ref([]);
-    const aclLoading = ref(false);
+    const aclData = ref( [] );
+    const aclLoading = ref( false );
 
     const timezones = [
       { value: "UTC", label: "UTC" },
@@ -350,7 +288,7 @@ export default defineComponent({
       { value: ManagedBy.MIX, label: "Mix" }
     ];
 
-    const localFormData = reactive<Partial<RadioStation>>({
+    const localFormData = reactive<Partial<RadioStation>>( {
       id: "",
       author: "",
       regDate: "",
@@ -373,65 +311,60 @@ export default defineComponent({
       profileId: undefined,
       timeZone: "",
       managedBy: undefined
-    });
+    } );
 
-    const localizedNameArray = computed({
-      get: () => {
-        if (!localFormData.localizedName) return [];
-        return Object.entries(localFormData.localizedName).map(([language, name]) => ({
-          language,
-          name
-        }));
-      },
-      set: (value) => {
-        localFormData.localizedName = {};
-        value.forEach(item => {
-          if (item.language && localFormData.localizedName) {
-            localFormData.localizedName[item.language] = item.name || "";
-          }
-        });
-      }
-    });
+    const localizedNameArray = ref<{ language: string; name: string }[]>( [] );
 
-    const createLocalizedName = () => ({
+    watch( localizedNameArray, ( newValue ) => {
+      localFormData.localizedName = {};
+      newValue.forEach( item => {
+        if ( item.language && item.language.trim() !== '' ) {
+          ( localFormData.localizedName ??= {} )[item.language] = item.name || "";
+        }
+      } );
+    }, { deep: true } );
+
+
+
+    const createLocalizedName = () => ( {
       language: "",
       name: ""
-    });
+    } );
 
-    const selectedAgent = computed(() => {
-      if (!localFormData.aiAgentId) return null;
-      return aiAgentStore.getEntries.find(a => a.id === localFormData.aiAgentId);
-    });
+    const selectedAgent = computed( () => {
+      if ( !localFormData.aiAgentId ) return null;
+      return aiAgentStore.getEntries.find( a => a.id === localFormData.aiAgentId );
+    } );
 
-    const selectedProfile = computed(() => {
-      if (!localFormData.profileId) return null;
-      return profileStore.getEntries.find(p => p.id === localFormData.profileId);
-    });
+    const selectedProfile = computed( () => {
+      if ( !localFormData.profileId ) return null;
+      return profileStore.getEntries.find( p => p.id === localFormData.profileId );
+    } );
 
 
 
-    const agentOptions = computed(() => {
-      return aiAgentStore.getEntries.map(agent => ({
+    const agentOptions = computed( () => {
+      return aiAgentStore.getEntries.map( agent => ( {
         label: agent.name,
         value: agent.id
-      }));
-    });
+      } ) );
+    } );
 
-    const profileOptions = computed(() => {
-      return profileStore.getEntries.map(profile => ({
+    const profileOptions = computed( () => {
+      return profileStore.getEntries.map( profile => ( {
         label: profile.name,
         value: profile.id
-      }));
-    });
+      } ) );
+    } );
 
-    const copyToClipboard = (text: string | undefined) => {
-      if (!text) {
-        message.error('Nothing to copy');
+    const copyToClipboard = ( text: string | undefined ) => {
+      if ( !text ) {
+        message.error( 'Nothing to copy' );
         return;
       }
-      navigator.clipboard.writeText(text)
-          .then(() => message.success('Copied to clipboard!'))
-          .catch(() => message.error('Failed to copy'));
+      navigator.clipboard.writeText( text )
+        .then( () => message.success( 'Copied to clipboard!' ) )
+        .catch( () => message.error( 'Failed to copy' ) );
     };
 
     const handleSave = async () => {
@@ -448,69 +381,74 @@ export default defineComponent({
           managedBy: localFormData.managedBy
         };
 
-        await store.save(saveDTO, localFormData.id as string);
-        message.success("Radio Station saved successfully");
-        await router.push("/outline/radiostations");
-      } catch (error) {
-        handleFormSaveError(error, message, 'Failed to save Radio Station');
+        await store.save( saveDTO, localFormData.id as string );
+        message.success( "Radio Station saved successfully" );
+        await router.push( "/outline/radiostations" );
+      } catch ( error ) {
+        handleFormSaveError( error, message, 'Failed to save Radio Station' );
       } finally {
         loadingBar.finish();
       }
     };
 
     const handleArchive = () => {
-      message.info("Archive functionality not implemented yet");
+      message.info( "Archive functionality not implemented yet" );
     };
 
     const goBack = () => {
-      router.push("/outline/radiostations");
+      router.push( "/outline/radiostations" );
     };
 
     const fetchAclData = async () => {
       const id = route.params.id as string;
-      if (!id || id === 'new') {
+      if ( !id || id === 'new' ) {
         aclData.value = [];
         return;
       }
-      
+
       try {
         aclLoading.value = true;
-        const response = await store.fetchAccessList(id);
+        const response = await store.fetchAccessList( id );
         aclData.value = response.accessList || [];
-      } catch (error) {
-        console.error('Failed to fetch ACL data:', error);
-        message.error('Failed to fetch access control list');
+      } catch ( error ) {
+        console.error( 'Failed to fetch ACL data:', error );
+        message.error( 'Failed to fetch access control list' );
         aclData.value = [];
       } finally {
         aclLoading.value = false;
       }
     };
 
-    watch(activeTab, (newTab) => {
-      if (newTab === 'acl' && localFormData.id) {
+    watch( activeTab, ( newTab ) => {
+      if ( newTab === 'acl' && localFormData.id ) {
         fetchAclData();
       }
-    });
+    } );
 
-    onMounted(async () => {
+    onMounted( async () => {
       const id = route.params.id as string;
 
       try {
         loadingBar.start();
-        await aiAgentStore.fetchAll(1, 100);
-        await profileStore.fetchAll(1, 100);
+        await aiAgentStore.fetchAll( 1, 100 );
+        await profileStore.fetchAll( 1, 100 );
+        await store.fetch( id );
+        Object.assign( localFormData, store.getCurrent );
 
-        if (id && id !== 'new') {
-          await store.fetch(id);
-          Object.assign(localFormData, store.getCurrent);
+        if ( localFormData.localizedName ) {
+          localizedNameArray.value = Object.entries( localFormData.localizedName ).map( ( [language, name] ) => ( {
+            language,
+            name: name || ""
+          } ) );
         }
-      } catch (error) {
-        console.error("Failed to fetch data:", error);
-        message.error('Failed to fetch data');
+
+      } catch ( error ) {
+        console.error( "Failed to fetch data:", error );
+        message.error( 'Failed to fetch data' );
       } finally {
         loadingBar.finish();
       }
-    });
+    } );
 
     return {
       store,
@@ -537,5 +475,5 @@ export default defineComponent({
       managedByOptions
     };
   }
-});
+} );
 </script>

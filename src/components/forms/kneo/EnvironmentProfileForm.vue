@@ -97,8 +97,6 @@ export default defineComponent({
     const store = useProfileStore();
     const route = useRoute();
     const activeTab = ref('properties');
-    
-    // ACL-related reactive properties
     const aclData = ref<any[]>([]);
     const aclLoading = ref(false);
 
@@ -136,7 +134,6 @@ export default defineComponent({
       router.push("/outline/profiles");
     };
     
-    // ACL fetch function
     const fetchAclData = async () => {
       const id = route.params.id as string;
       if (!id || id === 'new') {
@@ -157,7 +154,6 @@ export default defineComponent({
       }
     };
     
-    // Watch for tab changes to load ACL data
     watch(activeTab, (newTab) => {
       if (newTab === 'acl') {
         fetchAclData();
