@@ -128,7 +128,8 @@ import {computed, defineComponent, onMounted, reactive, ref, watch} from "vue";
 import {useRoute, useRouter} from "vue-router";
 import {NDynamicInput, NButton, NButtonGroup, NGrid, NGi, NForm, NFormItem, NInput, NSlider, NSelect, NTabs, NTabPane} from 'naive-ui';
 import {useLoadingBar, useMessage} from 'naive-ui';
-import {AiAgent, AiAgentSave} from '../../../types/kneoBroadcasterTypes';
+import {AiAgent, AiAgentSave} from "../../../types/kneoBroadcasterTypes";
+import { handleFormSaveError } from '../../../utils/errorHandling';
 import {useAiAgentStore} from '../../../stores/kneo/aiAgentStore';
 import {html} from "@codemirror/lang-html";
 import {EditorView} from "@codemirror/view";
@@ -226,8 +227,7 @@ export default defineComponent({
         message.success("AI Agent saved successfully");
         await router.push("/outline/ai_agents");
       } catch (error) {
-        console.error("Failed to save AI Agent:", error);
-        message.error("Failed to save AI Agent");
+        handleFormSaveError(error, message, 'Failed to save AI Agent');
       } finally {
         loadingBar.finish();
       }
@@ -238,18 +238,22 @@ export default defineComponent({
     };
 
     const fetchAclData = async () => {
-      const id = localFormData.id;
-      if (id) {
-        try {
-          aclLoading.value = true;
-          const data = await store.fetchAccessList(id);
-          aclData.value = data;
-        } catch (error) {
-          console.error('Failed to fetch ACL data:', error);
-          message.error('Failed to fetch ACL data');
-        } finally {
-          aclLoading.value = false;
-        }
+      const id = route.params.id as string;
+      if (!id || id === 'new') {
+        aclData.value = [];
+        return;
+      }
+      
+      try {
+        aclLoading.value = true;
+        const response = await store.fetchAccessList(id);
+        aclData.value = response.accessList || [];
+      } catch (error) {
+        console.error('Failed to fetch ACL data:', error);
+        message.error('Failed to fetch access control list');
+        aclData.value = [];
+      } finally {
+        aclLoading.value = false;
       }
     };
 
