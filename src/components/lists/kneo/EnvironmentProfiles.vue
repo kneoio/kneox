@@ -207,7 +207,7 @@ export default defineComponent({
             width: 50
           },
           {
-            title: 'Profile', // This title might also need an update if it's too generic now
+            title: 'Profile', 
             key: 'combined',
             render: (row: Profile) => {
               return h('div', {}, [

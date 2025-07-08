@@ -37,9 +37,10 @@
                       basic
                       :style="{
                         width: '60%',
-                        height: '200px',
+                        height: '400px',
                         border: '1px solid #d9d9d9',
-                        borderRadius: '3px'
+                        borderRadius: '3px',
+                        overflow: 'auto'
                       }"
                       :extensions="editorExtensions"
                   />
@@ -75,7 +76,7 @@ import {
   useLoadingBar,
   useMessage
 } from "naive-ui";
-import {html} from "@codemirror/lang-html";
+import {json} from "@codemirror/lang-json";
 import {EditorView} from "@codemirror/view";
 import CodeMirror from 'vue-codemirror6';
 import AclTable from '../../common/AclTable.vue';
@@ -110,8 +111,9 @@ export default defineComponent({
     const localContentString = ref("");
     const aclData = ref<any[]>([]);
     const aclLoading = ref(false);
-    const lang = ref(html());
+    const lang = ref(json());
     const editorExtensions = computed(() => [
+      json(),
       EditorView.lineWrapping
     ]);
     const localFormData = reactive<Partial<Memory>>({

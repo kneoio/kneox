@@ -71,7 +71,7 @@ import {
   useMessage
 } from "naive-ui";
 import AclTable from '../../common/AclTable.vue';
-import { Profile } from "../../../types/kneoBroadcasterTypes";
+import { Profile, ProfileSave } from "../../../types/kneoBroadcasterTypes";
 import { useProfileStore, ProfileDTO } from "../../../stores/kneo/profileStore";
 
 export default defineComponent({
@@ -116,7 +116,12 @@ export default defineComponent({
     const handleSave = async () => {
       try {
         loadingBar.start();
-        await store.save(localFormData as ProfileDTO, localFormData.id as string);
+        const saveData: ProfileSave = {
+          name: localFormData.name || "",
+          description: localFormData.description || "",
+          explicitContent: localFormData.explicitContent || false
+        };
+        await store.save(saveData, localFormData.id as string);
         message.success("Profile saved successfully");
         await router.push("/outline/profiles");
       } catch (error) {

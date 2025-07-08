@@ -2,7 +2,7 @@ import {defineStore} from 'pinia';
 import {computed, ref} from 'vue';
 import apiClient, {setupApiClient} from '../../api/apiClient';
 import {ApiFormResponse, ApiViewPageResponse} from "../../types";
-import {Memory, MemorySave} from "../../types/kneoBroadcasterTypes";
+import {Memory} from "../../types/kneoBroadcasterTypes";
 
 export const useMemoryStore = defineStore('memoryStore', () => {
     const apiViewResponse = ref<ApiViewPageResponse<Memory> | null>(null);
@@ -18,7 +18,7 @@ export const useMemoryStore = defineStore('memoryStore', () => {
             author: 0,
             regDate: '',
             lastModUser: 0,
-            lastModDate: '',
+            lastModifiedDate: '',
             brand: '',
             memoryType: '',
             content: {},
@@ -69,12 +69,6 @@ export const useMemoryStore = defineStore('memoryStore', () => {
         }
     };
 
-    const updateCurrent = (data: Memory, actions: any = {}) => {
-        apiFormResponse.value = {
-            docData: data,
-            actions: actions
-        };
-    };
 
     const deleteMemory = async (id: string) => {
         await apiClient.delete(`/memories/${id}`);

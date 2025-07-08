@@ -68,7 +68,8 @@
                         width: '60%',
                         height: '200px',
                         border: '1px solid #d9d9d9',
-                        borderRadius: '3px'
+                        borderRadius: '3px',
+                        overflow: 'auto'
                       }"
                   :extensions="editorExtensions"
               />
@@ -132,7 +133,7 @@ import {useLoadingBar, useMessage} from 'naive-ui';
 import {AiAgent, AiAgentSave} from "../../../types/kneoBroadcasterTypes";
 import { handleFormSaveError } from '../../../utils/errorHandling';
 import {useAiAgentStore} from '../../../stores/kneo/aiAgentStore';
-import {html} from "@codemirror/lang-html";
+import {json} from "@codemirror/lang-json";
 import {EditorView} from "@codemirror/view";
 import CodeMirror from 'vue-codemirror6';
 import AclTable from '../../common/AclTable.vue';
@@ -163,7 +164,7 @@ export default defineComponent({
     const router = useRouter();
     const store = useAiAgentStore();
     const route = useRoute();
-    const lang = ref(html());
+    const lang = ref(json());
     const editorExtensions = computed(() => [
       EditorView.lineWrapping
     ]);
