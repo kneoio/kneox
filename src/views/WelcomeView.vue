@@ -1,102 +1,97 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center">
-    <div class="max-w-7xl mx-auto px-8 py-12 w-full">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
-        
-        <!-- Left Panel -->
-        <div class="md:col-span-1 flex flex-col items-center justify-center space-y-6 text-center">
-          <div class="w-48 h-48">
-            <img src="/pwa-512x512.png" alt="Mixpla Logo" class="w-full h-full object-contain">
-          </div>
-          <router-link
-             to="/outline/dashboard"
-             class="group relative inline-flex items-center px-12 py-5 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold text-xl border-2 border-transparent hover:border-blue-600 hover:bg-gradient-to-r hover:from-transparent hover:to-transparent hover:text-blue-600 transition-all duration-500 ease-out transform hover:scale-105"
-          >
-            <span class="relative z-10">Launch Your Radio</span>
-            <n-icon class="ml-3 group-hover:translate-x-2 transition-transform duration-300" size="24">
-              <ArrowRight />
-            </n-icon>
-          </router-link>
+  <div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div class="max-w-6xl mx-auto px-8 py-16">
+      
+      <!-- Header -->
+      <div class="text-center mb-16">
+        <div class="w-32 h-32 mx-auto mb-8">
+          <img src="/logo.png" alt="Kneo.io Logo" class="w-full h-full object-contain">
         </div>
 
-        <!-- Right Panel -->
-        <div class="md:col-span-2 space-y-8">
+        <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+          Pioneering the future of digital experiences through innovative technology solutions
+        </p>
+      </div>
+
+      <!-- About Section -->
+      <div class="bg-white rounded-2xl shadow-lg p-8 mb-12">
+        <h2 class="text-3xl font-bold text-gray-900 mb-6 text-center">Who We Are</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
-            <h1 class="text-4xl font-extrabold text-gray-800 mb-4">Every Story Needs to Stream</h1>
-            <p class="text-lg text-gray-600">
-              Build your radio station. Your AI DJ handles the beats while you craft the vibe. Because the best stories are told through music.
+            <p class="text-gray-700 leading-relaxed mb-4">
+              At kneo.io, we transform ideas into cutting-edge digital solutions. Our team of experts specializes in creating innovative platforms that bridge the gap between technology and human experience.
+            </p>
+            <p class="text-gray-700 leading-relaxed">
+              We believe in the power of seamless integration, intelligent automation, and user-centric design to drive meaningful change across industries.
             </p>
           </div>
+          <div class="space-y-4">
+            <div class="flex items-center space-x-3">
+              <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
+              <span class="text-gray-700">Innovation-driven development</span>
+            </div>
+            <div class="flex items-center space-x-3">
+              <div class="w-3 h-3 bg-purple-500 rounded-full"></div>
+              <span class="text-gray-700">Scalable enterprise solutions</span>
+            </div>
+            <div class="flex items-center space-x-3">
+              <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+              <span class="text-gray-700">AI-powered experiences</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
-          <div class="bg-slate-100 p-6 rounded-lg">
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              <div class="space-y-2 feature-border-1 pl-4">
-                <h2 class="text-xl font-bold text-gray-800">Personal DJ</h2>
-                <p class="text-gray-600">Let our system curate the perfect music mix just for you, or take control yourself.</p>
-              </div>
-              <div class="space-y-2 feature-border-2 pl-4">
-                <h2 class="text-xl font-bold text-gray-800">Create Unique Tracks</h2>
-                <p class="text-gray-600">Generate personalized songs and audio experiences on demand.</p>
-              </div>
-              <div class="space-y-2 feature-border-3 pl-4">
-                <h2 class="text-xl font-bold text-gray-800">Share with Friends</h2>
-                <p class="text-gray-600">Broadcast your station or share favorite tracks and playlists with your network.</p>
+      <!-- Featured Project -->
+      <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-xl p-8 text-white">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+          <div>
+            <h2 class="text-3xl font-bold mb-4">Introducing Mixpla</h2>
+            <p class="text-blue-100 mb-6 leading-relaxed">
+              Our flagship project revolutionizing the audio streaming landscape. Experience personalized radio stations powered by AI, where every beat tells your story.
+            </p>
+            <router-link
+              to="/mixpla"
+              class="inline-flex items-center px-8 py-4 bg-white text-blue-600 font-bold text-lg rounded-lg hover:bg-blue-50 transition-all duration-300 transform hover:scale-105 shadow-lg"
+            >
+              <span>Explore Mixpla</span>
+              <n-icon class="ml-3" size="20">
+                <ArrowRight />
+              </n-icon>
+            </router-link>
+          </div>
+          <div class="text-center">
+            <div class="w-48 h-48 mx-auto bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm">
+              <div class="w-32 h-32 bg-white/20 rounded-full flex items-center justify-center">
+                <n-icon size="48" class="text-white">
+                  <ArrowRight />
+                </n-icon>
               </div>
             </div>
           </div>
-
-          <div class="space-y-4">
-            <h2 class="text-2xl font-bold text-gray-800 border-b pb-2">Featured Stations</h2>
-            <a v-for="station in stationsData" 
-               :key="station.slug_name" 
-               :href="`https://bratan.online/index.html?radio=${station.slug_name.toLowerCase()}`" 
-               target="_blank" 
-               rel="noopener noreferrer" 
-               class="block pt-2 group">
-              <h3 class="text-xl font-bold text-gray-700 group-hover:text-blue-600 transition-colors">{{ station.slug_name }}</h3>
-              <p class="text-gray-600 group-hover:text-gray-700 transition-colors">{{ station.description }}</p>
-            </a>
-          </div>
         </div>
-
       </div>
+
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { onMounted, onUnmounted } from 'vue';
 import { NIcon } from 'naive-ui';
 import { ArrowRight } from '@vicons/tabler';
 
 onMounted(() => {
   document.body.style.fontFamily = `'Inter', sans-serif`;
-  document.body.style.backgroundColor = '#f9fafb';
+  document.body.style.backgroundColor = '#f8fafc';
 });
 
 onUnmounted(() => {
   document.body.style.fontFamily = '';
   document.body.style.backgroundColor = '';
 });
-
-const stationsData = ref([
-  { slug_name: 'Bratan', description: 'Deep house, funk, disco, and electronic dance music with groovy basslines. Features underground house beats, classic funk rhythms, and modern disco-influenced tracks that keep the dance floor moving.' },
-  { slug_name: 'Bit2bit', description: 'Nostalgic chiptune and 8-bit music celebrating retro gaming culture. From classic arcade soundtracks to modern chip music artists, perfect for gamers and digital nostalgia enthusiasts.' },
-  { slug_name: 'Sexta', description: 'Ambient electronic and downtempo music for focus and relaxation. Features atmospheric soundscapes, chillout beats, and modern instrumental compositions perfect for work or study sessions.' },
-  { slug_name: 'Labirints', description: 'Dark industrial, experimental electronic, and intelligent dance music (IDM). Features harsh mechanical beats, complex rhythmic patterns, and avant-garde electronic compositions for discerning listeners.' },
-  { slug_name: 'Aizoo', description: 'Cutting-edge J-pop, electronic dance music, and experimental beats. Showcasing the latest trends in Japanese music culture with high-energy tracks and innovative sound design.' },
-  { slug_name: 'Nitroglycerin', description: 'High-octane rock, metal, and punk music that hits hard. From classic heavy metal anthems to modern hardcore punk, delivering explosive energy 24/7.' }
-]);
 </script>
 
 <style scoped>
-.feature-border-1 {
-  border-left: 4px solid #48dbfb;
-}
-.feature-border-2 {
-  border-left: 4px solid #feca57;
-}
-.feature-border-3 {
-  border-left: 4px solid #ff6b6b;
-}
+/* Corporate landing page styles */
 </style>

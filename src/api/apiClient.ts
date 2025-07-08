@@ -7,9 +7,15 @@ if (!apiServer) {
     throw new Error('VITE_API_SERVER environment variable is not set');
 }
 
+// Create base unsecured client for public endpoints
+const unsecuredClient = axios.create({
+    baseURL: apiServer,
+    withCredentials: false,
+});
+
+// Create secured client for authenticated endpoints
 const apiClient = axios.create({
     baseURL: `${apiServer}/api`,
-   // baseURL: apiServer.endsWith('/api') ? apiServer : `${apiServer}/api`,
     withCredentials: true,
 });
 
@@ -47,5 +53,16 @@ export const setupApiClient = (token?: string) => {
 export const getBaseURL = () => {
     return apiClient.defaults.baseURL;
 }
+
+// Public API methods
+export const getRadioStations = async () => {
+    try {
+        const response = await unsecuredClient.get('/radio/all-stations');
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching radio stations:', error);
+        throw error;
+    }
+};
 
 export default apiClient;
