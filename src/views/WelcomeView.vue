@@ -4,18 +4,18 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
         
         <!-- Left Panel -->
-        <div class="md:col-span-1 flex flex-col items-center justify-center space-y-8 text-center">
+        <div class="md:col-span-1 flex flex-col items-center justify-center space-y-6 text-center">
           <div class="w-48 h-48">
-            <img src="/iomix.jpg" alt="IOMIX Logo" class="w-full h-full object-contain">
+            <img src="/pwa-512x512.png" alt="Mixpla Logo" class="w-full h-full object-contain">
           </div>
           <router-link
              to="/outline/dashboard"
              class="group relative inline-flex items-center px-12 py-5 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold text-xl border-2 border-transparent hover:border-blue-600 hover:bg-gradient-to-r hover:from-transparent hover:to-transparent hover:text-blue-600 transition-all duration-500 ease-out transform hover:scale-105"
           >
             <span class="relative z-10">Launch Your Radio</span>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 ml-3 group-hover:translate-x-2 transition-transform duration-300" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 0 110-2h7.586l-2.293-2.293a1 0 010-1.414z" clip-rule="evenodd" />
-            </svg>
+            <n-icon class="ml-3 group-hover:translate-x-2 transition-transform duration-300" size="24">
+              <ArrowRight />
+            </n-icon>
           </router-link>
         </div>
 
@@ -66,6 +66,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
+import { NIcon } from 'naive-ui';
+import { ArrowRight } from '@vicons/tabler';
 
 onMounted(() => {
   document.body.style.fontFamily = `'Inter', sans-serif`;
