@@ -111,5 +111,5 @@ const fetchStations = async () => {
 </script>
 
 <style scoped>
-/* Removed individual feature border styles as they're now handled by Tailwind classes */
+/* handled by Tailwind classes */
 </style>

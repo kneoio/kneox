@@ -13,7 +13,7 @@
         :class="{ 'drawer-open': isDrawerOpen }"
     >
       <div class="drawer-header">
-        <n-space><n-h2>IOMIX</n-h2><n-h6 style="color:#6c757d; font-size: small">1.7.1</n-h6></n-space>
+        <n-space><n-h2>Mixpla</n-h2><n-h6 style="color:#6c757d; font-size: small">manager v.1.7.2</n-h6></n-space>
       </div>
       <div class="drawer-content">
         <n-menu

@@ -190,9 +190,10 @@ export default defineComponent({
           title: 'Memory Type',
           key: 'memoryType',
           render: (row: Memory) => {
-            let tagType: 'success' | 'warning' | 'default' = 'default';
+            let tagType: 'success' | 'warning' | 'info' | 'default' = 'default';
             if (row.memoryType === 'LISTENERS') tagType = 'success';
             if (row.memoryType === 'AUDIENCE_CONTEXT') tagType = 'warning';
+            if (row.memoryType === 'INSTANT_MESSAGE') tagType = 'info';
             return h(NTag, { type: tagType, bordered: false }, { default: () => row.memoryType });
           }
         },
@@ -207,11 +208,6 @@ export default defineComponent({
           title: 'Created Date',
           key: 'regDate',
           render: (row: Memory) => new Date(row.regDate).toLocaleString()
-        },
-        {
-          title: 'Last  Updated Date',
-          key: 'lastModDate',
-          render: (row: Memory) => new Date(row.lastModifiedDate).toLocaleString()
         }
       ];
 
