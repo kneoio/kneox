@@ -35,24 +35,7 @@
             </p>
           </div>
 
-          <div class="bg-slate-100 p-6 rounded-lg">
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              <div class="space-y-2 border-l-2 border-gray-300 pl-4">
-                <h2 class="text-xl font-bold text-gray-800">Personal DJ</h2>
-                <p class="text-gray-600">Let our system curate the perfect music mix just for you, or take control yourself.</p>
-              </div>
-              <div class="space-y-2 border-l-2 border-gray-300 pl-4">
-                <h2 class="text-xl font-bold text-gray-800">Create Unique Tracks</h2>
-                <p class="text-gray-600">Generate personalized songs and audio experiences on demand.</p>
-              </div>
-              <div class="space-y-2 border-l-2 border-gray-300 pl-4">
-                <h2 class="text-xl font-bold text-gray-800">Share with Friends</h2>
-                <p class="text-gray-600">Broadcast your station or share favorite tracks and playlists with your network.</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="space-y-4">
+<div class="space-y-4">
             <h2 class="text-2xl font-bold text-gray-800 border-b pb-2">Featured Stations</h2>
             <div v-if="isLoading" class="space-y-4">
               <n-skeleton text style="width: 60%" />
