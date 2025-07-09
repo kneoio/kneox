@@ -37,15 +37,15 @@
 
           <div class="bg-slate-100 p-6 rounded-lg">
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              <div class="space-y-2 feature-border-1 pl-4">
+              <div class="space-y-2 border-l-2 border-gray-300 pl-4">
                 <h2 class="text-xl font-bold text-gray-800">Personal DJ</h2>
                 <p class="text-gray-600">Let our system curate the perfect music mix just for you, or take control yourself.</p>
               </div>
-              <div class="space-y-2 feature-border-2 pl-4">
+              <div class="space-y-2 border-l-2 border-gray-300 pl-4">
                 <h2 class="text-xl font-bold text-gray-800">Create Unique Tracks</h2>
                 <p class="text-gray-600">Generate personalized songs and audio experiences on demand.</p>
               </div>
-              <div class="space-y-2 feature-border-3 pl-4">
+              <div class="space-y-2 border-l-2 border-gray-300 pl-4">
                 <h2 class="text-xl font-bold text-gray-800">Share with Friends</h2>
                 <p class="text-gray-600">Broadcast your station or share favorite tracks and playlists with your network.</p>
               </div>
@@ -67,7 +67,11 @@
                :href="`${radioPlayerHost}?radio=${station.name.toLowerCase()}`" 
                target="_blank" 
                rel="noopener noreferrer" 
-               class="block pt-2 group">
+               class="block pt-2 group relative pl-5">
+              <div 
+                class="absolute left-0 top-0 bottom-0 w-1 rounded-full" 
+                :style="{ backgroundColor: station.color }"
+              ></div>
               <h3 class="text-xl font-bold text-gray-700 group-hover:text-blue-600 transition-colors">{{ station.name }}</h3>
               <p class="text-gray-600 group-hover:text-gray-700 transition-colors">{{ station.description }}</p>
             </a>
@@ -107,7 +111,7 @@ const stationsData = ref<Array<Station>>([]);
 const isLoading = ref(true);
 const error = ref<Error | null>(null);
 
-const radioPlayerHost = ref('https://mixpla245.windsurf.build');
+const radioPlayerHost = ref('https://mixpla246.windsurf.build');
 
 const fetchStations = async () => {
   try {
@@ -124,13 +128,5 @@ const fetchStations = async () => {
 </script>
 
 <style scoped>
-.feature-border-1 {
-  border-left: 4px solid #48dbfb;
-}
-.feature-border-2 {
-  border-left: 4px solid #feca57;
-}
-.feature-border-3 {
-  border-left: 4px solid #ff6b6b;
-}
+/* Removed individual feature border styles as they're now handled by Tailwind classes */
 </style>
