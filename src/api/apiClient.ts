@@ -7,17 +7,25 @@ if (!apiServer) {
     throw new Error('VITE_API_SERVER environment variable is not set');
 }
 
-// Create base unsecured client for public endpoints
 const unsecuredClient = axios.create({
     baseURL: apiServer,
     withCredentials: false,
 });
 
-// Create secured client for authenticated endpoints
 const apiClient = axios.create({
     baseURL: `${apiServer}/api`,
     withCredentials: true,
 });
+
+unsecuredClient.interceptors.request.use(
+    (config) => {
+        config.headers['X-Client-ID'] = 'mixpla-web';
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
 
 export const setupApiClient = (token?: string) => {
     if (token) {
@@ -54,7 +62,6 @@ export const getBaseURL = () => {
     return apiClient.defaults.baseURL;
 }
 
-// Public API methods
 export const getRadioStations = async () => {
     try {
         const response = await unsecuredClient.get('/radio/all-stations');

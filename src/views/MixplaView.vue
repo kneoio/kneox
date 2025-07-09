@@ -1,5 +1,12 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center">
+  <div class="min-h-screen flex items-center justify-center relative">
+    <router-link 
+      to="/" 
+      class="absolute top-4 left-4 flex items-center text-gray-600 hover:text-blue-600 transition-colors"
+    >
+      <n-icon><ArrowLeft /></n-icon>
+      <span class="ml-1">Back to Home</span>
+    </router-link>
     <div class="max-w-7xl mx-auto px-8 py-12 w-full">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
         
@@ -75,7 +82,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
 import { NIcon, NSkeleton } from 'naive-ui';
-import { ArrowRight } from '@vicons/tabler';
+import { ArrowRight, ArrowLeft } from '@vicons/tabler';
 import { getRadioStations } from '../api/apiClient';
 
 interface Station {
@@ -100,7 +107,6 @@ const stationsData = ref<Array<Station>>([]);
 const isLoading = ref(true);
 const error = ref<Error | null>(null);
 
-// Configurable radio player host
 const radioPlayerHost = ref('https://mixpla245.windsurf.build');
 
 const fetchStations = async () => {
