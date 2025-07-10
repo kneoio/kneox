@@ -5,6 +5,7 @@ import StationDetail from '../components/forms/kneo/StationDetail.vue';
 
 import StationPlaylistView from '../components/lists/kneo/StationPlaylist.vue';
 import Listeners from '../components/lists/kneo/Listeners.vue';
+import AvailableListeners from '../components/lists/kneo/AvailableListeners.vue';
 import ListenerForm from '../components/forms/kneo/ListenerForm.vue';
 import RadioStations from '../components/lists/kneo/RadioStations.vue';
 import RadioStation from '../components/forms/kneo/RadioStationForm.vue';
@@ -80,7 +81,7 @@ const routes: Array<RouteRecordRaw> = [
             {
                 path: 'station/:brandName/listeners',
                 name: 'StationListeners',
-                component: Listeners,
+                component: AvailableListeners,
                 props: true,
             },
             {
@@ -208,19 +209,17 @@ const router = createRouter({
 
 export function setupRouterGuard(keycloak: Keycloak) {
     if (!keycloak) {
-        // This check might be redundant if TypeScript enforces the argument, but good for safety.
         throw new Error('Keycloak instance was not provided to setupRouterGuard');
     }
 
     router.beforeEach(async (to, from) => {
-        console.log(`Navigating from ${from.path} to ${to.path}`);
-        // Skip auth check for welcome page
+        //console.log(`Navigating from ${from.path} to ${to.path}`);
         if (to.name === 'WelcomeView') {
             return true;
         }
 
         if (to.matched.some(record => record.meta.requiresAuth)) {
-            console.log(`Router Guard: Checking protected route. keycloak.authenticated = ${keycloak.authenticated}`);
+            //console.log(`Router Guard: Checking protected route. keycloak.authenticated = ${keycloak.authenticated}`);
             try {
                 if (!keycloak.authenticated) {
                     console.log('User not authenticated, redirecting to login for protected route.');

@@ -2,7 +2,7 @@
   <n-grid :cols="isMobile ? 1 : 6" x-gap="12" y-gap="12" class="p-4">
     <n-gi>
       <n-page-header>
-        <template #title>All Listeners</template>
+        <template #title>Available Listeners for {{ brandName }}</template>
         <template #footer>
           Total: {{ store.getPagination.itemCount }}
         </template>
@@ -86,12 +86,12 @@ import { ListenerEntry } from "../../../types/kneoBroadcasterTypes";
 import { useListenersStore } from '../../../stores/kneo/listenersStore';
 
 export default defineComponent({
-  name: 'Listeners',
+  name: 'AvailableListeners',
   components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, NIcon, NInput },
   props: {
     brandName: {
       type: String,
-      required: false,
+      required: true,
     },
   },
   setup(props) {
@@ -106,26 +106,65 @@ export default defineComponent({
     const searchQuery = ref('');
     const debounceTimer = ref<number | null>(null);
 
-    const columns: DataTableColumns<ListenerEntry> = [
+    const columns: DataTableColumns<any> = [
       { type: 'selection' },
-      { title: 'Localized Name', key: 'localizedName.en' },
-      { title: 'Nickname', key: 'nickName.en' },
-      { title: 'Country', key: 'country' },
-      { title: 'Registered', key: 'regDate' }
+      { 
+        title: 'Localized Name', 
+        key: 'listener.localizedName',
+        render: (row: any) => {
+          return row.listener?.localizedName?.en || 'N/A';
+        }
+      },
+      { 
+        title: 'Nickname', 
+        key: 'listener.nickName',
+        render: (row: any) => row.listener?.nickName?.en || 'N/A'
+      },
+      { 
+        title: 'Country', 
+        key: 'listener.country',
+        render: (row: any) => row.listener?.country || 'N/A'
+      },
+      { 
+        title: 'Registered', 
+        key: 'listener.regDate',
+        render: (row: any) => row.listener?.regDate || 'N/A'
+      }
     ];
 
-    const rowKey = (row: ListenerEntry): string => {
-      return row.id;
+    // Map the nested listener data to the expected format
+    const mappedEntries = computed(() => {
+      const entries = store.getEntries || [];
+
+      
+      const mapped = entries.map((entry: any) => {
+        // Handle the nested listener structure from /available-listeners
+        if (entry.listener) {
+          const mappedEntry = {
+            ...entry.listener,
+            // Keep the original entry id for reference
+            originalId: entry.id
+          };
+          console.log('Mapped entry:', mappedEntry);
+          return mappedEntry;
+        }
+        // Fallback for regular listener structure
+        console.log('Direct entry:', entry);
+        return entry;
+      });
+      
+      console.log('Final mapped entries:', mapped);
+      return mapped;
+    });
+
+    const rowKey = (row: any): string => {
+      return row.id || Math.random().toString();
     };
 
     async function preFetch() {
       try {
         loading.value = true;
-        if (props.brandName) {
-          await store.fetchListeners(props.brandName);
-        } else {
-          await store.fetchAllListeners();
-        }
+        await store.fetchListeners(props.brandName);
       } catch (error) {
         console.error('Failed to fetch initial data:', error);
       } finally {
@@ -159,14 +198,10 @@ export default defineComponent({
     const fetchData = async (page = store.getPagination.page, pageSize = store.getPagination.pageSize) => {
       try {
         loading.value = true;
-        if (props.brandName) {
-          await store.fetchListeners(props.brandName, page, pageSize);
-        } else {
-          await store.fetchAllListeners(page, pageSize);
-        }
+        await store.fetchListeners(props.brandName, page, pageSize);
       } catch (error) {
-        console.error('Failed to fetch listeners:', error);
-        message.error('Failed to load listeners');
+        console.error('Failed to fetch available listeners:', error);
+        message.error('Failed to load available listeners');
       } finally {
         loading.value = false;
       }
@@ -190,7 +225,7 @@ export default defineComponent({
     };
 
     const handleNewClick = () => {
-      router.push('/outline/listeners/new');
+      router.push(`/outline/station/${props.brandName}/listeners/new`);
     };
 
     const getRowProps = (row: ListenerEntry) => {
@@ -201,7 +236,14 @@ export default defineComponent({
           if (target.closest('.n-checkbox') || target.closest('[data-n-checkbox]')) {
             return;
           }
-          router.push({ name: 'Listener', params: { id: row.id } });
+          // Navigate to the EditListener route for brand-specific listeners
+          router.push({ 
+            name: 'EditListener', 
+            params: { 
+              brandName: props.brandName, 
+              listenerId: row.id 
+            } 
+          });
         }
       };
     };
@@ -245,6 +287,7 @@ export default defineComponent({
     });
 
     watch(() => props.brandName, () => {
+
       fetchData();
     }, { immediate: true });
 
@@ -254,6 +297,7 @@ export default defineComponent({
       rowKey,
       isMobile,
       searchQuery,
+      mappedEntries,
       handleSearch,
       handleNewClick,
       handleDelete,

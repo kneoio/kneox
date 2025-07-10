@@ -67,6 +67,18 @@ export const useListenersStore = defineStore('listenersStore', () => {
         }
     };
 
+    const fetchAvailableListeners = async (brandName: string, page = 1, pageSize = 10) => {
+        try {
+            const response = await apiClient.get(`/listeners/available-listeners?brand=${brandName}&page=${page}&size=${pageSize}`);
+            if (!response?.data?.payload) throw new Error('Invalid API response for available listeners');
+            apiViewResponse.value = response.data.payload;
+        } catch (error) {
+            console.error('Failed to fetch available listeners:', error);
+            apiViewResponse.value = null;
+            throw error;
+        }
+    };
+
     const fetchListener = async (id: string) => {
         const response = await apiClient.get(`/listeners/${id}`);
         if (!response?.data?.payload) throw new Error('Invalid API response for a single listener');
@@ -98,6 +110,7 @@ export const useListenersStore = defineStore('listenersStore', () => {
         getPagination,
         fetchListeners,
         fetchAllListeners,
+        fetchAvailableListeners,
         fetchListener,
         saveListener,
         deleteListener,
