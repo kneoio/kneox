@@ -22,26 +22,7 @@
         </n-button>
       </n-button-group>
 
-      <n-input
-          v-model:value="searchQuery"
-          placeholder="Search..."
-          clearable
-          size="large"
-          style="width: 250px"
-          @keydown.enter="handleSearch"
-          @clear="handleSearch"
-      >
-        <template #suffix>
-          <n-button text @click="handleSearch">
-            <n-icon>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
-            </n-icon>
-          </n-button>
-        </template>
-      </n-input>
+
     </n-gi>
 
     <n-gi :span="isMobile ? 1 : 6">
@@ -82,7 +63,6 @@ import {
 } from 'naive-ui';
 import { useRouter } from 'vue-router';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
-import { ListenerEntry } from "../../../types/kneoBroadcasterTypes";
 import { useListenersStore } from '../../../stores/kneo/listenersStore';
 
 export default defineComponent({
@@ -103,8 +83,6 @@ export default defineComponent({
     const checkedRowKeys = ref<(string | number)[]>([]);
     const hasSelection = computed(() => checkedRowKeys.value.length > 0);
     const message = useMessage();
-    const searchQuery = ref('');
-    const debounceTimer = ref<number | null>(null);
 
     const columns: DataTableColumns<any> = [
       { type: 'selection' },
@@ -132,30 +110,7 @@ export default defineComponent({
       }
     ];
 
-    // Map the nested listener data to the expected format
-    const mappedEntries = computed(() => {
-      const entries = store.getEntries || [];
 
-      
-      const mapped = entries.map((entry: any) => {
-        // Handle the nested listener structure from /available-listeners
-        if (entry.listener) {
-          const mappedEntry = {
-            ...entry.listener,
-            // Keep the original entry id for reference
-            originalId: entry.id
-          };
-          console.log('Mapped entry:', mappedEntry);
-          return mappedEntry;
-        }
-        // Fallback for regular listener structure
-        console.log('Direct entry:', entry);
-        return entry;
-      });
-      
-      console.log('Final mapped entries:', mapped);
-      return mapped;
-    });
 
     const rowKey = (row: any): string => {
       return row.id || Math.random().toString();
@@ -228,7 +183,7 @@ export default defineComponent({
       router.push(`/outline/station/${props.brandName}/listeners/new`);
     };
 
-    const getRowProps = (row: ListenerEntry) => {
+    const getRowProps = (row: any) => {
       return {
         style: 'cursor: pointer;',
         onClick: (e: MouseEvent) => {
@@ -237,11 +192,18 @@ export default defineComponent({
             return;
           }
           // Navigate to the EditListener route for brand-specific listeners
+          const listenerId = row.listener?.id || row.id;
+          
+          if (!listenerId) {
+            console.error('No listener ID found in row data');
+            return;
+          }
+          
           router.push({ 
             name: 'EditListener', 
             params: { 
               brandName: props.brandName, 
-              listenerId: row.id 
+              id: listenerId 
             } 
           });
         }
@@ -275,16 +237,7 @@ export default defineComponent({
       window.removeEventListener('resize', handleResize);
     });
 
-    watch(searchQuery, (newVal, oldVal) => {
-      if (newVal !== oldVal) {
-        if (debounceTimer.value) {
-          clearTimeout(debounceTimer.value);
-        }
-        debounceTimer.value = window.setTimeout(() => {
-          handleSearch();
-        }, 500);
-      }
-    });
+
 
     watch(() => props.brandName, () => {
 
@@ -296,9 +249,6 @@ export default defineComponent({
       columns,
       rowKey,
       isMobile,
-      searchQuery,
-      mappedEntries,
-      handleSearch,
       handleNewClick,
       handleDelete,
       getRowProps,

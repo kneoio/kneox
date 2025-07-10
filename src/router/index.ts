@@ -91,7 +91,7 @@ const routes: Array<RouteRecordRaw> = [
                 props: true,
             },
             {
-                path: 'station/:brandName/listeners/:listenerId',
+                path: 'station/:brandName/listeners/:id',
                 name: 'EditListener',
                 component: ListenerForm,
                 props: true,
@@ -213,16 +213,13 @@ export function setupRouterGuard(keycloak: Keycloak) {
     }
 
     router.beforeEach(async (to, from) => {
-        //console.log(`Navigating from ${from.path} to ${to.path}`);
         if (to.name === 'WelcomeView') {
             return true;
         }
 
         if (to.matched.some(record => record.meta.requiresAuth)) {
-            //console.log(`Router Guard: Checking protected route. keycloak.authenticated = ${keycloak.authenticated}`);
             try {
                 if (!keycloak.authenticated) {
-                    console.log('User not authenticated, redirecting to login for protected route.');
                     return keycloak.login({
                         redirectUri: window.location.origin + to.fullPath // Use to.fullPath for accuracy
                     });
