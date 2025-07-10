@@ -13,13 +13,14 @@
         :class="{ 'drawer-open': isDrawerOpen }"
     >
       <div class="drawer-header">
-        <n-space><n-h2>Mixpla</n-h2><n-h6 style="color:#6c757d; font-size: small">manager v.1.7.2</n-h6></n-space>
+        <n-space><n-h2>Mixpla</n-h2><n-h6 style="color:#6c757d; font-size: small">manager v.1.7.3</n-h6></n-space>
       </div>
-      <div class="drawer-content">
+      <div class="drawer-content" style="overflow-y: auto; max-height: calc(100vh - 80px);">
         <n-menu
             :options="dynamicMenuOptions"
             :value="activeMenuKey"
             @update:value="handleMenuSelect"
+            style="min-width: 250px;"
         />
       </div>
     </div>
