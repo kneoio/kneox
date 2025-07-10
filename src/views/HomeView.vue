@@ -19,7 +19,6 @@ import {NGrid, NGridItem, NSpin} from 'naive-ui';
 import KneoHeader from "../components/common/KneoHeader.vue";
 import KneoFooter from "../components/common/KneoFooter.vue";
 import {KeycloakInstance} from 'keycloak-js';
-//import { useRouter } from 'vue-router';
 
 export default defineComponent({
   name: 'HomeView',
@@ -38,7 +37,6 @@ export default defineComponent({
     const authInitialized = ref(false);
     const inverted = ref(false);
 
-    // Initialize Keycloak and set up token refresh
     const initAuth = async () => {
       if (!kc) {
         console.error('Keycloak instance not available');
