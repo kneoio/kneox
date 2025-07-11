@@ -584,9 +584,8 @@ export default defineComponent( {
     });
 
     const taskTypeOptions = [
-      { label: 'Run DJ', value: 'run_dj' },
-      { label: 'Play Playlist', value: 'play_playlist' },
-      { label: 'Broadcast', value: 'broadcast' }
+      { label: 'Start DJs shift', value: 'run_dj' },
+
     ];
 
     const timeMarks = {
