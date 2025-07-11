@@ -180,6 +180,75 @@
             </n-grid>
           </n-form>
         </n-tab-pane>
+        <n-tab-pane name="schedule" tab="Schedule">
+          <n-form label-placement="left" label-width="auto">
+            <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
+              <n-gi>
+                <n-form-item label="Timezone">
+                  <n-select v-model:value="localFormData.timeZone" :options="timezones" 
+                    placeholder="Select Time Zone" style="width: 300px;" />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="Scheduled Tasks">
+                  <n-dynamic-input v-model:value="scheduleTasksArray" :on-create="createScheduleTask"
+                    style="max-width: 800px;">
+                    <template #default="{ value, index }">
+                      <n-card size="small" class="mb-3">
+                        <template #header>
+                          <n-text strong>Task {{ index + 1 }}</n-text>
+                        </template>
+                        
+                        <!-- Task Type and Target -->
+                        <n-space vertical size="medium">
+                          <n-space>
+                            <n-form-item label="Type" style="margin-bottom: 0;">
+                              <n-select v-model:value="value.type" :options="taskTypeOptions" 
+                                style="width: 150px;" />
+                            </n-form-item>
+                            <n-form-item label="Target" style="margin-bottom: 0;">
+                              <n-input v-model:value="value.target" placeholder="default" 
+                                style="width: 120px;" />
+                            </n-form-item>
+                          </n-space>
+                          
+                          <!-- Time Slider -->
+                          <n-form-item label="Time Range" style="margin-bottom: 0;">
+                            <n-space vertical style="width: 100%;">
+                              <n-slider v-model:value="value.timeRange" range :marks="timeMarks" 
+                                :step="15" :min="0" :max="1440" style="width: 400px;" />
+                              <n-space>
+                                <n-text depth="3" style="font-size: 12px;">{{ formatMinutesToTime(value.timeRange[0]) }}</n-text>
+                                <n-text depth="3" style="font-size: 12px;">to</n-text>
+                                <n-text depth="3" style="font-size: 12px;">{{ formatMinutesToTime(value.timeRange[1]) }}</n-text>
+                                <n-text depth="3" style="font-size: 12px;">({{ calculateDurationFromMinutes(value.timeRange[0], value.timeRange[1]) }})</n-text>
+                              </n-space>
+                            </n-space>
+                          </n-form-item>
+                          
+                          <!-- Weekdays Checkboxes -->
+                          <n-form-item label="Days" style="margin-bottom: 0;">
+                            <n-checkbox-group v-model:value="value.weekdays">
+                              <n-space>
+                                <n-checkbox value="MONDAY" label="Mon" />
+                                <n-checkbox value="TUESDAY" label="Tue" />
+                                <n-checkbox value="WEDNESDAY" label="Wed" />
+                                <n-checkbox value="THURSDAY" label="Thu" />
+                                <n-checkbox value="FRIDAY" label="Fri" />
+                                <n-checkbox value="SATURDAY" label="Sat" />
+                                <n-checkbox value="SUNDAY" label="Sun" />
+                              </n-space>
+                            </n-checkbox-group>
+                          </n-form-item>
+                        </n-space>
+                      </n-card>
+                    </template>
+                  </n-dynamic-input>
+                </n-form-item>
+              </n-gi>
+            </n-grid>
+          </n-form>
+        </n-tab-pane>
         <n-tab-pane name="acl" tab="ACL">
           <AclTable :acl-data="aclData" :loading="aclLoading" />
         </n-tab-pane>
@@ -194,7 +263,9 @@ import { useRoute, useRouter } from "vue-router";
 import {
   NButton,
   NButtonGroup,
+  NCard,
   NCheckbox,
+  NCheckboxGroup,
   NColorPicker,
   NDynamicInput,
   NForm,
@@ -204,6 +275,7 @@ import {
   NInput,
   NPageHeader,
   NSelect,
+  NSlider,
   NSpace,
   NTabPane,
   NTabs,
@@ -238,12 +310,16 @@ export default defineComponent( {
   components: {
     NPageHeader,
     NButtonGroup,
+    NCard,
+    NCheckbox,
+    NCheckboxGroup,
     NColorPicker,
     NDynamicInput,
     NForm,
     NFormItem,
     NInput,
     NButton,
+    NSlider,
     NSpace,
     NText,
     NUpload,
@@ -252,7 +328,6 @@ export default defineComponent( {
     NGrid,
     NGi,
     NSelect,
-    NCheckbox,
     NIcon,
     Copy,
     CodeMirror,
@@ -291,7 +366,7 @@ export default defineComponent( {
       { value: ManagedBy.MIX, label: "Mix" }
     ];
 
-    const localFormData = reactive<Partial<RadioStation>>( {
+    const localFormData = reactive<Partial<RadioStation> & { schedule?: any }>( {
       id: "",
       author: "",
       regDate: "",
@@ -313,7 +388,8 @@ export default defineComponent( {
       aiAgentId: undefined,
       profileId: undefined,
       timeZone: "",
-      managedBy: undefined
+      managedBy: undefined,
+      schedule: undefined
     } );
 
     const localizedNameArray = ref<{ language: string; name: string }[]>( [] );
@@ -410,6 +486,112 @@ export default defineComponent( {
       router.push( "/outline/radiostations" );
     };
 
+    const calculateDuration = (startTime: string, endTime: string): string => {
+      const [startHour, startMin] = startTime.split(':').map(Number);
+      const [endHour, endMin] = endTime.split(':').map(Number);
+      
+      let startMinutes = startHour * 60 + startMin;
+      let endMinutes = endHour * 60 + endMin;
+      
+      // Handle overnight schedules
+      if (endMinutes < startMinutes) {
+        endMinutes += 24 * 60;
+      }
+      
+      const durationMinutes = endMinutes - startMinutes;
+      const hours = Math.floor(durationMinutes / 60);
+      const minutes = durationMinutes % 60;
+      
+      if (hours === 0) {
+        return `${minutes}m`;
+      } else if (minutes === 0) {
+        return `${hours}h`;
+      } else {
+        return `${hours}h ${minutes}m`;
+      }
+    };
+
+    const formatWeekday = (day: string): string => {
+      const dayMap: { [key: string]: string } = {
+        'MONDAY': 'Mon',
+        'TUESDAY': 'Tue',
+        'WEDNESDAY': 'Wed',
+        'THURSDAY': 'Thu',
+        'FRIDAY': 'Fri',
+        'SATURDAY': 'Sat',
+        'SUNDAY': 'Sun'
+      };
+      return dayMap[day] || day;
+    };
+
+    const formatMinutesToTime = (minutes: number): string => {
+      const hours = Math.floor(minutes / 60);
+      const mins = minutes % 60;
+      return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+    };
+
+    const calculateDurationFromMinutes = (startMinutes: number, endMinutes: number): string => {
+      let duration = endMinutes - startMinutes;
+      if (duration < 0) {
+        duration += 24 * 60; // Handle overnight schedules
+      }
+      const hours = Math.floor(duration / 60);
+      const minutes = duration % 60;
+      
+      if (hours === 0) {
+        return `${minutes}m`;
+      } else if (minutes === 0) {
+        return `${hours}h`;
+      } else {
+        return `${hours}h ${minutes}m`;
+      }
+    };
+
+    const timeToMinutes = (timeStr: string): number => {
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      return hours * 60 + minutes;
+    };
+
+    const scheduleTasksArray = ref<any[]>([]);
+
+    // Watch scheduleTasksArray and sync back to localFormData.schedule
+    watch( scheduleTasksArray, ( newValue ) => {
+      if ( !localFormData.schedule ) {
+        localFormData.schedule = { timezone: localFormData.timeZone || 'UTC', tasks: [] };
+      }
+      localFormData.schedule.tasks = newValue.map( task => ({
+        type: task.type,
+        target: task.target,
+        triggerType: 'TIME_WINDOW',
+        timeWindowTrigger: {
+          startTime: formatMinutesToTime(task.timeRange[0]),
+          endTime: formatMinutesToTime(task.timeRange[1]),
+          weekdays: task.weekdays
+        }
+      }));
+    }, { deep: true } );
+
+    const createScheduleTask = () => ({
+      type: 'run_dj',
+      target: 'default',
+      timeRange: [540, 600], // 09:00 to 10:00
+      weekdays: ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY']
+    });
+
+    const taskTypeOptions = [
+      { label: 'Run DJ', value: 'run_dj' },
+      { label: 'Play Playlist', value: 'play_playlist' },
+      { label: 'Broadcast', value: 'broadcast' }
+    ];
+
+    const timeMarks = {
+      0: '00:00',
+      360: '06:00',
+      720: '12:00',
+      1080: '18:00',
+      1440: '24:00'
+    };
+
     const fetchAclData = async () => {
       const id = route.params.id as string;
       if ( !id || id === 'new' ) {
@@ -453,6 +635,19 @@ export default defineComponent( {
           } ) );
         }
 
+        // Populate schedule tasks array from existing data
+        if ( localFormData.schedule && localFormData.schedule.tasks ) {
+          scheduleTasksArray.value = localFormData.schedule.tasks.map( (task: any) => ({
+            type: task.type,
+            target: task.target,
+            timeRange: task.timeWindowTrigger ? [
+              timeToMinutes(task.timeWindowTrigger.startTime),
+              timeToMinutes(task.timeWindowTrigger.endTime)
+            ] : [540, 600],
+            weekdays: task.timeWindowTrigger ? task.timeWindowTrigger.weekdays : []
+          }));
+        }
+
       } catch ( error ) {
         console.error( "Failed to fetch data:", error );
         message.error( 'Failed to fetch data' );
@@ -483,8 +678,24 @@ export default defineComponent( {
       goBack,
       aclData,
       aclLoading,
-      timezones,
-      managedByOptions
+      timezones: [
+        { label: 'UTC', value: 'UTC' },
+        { label: 'Europe/London', value: 'Europe/London' },
+        { label: 'Europe/Paris', value: 'Europe/Paris' },
+        { label: 'America/New_York', value: 'America/New_York' },
+        { label: 'America/Los_Angeles', value: 'America/Los_Angeles' },
+        { label: 'Asia/Tokyo', value: 'Asia/Tokyo' }
+      ],
+      managedByOptions,
+      scheduleTasksArray,
+      createScheduleTask,
+      taskTypeOptions,
+      timeMarks,
+      formatMinutesToTime,
+      calculateDurationFromMinutes,
+      timeToMinutes,
+      calculateDuration,
+      formatWeekday
     };
   }
 } );
