@@ -3,26 +3,24 @@
     <!-- Header Section -->
     <div class="dashboard-header mb-6 max-w-4xl">
       <n-card>
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-4">
-            <div class="station-avatar w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold" 
-                 :style="{ backgroundColor: stationColor }">
-              {{ stationInitials }}
-            </div>
-            <div>
-              <h1 class="text-2xl font-bold text-gray-900">{{ brandName }}</h1>
-              <div class="flex items-center gap-2 mt-1">
-                <n-tag :type="isOnline ? 'success' : 'error'" size="small">
-                  {{ isOnline ? 'ONLINE' : 'OFFLINE' }}
-                </n-tag>
-                <span class="text-gray-500 text-sm">{{ currentListeners }} listeners</span>
-              </div>
+        <div class="flex items-center gap-4">
+          <div class="station-avatar w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold" 
+               :style="{ backgroundColor: stationColor }">
+            {{ stationInitials }}
+          </div>
+          <div class="w-80">
+            <h1 class="text-2xl font-bold text-gray-900">{{ brandName }}</h1>
+            <div class="flex items-center gap-2 mt-1">
+              <n-tag :type="isOnline ? 'success' : 'error'" size="small">
+                {{ isOnline ? 'ONLINE' : 'OFFLINE' }}
+              </n-tag>
+              <span class="text-gray-500 text-sm">{{ currentListeners }} listeners</span>
             </div>
           </div>
-          <div class="flex gap-3">
+          <div class="flex gap-3 ml-2.5">
             <n-button 
               type="primary" 
-              size="large" 
+              size="medium" 
               :loading="isStartingStation" 
               :disabled="isOnline"
               @click="handleStart">
@@ -33,7 +31,7 @@
             </n-button>
             <n-button 
               type="error" 
-              size="large" 
+              size="medium" 
               :loading="isStoppingStation" 
               :disabled="!isOnline"
               @click="handleStop">
