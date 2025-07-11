@@ -110,9 +110,7 @@ export default defineComponent({
     const getStatusStyle = (status: string) => {
       switch (status) {
         case 'ON_LINE':
-          return { color: '#00aa00', text: '● ONLINE' };
-        case 'ON_LINE_WELL':
-          return { color: '#00ff00', text: '● ONLINE (WELL)' };
+          return { color: '#00aa00', text: '● ONLINE' };        
         case 'WARMING_UP':
           return { color: '#ffa500', text: '● WARMING UP' };
         case 'WAITING_FOR_CURATOR':

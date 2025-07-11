@@ -10,7 +10,6 @@ type NTagType = 'success' | 'warning' | 'error' | 'default' | 'info';
 // Define all possible radio station statuses
 type RadioStationStatus =
     | 'ON_LINE'
-    | 'ON_LINE_WELL'
     | 'WARMING_UP'
     | 'WAITING_FOR_CURATOR'
     | 'IDLE'
@@ -52,9 +51,7 @@ export const useStationColumns = (
     const getStatusInfo = (status: RadioStationStatus): StatusInfo => {
         switch (status) {
             case 'ON_LINE':
-                return { text: 'Online', type: 'success' };
-            case 'ON_LINE_WELL':
-                return { text: 'Online (Well)', type: 'success' };
+                return { text: 'Online', type: 'success' };          
             case 'WARMING_UP':
                 return { text: 'Warming Up', type: 'warning' };
             case 'WAITING_FOR_CURATOR':

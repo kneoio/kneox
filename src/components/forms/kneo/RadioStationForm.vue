@@ -184,9 +184,10 @@
           <n-form label-placement="left" label-width="auto">
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
               <n-gi>
-                <n-form-item label="Timezone">
-                  <n-select v-model:value="localFormData.schedule.timezone" :options="timezones" 
-                    placeholder="Select Time Zone" style="width: 300px;" />
+                <n-form-item>
+                  <n-checkbox v-model:checked="localFormData.schedule.enabled">
+                    Enable
+                  </n-checkbox>
                 </n-form-item>
               </n-gi>
               <n-gi>
@@ -207,8 +208,9 @@
                                 style="width: 150px;" />
                             </n-form-item>
                             <n-form-item label="Target" style="margin-bottom: 0;">
-                              <n-input v-model:value="value.target" placeholder="default" 
-                                style="width: 120px;" />
+                              <n-select v-model:value="value.target" :options="targetOptions" 
+                                filterable tag placeholder="Select or type target" 
+                                style="width: 150px;" />
                             </n-form-item>
                           </n-space>
                           
@@ -286,7 +288,7 @@ import {
   useLoadingBar,
   useMessage
 } from "naive-ui";
-import { Copy, ExternalLink } from '@vicons/tabler';
+import { Copy } from '@vicons/tabler';
 import { html } from '@codemirror/lang-html';
 import { EditorView } from '@codemirror/view';
 import CodeMirror from 'vue-codemirror6';
@@ -294,8 +296,6 @@ import {
   RadioStation,
   BrandStatus,
   RadioStationSave,
-  AiAgent,
-  Profile,
   ManagedBy
 } from "../../../types/kneoBroadcasterTypes";
 import { useRadioStationStore } from "../../../stores/kneo/radioStationStore";
@@ -352,18 +352,14 @@ export default defineComponent( {
 
     const aclData = ref( [] );
     const aclLoading = ref( false );
-
-    const timezones = [
-      { value: "UTC", label: "UTC" },
-      { value: "Europe/London", label: "London (GMT)" },
-      { value: "America/New_York", label: "New York (EST)" },
-      { value: "Asia/Tokyo", label: "Tokyo (JST)" }
-    ];
-
     const managedByOptions = [
       { value: ManagedBy.ITSELF, label: "Itself" },
       { value: ManagedBy.AI_AGENT, label: "AI Agent" },
       { value: ManagedBy.MIX, label: "Mix" }
+    ];
+
+    const targetOptions = [
+      { value: "default", label: "default" }
     ];
 
     const localFormData = reactive<Partial<RadioStation> & { schedule?: any }>( {
@@ -705,6 +701,7 @@ export default defineComponent( {
         { label: 'Asia/Tokyo', value: 'Asia/Tokyo' }
       ],
       managedByOptions,
+      targetOptions,
       scheduleTasksArray,
       createScheduleTask,
       taskTypeOptions,

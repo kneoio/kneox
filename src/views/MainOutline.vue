@@ -134,9 +134,7 @@ export default defineComponent({
     const getStatusColor = (status: BrandStatus) => {
       switch (status) {
         case BrandStatus.ON_LINE:
-          return '#00aa00';
-        case BrandStatus.ON_LINE_WELL:
-          return '#00ff00';
+          return '#00aa00';     
         case BrandStatus.WARMING_UP:
           return '#ffa500';
         case BrandStatus.WAITING_FOR_CURATOR:

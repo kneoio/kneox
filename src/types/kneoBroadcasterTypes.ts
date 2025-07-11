@@ -6,8 +6,7 @@ export enum FragmentType {
 
 export enum BrandStatus {
     OFF_LINE = "OFF_LINE",
-    ON_LINE = "ON_LINE",
-    ON_LINE_WELL = "ON_LINE_WELL",
+    ON_LINE = "ON_LINE",  
     WARMING_UP = "WARMING_UP",
     WAITING_FOR_CURATOR = "WAITING_FOR_CURATOR",
     IDLE = "IDLE",
