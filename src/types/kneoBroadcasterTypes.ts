@@ -70,6 +70,7 @@ export interface RadioStationSave {
     profileId?: string;
     timeZone?: string;
     managedBy?: ManagedBy;
+    schedule?: any;
 }
 
 export interface SoundFragment {

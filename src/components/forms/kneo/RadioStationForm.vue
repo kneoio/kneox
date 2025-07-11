@@ -185,7 +185,7 @@
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
               <n-gi>
                 <n-form-item label="Timezone">
-                  <n-select v-model:value="localFormData.timeZone" :options="timezones" 
+                  <n-select v-model:value="localFormData.schedule.timezone" :options="timezones" 
                     placeholder="Select Time Zone" style="width: 300px;" />
                 </n-form-item>
               </n-gi>
@@ -457,16 +457,20 @@ export default defineComponent( {
     const handleSave = async () => {
       try {
         loadingBar.start();
+        // Convert Proxy objects to plain objects for proper serialization
         const saveDTO: RadioStationSave = {
-          localizedName: localFormData.localizedName ?? {},
+          localizedName: localFormData.localizedName ? JSON.parse(JSON.stringify(localFormData.localizedName)) : {},
           country: localFormData.country || "",
           description: localFormData.description || "",
           color: localFormData.color || "",
           aiAgentId: localFormData.aiAgentId,
           profileId: localFormData.profileId,
           timeZone: localFormData.timeZone,
-          managedBy: localFormData.managedBy
+          managedBy: localFormData.managedBy,
+          schedule: localFormData.schedule ? JSON.parse(JSON.stringify(localFormData.schedule)) : undefined
         };
+        
+
 
         await store.save( saveDTO, localFormData.id as string );
         message.success( "Radio Station saved successfully" );
@@ -557,8 +561,9 @@ export default defineComponent( {
     // Watch scheduleTasksArray and sync back to localFormData.schedule
     watch( scheduleTasksArray, ( newValue ) => {
       if ( !localFormData.schedule ) {
-        localFormData.schedule = { timezone: localFormData.timeZone || 'UTC', tasks: [] };
+        localFormData.schedule = { timezone: 'UTC', tasks: [] };
       }
+      
       localFormData.schedule.tasks = newValue.map( task => ({
         type: task.type,
         target: task.target,
@@ -626,7 +631,8 @@ export default defineComponent( {
         await aiAgentStore.fetchAll( 1, 100 );
         await profileStore.fetchAll( 1, 100 );
         await store.fetch( id );
-        Object.assign( localFormData, store.getCurrent );
+        const currentData = store.getCurrent;
+        Object.assign( localFormData, currentData );
 
         if ( localFormData.localizedName ) {
           localizedNameArray.value = Object.entries( localFormData.localizedName ).map( ( [language, name] ) => ( {
@@ -635,9 +641,9 @@ export default defineComponent( {
           } ) );
         }
 
-        // Populate schedule tasks array from existing data
-        if ( localFormData.schedule && localFormData.schedule.tasks ) {
-          scheduleTasksArray.value = localFormData.schedule.tasks.map( (task: any) => ({
+        // Initialize schedule data
+        if (localFormData.schedule && localFormData.schedule.tasks?.length > 0) {
+          scheduleTasksArray.value = localFormData.schedule.tasks.map(task => ({
             type: task.type,
             target: task.target,
             timeRange: task.timeWindowTrigger ? [
@@ -646,8 +652,20 @@ export default defineComponent( {
             ] : [540, 600],
             weekdays: task.timeWindowTrigger ? task.timeWindowTrigger.weekdays : []
           }));
+        } else {
+          scheduleTasksArray.value = [];
         }
 
+        // Ensure schedule structure exists
+        if (!localFormData.schedule) {
+          localFormData.schedule = {
+            timezone: localFormData.timeZone || 'UTC',
+            tasks: []
+          };
+        } else {
+          // Sync timezone
+          localFormData.schedule.timezone = localFormData.timeZone || 'UTC';
+        }
       } catch ( error ) {
         console.error( "Failed to fetch data:", error );
         message.error( 'Failed to fetch data' );
@@ -681,6 +699,7 @@ export default defineComponent( {
       timezones: [
         { label: 'UTC', value: 'UTC' },
         { label: 'Europe/London', value: 'Europe/London' },
+        { label: 'Europe/Riga', value: 'Europe/Riga' },
         { label: 'Europe/Paris', value: 'Europe/Paris' },
         { label: 'America/New_York', value: 'America/New_York' },
         { label: 'America/Los_Angeles', value: 'America/Los_Angeles' },
