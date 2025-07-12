@@ -72,8 +72,8 @@ app.get('*', (req, res) => {
         const html = templateFunction({
             nonce: res.locals.nonce,
             title: process.env.ORG_NAME,
-            cssFile: manifest['src/main.ts']?.css?.[0] || '',
-            scriptFilename: manifest['src/main.ts']?.file || '',
+            cssFile: manifest['style.css']?.file || '',
+            scriptFilename: manifest['index.html']?.file || '',
             apiServer: process.env.VITE_API_SERVER
         });
 
