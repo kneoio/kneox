@@ -20,8 +20,9 @@ let manifest = {};
 const manifestPath = path.join(__dirname, 'dist', '.vite', 'manifest.json');
 if (fs.existsSync(manifestPath)) {
     manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+    console.log('✅ Manifest loaded successfully');
 } else {
-    console.log('Manifest not found');
+    console.log('❌ Manifest not found at:', manifestPath);
 }
 
 app.use((req, res, next) => {
@@ -29,8 +30,8 @@ app.use((req, res, next) => {
     next();
 });
 
-// Serve static files with proper MIME types
-app.use(express.static(path.join(__dirname, 'dist'), {
+// Serve static files with proper MIME types BEFORE other routes
+app.use('/assets', express.static(path.join(__dirname, 'dist/assets'), {
     setHeaders: (res, filePath) => {
         if (filePath.endsWith('.js')) {
             res.setHeader('Content-Type', 'application/javascript');
@@ -38,6 +39,11 @@ app.use(express.static(path.join(__dirname, 'dist'), {
             res.setHeader('Content-Type', 'text/css');
         }
     }
+}));
+
+// Serve other static files
+app.use(express.static(path.join(__dirname, 'dist'), {
+    index: false // Don't serve index.html automatically
 }));
 
 let templateFunction;
@@ -49,12 +55,16 @@ try {
     process.exit(1);
 }
 
+// Health check route BEFORE catch-all
 app.get('/health', (req, res) => {
     res.status(200).send('OK');
 });
 
+// Only serve template for non-asset requests
 app.get('*', (req, res) => {
+    // Skip template for asset requests - return 404 instead
     if (req.url.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|map)$/)) {
+        console.log(`❌ Asset not found: ${req.url}`);
         return res.status(404).send('Asset not found');
     }
 
@@ -62,7 +72,7 @@ app.get('*', (req, res) => {
         const html = templateFunction({
             nonce: res.locals.nonce,
             title: process.env.ORG_NAME,
-            cssFile: manifest['src/main.ts']?.css[0] || '',
+            cssFile: manifest['src/main.ts']?.css?.[0] || '',
             scriptFilename: manifest['src/main.ts']?.file || '',
             apiServer: process.env.VITE_API_SERVER
         });
@@ -77,4 +87,5 @@ app.get('*', (req, res) => {
 const port = process.env.PORT || 8090;
 app.listen(port, () => {
     console.log(`Server is listening on port ${port}`);
+    console.log(`Manifest entries:`, Object.keys(manifest));
 });

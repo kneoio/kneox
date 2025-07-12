@@ -19,10 +19,10 @@ export default defineConfig({
         entryFileNames: '[name].[hash].js',
         chunkFileNames: '[name].[hash].js',
         assetFileNames: '[name].[hash].[ext]',
-        manualChunks: undefined, // Disable chunking to save memory
+        manualChunks: undefined,
       },
     },
-    target: 'es2015', // Lower target to reduce complexity
+    target: 'es2015',
     modulePreload: false,
   },
 });
