@@ -29,7 +29,16 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use(express.static(path.join(__dirname, 'dist')));
+// Serve static files with proper MIME types
+app.use(express.static(path.join(__dirname, 'dist'), {
+    setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.js')) {
+            res.setHeader('Content-Type', 'application/javascript');
+        } else if (filePath.endsWith('.css')) {
+            res.setHeader('Content-Type', 'text/css');
+        }
+    }
+}));
 
 let templateFunction;
 try {
@@ -40,7 +49,15 @@ try {
     process.exit(1);
 }
 
+app.get('/health', (req, res) => {
+    res.status(200).send('OK');
+});
+
 app.get('*', (req, res) => {
+    if (req.url.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|map)$/)) {
+        return res.status(404).send('Asset not found');
+    }
+
     try {
         const html = templateFunction({
             nonce: res.locals.nonce,
@@ -55,10 +72,6 @@ app.get('*', (req, res) => {
         console.error('Error rendering template:', error);
         res.status(500).send('Internal Server Error');
     }
-});
-
-app.get('/health', (req, res) => {
-    res.status(200).send('OK');
 });
 
 const port = process.env.PORT || 8090;
