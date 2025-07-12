@@ -453,7 +453,6 @@ export default defineComponent( {
     const handleSave = async () => {
       try {
         loadingBar.start();
-        // Convert Proxy objects to plain objects for proper serialization
         const saveDTO: RadioStationSave = {
           localizedName: localFormData.localizedName ? JSON.parse(JSON.stringify(localFormData.localizedName)) : {},
           country: localFormData.country || "",
@@ -554,10 +553,9 @@ export default defineComponent( {
 
     const scheduleTasksArray = ref<any[]>([]);
 
-    // Watch scheduleTasksArray and sync back to localFormData.schedule
     watch( scheduleTasksArray, ( newValue ) => {
       if ( !localFormData.schedule ) {
-        localFormData.schedule = { timezone: 'UTC', tasks: [] };
+        localFormData.schedule = { tasks: [] };
       }
       
       localFormData.schedule.tasks = newValue.map( task => ({
@@ -573,14 +571,14 @@ export default defineComponent( {
     }, { deep: true } );
 
     const createScheduleTask = () => ({
-      type: 'run_dj',
+      type: 'PROCESS_DJ_CONTROL',
       target: 'default',
       timeRange: [540, 600], // 09:00 to 10:00
       weekdays: ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY']
     });
 
     const taskTypeOptions = [
-      { label: 'Start DJs shift', value: 'run_dj' },
+      { label: 'DJs shift', value: 'PROCESS_DJ_CONTROL' },
 
     ];
 
@@ -636,7 +634,6 @@ export default defineComponent( {
           } ) );
         }
 
-        // Initialize schedule data
         if (localFormData.schedule && localFormData.schedule.tasks?.length > 0) {
           scheduleTasksArray.value = localFormData.schedule.tasks.map(task => ({
             type: task.type,
@@ -651,15 +648,10 @@ export default defineComponent( {
           scheduleTasksArray.value = [];
         }
 
-        // Ensure schedule structure exists
         if (!localFormData.schedule) {
           localFormData.schedule = {
-            timezone: localFormData.timeZone || 'UTC',
             tasks: []
           };
-        } else {
-          // Sync timezone
-          localFormData.schedule.timezone = localFormData.timeZone || 'UTC';
         }
       } catch ( error ) {
         console.error( "Failed to fetch data:", error );

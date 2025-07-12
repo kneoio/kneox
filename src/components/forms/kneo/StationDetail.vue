@@ -45,10 +45,8 @@
       </n-card>
     </div>
 
-    <!-- Dashboard Grid -->
     <div class="dashboard-grid grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
       
-      <!-- AI DJ Memory -->
       <div class="col-span-1">
         <n-card title="AI DJ Memory" class="h-full">
           <template #header-extra>

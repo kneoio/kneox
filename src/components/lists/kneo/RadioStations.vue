@@ -110,7 +110,7 @@ export default defineComponent({
     const getStatusStyle = (status: string) => {
       switch (status) {
         case 'ON_LINE':
-          return { color: '#00aa00', text: '● ONLINE' };        
+          return { color: '#00aa00', text: '● ONLINE' };
         case 'WARMING_UP':
           return { color: '#ffa500', text: '● WARMING UP' };
         case 'WAITING_FOR_CURATOR':
@@ -219,23 +219,42 @@ export default defineComponent({
             }, statusInfo.text);
           }
         },
+        {
+          title: 'AI Control',
+          key: 'aiControlAllowed',
+          render: (row: RadioStation) => {
+            return h('div', {
+              style: `color: ${row.aiControlAllowed ? '#df9710' : '#888888'};`
+            }, row.aiControlAllowed ? 'Accepting' : 'Doesn\'t allow');
+          }
+        },
+        {
+          title: 'Schedule',
+          key: 'scheduleEnabled',
+          render: (row: RadioStation) => {
+            return h('div', {
+              style: `color: ${row.schedule?.enabled ? '#033b81' : '#888888'};`
+            }, row.schedule?.enabled ? 'Enabled' : 'Disabled');
+          }
+        },
         {title: 'Name', key: 'slugName'},
         {title: 'Country', key: 'country'},
+        {title: 'Managed By', key: 'managedBy'},
         {
           title: 'URL',
-          key: 'url',
+          key: 'mixplaUrl',
           render: (row: RadioStation) => {
             return h('div', {
               style: 'display: flex; align-items: center; cursor: pointer;',
               onClick: (e: MouseEvent) => {
                 e.stopPropagation();
-                handleCopyUrl(row.url);
+                handleCopyUrl(row.mixplaUrl);
               },
               title: 'Click to copy URL'
             }, [
               h('span', {
                 style: 'overflow: hidden; text-overflow: ellipsis;',
-              }, row.url)
+              }, row.mixplaUrl)
             ]);
           }
         }
@@ -271,10 +290,19 @@ export default defineComponent({
                   style: `color: ${statusInfo.color}; font-size: 0.8rem;`
                 }, statusInfo.text),
                 h('div', {
+                  style: `color: ${row.aiControlAllowed ? '#df9710' : '#888888'}; font-size: 0.8rem;`
+                }, `AI Control: ${row.aiControlAllowed ? 'Accepting' : 'Doesn\'t allow'}`),
+                h('div', {
+                  style: `color: ${row.schedule?.enabled ? '#033b81' : '#888888'}; font-size: 0.8rem;`
+                }, `Schedule: ${row.schedule?.enabled ? 'Enabled' : 'Disabled'}`),
+                h('div', {
+                  style: 'font-size: 0.8rem; color: #666;'
+                }, `Managed by: ${row.managedBy}`),
+                h('div', {
                   style: 'cursor: pointer; font-size: 0.8rem;',
                   onClick: (e: MouseEvent) => {
                     e.stopPropagation();
-                    handleCopyUrl(row.url);
+                    handleCopyUrl(row.mixplaUrl);
                   }
                 }, 'Click to copy URL')
               ]);
