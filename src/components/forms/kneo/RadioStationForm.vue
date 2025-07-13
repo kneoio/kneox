@@ -4,7 +4,8 @@
       <n-page-header subtitle="Radio Station" @back="goBack">
         <template #title>
           {{ store.getCurrent.country || store.getCurrent.slugName }}
-          <span v-if="localFormData.timeZone && getCurrentTimeInTimezone" style="margin-left: 16px; font-weight: normal; color: #666;">
+          <span v-if=" localFormData.timeZone && getCurrentTimeInTimezone "
+            style="margin-left: 16px; font-weight: normal; color: #666;">
             {{ getCurrentTimeInTimezone }}
           </span>
         </template>
@@ -224,13 +225,13 @@
                                 :max="1440" style="width: 400px;" />
                               <n-space>
                                 <n-text depth="3" style="font-size: 12px;">{{ formatMinutesToTime( value.timeRange[0] )
-                                  }}</n-text>
+                                }}</n-text>
                                 <n-text depth="3" style="font-size: 12px;">to</n-text>
                                 <n-text depth="3" style="font-size: 12px;">{{ formatMinutesToTime( value.timeRange[1] )
-                                  }}</n-text>
+                                }}</n-text>
                                 <n-text depth="3" style="font-size: 12px;">({{
                                   calculateDurationFromMinutes( value.timeRange[0],
-                                  value.timeRange[1]) }})</n-text>
+                                    value.timeRange[1] ) }})</n-text>
                               </n-space>
                             </n-space>
                           </n-form-item>
@@ -359,8 +360,8 @@ export default defineComponent( {
 
     const aclData = ref( [] );
     const aclLoading = ref( false );
-    const currentTime = ref(new Date());
-    const clockIntervalId = ref<number | null>(null);
+    const currentTime = ref( new Date() );
+    const clockIntervalId = ref<number | null>( null );
     const managedByOptions = [
       { value: ManagedBy.ITSELF, label: "Itself" },
       { value: ManagedBy.AI_AGENT, label: "AI Agent" },
@@ -442,29 +443,29 @@ export default defineComponent( {
     } );
 
     const startClockUpdate = () => {
-      if (!clockIntervalId.value) {
-        clockIntervalId.value = window.setInterval(() => {
+      if ( !clockIntervalId.value ) {
+        clockIntervalId.value = window.setInterval( () => {
           currentTime.value = new Date();
-        }, 60000); // Update every minute
+        }, 60000 ); // Update every minute
       }
     };
 
     const stopClockUpdate = () => {
-      if (clockIntervalId.value) {
-        clearInterval(clockIntervalId.value);
+      if ( clockIntervalId.value ) {
+        clearInterval( clockIntervalId.value );
         clockIntervalId.value = null;
       }
     };
 
-    const getCurrentTimeInTimezone = computed(() => {
-      if (!localFormData.timeZone) return '';
-      return currentTime.value.toLocaleTimeString('en-US', {
+    const getCurrentTimeInTimezone = computed( () => {
+      if ( !localFormData.timeZone ) return '';
+      return currentTime.value.toLocaleTimeString( 'en-US', {
         timeZone: localFormData.timeZone,
         hour: '2-digit',
         minute: '2-digit',
         hour12: false
-      });
-    });
+      } );
+    } );
 
     const copyToClipboard = ( text: string | undefined ) => {
       if ( !text ) {
@@ -696,9 +697,9 @@ export default defineComponent( {
       }
     } );
 
-    onUnmounted(() => {
+    onUnmounted( () => {
       stopClockUpdate();
-    });
+    } );
 
     return {
       store,
@@ -732,6 +733,11 @@ export default defineComponent( {
         { label: 'Europe/Rome', value: 'Europe/Rome' },
         { label: 'Europe/Madrid', value: 'Europe/Madrid' },
         { label: 'Europe/Kiev', value: 'Europe/Kiev' },
+        { label: 'Europe/Helsinki', value: 'Europe/Helsinki' },
+        { label: 'Europe/Oslo', value: 'Europe/Oslo' },
+        { label: 'Europe/Stockholm', value: 'Europe/Stockholm' },
+        { label: 'Europe/Warsaw', value: 'Europe/Warsaw' },
+        { label: 'Europe/Istanbul', value: 'Europe/Istanbul' },
         { label: 'Asia/Tbilisi', value: 'Asia/Tbilisi' },
         { label: 'Asia/Almaty', value: 'Asia/Almaty' },
         { label: 'Asia/Astana', value: 'Asia/Astana' },
@@ -740,6 +746,8 @@ export default defineComponent( {
         { label: 'America/Los_Angeles', value: 'America/Los_Angeles' },
         { label: 'Asia/Tokyo', value: 'Asia/Tokyo' },
         { label: 'Asia/Shanghai', value: 'Asia/Shanghai' },
+        { label: 'Asia/Seoul', value: 'Asia/Seoul' },
+        { label: 'Asia/Kolkata', value: 'Asia/Kolkata' },
         { label: 'Asia/Dubai', value: 'Asia/Dubai' },
         { label: 'Australia/Sydney', value: 'Australia/Sydney' }
       ],
