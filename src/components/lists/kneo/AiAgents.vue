@@ -33,6 +33,7 @@
           :bordered="false"
           :row-props="getRowProps"
           :loading="loading"
+          v-model:checked-row-keys="checkedRowKeys"
           @update:page="handlePageChange"
           @update:page-size="handlePageSizeChange"
       >

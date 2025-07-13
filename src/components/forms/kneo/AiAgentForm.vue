@@ -56,6 +56,24 @@
                   </n-grid>
                 </template>
               </n-dynamic-input>
+            </n-form-item>            
+          </n-gi>
+          <n-gi>
+            <n-form-item label="Available Variables">
+              <div style="width: 60%;">
+                <n-card size="small" style="margin-bottom: 16px;">
+                  <n-space vertical size="small">
+                    <div><n-tag type="info" size="small"><strong>ai_dj_name</strong></n-tag> - The current DJ's name</div>
+                    <div><n-tag type="info" size="small"><strong>brand</strong></n-tag> - Radio station name/identity for consistent branding</div>
+                    <div><n-tag type="info" size="small"><strong>song_title</strong></n-tag> - Name of the song being introduced to listeners</div>
+                    <div><n-tag type="info" size="small"><strong>artist</strong></n-tag> - Performer/band name for proper attribution</div>
+                    <div><n-tag type="info" size="small"><strong>listeners</strong></n-tag> - Target audience description to tailor messaging appropriately</div>
+                    <div><n-tag type="info" size="small"><strong>context</strong></n-tag> - Current situational context like time of day, events, or show theme</div>
+                    <div><n-tag type="info" size="small"><strong>history</strong></n-tag> - Previous show interactions to maintain conversational flow</div>
+                    <div><n-tag type="info" size="small"><strong>instant_message</strong></n-tag> - Priority user message content that takes precedence in introduction</div>
+                  </n-space>
+                </n-card>
+              </div>
             </n-form-item>
           </n-gi>
           <n-gi>

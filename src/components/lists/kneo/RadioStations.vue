@@ -73,6 +73,8 @@ export default defineComponent({
     const isMobile = ref(window.innerWidth < 768);
     const loading = ref(false);
     const intervalId = ref<number | null>(null);
+    const clockIntervalId = ref<number | null>(null);
+    const currentTime = ref(new Date());
     const currentSongName = inject<Ref<string | null>>('parentTitle');
     const checkedRowKeys = ref<(string | number)[]>([]);
     const hasSelection = computed(() => checkedRowKeys.value.length > 0);
@@ -107,6 +109,21 @@ export default defineComponent({
       }
     };
 
+    const startClockUpdate = () => {
+      if (!clockIntervalId.value) {
+        clockIntervalId.value = window.setInterval(() => {
+          currentTime.value = new Date();
+        }, 60000); // Update every minute
+      }
+    };
+
+    const stopClockUpdate = () => {
+      if (clockIntervalId.value) {
+        clearInterval(clockIntervalId.value);
+        clockIntervalId.value = null;
+      }
+    };
+
     const getStatusStyle = (status: string) => {
       switch (status) {
         case 'ON_LINE':
@@ -127,6 +144,7 @@ export default defineComponent({
 
     preFetch();
     startPeriodicRefresh();
+    startClockUpdate();
 
     onMounted(() => {
       window.addEventListener('resize', () => {
@@ -136,6 +154,7 @@ export default defineComponent({
 
     onUnmounted(() => {
       stopPeriodicRefresh();
+      stopClockUpdate();
     });
 
     const handleCopyUrl = (url: string) => {
@@ -237,8 +256,32 @@ export default defineComponent({
             }, row.schedule?.enabled ? 'Enabled' : 'Disabled');
           }
         },
-        {title: 'Name', key: 'slugName'},
+        {
+          title: 'Name',
+          key: 'slugName',
+          render: (row: RadioStation) => {
+            return h('div', {
+              style: 'font-weight: bold; font-size: 0.9rem;'
+            }, row.slugName);
+          }
+        },
         {title: 'Country', key: 'country'},
+        {
+          title: 'Timezone',
+          key: 'timeZone',
+          render: (row: RadioStation) => {
+            const timeString = currentTime.value.toLocaleTimeString('en-US', {
+              timeZone: row.timeZone,
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false
+            });
+            return h('div', {}, [
+              h('div', { style: 'font-weight: bold; font-size: 0.9rem;' }, timeString),
+              h('div', { style: 'font-size: 0.75rem; color: #666;' }, row.timeZone)
+            ]);
+          }
+        },
         {title: 'Managed By', key: 'managedBy'},
         {
           title: 'URL',

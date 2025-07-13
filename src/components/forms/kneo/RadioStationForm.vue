@@ -2,7 +2,12 @@
   <n-grid cols="6" x-gap="12" y-gap="12" class="m-5">
     <n-gi span="6">
       <n-page-header subtitle="Radio Station" @back="goBack">
-        <template #title>{{ store.getCurrent.country || store.getCurrent.slugName }}</template>
+        <template #title>
+          {{ store.getCurrent.country || store.getCurrent.slugName }}
+          <span v-if="localFormData.timeZone && getCurrentTimeInTimezone" style="margin-left: 16px; font-weight: normal; color: #666;">
+            {{ getCurrentTimeInTimezone }}
+          </span>
+        </template>
         <template #footer>
           Registered: {{ store.getCurrent.regDate }}, Last Modified: {{ store.getCurrent.lastModifiedDate }}
           <br>
@@ -66,7 +71,7 @@
               </n-gi>
               <n-gi>
                 <n-form-item label="HLS URL">
-                  <n-text style="width: 50%; max-width: 600px; font-family: monospace; cursor: pointer; color: #1890ff;" 
+                  <n-text style="width: 50%; max-width: 600px; font-family: monospace; cursor: pointer; color: #1890ff;"
                     @click="openUrl( localFormData.hlsUrl )">
                     {{ localFormData.hlsUrl }}
                   </n-text>
@@ -82,7 +87,7 @@
               </n-gi>
               <n-gi>
                 <n-form-item label="Icecast URL">
-                  <n-text style="width: 50%; max-width: 600px; font-family: monospace; cursor: pointer; color: #1890ff;" 
+                  <n-text style="width: 50%; max-width: 600px; font-family: monospace; cursor: pointer; color: #1890ff;"
                     @click="openUrl( localFormData.iceCastUrl )">
                     {{ localFormData.iceCastUrl }}
                   </n-text>
@@ -98,7 +103,7 @@
               </n-gi>
               <n-gi>
                 <n-form-item label="Mixpla URL">
-                  <n-text style="width: 50%; max-width: 600px; font-family: monospace; cursor: pointer; color: #1890ff;" 
+                  <n-text style="width: 50%; max-width: 600px; font-family: monospace; cursor: pointer; color: #1890ff;"
                     @click="openUrl( localFormData.mixplaUrl )">
                     {{ localFormData.mixplaUrl }}
                   </n-text>
@@ -194,40 +199,42 @@
                 <n-form-item label="Scheduled Tasks">
                   <n-dynamic-input v-model:value="scheduleTasksArray" :on-create="createScheduleTask"
                     style="max-width: 800px;">
-                    <template #default="{ value, index }">
+                    <template #default=" { value, index } ">
                       <n-card size="small" class="mb-3">
                         <template #header>
                           <n-text strong>Task {{ index + 1 }}</n-text>
                         </template>
-                        
+
                         <!-- Task Type and Target -->
                         <n-space vertical size="medium">
                           <n-space>
                             <n-form-item label="Type" style="margin-bottom: 0;">
-                              <n-select v-model:value="value.type" :options="taskTypeOptions" 
-                                style="width: 150px;" />
+                              <n-select v-model:value="value.type" :options="taskTypeOptions" style="width: 150px;" />
                             </n-form-item>
                             <n-form-item label="Target" style="margin-bottom: 0;">
-                              <n-select v-model:value="value.target" :options="targetOptions" 
-                                filterable tag placeholder="Select or type target" 
-                                style="width: 150px;" />
+                              <n-select v-model:value="value.target" :options="targetOptions" filterable tag
+                                placeholder="Select or type target" style="width: 150px;" />
                             </n-form-item>
                           </n-space>
-                          
+
                           <!-- Time Slider -->
                           <n-form-item label="Time Range" style="margin-bottom: 0;">
                             <n-space vertical style="width: 100%;">
-                              <n-slider v-model:value="value.timeRange" range :marks="timeMarks" 
-                                :step="15" :min="0" :max="1440" style="width: 400px;" />
+                              <n-slider v-model:value="value.timeRange" range :marks="timeMarks" :step="15" :min="0"
+                                :max="1440" style="width: 400px;" />
                               <n-space>
-                                <n-text depth="3" style="font-size: 12px;">{{ formatMinutesToTime(value.timeRange[0]) }}</n-text>
+                                <n-text depth="3" style="font-size: 12px;">{{ formatMinutesToTime( value.timeRange[0] )
+                                  }}</n-text>
                                 <n-text depth="3" style="font-size: 12px;">to</n-text>
-                                <n-text depth="3" style="font-size: 12px;">{{ formatMinutesToTime(value.timeRange[1]) }}</n-text>
-                                <n-text depth="3" style="font-size: 12px;">({{ calculateDurationFromMinutes(value.timeRange[0], value.timeRange[1]) }})</n-text>
+                                <n-text depth="3" style="font-size: 12px;">{{ formatMinutesToTime( value.timeRange[1] )
+                                  }}</n-text>
+                                <n-text depth="3" style="font-size: 12px;">({{
+                                  calculateDurationFromMinutes( value.timeRange[0],
+                                  value.timeRange[1]) }})</n-text>
                               </n-space>
                             </n-space>
                           </n-form-item>
-                          
+
                           <!-- Weekdays Checkboxes -->
                           <n-form-item label="Days" style="margin-bottom: 0;">
                             <n-checkbox-group v-model:value="value.weekdays">
@@ -260,7 +267,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, reactive, ref, computed, watch } from "vue";
+import { defineComponent, onMounted, onUnmounted, reactive, ref, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
   NButton,
@@ -352,6 +359,8 @@ export default defineComponent( {
 
     const aclData = ref( [] );
     const aclLoading = ref( false );
+    const currentTime = ref(new Date());
+    const clockIntervalId = ref<number | null>(null);
     const managedByOptions = [
       { value: ManagedBy.ITSELF, label: "Itself" },
       { value: ManagedBy.AI_AGENT, label: "AI Agent" },
@@ -432,6 +441,31 @@ export default defineComponent( {
       } ) );
     } );
 
+    const startClockUpdate = () => {
+      if (!clockIntervalId.value) {
+        clockIntervalId.value = window.setInterval(() => {
+          currentTime.value = new Date();
+        }, 60000); // Update every minute
+      }
+    };
+
+    const stopClockUpdate = () => {
+      if (clockIntervalId.value) {
+        clearInterval(clockIntervalId.value);
+        clockIntervalId.value = null;
+      }
+    };
+
+    const getCurrentTimeInTimezone = computed(() => {
+      if (!localFormData.timeZone) return '';
+      return currentTime.value.toLocaleTimeString('en-US', {
+        timeZone: localFormData.timeZone,
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+    });
+
     const copyToClipboard = ( text: string | undefined ) => {
       if ( !text ) {
         message.error( 'Nothing to copy' );
@@ -454,7 +488,7 @@ export default defineComponent( {
       try {
         loadingBar.start();
         const saveDTO: RadioStationSave = {
-          localizedName: localFormData.localizedName ? JSON.parse(JSON.stringify(localFormData.localizedName)) : {},
+          localizedName: localFormData.localizedName ? JSON.parse( JSON.stringify( localFormData.localizedName ) ) : {},
           country: localFormData.country || "",
           description: localFormData.description || "",
           color: localFormData.color || "",
@@ -462,9 +496,9 @@ export default defineComponent( {
           profileId: localFormData.profileId,
           timeZone: localFormData.timeZone,
           managedBy: localFormData.managedBy,
-          schedule: localFormData.schedule ? JSON.parse(JSON.stringify(localFormData.schedule)) : undefined
+          schedule: localFormData.schedule ? JSON.parse( JSON.stringify( localFormData.schedule ) ) : undefined
         };
-        
+
 
 
         await store.save( saveDTO, localFormData.id as string );
@@ -485,32 +519,32 @@ export default defineComponent( {
       router.push( "/outline/radiostations" );
     };
 
-    const calculateDuration = (startTime: string, endTime: string): string => {
-      const [startHour, startMin] = startTime.split(':').map(Number);
-      const [endHour, endMin] = endTime.split(':').map(Number);
-      
+    const calculateDuration = ( startTime: string, endTime: string ): string => {
+      const [startHour, startMin] = startTime.split( ':' ).map( Number );
+      const [endHour, endMin] = endTime.split( ':' ).map( Number );
+
       let startMinutes = startHour * 60 + startMin;
       let endMinutes = endHour * 60 + endMin;
-      
+
       // Handle overnight schedules
-      if (endMinutes < startMinutes) {
+      if ( endMinutes < startMinutes ) {
         endMinutes += 24 * 60;
       }
-      
+
       const durationMinutes = endMinutes - startMinutes;
-      const hours = Math.floor(durationMinutes / 60);
+      const hours = Math.floor( durationMinutes / 60 );
       const minutes = durationMinutes % 60;
-      
-      if (hours === 0) {
+
+      if ( hours === 0 ) {
         return `${minutes}m`;
-      } else if (minutes === 0) {
+      } else if ( minutes === 0 ) {
         return `${hours}h`;
       } else {
         return `${hours}h ${minutes}m`;
       }
     };
 
-    const formatWeekday = (day: string): string => {
+    const formatWeekday = ( day: string ): string => {
       const dayMap: { [key: string]: string } = {
         'MONDAY': 'Mon',
         'TUESDAY': 'Tue',
@@ -523,59 +557,59 @@ export default defineComponent( {
       return dayMap[day] || day;
     };
 
-    const formatMinutesToTime = (minutes: number): string => {
-      const hours = Math.floor(minutes / 60);
+    const formatMinutesToTime = ( minutes: number ): string => {
+      const hours = Math.floor( minutes / 60 );
       const mins = minutes % 60;
-      return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+      return `${hours.toString().padStart( 2, '0' )}:${mins.toString().padStart( 2, '0' )}`;
     };
 
-    const calculateDurationFromMinutes = (startMinutes: number, endMinutes: number): string => {
+    const calculateDurationFromMinutes = ( startMinutes: number, endMinutes: number ): string => {
       let duration = endMinutes - startMinutes;
-      if (duration < 0) {
+      if ( duration < 0 ) {
         duration += 24 * 60; // Handle overnight schedules
       }
-      const hours = Math.floor(duration / 60);
+      const hours = Math.floor( duration / 60 );
       const minutes = duration % 60;
-      
-      if (hours === 0) {
+
+      if ( hours === 0 ) {
         return `${minutes}m`;
-      } else if (minutes === 0) {
+      } else if ( minutes === 0 ) {
         return `${hours}h`;
       } else {
         return `${hours}h ${minutes}m`;
       }
     };
 
-    const timeToMinutes = (timeStr: string): number => {
-      const [hours, minutes] = timeStr.split(':').map(Number);
+    const timeToMinutes = ( timeStr: string ): number => {
+      const [hours, minutes] = timeStr.split( ':' ).map( Number );
       return hours * 60 + minutes;
     };
 
-    const scheduleTasksArray = ref<any[]>([]);
+    const scheduleTasksArray = ref<any[]>( [] );
 
     watch( scheduleTasksArray, ( newValue ) => {
       if ( !localFormData.schedule ) {
         localFormData.schedule = { tasks: [] };
       }
-      
-      localFormData.schedule.tasks = newValue.map( task => ({
+
+      localFormData.schedule.tasks = newValue.map( task => ( {
         type: task.type,
         target: task.target,
         triggerType: 'TIME_WINDOW',
         timeWindowTrigger: {
-          startTime: formatMinutesToTime(task.timeRange[0]),
-          endTime: formatMinutesToTime(task.timeRange[1]),
+          startTime: formatMinutesToTime( task.timeRange[0] ),
+          endTime: formatMinutesToTime( task.timeRange[1] ),
           weekdays: task.weekdays
         }
-      }));
+      } ) );
     }, { deep: true } );
 
-    const createScheduleTask = () => ({
+    const createScheduleTask = () => ( {
       type: 'PROCESS_DJ_CONTROL',
       target: 'default',
       timeRange: [540, 600], // 09:00 to 10:00
       weekdays: ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY']
-    });
+    } );
 
     const taskTypeOptions = [
       { label: 'DJs shift', value: 'PROCESS_DJ_CONTROL' },
@@ -618,6 +652,7 @@ export default defineComponent( {
 
     onMounted( async () => {
       const id = route.params.id as string;
+      startClockUpdate();
 
       try {
         loadingBar.start();
@@ -634,21 +669,21 @@ export default defineComponent( {
           } ) );
         }
 
-        if (localFormData.schedule && localFormData.schedule.tasks?.length > 0) {
-          scheduleTasksArray.value = localFormData.schedule.tasks.map(task => ({
+        if ( localFormData.schedule && localFormData.schedule.tasks?.length > 0 ) {
+          scheduleTasksArray.value = localFormData.schedule.tasks.map( task => ( {
             type: task.type,
             target: task.target,
             timeRange: task.timeWindowTrigger ? [
-              timeToMinutes(task.timeWindowTrigger.startTime),
-              timeToMinutes(task.timeWindowTrigger.endTime)
+              timeToMinutes( task.timeWindowTrigger.startTime ),
+              timeToMinutes( task.timeWindowTrigger.endTime )
             ] : [540, 600],
             weekdays: task.timeWindowTrigger ? task.timeWindowTrigger.weekdays : []
-          }));
+          } ) );
         } else {
           scheduleTasksArray.value = [];
         }
 
-        if (!localFormData.schedule) {
+        if ( !localFormData.schedule ) {
           localFormData.schedule = {
             tasks: []
           };
@@ -660,6 +695,10 @@ export default defineComponent( {
         loadingBar.finish();
       }
     } );
+
+    onUnmounted(() => {
+      stopClockUpdate();
+    });
 
     return {
       store,
@@ -688,9 +727,21 @@ export default defineComponent( {
         { label: 'Europe/London', value: 'Europe/London' },
         { label: 'Europe/Riga', value: 'Europe/Riga' },
         { label: 'Europe/Paris', value: 'Europe/Paris' },
+        { label: 'Europe/Lisbon', value: 'Europe/Lisbon' },
+        { label: 'Europe/Berlin', value: 'Europe/Berlin' },
+        { label: 'Europe/Rome', value: 'Europe/Rome' },
+        { label: 'Europe/Madrid', value: 'Europe/Madrid' },
+        { label: 'Europe/Kiev', value: 'Europe/Kiev' },
+        { label: 'Asia/Tbilisi', value: 'Asia/Tbilisi' },
+        { label: 'Asia/Almaty', value: 'Asia/Almaty' },
+        { label: 'Asia/Astana', value: 'Asia/Astana' },
+        { label: 'Asia/Tashkent', value: 'Asia/Tashkent' },
         { label: 'America/New_York', value: 'America/New_York' },
         { label: 'America/Los_Angeles', value: 'America/Los_Angeles' },
-        { label: 'Asia/Tokyo', value: 'Asia/Tokyo' }
+        { label: 'Asia/Tokyo', value: 'Asia/Tokyo' },
+        { label: 'Asia/Shanghai', value: 'Asia/Shanghai' },
+        { label: 'Asia/Dubai', value: 'Asia/Dubai' },
+        { label: 'Australia/Sydney', value: 'Australia/Sydney' }
       ],
       managedByOptions,
       targetOptions,
@@ -702,7 +753,8 @@ export default defineComponent( {
       calculateDurationFromMinutes,
       timeToMinutes,
       calculateDuration,
-      formatWeekday
+      formatWeekday,
+      getCurrentTimeInTimezone
     };
   }
 } );
