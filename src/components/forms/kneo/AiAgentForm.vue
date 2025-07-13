@@ -71,6 +71,8 @@
                     <div><n-tag type="info" size="small"><strong>context</strong></n-tag> - Current situational context like time of day, events, or show theme</div>
                     <div><n-tag type="info" size="small"><strong>history</strong></n-tag> - Previous show interactions to maintain conversational flow</div>
                     <div><n-tag type="info" size="small"><strong>instant_message</strong></n-tag> - Priority user message content that takes precedence in introduction</div>
+                    <div><n-tag type="info" size="small"><strong>events</strong></n-tag> - Various events that may affect the introduction (DJ shifts, station events, etc.)</div>
+
                   </n-space>
                 </n-card>
               </div>
