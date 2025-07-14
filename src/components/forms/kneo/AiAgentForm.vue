@@ -145,6 +145,7 @@ import { useLoadingBar, useMessage } from 'naive-ui';
 import { AiAgent, AiAgentSave } from "../../../types/kneoBroadcasterTypes";
 import { handleFormSaveError } from '../../../utils/errorHandling';
 import { useAiAgentStore } from '../../../stores/kneo/aiAgentStore';
+import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 import { json } from "@codemirror/lang-json";
 import { EditorView } from "@codemirror/view";
 import CodeMirror from 'vue-codemirror6';
@@ -175,6 +176,7 @@ export default defineComponent( {
     const message = useMessage();
     const router = useRouter();
     const store = useAiAgentStore();
+    const referencesStore = useReferencesStore();
     const route = useRoute();
     const lang = ref( json() );
     const editorExtensions = computed( () => [
@@ -185,27 +187,7 @@ export default defineComponent( {
     const aclData = ref( [] );
     const aclLoading = ref( false );
 
-    const langOptions = [
-      { label: 'English', value: 'en' },
-      { label: 'Português', value: 'pt' },
-      { label: 'Русский', value: 'ru' },
-      { label: 'Español', value: 'es' },
-      { label: 'Français', value: 'fr' },
-      { label: 'Deutsch', value: 'de' },
-      { label: 'Қазақша', value: 'kk' },
-      { label: 'Latviešu', value: 'lv' },
-      { label: '日本語', value: 'ja' },
-      { label: '中文', value: 'zh' },
-      { label: '한국어', value: 'ko' },
-      { label: 'हिंदी', value: 'hi' },
-      { label: 'Українська', value: 'uk' },
-      { label: 'Suomi', value: 'fi' },
-      { label: 'Norsk', value: 'no' },
-      { label: 'Svenska', value: 'sv' },
-      { label: 'Polski', value: 'pl' },
-      { label: 'Italiano', value: 'it' },
-      { label: 'Türkçe', value: 'tr' }
-    ];
+
 
     const formTitle = computed( () => localFormData.id ? 'Edit AI Agent' : 'Create New AI Agent' );
 
@@ -308,7 +290,7 @@ export default defineComponent( {
 
     return {
       localFormData,
-      langOptions,
+      langOptions: referencesStore.languageOptions,
       formTitle,
       createFillerItem,
       createVoiceItem,

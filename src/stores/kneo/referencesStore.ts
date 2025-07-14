@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import apiClient from '../../api/apiClient';
+import { unsecuredClient } from '../../api/apiClient';
 
 export const useReferencesStore = defineStore('references', () => {
   const countryOptions = [
@@ -49,8 +50,21 @@ export const useReferencesStore = defineStore('references', () => {
 
   const genreOptions = ref<Array<{label: string, value: string}>>([]);
 
+  const audioAcceptTypes = [
+    '.mp3',
+    '.wav',
+    '.ogg',
+    '.flac',
+    'audio/mpeg',
+    'audio/wav',
+    'audio/ogg',
+    'audio/flac',
+    'audio/x-wav',
+    'audio/mp4',
+  ].join(',');
+
   const fetchGenres = async () => {
-    const response = await apiClient.get('/genres');
+    const response = await apiClient.get('/dictionary/genres?page=1&size=100');
     if (!response?.data?.payload) throw new Error('Invalid API response');
 
     genreOptions.value = response.data.payload.viewData.entries
@@ -62,10 +76,21 @@ export const useReferencesStore = defineStore('references', () => {
             a.label.localeCompare(b.label));
   };
 
+  const fetchDictionary = async (type: 'agents' | 'profiles', page = 1, pageSize = 100) => {
+    const response = await unsecuredClient.get(`/api/dictionary/${type}?page=${page}&size=${pageSize}`);
+    if (response?.data?.payload) {
+      return response.data.payload;
+    } else {
+      throw new Error('Invalid API response structure');
+    }
+  };
+
   return {
     countryOptions,
     languageOptions,
     genreOptions,
-    fetchGenres
+    audioAcceptTypes,
+    fetchGenres,
+    fetchDictionary
   };
 });

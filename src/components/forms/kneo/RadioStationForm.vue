@@ -679,8 +679,8 @@ export default defineComponent( {
 
       try {
         loadingBar.start();
-        await aiAgentStore.fetchAll( 1, 100 );
-        await profileStore.fetchAll( 1, 100 );
+        await aiAgentStore.fetchAllUnsecured( 1, 100 );
+        await profileStore.fetchAllUnsecured( 1, 100 );
         await store.fetch( id );
         const currentData = store.getCurrent;
         Object.assign( localFormData, currentData );

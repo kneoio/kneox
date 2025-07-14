@@ -72,4 +72,5 @@ export const getRadioStations = async () => {
     }
 };
 
+export { unsecuredClient };
 export default apiClient;

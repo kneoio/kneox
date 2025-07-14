@@ -4,6 +4,7 @@ import { computed, ref } from 'vue';
 import apiClient, { setupApiClient } from '../../api/apiClient';
 import { ApiFormResponse, ApiViewPageResponse } from "../../types";
 import { ProfileSave } from '../../types/kneoBroadcasterTypes';
+import { useReferencesStore } from './referencesStore';
 
 export interface Genre {
     id: string;
@@ -78,6 +79,12 @@ export const useProfileStore = defineStore( 'profileStore', () => {
         }
     };
 
+    const fetchProfilesUnsecured = async ( page = 1, pageSize = 100 ) => {
+        const referencesStore = useReferencesStore();
+        const payload = await referencesStore.fetchDictionary('profiles', page, pageSize);
+        apiViewResponse.value = payload;
+    };
+
     const fetchProfile = async ( id: string ) => {
         const response = await apiClient.get( `/profiles/${id}` );
         if ( response?.data?.payload ) {
@@ -119,6 +126,7 @@ export const useProfileStore = defineStore( 'profileStore', () => {
         apiFormResponse,
         setupApiClient,
         fetchAll: fetchProfiles,
+        fetchAllUnsecured: fetchProfilesUnsecured,
         fetch: fetchProfile,
         save,
         delete: deleteProfile,

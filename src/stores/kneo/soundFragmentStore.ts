@@ -124,7 +124,9 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
             const uploadId = uploadData.id;
 
             if (uploadId && onProgress) {
-                pollUploadProgress(uploadId, onProgress);
+                // Wait for upload to complete and get the final data with metadata
+                const finalData = await pollUploadProgress(uploadId, onProgress);
+                return finalData;
             }
 
             return uploadData;
@@ -159,26 +161,31 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         }
     };
 
-    const pollUploadProgress = async (uploadId: string, onProgress: (percentage: number) => void) => {
-        const pollInterval = setInterval(async () => {
-            try {
-                const progressResponse = await apiClient.get(`/soundfragments/upload-progress/${uploadId}`);
-                const progress = progressResponse.data;
+    const pollUploadProgress = async (uploadId: string, onProgress: (percentage: number) => void): Promise<any> => {
+        return new Promise((resolve, reject) => {
+            const pollInterval = setInterval(async () => {
+                try {
+                    const progressResponse = await apiClient.get(`/soundfragments/upload-progress/${uploadId}`);
+                    const progress = progressResponse.data;
 
-                onProgress(progress.percentage);
+                    onProgress(progress.percentage);
 
-                if (progress.status === 'finished' || progress.status === 'error') {
-                    clearInterval(pollInterval);
+                    if (progress.status === 'finished' || progress.status === 'error') {
+                        clearInterval(pollInterval);
 
-                    if (progress.status === 'error') {
-                        throw new Error('Upload processing failed on server');
+                        if (progress.status === 'error') {
+                            reject(new Error('Upload processing failed on server'));
+                        } else {
+                            resolve(progress); // Return the full progress data including metadata
+                        }
                     }
+                } catch (error: any) {
+                    clearInterval(pollInterval);
+                    console.error('Progress polling failed:', error);
+                    reject(error);
                 }
-            } catch (error: any) {
-                clearInterval(pollInterval);
-                console.error('Progress polling failed:', error);
-            }
-        }, 1000); // Poll every second
+            }, 1000); // Poll every second
+        });
     };
 
     const updateCurrent = (data: SoundFragment, actions: any = {}) => {

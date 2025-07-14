@@ -143,7 +143,6 @@ export default defineComponent( {
     const uploadedFileNames = ref<string[]>( [] );
     const tempFileIds = ref<string[]>( [] );
 
-    // ACL-related reactive properties
     const aclData = ref<any[]>( [] );
     const aclLoading = ref( false );
 
@@ -196,7 +195,6 @@ export default defineComponent( {
         file.status = 'uploading';
         file.percentage = 0;
 
-        // Use uploadFile instead of uploadTempFile
         const response = await store.uploadFile( entityId, file.file as File, ( percentage: number ) => {
           if ( onProgress ) {
             onProgress( { percent: percentage } );
@@ -205,6 +203,36 @@ export default defineComponent( {
         } );
 
         uploadedFileNames.value.push( file.name );
+
+        // Auto-populate form fields from metadata if available
+        if (response.metadata) {
+          const metadata = response.metadata;
+          
+          // Set title if available and form field is empty
+          if (metadata.title && !localFormData.title) {
+            localFormData.title = metadata.title;
+          }
+          
+          // Set artist if available and form field is empty
+          if (metadata.artist && !localFormData.artist) {
+            localFormData.artist = metadata.artist;
+          }
+          
+          // Set album if available and form field is empty
+          if (metadata.album && !localFormData.album) {
+            localFormData.album = metadata.album;
+          }
+          
+          // Set genre if available, form field is empty, and genre exists in options
+          if (metadata.genre && !localFormData.genre) {
+            const genreExists = referencesStore.genreOptions.some(
+              option => option.value === metadata.genre || option.label === metadata.genre
+            );
+            if (genreExists) {
+              localFormData.genre = metadata.genre;
+            }
+          }
+        }
 
         const newFile = {
           ...file,
@@ -320,7 +348,6 @@ export default defineComponent( {
       router.back();
     };
     
-    // ACL fetch function
     const fetchAclData = async () => {
       const id = route.params.id as string;
       if (!id || id === 'new') {
@@ -381,18 +408,7 @@ export default defineComponent( {
         }
     });
 
-    const audioAcceptTypes = [
-      '.mp3',
-      '.wav',
-      '.ogg',
-      '.flac',
-      'audio/mpeg',
-      'audio/wav',
-      'audio/ogg',
-      'audio/flac',
-      'audio/x-wav',
-      'audio/mp4',
-    ].join( ',' );
+
 
     return {
       store,
@@ -406,7 +422,7 @@ export default defineComponent( {
       handleUpload,
       handleDownload,
       fileList,
-      audioAcceptTypes,
+      audioAcceptTypes: referencesStore.audioAcceptTypes,
       radioStationOptions,
       formTitle,
       referencesStore,

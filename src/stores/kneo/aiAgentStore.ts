@@ -3,6 +3,7 @@ import {computed, ref} from 'vue';
 import apiClient, {setupApiClient} from '../../api/apiClient';
 import {ApiFormResponse, ApiViewPageResponse} from "../../types";
 import {AiAgent, AiAgentSave} from "../../types/kneoBroadcasterTypes";
+import {useReferencesStore} from './referencesStore';
 
 export const useAiAgentStore = defineStore('aiAgentStore', () => {
     const apiViewResponse = ref<ApiViewPageResponse<AiAgent> | null>(null);
@@ -62,6 +63,12 @@ export const useAiAgentStore = defineStore('aiAgentStore', () => {
         }
     };
 
+    const fetchAiAgentsUnsecured = async (page = 1, pageSize = 100) => {
+        const referencesStore = useReferencesStore();
+        const payload = await referencesStore.fetchDictionary('agents', page, pageSize);
+        apiViewResponse.value = payload;
+    };
+
     const fetchAiAgent = async (id: string) => {
         const response = await apiClient.get(`/aiagents/${id}`);
         if (response?.data?.payload) {
@@ -104,6 +111,7 @@ export const useAiAgentStore = defineStore('aiAgentStore', () => {
         apiFormResponse,
         setupApiClient,
         fetchAll: fetchAiAgents,
+        fetchAllUnsecured: fetchAiAgentsUnsecured,
         fetch: fetchAiAgent,
         save,
         deleteAiAgent,
