@@ -221,8 +221,30 @@
                           <!-- Time Slider -->
                           <n-form-item label="Time Range" style="margin-bottom: 0;">
                             <n-space vertical style="width: 100%;">
-                              <n-slider v-model:value="value.timeRange" range :marks="timeMarks" :step="15" :min="0"
-                                :max="1440" style="width: 400px;" />
+                              <n-space align="center">
+                                <!-- Start time controls -->
+                                <n-button-group style="align-self: center;">
+                                  <n-button size="small" @click="value.timeRange[0] = Math.max(0, value.timeRange[0] - 1)" style="margin-bottom: 16px;">
+                                    -
+                                  </n-button>
+                                  <n-button size="small" @click="value.timeRange[0] = Math.min(value.timeRange[1] - 1, value.timeRange[0] + 1)" style="margin-bottom: 16px;">
+                                    +
+                                  </n-button>
+                                </n-button-group>
+                                
+                                <n-slider v-model:value="value.timeRange" range :marks="timeMarks" :step="15" :min="0"
+                                  :max="1440" style="width: 400px;" />
+                                
+                                <!-- End time controls -->
+                                <n-button-group style="align-self: center;">
+                                  <n-button size="small" @click="value.timeRange[1] = Math.max(value.timeRange[0] + 1, value.timeRange[1] - 1)" style="margin-bottom: 16px;">
+                                    -
+                                  </n-button>
+                                  <n-button size="small" @click="value.timeRange[1] = Math.min(1440, value.timeRange[1] + 1)" style="margin-bottom: 16px;">
+                                    +
+                                  </n-button>
+                                </n-button-group>
+                              </n-space>
                               <n-space>
                                 <n-text depth="3" style="font-size: 12px;">{{ formatMinutesToTime( value.timeRange[0] )
                                 }}</n-text>
