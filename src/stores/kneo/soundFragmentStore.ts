@@ -103,38 +103,31 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         apiFormResponse.value = response.data.payload;
     };
 
-    const uploadFile = async (id: string, file: File, onProgress?: (percentage: number) => void) => {
+    const uploadFile = async (id: string, file: File) => {
         const maxSizeBytes = 100 * 1024 * 1024; // 100MB
-
+    
         if (file.size > maxSizeBytes) {
             throw new Error(`File too large. Maximum size is ${maxSizeBytes / 1024 / 1024}MB`);
         }
-
+    
         const formData = new FormData();
         formData.append('file', file);
-
+    
         try {
             const response = await apiClient.post('/soundfragments/files/' + id, formData, {
                 timeout: 600000, // 10 minutes
                 maxContentLength: 120 * 1024 * 1024,
                 maxBodyLength: 120 * 1024 * 1024,
             });
-
-            const uploadData = response.data;
-            const uploadId = uploadData.id;
-
-            if (uploadId && onProgress) {
-                // Wait for upload to complete and get the final data with metadata
-                const finalData = await pollUploadProgress(uploadId, onProgress);
-                return finalData;
-            }
-
-            return uploadData;
+    
+            // Return the upload response immediately (contains uploadId)
+            return response.data;
+            
         } catch (error: any) {
             if (error.response) {
                 const status = error.response.status;
                 const errorData = error.response.data;
-
+    
                 switch (status) {
                     case 413:
                         throw new Error('File size exceeds server limits. Please choose a smaller file.');
@@ -161,33 +154,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         }
     };
 
-    const pollUploadProgress = async (uploadId: string, onProgress: (percentage: number) => void): Promise<any> => {
-        return new Promise((resolve, reject) => {
-            const pollInterval = setInterval(async () => {
-                try {
-                    const progressResponse = await apiClient.get(`/soundfragments/upload-progress/${uploadId}`);
-                    const progress = progressResponse.data;
-
-                    onProgress(progress.percentage);
-
-                    if (progress.status === 'finished' || progress.status === 'error') {
-                        clearInterval(pollInterval);
-
-                        if (progress.status === 'error') {
-                            reject(new Error('Upload processing failed on server'));
-                        } else {
-                            resolve(progress); // Return the full progress data including metadata
-                        }
-                    }
-                } catch (error: any) {
-                    clearInterval(pollInterval);
-                    console.error('Progress polling failed:', error);
-                    reject(error);
-                }
-            }, 1000); // Poll every second
-        });
-    };
-
+  
     const updateCurrent = (data: SoundFragment, actions: any = {}) => {
         apiFormResponse.value = { docData: data, actions };
     };
@@ -220,6 +187,32 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
     };
 
 
+    const pollUploadProgress = async (uploadId: string, onProgress: (percentage: number) => void): Promise<any> => {
+        return new Promise((resolve, reject) => {
+            const pollInterval = setInterval(async () => {
+                try {
+                    const progressResponse = await apiClient.get(`/soundfragments/upload-progress/${uploadId}`);
+                    const progress = progressResponse.data;
+    
+                    onProgress(progress.percentage);
+    
+                    if (progress.status === 'finished' || progress.status === 'error') {
+                        clearInterval(pollInterval);
+    
+                        if (progress.status === 'error') {
+                            reject(new Error('Upload processing failed on server'));
+                        } else {
+                            resolve(progress); // Return the full progress data including metadata
+                        }
+                    }
+                } catch (error: any) {
+                    clearInterval(pollInterval);
+                    console.error('Progress polling failed:', error);
+                    reject(error);
+                }
+            }, 500); // Poll every 500ms for more responsive updates
+        });
+    };
 
     return {
         apiViewResponse,
@@ -236,6 +229,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         save,
         delete: deleteSoundFragment,
         uploadFile,
+        pollUploadProgress,
         updateCurrent,
         downloadFile,
         downloadFileWithProgress,

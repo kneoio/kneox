@@ -172,7 +172,7 @@ export default defineComponent( {
       } ) );
     } );
 
-    const formTitle = computed(() => localFormData.id ? 'Edit Sound Fragment' : 'Create New Sound Fragment');
+    const formTitle = computed( () => localFormData.id ? 'Edit Sound Fragment' : 'Create New Sound Fragment' );
 
     watch(
       () => store.getCurrent?.uploadedFiles,
@@ -195,70 +195,100 @@ export default defineComponent( {
         file.status = 'uploading';
         file.percentage = 0;
 
-        const response = await store.uploadFile( entityId, file.file as File, ( percentage: number ) => {
-          if ( onProgress ) {
-            onProgress( { percent: percentage } );
-          }
-          file.percentage = percentage;
-        } );
+        // Start the upload (this returns immediately with uploadId)
+        const uploadResponse = await store.uploadFile( entityId, file.file as File );
+        const uploadId = uploadResponse.id;
 
-        uploadedFileNames.value.push( file.name );
+        if ( uploadId ) {
+          // Now poll for progress updates
+          const pollProgress = async () => {
+            try {
+              const finalData = await store.pollUploadProgress( uploadId, ( percentage: number ) => {
+                if ( onProgress ) {
+                  onProgress( { percent: percentage } );
+                }
+                file.percentage = percentage;
+              } );
 
-        // Auto-populate form fields from metadata if available
-        if (response.metadata) {
-          const metadata = response.metadata;
-          
-          // Set title if available and form field is empty
-          if (metadata.title && !localFormData.title) {
-            localFormData.title = metadata.title;
-          }
-          
-          // Set artist if available and form field is empty
-          if (metadata.artist && !localFormData.artist) {
-            localFormData.artist = metadata.artist;
-          }
-          
-          // Set album if available and form field is empty
-          if (metadata.album && !localFormData.album) {
-            localFormData.album = metadata.album;
-          }
-          
-          // Set genre if available, form field is empty, and genre exists in options
-          if (metadata.genre && !localFormData.genre) {
-            const genreExists = referencesStore.genreOptions.some(
-              option => option.value === metadata.genre || option.label === metadata.genre
-            );
-            if (genreExists) {
-              localFormData.genre = metadata.genre;
+              // Auto-populate form fields from metadata if available
+              if ( finalData.metadata ) {
+                const metadata = finalData.metadata;
+
+                if ( metadata.title && !localFormData.title ) {
+                  localFormData.title = metadata.title;
+                }
+
+                if ( metadata.artist && !localFormData.artist ) {
+                  localFormData.artist = metadata.artist;
+                }
+
+                if ( metadata.album && !localFormData.album ) {
+                  localFormData.album = metadata.album;
+                }
+
+                if ( metadata.genre && !localFormData.genre ) {
+                  const genreExists = referencesStore.genreOptions.some(
+                    option => option.value === metadata.genre || option.label === metadata.genre
+                  );
+                  if ( genreExists ) {
+                    localFormData.genre = metadata.genre;
+                  }
+                }
+              }
+
+              uploadedFileNames.value.push( file.name );
+
+              const newFile = {
+                ...file,
+                id: finalData.id || file.name,
+                url: finalData.url || finalData.fileUrl,
+                status: 'finished' as const,
+                percentage: 100
+              };
+
+              if ( onFinish ) onFinish( newFile );
+              message.success( `File "${file.name}" uploaded successfully` );
+
+            } catch ( pollError: any ) {
+              console.error( 'Progress polling failed:', pollError );
+              file.status = 'error';
+              file.percentage = 0;
+              message.error( `Upload processing failed: ${pollError.message}` );
+              if ( onError ) onError( pollError as Error );
             }
-          }
+          };
+
+          // Start polling asynchronously
+          pollProgress();
+
+        } else {
+          // Fallback if no uploadId is returned
+          uploadedFileNames.value.push( file.name );
+          const newFile = {
+            ...file,
+            id: uploadResponse.id || file.name,
+            url: uploadResponse.fileUrl || uploadResponse.url,
+            status: 'finished' as const,
+            percentage: 100
+          };
+
+          if ( onFinish ) onFinish( newFile );
+          message.success( `File "${file.name}" uploaded successfully` );
         }
 
-        const newFile = {
-          ...file,
-          id: response.id || file.name,
-          url: response.fileUrl || response.url,
-          status: 'finished' as const,
-          percentage: 100
-        };
-
-        if ( onFinish ) onFinish( newFile );
-        message.success( `File "${file.name}" uploaded successfully` );
-        return newFile;
       } catch ( error: any ) {
         file.status = 'error';
         file.percentage = 0;
 
-        // Show specific error message to user
         const errorMessage = error.message || 'Upload failed';
         message.error( errorMessage );
-
         console.error( 'Upload error:', error );
 
         if ( onError ) onError( error as Error );
         throw error;
       }
     };
+
 
     const handleDownload = async ( file: UploadFileInfo ) => {
       try {
@@ -316,10 +346,10 @@ export default defineComponent( {
 
         await store.save( saveDTO, localFormData.id );
         message.success( "Saved successfully" );
-        if (route.params.brandName) {
-          await router.push("/outline/station/" + route.params.brandName + "/soundfragments");
+        if ( route.params.brandName ) {
+          await router.push( "/outline/station/" + route.params.brandName + "/soundfragments" );
         } else {
-          await router.push("/outline/soundfragments");
+          await router.push( "/outline/soundfragments" );
         }
       } catch ( error: unknown ) {
         if ( isErrorWithResponse( error ) && error.response?.status === 400 ) {
@@ -347,21 +377,21 @@ export default defineComponent( {
     const goBack = () => {
       router.back();
     };
-    
+
     const fetchAclData = async () => {
       const id = route.params.id as string;
-      if (!id || id === 'new') {
+      if ( !id || id === 'new' ) {
         aclData.value = [];
         return;
       }
-      
+
       try {
         aclLoading.value = true;
-        const response = await store.fetchAccessList(id);
+        const response = await store.fetchAccessList( id );
         aclData.value = response.accessList || [];
-      } catch (error) {
-        console.error('Failed to fetch ACL data:', error);
-        message.error('Failed to fetch access control list');
+      } catch ( error ) {
+        console.error( 'Failed to fetch ACL data:', error );
+        message.error( 'Failed to fetch access control list' );
         aclData.value = [];
       } finally {
         aclLoading.value = false;
@@ -369,47 +399,47 @@ export default defineComponent( {
     };
 
     // Watch for tab changes to load ACL data
-    watch(activeTab, (newTab) => {
-      if (newTab === 'acl') {
+    watch( activeTab, ( newTab ) => {
+      if ( newTab === 'acl' ) {
         fetchAclData();
       }
-    });
-    
-    onMounted(async () => {
-        const id = route.params.id as string;
-        if (id && id !== 'new') {
-            try {
-                loadingBar.start();
-                await store.fetch(id);
-                Object.assign(localFormData, store.getCurrent);
+    } );
 
-                if (localFormData.uploadedFiles?.length) {
-                    fileList.value = localFormData.uploadedFiles.map(f => ({
-                        id: f.name,
-                        name: f.name,
-                        status: 'finished' as const,
-                        url: f.url
-                    }));
-                    uploadedFileNames.value = localFormData.uploadedFiles.map(f => f.name);
-                }
-            } catch (error) {
-                console.error("Failed to fetch sound fragment:", error);
-                message.error('Failed to fetch sound fragment');
-            } finally {
-                loadingBar.finish();
-            }
-        } else {
-          await store.fetch(id);
-          Object.assign(localFormData, store.getCurrent);
-        }
-
+    onMounted( async () => {
+      const id = route.params.id as string;
+      if ( id && id !== 'new' ) {
         try {
-            await radioStationStore.fetchAll(1, 100);
-            await referencesStore.fetchGenres();
-        } catch (error) {
-            console.error("Failed to fetch data:", error);
+          loadingBar.start();
+          await store.fetch( id );
+          Object.assign( localFormData, store.getCurrent );
+
+          if ( localFormData.uploadedFiles?.length ) {
+            fileList.value = localFormData.uploadedFiles.map( f => ( {
+              id: f.name,
+              name: f.name,
+              status: 'finished' as const,
+              url: f.url
+            } ) );
+            uploadedFileNames.value = localFormData.uploadedFiles.map( f => f.name );
+          }
+        } catch ( error ) {
+          console.error( "Failed to fetch sound fragment:", error );
+          message.error( 'Failed to fetch sound fragment' );
+        } finally {
+          loadingBar.finish();
         }
-    });
+      } else {
+        await store.fetch( id );
+        Object.assign( localFormData, store.getCurrent );
+      }
+
+      try {
+        await radioStationStore.fetchAll( 1, 100 );
+        await referencesStore.fetchGenres();
+      } catch ( error ) {
+        console.error( "Failed to fetch data:", error );
+      }
+    } );
 
 
 
