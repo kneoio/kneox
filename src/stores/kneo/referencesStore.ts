@@ -85,12 +85,23 @@ export const useReferencesStore = defineStore('references', () => {
     }
   };
 
+  const fetchRadioStations = async () => {
+    try {
+      const response = await unsecuredClient.get('/radio/all-stations');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching radio stations:', error);
+      throw error;
+    }
+  };
+
   return {
     countryOptions,
     languageOptions,
     genreOptions,
     audioAcceptTypes,
     fetchGenres,
-    fetchDictionary
+    fetchDictionary,
+    fetchRadioStations
   };
 });

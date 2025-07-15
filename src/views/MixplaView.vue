@@ -24,8 +24,10 @@
               <ArrowRight />
             </n-icon>
           </router-link>
+          <a href="https://t.me/project_mixpla" target="_blank" rel="noopener noreferrer" class="text-sm text-gray-600 block mt-2">
+            Join our Telegram community
+          </a>
         </div>
-
         <!-- Right Panel -->
         <div class="md:col-span-2 space-y-8">
           <div>
@@ -70,7 +72,7 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { NIcon, NSkeleton } from 'naive-ui';
 import { ArrowRight, ArrowLeft } from '@vicons/tabler';
-import { getRadioStations } from '../api/apiClient';
+import { useReferencesStore } from '../stores/kneo/referencesStore';
 
 interface Station {
   name: string;
@@ -95,11 +97,12 @@ const isLoading = ref(true);
 const error = ref<Error | null>(null);
 
 const radioPlayerHost = ref('https://mixpla246.windsurf.build');
+const referencesStore = useReferencesStore();
 
 const fetchStations = async () => {
   try {
     isLoading.value = true;
-    const data = await getRadioStations();
+    const data = await referencesStore.fetchRadioStations();
     stationsData.value = data;
   } catch (err) {
     console.error('Failed to fetch stations:', err);

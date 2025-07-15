@@ -398,6 +398,9 @@ export default defineComponent( {
             } finally {
                 loadingBar.finish();
             }
+        } else {
+          await store.fetch(id);
+          Object.assign(localFormData, store.getCurrent);
         }
 
         try {

@@ -12,6 +12,7 @@ interface UserProfile {
     username?: string;
     firstName?: string;
     lastName?: string;
+    roles?: string[];
 }
 
 interface UserData {
@@ -30,43 +31,38 @@ keycloak.init({
     if (authenticated) {
         try {
             const profile = await keycloak.loadUserProfile();
-            userData.profile = profile;
+            const roles = keycloak.tokenParsed?.realm_access?.roles || [];
+            userData.profile = { ...profile, roles };
             console.log('User profile loaded', profile);
-            setupApiClient(keycloak.idToken); // Setup API client with token
+            console.log('User roles:', roles);
+            setupApiClient(keycloak.idToken);
 
-            // Token refresh interval
             setInterval(async () => {
                 try {
                     const refreshed = await keycloak.updateToken(70);
                     if (refreshed) {
                         console.log('Token was successfully refreshed');
-                        setupApiClient(keycloak.idToken); // Re-setup API client with new token
+                        setupApiClient(keycloak.idToken);
                     } else {
                         console.log('Token is still valid');
                     }
                 } catch (error) {
                     console.error('Failed to refresh token, attempting login', error);
-                    keycloak.login(); // Force login on refresh failure
+                    keycloak.login();
                 }
-            }, 60000); // Check every 60 seconds
+            }, 60000);
 
         } catch (error) {
             console.error('Failed to load user profile or setup API client post-authentication', error);
-            // Decide if app should start or show an error page
         }
     } else {
         console.log('User is not authenticated initially.');
-        // API client might be set up without a token for public endpoints, or not at all
-        // setupApiClient(); // Or setupApiClient(null) if it supports unauthenticated state
     }
-    // Always start the app to allow access to public routes
     startApp();
 
 }).catch(error => {
     console.error('Keycloak initialization failed catastrophically', error);
-    // Potentially start app with an error message or limited functionality
-    // For example, you could navigate to an error page or show a global notification
-    startApp(); // Attempt to start the app to show public content or an error state
+    startApp();
 });
 
 function startApp() {
@@ -76,6 +72,6 @@ function startApp() {
     app.provide('userData', userData);
     app.use(createPinia());
     app.use(router);
-    setupRouterGuard(keycloak); // Initialize router guards and pass keycloak instance
+    setupRouterGuard(keycloak);
     app.mount('#app');
 }

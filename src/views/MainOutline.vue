@@ -13,7 +13,7 @@
         :class="{ 'drawer-open': isDrawerOpen }"
     >
       <div class="drawer-header">
-        <n-space><n-h2>Mixpla</n-h2><n-h6 style="color:#6c757d; font-size: small">manager v.1.7.6</n-h6></n-space>
+        <n-space><n-h2>MixpL^</n-h2><n-h6 style="color:#6c757d; font-size: small">manager v.1.7.6</n-h6></n-space>
       </div>
       <div class="drawer-content" style="overflow-y: auto; max-height: calc(100vh - 80px);">
         <n-menu
@@ -150,24 +150,8 @@ export default defineComponent({
     };
 
     const dynamicMenuOptions = computed<MenuOption[]>(() => {
-      const baseOptions: MenuOption[] = [
-        {
-          label: 'Dashboard',
-          key: 'dashboard',
-          icon: () => h(Dashboard)
-        },
-        {
-          key: 'divider-1',
-          type: 'divider',
-          props: {
-            style: {
-              marginLeft: '32px',
-              marginBottom: '10px',
-              color: '#ffb700',
-            }
-          }
-        }
-      ];
+      const userRoles = keycloakInst.tokenParsed?.realm_access?.roles || [];
+      const isSupervisor = userRoles.includes('supervisor');
 
       const radioStationOptions: MenuOption[] = radioStations.value.map((station: RadioStation) => ({
         label: () => h('div', {
@@ -200,10 +184,64 @@ export default defineComponent({
       }));
 
       const allStationsOption: MenuOption = {
-        label: 'Radiostations',
+        label: 'All Radiostations',
         key: 'radiostations',
         icon: () => h(List)
       };
+
+      const logoutOption: MenuOption = {
+        label: () => h('div', { style: 'display: flex; flex-direction: column;' }, [
+          h('div', 'Logout'),
+          h('div', { 
+            style: 'font-size: 0.75rem; color: #666; margin-top: 2px;',
+            title: keycloakInst.tokenParsed?.email || keycloakInst.tokenParsed?.preferred_username || ''
+          }, keycloakInst.tokenParsed?.preferred_username || '')
+        ]),
+        key: 'logout',
+        icon: () => h(Logout)
+      };
+
+      if (!isSupervisor) {
+        return [
+          ...radioStationOptions,
+          {
+            key: 'divider-2',
+            type: 'divider',
+            props: {
+              style: {
+                marginLeft: '32px',
+                marginBottom: '10px',
+                color: '#ffb700',
+              }
+            }
+          },
+          allStationsOption,
+          {
+            type: 'divider',
+            key: 'd1'
+          },
+          logoutOption
+        ];
+      }
+
+      const baseOptions: MenuOption[] = [
+        {
+          label: 'Dashboard',
+          key: 'dashboard',
+          icon: () => h(Dashboard)
+        },
+        {
+          key: 'divider-1',
+          type: 'divider',
+          props: {
+            style: {
+              marginLeft: '32px',
+              marginBottom: '10px',
+              color: '#ffb700',
+            }
+          }
+        }
+      ];
 
       const remainingOptions: MenuOption[] = [
         {

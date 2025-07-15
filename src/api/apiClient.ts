@@ -62,15 +62,7 @@ export const getBaseURL = () => {
     return apiClient.defaults.baseURL;
 }
 
-export const getRadioStations = async () => {
-    try {
-        const response = await unsecuredClient.get('/radio/all-stations');
-        return response.data;
-    } catch (error) {
-        console.error('Error fetching radio stations:', error);
-        throw error;
-    }
-};
+
 
 export { unsecuredClient };
 export default apiClient;
