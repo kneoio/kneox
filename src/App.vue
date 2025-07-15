@@ -54,12 +54,10 @@ const lightThemeOverrides = {
     successColorPressed: '#7CB342',
     successColorSuppl: '#9CCC65',
 
-    // Custom colors for drawer
     bodyColor: '#f8f8f8',
     textColorBase: '#333',
     borderColor: '#e0e0e0',
 
-    // These ensure CSS variables are generated
     color: '#f8f8f8',
     textColor: '#333',
 
@@ -89,12 +87,10 @@ const darkThemeOverrides = {
     successColorPressed: '#7CB342',
     successColorSuppl: '#9CCC65',
 
-    // Custom colors for drawer
     bodyColor: '#1a1a1a',
     textColorBase: '#f0f0f0',
     borderColor: '#333',
 
-    // These ensure CSS variables are generated
     color: '#1a1a1a',
     textColor: '#f0f0f0',
 

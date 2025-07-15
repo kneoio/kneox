@@ -57,7 +57,7 @@ const routes: Array<RouteRecordRaw> = [
         children: [
             {
                 path: '',
-                redirect: {name: 'Dashboard'}
+                redirect: {name: 'RadioStations'}
             },
             {
                 path: 'dashboard',
