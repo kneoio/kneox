@@ -22,19 +22,17 @@ interface StatusInfo {
     type: NTagType;
 }
 
-// Define structure for managed by information
 interface ManagedByInfo {
     text: string;
     type: NTagType;
 }
 
-// Define the row data structure
 interface StationRow {
     status: RadioStationStatus;
     managedBy: 'ITSELF' | 'AI_AGENT' | string;
     brandName: string;
     aliveTimeInHours: number;
-    [key: string]: any; // Allow additional properties
+    [key: string]: any;
 }
 
 export const useStationColumns = (
@@ -44,10 +42,7 @@ export const useStationColumns = (
     isMobile: { value: boolean },
     sendCommand: (brandName: string, command: string) => Promise<void>
 ) => {
-    // Track loading states for each station
     const loadingStates = ref<Record<string, { feed: boolean; stop: boolean }>>({});
-
-    // Helper function to get status information
     const getStatusInfo = (status: RadioStationStatus): StatusInfo => {
         switch (status) {
             case 'ON_LINE':
@@ -65,8 +60,6 @@ export const useStationColumns = (
                 return { text: 'Offline', type: 'default' };
         }
     };
-
-    // Helper function to get managed by information
     const getManagedByInfo = (managedBy: string): ManagedByInfo => {
         switch (managedBy) {
             case 'AI_AGENT':
@@ -77,11 +70,7 @@ export const useStationColumns = (
                 return { text: managedBy, type: 'default' };
         }
     };
-
-    // Track disabled states for each station
     const disabledStates = ref<Record<string, { feed: boolean; stop: boolean }>>({});
-
-    // Helper function to handle command execution
     const handleCommand = async (brandName: string, command: 'feed' | 'stop') => {
         if (!loadingStates.value[brandName]) {
             loadingStates.value[brandName] = { feed: false, stop: false };
@@ -95,7 +84,6 @@ export const useStationColumns = (
         try {
             await sendCommand(brandName, command);
 
-            // If stop command was successful, disable the stop button
             if (command === 'stop') {
                 disabledStates.value[brandName].stop = true;
             }

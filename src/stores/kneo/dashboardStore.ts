@@ -217,6 +217,10 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
         };
     };
 
+    const getLastUpdate = () => {
+        return lastUpdate.value;
+    };
+
     return {
         response,
         stationResponse,
@@ -234,6 +238,7 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
         fetchDashboard,
         fetchStation,
         getStationDetails,
+        getLastUpdate,
         triggerBroadcastAction,
         setupPeriodicRefresh
     };

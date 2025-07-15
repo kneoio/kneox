@@ -81,14 +81,21 @@ export interface StationDetails {
     managedBy: string;
     segmentsSize: number;
     playlistManagerStats: PlaylistManagerStats;
-    timelines: Array<{
-        task: PeriodicTask;
-    }>;
+    timeline: {
+        pastSegmentSequences: number[];
+        visibleSegmentSequences: number[];
+        upcomingSegmentSequences: number[];
+    } | null;
     totalBytesProcessed: number;
     bitrate: number;
     queueSize: number;
-    songStatistics: Record<string, SongStatistics>;
+    songStatistics: {
+        title: string;
+        segmentTimestamp: number;
+        requestCount: number;
+    } | null;
     segmentSizeHistory: number[];
+    currentListeners: number;
 }
 
 export interface StationResponse {

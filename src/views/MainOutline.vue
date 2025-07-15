@@ -33,9 +33,9 @@
         }"
         @click="handleContentClick"
     >
-      <h1 style="padding-left: 20%">
+      <!-- <h1 style="padding-left: 20%">
         {{ viewTitle || "" }}
-      </h1>
+      </h1> -->
       <router-view/>
     </div>
   </div>

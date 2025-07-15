@@ -54,10 +54,7 @@
                 <n-tag type="success" size="small">Online: {{ dashboard.stats.onlineStations }}</n-tag>
                 <n-tag type="warning" size="small">Warming: {{ dashboard.stats.warmingStations }}</n-tag>
                 <n-tag type="error" size="small">Offline: {{ dashboard.stats.offlineStations }}</n-tag>
-              </div>
-              <div class="segments-info">
-                Segments: {{ dashboard.stats.minimumSegments }}-{{ dashboard.stats.slidingWindowSize }}
-              </div>
+              </div>              
             </div>
           </n-descriptions-item>
 

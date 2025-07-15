@@ -3,7 +3,7 @@
     <div class="desktop-row">
       <div class="playlist-manager-section">
         <div class="fragment-list">
-          <div class="sub-label">Consumed by HLS player:</div>
+          <div class="sub-label">In Queue:</div>
           <div v-if="row.playlistManagerStats?.obtainedByPlaylist && row.playlistManagerStats.obtainedByPlaylist.length > 0">
             <div
                 v-for="(fragment, index) in row.playlistManagerStats.obtainedByPlaylist"
@@ -18,7 +18,7 @@
         </div>
 
         <div class="fragment-list">
-          <div class="sub-label">Ready to be consumed by HLS player:</div>
+          <div class="sub-label">Ready to be queued:</div>
           <div v-if="row.playlistManagerStats?.readyToBeConsumed && row.playlistManagerStats.readyToBeConsumed.length > 0">
             <div
                 v-for="(fragment, index) in row.playlistManagerStats.readyToBeConsumed"
@@ -33,100 +33,75 @@
         </div>
       </div>
 
-      <div v-if="row.timeline" class="hls-provider-section segment-timeline-display">
-        <div class="sub-label timeline-main-label">Segment Timeline:</div>
-
-        <div v-if="row.hlsSongStats" class="hls-song-info">
-          <div class="song-title-container">
-            <span class="info-label">Current Track:</span>
-            <span class="song-title" :title="cleanTitle(row.hlsSongStats.title)">
-              {{ cleanTitle(row.hlsSongStats.title) }}
-            </span>
-          </div>
-          <div class="song-timestamp-container">
-            <span class="info-label">Est. Time:</span>
-            <span class="song-timestamp">
-              {{ formatHlsTimestamp(row.hlsSongStats.segmentTimestamp) }}
-            </span>
-          </div>
-          <div class="activity-info-container">
-            <span class="info-label">Recent Requests:</span>
-            <span class="request-count-display">
-              {{ row.hlsSongStats.requestCount }}
-              <span class="request-count-unit">/ 5min</span>
-              <span class="live-dot" v-if="row.hlsSongStats.requestCount > 0">●</span>
-            </span>
-          </div>
-          <div class="estimated-listeners-container">
-            <span class="info-label">Est. Listeners:</span>
-            <span class="listeners-count-value">
-              <template v-if="row.listenersCount === -1">
-                <span title="Cannot determine listeners (check config/duration)">N/A</span>
-              </template>
-              <template v-else>
-                {{ row.listenersCount }}
-              </template>
-            </span>
+      <div class="hls-provider-section">
+        <div class="sub-label">Segment Timeline</div>
+        <div class="sub-label" style="font-size: 0.7rem; color: #999; margin-bottom: 8px;">Updated: {{ formatTimestamp(row.lastUpdate) }}</div>
+        <div class="timeline-container">
+          <div class="timeline-string" v-if="row.timeline">
+            <span v-if="row.timeline.pastSegmentSequences?.length > 0" class="past-segments">{{ row.timeline.pastSegmentSequences.join('-') }}</span>
+            <span v-if="row.timeline.pastSegmentSequences?.length > 0" class="separator">-</span>
+            <span class="current-marker">||></span>
+            <span v-if="row.timeline.visibleSegmentSequences?.length > 0" class="visible-segments">{{ row.timeline.visibleSegmentSequences.join('-') }}</span>
+            <span v-else class="empty-segments">(empty)</span>
+            <span class="current-marker"><||</span>
+            <span v-if="row.timeline.upcomingSegmentSequences?.length > 0" class="separator">-</span>
+            <span v-if="row.timeline.upcomingSegmentSequences?.length > 0" class="upcoming-segments">{{ row.timeline.upcomingSegmentSequences.join('-') }}</span>
           </div>
         </div>
 
-        <div class="timeline-string-container">
-          <span v-if="row.timeline.pastSegmentSequences && row.timeline.pastSegmentSequences.length > 0" class="timeline-part timeline-past">
-            {{ row.timeline.pastSegmentSequences.join('-') }}
-          </span>
-          <span v-if="row.timeline.pastSegmentSequences && row.timeline.pastSegmentSequences.length > 0" class="timeline-part-separator">-</span>
-
-          <span class="timeline-delimiter">||></span>
-
-          <span v-if="row.timeline.visibleSegmentSequences && row.timeline.visibleSegmentSequences.length > 0" class="timeline-part timeline-visible">
-            {{ row.timeline.visibleSegmentSequences.join('-') }}
-          </span>
-          <span v-else class="timeline-part timeline-visible-empty">(empty)</span>
-
-          <span class="timeline-delimiter"><||</span>
-
-          <span v-if="row.timeline.upcomingSegmentSequences && row.timeline.upcomingSegmentSequences.length > 0" class="timeline-part-separator">-</span>
-          <span v-if="row.timeline.upcomingSegmentSequences && row.timeline.upcomingSegmentSequences.length > 0" class="timeline-part timeline-upcoming">
-            {{ row.timeline.upcomingSegmentSequences.join('-') }}
-          </span>
+        <div class="sub-label" style="margin-top: 15px;">HLS Song Info</div>
+        <div class="hls-info" v-if="row.songStatistics">
+          <div class="hls-item">
+            <span class="hls-label">Current Track:</span>
+            <span class="hls-value">{{ cleanTitle(row.songStatistics.title) }}</span>
+          </div>
+          <div class="hls-item">
+            <span class="hls-label">Timestamp:</span>
+            <span class="hls-value">{{ formatHlsTimestamp(row.songStatistics.segmentTimestamp) }}</span>
+          </div>
+          <div class="hls-item">
+            <span class="hls-label">Request Count:</span>
+            <span class="hls-value">{{ row.songStatistics.requestCount }}</span>
+          </div>
+          <div class="hls-item">
+            <span class="hls-label">Listeners:</span>
+            <span class="hls-value">{{ row.currentListeners || 0 }}</span>
+          </div>
         </div>
       </div>
+
     </div>
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent } from 'vue';
+<script setup lang="ts">
+const props = defineProps<{
+  row: any;
+}>();
 
-export default defineComponent({
-  props: {
-    row: {
-      type: Object,
-      required: true
-    }
-  },
-  setup() {
-    const cleanTitle = (title: string | undefined | null): string => {
-      if (!title) return 'N/A';
-      return title.replace(/^#+\s*/, '').trim();
-    };
+const cleanTitle = (title: string | undefined | null): string => {
+  if (!title) return 'N/A';
+  return title.replace(/^#+\s*/, '').trim();
+};
 
-    const formatHlsTimestamp = (timestampSeconds: number | undefined | null): string => {
-      if (!timestampSeconds) return 'N/A';
-      try {
-        const date = new Date(timestampSeconds * 1000);
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      } catch (e) {
-        return 'Invalid Date';
-      }
-    };
+const formatTimestamp = (timestamp: Date | null): string => {
+  if (!timestamp) return 'N/A';
+  return timestamp.toLocaleTimeString([], { 
+    hour: '2-digit', 
+    minute: '2-digit', 
+    second: '2-digit' 
+  });
+};
 
-    return {
-      cleanTitle,
-      formatHlsTimestamp,
-    };
-  }
-});
+const formatHlsTimestamp = (timestamp: number | null): string => {
+  if (!timestamp) return 'N/A';
+  const date = new Date(timestamp * 1000);
+  return date.toLocaleTimeString([], { 
+    hour: '2-digit', 
+    minute: '2-digit', 
+    second: '2-digit' 
+  });
+};
 </script>
 
 <style scoped>
@@ -171,6 +146,71 @@ export default defineComponent({
 
 .hls-provider-section {
   min-width: 500px;
+}
+
+.timeline-container {
+  margin-bottom: 10px;
+}
+
+.timeline-string {
+  font-family: monospace;
+  font-size: 0.9rem;
+  background-color: #f0f0f0;
+  padding: 10px 15px;
+  border-radius: 4px;
+  border: 1px solid #dcdcdc;
+  white-space: nowrap;
+  overflow-x: auto;
+}
+
+.past-segments {
+  color: #5a5a5a;
+}
+
+.separator {
+  color: #757575;
+  margin: 0 1px;
+}
+
+.current-marker {
+  color: #ff6f00;
+  font-weight: bold;
+  margin: 0 3px;
+}
+
+.visible-segments {
+  color: #1a73e8;
+  font-weight: bold;
+}
+
+.empty-segments {
+  color: #d93025;
+  font-style: italic;
+}
+
+.upcoming-segments {
+  color: #188038;
+}
+
+.hls-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hls-item {
+  display: flex;
+  font-size: 0.875rem;
+}
+
+.hls-label {
+  min-width: 120px;
+  font-weight: 600;
+  color: #666;
+}
+
+.hls-value {
+  color: #333;
 }
 
 .segment-timeline-display .timeline-main-label {
