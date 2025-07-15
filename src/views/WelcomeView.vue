@@ -2,7 +2,6 @@
   <div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
     <div class="max-w-6xl mx-auto px-8 py-16">
       
-      <!-- Header -->
       <div class="text-center mb-16">
         <div class="w-32 h-32 mx-auto mb-8">
           <img src="/logo.png" alt="Kneo.io Logo" class="w-full h-full object-contain">
@@ -13,7 +12,6 @@
         </p>
       </div>
 
-      <!-- About Section -->
       <div class="bg-white rounded-2xl shadow-lg p-8 mb-12">
         <h2 class="text-3xl font-bold text-gray-900 mb-6 text-center">Who We Are</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -42,7 +40,6 @@
         </div>
       </div>
 
-      <!-- Featured Project -->
       <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-xl p-8 text-white">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
           <div>

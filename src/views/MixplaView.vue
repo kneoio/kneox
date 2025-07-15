@@ -10,7 +10,6 @@
     <div class="max-w-7xl mx-auto px-8 py-12 w-full">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
         
-        <!-- Left Panel -->
         <div class="md:col-span-1 flex flex-col items-center justify-center space-y-6 text-center">
           <div class="w-48 h-48">
             <img src="/pwa-512x512.png" alt="Mixpla Logo" class="w-full h-full object-contain">
@@ -28,7 +27,6 @@
             Join our Telegram community
           </a>
         </div>
-        <!-- Right Panel -->
         <div class="md:col-span-2 space-y-8">
           <div>
             <h1 class="text-4xl font-extrabold text-gray-800 mb-4">Every Story Needs to Stream</h1>
