@@ -81,16 +81,6 @@
         </n-descriptions>
         <n-alert v-else type="warning" class="mt-2">No stats available</n-alert>
       </n-gi>
-
-      <n-gi :span="24" class="mt-4">
-        <n-data-table
-            :columns="stationColumns"
-            :data="detailedStationsList"
-            :pagination="{ pageSize: 5 }"
-            :row-key="(row: StationEntry) => row.brandName"
-            size="small"
-        />
-      </n-gi>
     </n-grid>
 
     <div class="footer">
@@ -275,7 +265,7 @@ export default defineComponent({
 }
 
 .config-stats {
-  max-height: 100px;
+  max-height: 600px;
   overflow-y: auto;
   font-size: 0.8rem;
 }

@@ -15,7 +15,7 @@
             <img src="/pwa-512x512.png" alt="Mixpla Logo" class="w-full h-full object-contain">
           </div>
           <router-link
-             to="/outline/dashboard"
+             to="/outline/radiostations"
              class="group relative inline-flex items-center px-12 py-5 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold text-xl border-2 border-transparent hover:border-blue-600 hover:bg-gradient-to-r hover:from-transparent hover:to-transparent hover:text-blue-600 transition-all duration-500 ease-out transform hover:scale-105"
           >
             <span class="relative z-10">Launch Your Radio</span>
