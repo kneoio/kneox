@@ -95,9 +95,43 @@ export const useReferencesStore = defineStore('references', () => {
     }
   };
 
+  const voiceOptions = [
+    { label: 'Alloy (English)', value: 'alloy' },
+    { label: 'Echo (English)', value: 'echo' },
+    { label: 'Fable (English)', value: 'fable' },
+    { label: 'Onyx (English)', value: 'onyx' },
+    { label: 'Nova (English)', value: 'nova' },
+    { label: 'Shimmer (English)', value: 'shimmer' },
+    { label: 'Aria (English)', value: 'aria' },
+    { label: 'Drew (English)', value: 'drew' },
+    { label: 'Bella (English)', value: 'bella' },
+    { label: 'Andy (English)', value: 'andy' },
+    { label: 'Rachel (English)', value: 'rachel' },
+    { label: 'Domi (English)', value: 'domi' },
+    { label: 'Thomas (English)', value: 'thomas' },
+    { label: 'Charlotte (English)', value: 'charlotte' },
+    { label: 'Callum (English)', value: 'callum' },
+    { label: 'Liam (English)', value: 'liam' },
+    { label: 'Ruth (English)', value: 'ruth' },
+    { label: 'Daisy (English)', value: 'daisy' },
+    { label: 'Alain (French)', value: 'alain' },
+    { label: 'Brigitte (French)', value: 'brigitte' },
+    { label: 'Claude (French)', value: 'claude' },
+    { label: 'Jacqueline (French)', value: 'jacqueline' },
+    { label: 'Hans (German)', value: 'hans' },
+    { label: 'Bettina (German)', value: 'bettina' },
+    { label: 'Stefan (German)', value: 'stefan' },
+    { label: 'Hiroshi (Japanese)', value: 'hiroshi' },
+    { label: 'Hikari (Japanese)', value: 'hikari' },
+    { label: 'Takeru (Japanese)', value: 'takeru' },
+    { label: 'Zhiyu (Chinese)', value: 'zhiyu' },
+    { label: 'Nari (Korean)', value: 'nari' },
+  ];
+
   return {
     countryOptions,
     languageOptions,
+    voiceOptions,
     genreOptions,
     audioAcceptTypes,
     fetchGenres,

@@ -133,6 +133,12 @@ export interface Tool {
     name: string;
 }
 
+// Extend the base AiAgent interface to include form-specific fields
+export interface AiAgentForm extends Omit<AiAgent, 'preferredVoice'> {
+    preferredVoiceId?: string;
+    preferredVoice: Voice[];
+}
+
 export interface AiAgent {
     id: string;
     author: string;

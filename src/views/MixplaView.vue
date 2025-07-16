@@ -23,6 +23,9 @@
               <ArrowRight />
             </n-icon>
           </router-link>
+          <a href="https://discord.gg/EqQry4Vg" target="_blank" rel="noopener noreferrer" class="text-sm text-gray-600 block">
+            Join our Discord community
+          </a>
           <a href="https://t.me/project_mixpla" target="_blank" rel="noopener noreferrer" class="text-sm text-gray-600 block mt-2">
             Join our Telegram community
           </a>

@@ -103,19 +103,13 @@
               </n-gi>
               <n-gi>
                 <n-form-item label="Preferred Voice">
-                  <n-dynamic-input v-model:value="localFormData.preferredVoice" :on-create="createVoiceItem"
-                    style="width: 60%;">
-                    <template #default=" { value, index } ">
-                      <n-grid cols="2" x-gap="12">
-                        <n-gi>
-                          <n-input v-model:value="value.id" placeholder="Voice ID" />
-                        </n-gi>
-                        <n-gi>
-                          <n-input v-model:value="value.name" placeholder="Voice Name" />
-                        </n-gi>
-                      </n-grid>
-                    </template>
-                  </n-dynamic-input>
+                  <n-select 
+                    v-model:value="localFormData.preferredVoiceId" 
+                    :options="voiceOptions" 
+                    filterable
+                    placeholder="Select a voice"
+                    style="width: 60%;"
+                  />
                 </n-form-item>
               </n-gi>
 
@@ -140,10 +134,9 @@
 <script lang="ts">
 import { computed, defineComponent, onMounted, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { NDynamicInput, NButton, NButtonGroup, NDynamicTags, NForm, NFormItem, NGi, NGrid, NInput, NPageHeader, NSlider, NSelect, NTabs, NTabPane } from 'naive-ui';
+import { AiAgent, AiAgentForm, LanguageCode } from '../../../types/kneoBroadcasterTypes';
+import { NButton, NButtonGroup, NForm, NFormItem, NGi, NGrid, NInput, NPageHeader, NSlider, NSelect, NTabs, NTabPane, NDynamicInput, NTag, NSpace, NCard, NDynamicTags } from 'naive-ui';
 import { useLoadingBar, useMessage } from 'naive-ui';
-import { AiAgent, AiAgentSave } from "../../../types/kneoBroadcasterTypes";
-import { handleFormSaveError } from '../../../utils/errorHandling';
 import { useAiAgentStore } from '../../../stores/kneo/aiAgentStore';
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 import { json } from "@codemirror/lang-json";
@@ -151,23 +144,26 @@ import { EditorView } from "@codemirror/view";
 import CodeMirror from 'vue-codemirror6';
 import AclTable from '../../common/AclTable.vue';
 
-export default defineComponent( {
+export default defineComponent({
   name: "AiAgentForm",
   components: {
-    NDynamicInput,
-    NDynamicTags,
     NButton,
     NButtonGroup,
-    NGrid,
-    NGi,
     NForm,
     NFormItem,
+    NGi,
+    NGrid,
     NInput,
     NPageHeader,
     NSlider,
     NSelect,
     NTabs,
     NTabPane,
+    NDynamicInput,
+    NTag,
+    NSpace,
+    NCard,
+    NDynamicTags,
     AclTable,
     CodeMirror
   },
@@ -178,20 +174,25 @@ export default defineComponent( {
     const store = useAiAgentStore();
     const referencesStore = useReferencesStore();
     const route = useRoute();
-    const lang = ref( json() );
-    const editorExtensions = computed( () => [
+    const lang = ref(json());
+    const editorExtensions = computed(() => [
       EditorView.lineWrapping
-    ] );
+    ]);
 
-    const activeTab = ref( 'properties' );
-    const aclData = ref( [] );
-    const aclLoading = ref( false );
+    const activeTab = ref('properties');
+    const aclData = ref([]);
+    const aclLoading = ref(false);
 
+    const formTitle = computed(() => localFormData.id ? 'Edit AI Agent' : 'Create New AI Agent');
 
+    const voiceOptions = computed(() => 
+      (referencesStore.voiceOptions || []).map(voice => ({
+        label: voice.label,
+        value: voice.value
+      }))
+    );
 
-    const formTitle = computed( () => localFormData.id ? 'Edit AI Agent' : 'Create New AI Agent' );
-
-    const localFormData = reactive<Partial<AiAgent>>( {
+    const localFormData = reactive<AiAgentForm>({
       id: "",
       author: "",
       regDate: "",
@@ -199,98 +200,124 @@ export default defineComponent( {
       lastModifiedDate: "",
       name: "",
       mainPrompt: "",
-      preferredLang: "en",
+      preferredLang: "en" as LanguageCode,
       fillerPrompt: [],
       preferredVoice: [],
+      preferredVoiceId: "",
       enabledTools: [],
       talkativity: 0.3
-    } );
+    });
 
     const createFillerItem = () => "";
 
-    const createVoiceItem = () => ( {
+    const createVoiceItem = () => ({
       id: "",
       name: ""
-    } );
+    });
 
-    const createToolItem = () => ( {
+    const createToolItem = () => ({
       name: "",
       variableName: null,
       description: ""
-    } );
+    });
 
     const handleSave = async () => {
       try {
         loadingBar.start();
-        const payload: AiAgentSave = {
+
+        const saveData: Partial<AiAgent> = {
           name: localFormData.name || '',
+          preferredLang: localFormData.preferredLang as LanguageCode,
           mainPrompt: localFormData.mainPrompt || '',
-          preferredLang: localFormData.preferredLang || 'en',
           fillerPrompt: localFormData.fillerPrompt || [],
-          preferredVoice: localFormData.preferredVoice || [],
           enabledTools: localFormData.enabledTools || [],
-          talkativity: localFormData.talkativity || 0.3
+          talkativity: localFormData.talkativity || 0.3,
+          preferredVoice: []
         };
 
-        const id = localFormData.id ? localFormData.id : null;
-        await store.save( payload, id );
+        if (localFormData.preferredVoiceId) {
+          const selectedVoice = voiceOptions.value.find(
+            (v: { label: string; value: string }) => v.value === localFormData.preferredVoiceId
+          );
 
-        message.success( "AI Agent saved successfully" );
-        await router.push( "/outline/ai_agents" );
-      } catch ( error ) {
-        handleFormSaveError( error, message, 'Failed to save AI Agent' );
+          if (selectedVoice) {
+            saveData.preferredVoice = [{
+              id: selectedVoice.value,
+              name: selectedVoice.label
+            }];
+          }
+        }
+
+        const id = localFormData.id ? localFormData.id : null;
+        await store.save(saveData, id);
+
+        message.success("AI Agent saved successfully");
+        await router.push("/outline/ai_agents");
+      } catch (error) {
+        console.error('Failed to save AI Agent:', error);
+        message.error('Failed to save AI Agent');
       } finally {
         loadingBar.finish();
       }
     };
 
     const goBack = () => {
-      router.push( "/outline/ai_agents" );
+      router.push("/outline/ai_agents");
     };
 
     const fetchAclData = async () => {
       const id = route.params.id as string;
-      if ( !id || id === 'new' ) {
+      if (!id || id === 'new') {
         aclData.value = [];
         return;
       }
 
       try {
         aclLoading.value = true;
-        const response = await store.fetchAccessList( id );
+        const response = await store.fetchAccessList(id);
         aclData.value = response.accessList || [];
-      } catch ( error ) {
-        console.error( 'Failed to fetch ACL data:', error );
-        message.error( 'Failed to fetch access control list' );
+      } catch (error) {
+        console.error('Failed to fetch ACL data:', error);
+        message.error('Failed to fetch access control list');
         aclData.value = [];
       } finally {
         aclLoading.value = false;
       }
     };
 
-    watch( activeTab, ( newTab ) => {
-      if ( newTab === 'acl' && localFormData.id ) {
+    watch(activeTab, (newTab) => {
+      if (newTab === 'acl' && localFormData.id) {
         fetchAclData();
       }
-    } );
+    });
 
-    onMounted( async () => {
-      const id = route.params.id as string;
+    onMounted(async () => {
       try {
-        loadingBar.start();
-        await store.fetch( id );
-        Object.assign( localFormData, store.getCurrent );
-      } catch ( error ) {
-        console.error( "Failed to fetch AI Agent:", error );
-        message.error( 'Failed to fetch AI Agent' );
+        const id = route.params.id as string;
+        if (id) {
+          loadingBar.start();
+          await store.fetch(id);
+          const agentData = { ...store.getCurrent } as AiAgentForm;
+
+          if (agentData.preferredVoice && agentData.preferredVoice.length > 0) {
+            agentData.preferredVoiceId = agentData.preferredVoice[0]?.id || '';
+          }
+
+          Object.assign(localFormData, agentData);
+        }
+      } catch (error) {
+        console.error("Failed to fetch AI Agent:", error);
+        message.error('Failed to fetch AI Agent');
+        router.push("/outline/ai_agents");
       } finally {
         loadingBar.finish();
       }
-    } );
+    });
 
     return {
       localFormData,
       langOptions: referencesStore.languageOptions,
+      voiceOptions,
       formTitle,
       createFillerItem,
       createVoiceItem,
