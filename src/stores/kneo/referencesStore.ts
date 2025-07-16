@@ -49,6 +49,7 @@ export const useReferencesStore = defineStore('references', () => {
  ];
 
   const genreOptions = ref<Array<{label: string, value: string}>>([]);
+  const voiceOptions = ref<Array<{label: string, value: string}>>([]);
 
   const audioAcceptTypes = [
     '.mp3',
@@ -76,7 +77,20 @@ export const useReferencesStore = defineStore('references', () => {
             a.label.localeCompare(b.label));
   };
 
-  const fetchDictionary = async (type: 'agents' | 'profiles', page = 1, pageSize = 100) => {
+  const fetchVoices = async () => {
+    const response = await unsecuredClient.get('/api/dictionary/voices?page=1&size=100');
+    if (!response?.data?.payload) throw new Error('Invalid API response');
+
+    voiceOptions.value = response.data.payload.viewData.entries
+        .map((entry: any) => ({
+            label: entry.name,
+            value: entry.id
+        }))
+        .sort((a: {label: string}, b: {label: string}) =>
+            a.label.localeCompare(b.label));
+  };
+
+  const fetchDictionary = async (type: 'agents' | 'profiles' | 'voices', page = 1, pageSize = 100) => {
     const response = await unsecuredClient.get(`/api/dictionary/${type}?page=${page}&size=${pageSize}`);
     if (response?.data?.payload) {
       return response.data.payload;
@@ -95,39 +109,6 @@ export const useReferencesStore = defineStore('references', () => {
     }
   };
 
-  const voiceOptions = [
-    { label: 'Alloy (English)', value: 'alloy' },
-    { label: 'Echo (English)', value: 'echo' },
-    { label: 'Fable (English)', value: 'fable' },
-    { label: 'Onyx (English)', value: 'onyx' },
-    { label: 'Nova (English)', value: 'nova' },
-    { label: 'Shimmer (English)', value: 'shimmer' },
-    { label: 'Aria (English)', value: 'aria' },
-    { label: 'Drew (English)', value: 'drew' },
-    { label: 'Bella (English)', value: 'bella' },
-    { label: 'Andy (English)', value: 'andy' },
-    { label: 'Rachel (English)', value: 'rachel' },
-    { label: 'Domi (English)', value: 'domi' },
-    { label: 'Thomas (English)', value: 'thomas' },
-    { label: 'Charlotte (English)', value: 'charlotte' },
-    { label: 'Callum (English)', value: 'callum' },
-    { label: 'Liam (English)', value: 'liam' },
-    { label: 'Ruth (English)', value: 'ruth' },
-    { label: 'Daisy (English)', value: 'daisy' },
-    { label: 'Alain (French)', value: 'alain' },
-    { label: 'Brigitte (French)', value: 'brigitte' },
-    { label: 'Claude (French)', value: 'claude' },
-    { label: 'Jacqueline (French)', value: 'jacqueline' },
-    { label: 'Hans (German)', value: 'hans' },
-    { label: 'Bettina (German)', value: 'bettina' },
-    { label: 'Stefan (German)', value: 'stefan' },
-    { label: 'Hiroshi (Japanese)', value: 'hiroshi' },
-    { label: 'Hikari (Japanese)', value: 'hikari' },
-    { label: 'Takeru (Japanese)', value: 'takeru' },
-    { label: 'Zhiyu (Chinese)', value: 'zhiyu' },
-    { label: 'Nari (Korean)', value: 'nari' },
-  ];
-
   return {
     countryOptions,
     languageOptions,
@@ -135,6 +116,7 @@ export const useReferencesStore = defineStore('references', () => {
     genreOptions,
     audioAcceptTypes,
     fetchGenres,
+    fetchVoices,
     fetchDictionary,
     fetchRadioStations
   };

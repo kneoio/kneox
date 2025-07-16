@@ -293,9 +293,10 @@ export default defineComponent({
 
     onMounted(async () => {
       try {
+        loadingBar.start();
+        await referencesStore.fetchVoices();
         const id = route.params.id as string;
         if (id) {
-          loadingBar.start();
           await store.fetch(id);
           const agentData = { ...store.getCurrent } as AiAgentForm;
 
@@ -306,9 +307,11 @@ export default defineComponent({
           Object.assign(localFormData, agentData);
         }
       } catch (error) {
-        console.error("Failed to fetch AI Agent:", error);
-        message.error('Failed to fetch AI Agent');
-        router.push("/outline/ai_agents");
+        console.error("Failed to fetch data:", error);
+        message.error('Failed to fetch data');
+        if (route.params.id) {
+          router.push("/outline/ai_agents");
+        }
       } finally {
         loadingBar.finish();
       }
