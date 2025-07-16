@@ -254,88 +254,51 @@ export default defineComponent( {
 
         console.log('Starting upload for file:', file.name);
         const uploadResponse = await store.uploadFile(entityId, file.file as File);
-        
-        updateProgress(10);
-        
         const uploadId = uploadResponse.id;
-        console.log('Upload response received, uploadId:', uploadId);
 
         if (uploadId) {
-          const pollProgress = async () => {
-            try {
-              console.log('Starting progress polling for uploadId:', uploadId);
-              
-              const finalData = await store.pollUploadProgress(uploadId, (percentage: number) => {
-                console.log('Progress update:', percentage + '%');
-                
-                const adjustedPercentage = Math.max(10, Math.min(95, percentage));
-                updateProgress(adjustedPercentage, 'uploading');
-              });
+          console.log('Starting progress polling for uploadId:', uploadId);
+          
+          const finalData = await store.pollUploadProgress(uploadId, (percentage: number) => {
+            console.log('Real progress from server:', percentage + '%');
+            updateProgress(percentage, 'uploading');
+          });
 
-              console.log('Upload processing completed:', finalData);
-
-              if (finalData.metadata) {
-                const metadata = finalData.metadata;
-                console.log('Extracted metadata:', metadata);
-
-                if (metadata.title && !localFormData.title) {
-                  localFormData.title = metadata.title;
-                }
-
-                if (metadata.artist && !localFormData.artist) {
-                  localFormData.artist = metadata.artist;
-                }
-
-                if (metadata.album && !localFormData.album) {
-                  localFormData.album = metadata.album;
-                }
-
-                if (metadata.genre && !localFormData.genre) {
-                  const genreExists = referencesStore.genreOptions.some(
-                    option => option.value === metadata.genre || option.label === metadata.genre
-                  );
-                  if (genreExists) {
-                    localFormData.genre = metadata.genre;
-                  }
-                }
-              }
-
-              updateProgress(100, 'finished');
-              
-              uploadedFileNames.value.push(file.name);
-
-              const newFile = {
-                ...file,
-                id: finalData.id || file.name,
-                url: finalData.url || finalData.fileUrl,
-                status: 'finished' as const,
-                percentage: 100
-              };
-
-              const fileIndex = fileList.value.findIndex(f => f.id === file.id || f.name === file.name);
-              if (fileIndex !== -1) {
-                fileList.value[fileIndex] = newFile;
-                fileList.value = [...fileList.value];
-              }
-
-              if (onFinish) onFinish(newFile);
-              message.success(`File "${file.name}" uploaded successfully`);
-
-            } catch (pollError: any) {
-              console.error('Progress polling failed:', pollError);
-              updateProgress(0, 'error');
-              
-              message.error(`Upload processing failed: ${pollError.message}`);
-              if (onError) onError(pollError as Error);
+          if (finalData.metadata) {
+            const metadata = finalData.metadata;
+            if (metadata.title && !localFormData.title) localFormData.title = metadata.title;
+            if (metadata.artist && !localFormData.artist) localFormData.artist = metadata.artist;
+            if (metadata.album && !localFormData.album) localFormData.album = metadata.album;
+            if (metadata.genre && !localFormData.genre) {
+              const genreExists = referencesStore.genreOptions.some(
+                option => option.value === metadata.genre || option.label === metadata.genre
+              );
+              if (genreExists) localFormData.genre = metadata.genre;
             }
+          }
+
+          updateProgress(100, 'finished');
+          uploadedFileNames.value.push(file.name);
+
+          const newFile = {
+            ...file,
+            id: finalData.id || file.name,
+            url: finalData.url || finalData.fileUrl,
+            status: 'finished' as const,
+            percentage: 100
           };
 
-          setTimeout(pollProgress, 100);
+          const fileIndex = fileList.value.findIndex(f => f.id === file.id || f.name === file.name);
+          if (fileIndex !== -1) {
+            fileList.value[fileIndex] = newFile;
+            fileList.value = [...fileList.value];
+          }
+
+          if (onFinish) onFinish(newFile);
+          message.success(`File "${file.name}" uploaded successfully`);
 
         } else {
-          console.log('Direct upload completed without polling');
           updateProgress(100, 'finished');
-          
           uploadedFileNames.value.push(file.name);
           const newFile = {
             ...file,
@@ -355,7 +318,6 @@ export default defineComponent( {
         file.status = 'error';
         file.percentage = 0;
 
-        // Update fileList to reflect error state
         const fileIndex = fileList.value.findIndex(f => f.id === file.id || f.name === file.name);
         if (fileIndex !== -1) {
           fileList.value[fileIndex] = { ...fileList.value[fileIndex], status: 'error', percentage: 0 };

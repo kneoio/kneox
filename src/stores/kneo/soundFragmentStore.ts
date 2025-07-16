@@ -186,15 +186,21 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         return response.data;
     };
 
-
     const pollUploadProgress = async (uploadId: string, onProgress: (percentage: number) => void): Promise<any> => {
         return new Promise((resolve, reject) => {
+            let lastReportedProgress = -1;
+            
             const pollInterval = setInterval(async () => {
                 try {
                     const progressResponse = await apiClient.get(`/soundfragments/upload-progress/${uploadId}`);
                     const progress = progressResponse.data;
     
-                    onProgress(progress.percentage);
+                    console.log('Real progress from server:', progress);
+    
+                    if (progress.percentage !== lastReportedProgress) {
+                        lastReportedProgress = progress.percentage;
+                        onProgress(progress.percentage);
+                    }
     
                     if (progress.status === 'finished' || progress.status === 'error') {
                         clearInterval(pollInterval);
@@ -202,7 +208,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
                         if (progress.status === 'error') {
                             reject(new Error('Upload processing failed on server'));
                         } else {
-                            resolve(progress); // Return the full progress data including metadata
+                            resolve(progress);
                         }
                     }
                 } catch (error: any) {
@@ -210,7 +216,12 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
                     console.error('Progress polling failed:', error);
                     reject(error);
                 }
-            }, 500); // Poll every 500ms for more responsive updates
+            }, 500); // Poll every 500ms
+            
+            setTimeout(() => {
+                clearInterval(pollInterval);
+                reject(new Error('Upload processing timeout'));
+            }, 10 * 60 * 1000);
         });
     };
 
