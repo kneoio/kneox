@@ -78,7 +78,7 @@
                   <n-select
                       v-model:value="localFormData.country"
                       :options="countryOptions"
-                      style="width: 50%; max-width: 600px;"
+                      style="width: 25%; max-width: 300px;"
                   />
                 </n-form-item>
               </n-gi>

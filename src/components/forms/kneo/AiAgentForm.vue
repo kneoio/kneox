@@ -29,7 +29,7 @@
               <n-gi>
                 <n-form-item label="Preferred Language">
                   <n-select v-model:value="localFormData.preferredLang" :options="langOptions"
-                    style="width: 50%; max-width: 600px;" />
+                    style="width: 25%; max-width: 300px;" />
                 </n-form-item>
               </n-gi>
               <n-gi>
@@ -108,7 +108,7 @@
                     :options="voiceOptions" 
                     filterable
                     placeholder="Select a voice"
-                    style="width: 60%;"
+                    style="width: 30%; max-width: 300px;"
                   />
                 </n-form-item>
               </n-gi>

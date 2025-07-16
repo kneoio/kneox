@@ -34,7 +34,7 @@
               <n-gi>
                 <n-form-item label="Genre">
                   <n-select v-model:value="localFormData.genre" :options="referencesStore.genreOptions" filterable
-                    placeholder="Select Genre" style="width: 50%; max-width: 600px;" />
+                    placeholder="Select Genre" style="width: 25%; max-width: 300px;" />
                 </n-form-item>
               </n-gi>
               <n-gi>

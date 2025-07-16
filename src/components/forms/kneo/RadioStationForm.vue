@@ -44,7 +44,7 @@
               <n-gi>
                 <n-form-item label="Country">
                   <n-select v-model:value="localFormData.country" :options="countryOptions"
-                    style="width: 50%; max-width: 600px;" />
+                    style="width: 25%; max-width: 300px;" />
                 </n-form-item>
               </n-gi>
               <n-gi>
@@ -61,13 +61,13 @@
               <n-gi>
                 <n-form-item label="Time Zone">
                   <n-select v-model:value="localFormData.timeZone" :options="timezones" placeholder="Select Time Zone"
-                    style="width: 50%; max-width: 600px;" />
+                    style="width: 25%; max-width: 300px;" />
                 </n-form-item>
               </n-gi>
               <n-gi>
                 <n-form-item label="Managed By">
                   <n-select v-model:value="localFormData.managedBy" :options="managedByOptions"
-                    placeholder="Select Management Type" style="width: 50%; max-width: 600px;" />
+                    placeholder="Select Management Type" style="width: 25%; max-width: 300px;" />
                 </n-form-item>
               </n-gi>
               <n-gi>
