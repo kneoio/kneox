@@ -2,7 +2,7 @@
   <n-layout-header :inverted="inverted" bordered>
     <n-grid x-gap="12" :cols="4">
       <n-gi>
-        <n-h1 class="title">&nbsp;&nbsp;IOMIX</n-h1>
+        <n-h1 class="title">&nbsp;&nbsp;Mixpla</n-h1>
       </n-gi>
       <n-gi :offset="2">
         <div class="user-info" v-if="isAuthenticated">
@@ -57,8 +57,8 @@ export default defineComponent({
     const handleLogout = async () => {
       if (kc) {
         try {
-          await kc.logout();
-         // window.location.href = 'http://localhost:8090/dashboard';
+          const redirectUri = `${window.location.origin}/mixpla`;
+          await kc.logout({ redirectUri });
         } catch (error) {
           console.error("Logout failed", error);
         }

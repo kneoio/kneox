@@ -39,7 +39,7 @@
           </div>
 
 <div class="space-y-4">
-            <h2 class="text-2xl font-bold text-gray-800 border-b pb-2">Featured Stations</h2>
+            <h2 class="text-2xl font-bold text-gray-800 border-b pb-2">Featured Stations(Demo)</h2>
             <div v-if="isLoading" class="space-y-4">
               <n-skeleton text style="width: 60%" />
               <n-skeleton text :repeat="2" />
@@ -97,7 +97,7 @@ const stationsData = ref<Array<Station>>([]);
 const isLoading = ref(true);
 const error = ref<Error | null>(null);
 
-const radioPlayerHost = ref('https://mixpla246.windsurf.build');
+const radioPlayerHost = ref('https://mixpla250.windsurf.build');
 const referencesStore = useReferencesStore();
 
 const fetchStations = async () => {
@@ -115,5 +115,4 @@ const fetchStations = async () => {
 </script>
 
 <style scoped>
-/* handled by Tailwind classes */
 </style>
