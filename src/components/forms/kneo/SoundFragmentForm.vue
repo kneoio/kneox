@@ -50,16 +50,57 @@
               </n-gi>
               <n-gi>
                 <n-form-item label="Upload File">
-                  <n-upload v-model:file-list="fileList" :multiple="false" :max="1" :show-download-button="true"
-                    :disabled="false" @change="handleChange" @finish="handleFinish" @download="handleDownload"
-                    @preview="handleDownload" style="width: 50%; max-width: 600px;" :accept="audioAcceptTypes"
-                    :custom-request="handleUpload" :show-remove-button="true">
+                  <n-upload 
+                    v-model:file-list="fileList" 
+                    :multiple="false" 
+                    :max="1" 
+                    :show-download-button="true"
+                    :disabled="false" 
+                    @change="handleChange" 
+                    @finish="handleFinish" 
+                    @download="handleDownload"
+                    @preview="handleDownload" 
+                    style="width: 50%; max-width: 600px;" 
+                    :accept="audioAcceptTypes"
+                    :custom-request="handleUpload" 
+                    :show-remove-button="true"
+                    :default-upload="true">
                     <n-button>Select File</n-button>
-                    <template #file=" { file } ">
-                      <div class="upload-file" @click.stop.prevent="handleDownload( file )">
-                        {{ file.name }}
-                        <n-progress v-if=" file.status === 'uploading' " :percentage="file.percentage || 0"
-                          :show-indicator="true" style="margin-top: 8px;" />
+                    <template #file="{ file }">
+                      <div class="upload-file" style="padding: 12px; border: 1px solid #e0e0e6; border-radius: 6px; margin-top: 8px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                          <span style="font-weight: 500;">{{ file.name }}</span>
+                          <span v-if="file.status === 'uploading'" style="color: #2080f0; font-size: 12px;">
+                            {{ Math.round(file.percentage || 0) }}%
+                          </span>
+                          <span v-else-if="file.status === 'finished'" style="color: #18a058; font-size: 12px;">
+                            ✓ Complete
+                          </span>
+                          <span v-else-if="file.status === 'error'" style="color: #d03050; font-size: 12px;">
+                            ✗ Failed
+                          </span>
+                        </div>
+                        
+                        <n-progress 
+                          v-if="file.status === 'uploading'" 
+                          :percentage="file.percentage || 0"
+                          :show-indicator="false" 
+                          type="line"
+                          :height="6"
+                          :border-radius="3"
+                          color="#2080f0"
+                          style="margin-bottom: 8px;" />
+                        
+                        <div v-if="file.status === 'finished'" 
+                             style="padding: 4px 8px; background-color: #f0f9ff; border: 1px solid #18a058; border-radius: 4px; color: #18a058; font-size: 12px; cursor: pointer;"
+                             @click.stop.prevent="handleDownload(file)">
+                          Click to download
+                        </div>
+                        
+                        <div v-if="file.status === 'error'" 
+                             style="padding: 4px 8px; background-color: #fef2f2; border: 1px solid #d03050; border-radius: 4px; color: #d03050; font-size: 12px;">
+                          Upload failed - please try again
+                        </div>
                       </div>
                     </template>
                   </n-upload>
@@ -138,7 +179,7 @@ export default defineComponent( {
     const store = useSoundFragmentStore();
     const radioStationStore = useRadioStationStore();
     const referencesStore = useReferencesStore();
-    const activeTab = ref( "properties" );
+    const activeTab = ref("properties");
     const fileList = ref<UploadFileInfo[]>( [] );
     const uploadedFileNames = ref<string[]>( [] );
     const tempFileIds = ref<string[]>( [] );
@@ -182,61 +223,86 @@ export default defineComponent( {
       { immediate: true }
     );
 
-
-    const handleUpload = async ( { file, onFinish, onError, onProgress }: {
+    const handleUpload = async ({ file, onFinish, onError, onProgress }: {
       file: UploadFileInfo,
-      onFinish?: ( file?: UploadFileInfo ) => void,
-      onError?: ( e: Error ) => void,
-      onProgress?: ( e: { percent: number } ) => void,
-    } ) => {
+      onFinish?: (file?: UploadFileInfo) => void,
+      onError?: (e: Error) => void,
+      onProgress?: (e: { percent: number }) => void,
+    }) => {
       try {
         const entityId = localFormData.id || "temp";
 
         file.status = 'uploading';
         file.percentage = 0;
 
-        // Start the upload (this returns immediately with uploadId)
-        const uploadResponse = await store.uploadFile( entityId, file.file as File );
-        const uploadId = uploadResponse.id;
+        const updateProgress = (percentage: number, status?: 'uploading' | 'finished' | 'error') => {
+          file.percentage = percentage;
+          if (status) file.status = status;
+          
+          if (onProgress) {
+            onProgress({ percent: percentage });
+          }
+          
+          const fileIndex = fileList.value.findIndex(f => f.id === file.id || f.name === file.name);
+          if (fileIndex !== -1) {
+            fileList.value[fileIndex] = { ...fileList.value[fileIndex], percentage, status: status || fileList.value[fileIndex].status };
+            fileList.value = [...fileList.value];
+          }
+        };
 
-        if ( uploadId ) {
-          // Now poll for progress updates
+        updateProgress(0, 'uploading');
+
+        console.log('Starting upload for file:', file.name);
+        const uploadResponse = await store.uploadFile(entityId, file.file as File);
+        
+        updateProgress(10);
+        
+        const uploadId = uploadResponse.id;
+        console.log('Upload response received, uploadId:', uploadId);
+
+        if (uploadId) {
           const pollProgress = async () => {
             try {
-              const finalData = await store.pollUploadProgress( uploadId, ( percentage: number ) => {
-                if ( onProgress ) {
-                  onProgress( { percent: percentage } );
-                }
-                file.percentage = percentage;
-              } );
+              console.log('Starting progress polling for uploadId:', uploadId);
+              
+              const finalData = await store.pollUploadProgress(uploadId, (percentage: number) => {
+                console.log('Progress update:', percentage + '%');
+                
+                const adjustedPercentage = Math.max(10, Math.min(95, percentage));
+                updateProgress(adjustedPercentage, 'uploading');
+              });
 
-              // Auto-populate form fields from metadata if available
-              if ( finalData.metadata ) {
+              console.log('Upload processing completed:', finalData);
+
+              if (finalData.metadata) {
                 const metadata = finalData.metadata;
+                console.log('Extracted metadata:', metadata);
 
-                if ( metadata.title && !localFormData.title ) {
+                if (metadata.title && !localFormData.title) {
                   localFormData.title = metadata.title;
                 }
 
-                if ( metadata.artist && !localFormData.artist ) {
+                if (metadata.artist && !localFormData.artist) {
                   localFormData.artist = metadata.artist;
                 }
 
-                if ( metadata.album && !localFormData.album ) {
+                if (metadata.album && !localFormData.album) {
                   localFormData.album = metadata.album;
                 }
 
-                if ( metadata.genre && !localFormData.genre ) {
+                if (metadata.genre && !localFormData.genre) {
                   const genreExists = referencesStore.genreOptions.some(
                     option => option.value === metadata.genre || option.label === metadata.genre
                   );
-                  if ( genreExists ) {
+                  if (genreExists) {
                     localFormData.genre = metadata.genre;
                   }
                 }
               }
 
-              uploadedFileNames.value.push( file.name );
+              updateProgress(100, 'finished');
+              
+              uploadedFileNames.value.push(file.name);
 
               const newFile = {
                 ...file,
@@ -246,24 +312,31 @@ export default defineComponent( {
                 percentage: 100
               };
 
-              if ( onFinish ) onFinish( newFile );
-              message.success( `File "${file.name}" uploaded successfully` );
+              const fileIndex = fileList.value.findIndex(f => f.id === file.id || f.name === file.name);
+              if (fileIndex !== -1) {
+                fileList.value[fileIndex] = newFile;
+                fileList.value = [...fileList.value];
+              }
 
-            } catch ( pollError: any ) {
-              console.error( 'Progress polling failed:', pollError );
-              file.status = 'error';
-              file.percentage = 0;
-              message.error( `Upload processing failed: ${pollError.message}` );
-              if ( onError ) onError( pollError as Error );
+              if (onFinish) onFinish(newFile);
+              message.success(`File "${file.name}" uploaded successfully`);
+
+            } catch (pollError: any) {
+              console.error('Progress polling failed:', pollError);
+              updateProgress(0, 'error');
+              
+              message.error(`Upload processing failed: ${pollError.message}`);
+              if (onError) onError(pollError as Error);
             }
           };
 
-          // Start polling asynchronously
-          pollProgress();
+          setTimeout(pollProgress, 100);
 
         } else {
-          // Fallback if no uploadId is returned
-          uploadedFileNames.value.push( file.name );
+          console.log('Direct upload completed without polling');
+          updateProgress(100, 'finished');
+          
+          uploadedFileNames.value.push(file.name);
           const newFile = {
             ...file,
             id: uploadResponse.id || file.name,
@@ -272,29 +345,36 @@ export default defineComponent( {
             percentage: 100
           };
 
-          if ( onFinish ) onFinish( newFile );
-          message.success( `File "${file.name}" uploaded successfully` );
+          if (onFinish) onFinish(newFile);
+          message.success(`File "${file.name}" uploaded successfully`);
         }
 
-      } catch ( error: any ) {
+      } catch (error: any) {
+        console.error('Upload error:', error);
+        
         file.status = 'error';
         file.percentage = 0;
 
-        const errorMessage = error.message || 'Upload failed';
-        message.error( errorMessage );
-        console.error( 'Upload error:', error );
+        // Update fileList to reflect error state
+        const fileIndex = fileList.value.findIndex(f => f.id === file.id || f.name === file.name);
+        if (fileIndex !== -1) {
+          fileList.value[fileIndex] = { ...fileList.value[fileIndex], status: 'error', percentage: 0 };
+          fileList.value = [...fileList.value];
+        }
 
-        if ( onError ) onError( error as Error );
+        const errorMessage = error.message || 'Upload failed';
+        message.error(errorMessage);
+
+        if (onError) onError(error as Error);
         throw error;
       }
     };
-
 
     const handleDownload = async ( file: UploadFileInfo ) => {
       try {
         const entityId = localFormData.id || "temp";
         const fileKey = file.id || file.name || 'download';
-        const fileName = file.name; // Pass the original filename
+        const fileName = file.name; 
 
         loadingBar.start();
 
@@ -303,7 +383,7 @@ export default defineComponent( {
           fileKey,
           fileName,
           ( percentage: number ) => {
-            // loadingBar progress indication ??
+           // loadingBar.progress( percentage / 100 );
           }
         );
 
@@ -398,7 +478,6 @@ export default defineComponent( {
       }
     };
 
-    // Watch for tab changes to load ACL data
     watch( activeTab, ( newTab ) => {
       if ( newTab === 'acl' ) {
         fetchAclData();
@@ -440,8 +519,6 @@ export default defineComponent( {
         console.error( "Failed to fetch data:", error );
       }
     } );
-
-
 
     return {
       store,

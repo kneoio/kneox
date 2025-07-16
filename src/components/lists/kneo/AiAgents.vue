@@ -193,6 +193,11 @@ export default defineComponent({
         {title: 'Name', key: 'name'},
         {title: 'Preferred Language', key: 'preferredLang'},
         {
+          title: 'Talkativity',
+          key: 'talkativity',
+          render: (row) => `${Math.round(row.talkativity * 100)}%`
+        },
+        {
           title: 'Main Prompt',
           key: 'mainPrompt',
           ellipsis: {tooltip: true}

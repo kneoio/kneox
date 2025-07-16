@@ -72,7 +72,7 @@ import {
 } from "naive-ui";
 import AclTable from '../../common/AclTable.vue';
 import { Profile, ProfileSave } from "../../../types/kneoBroadcasterTypes";
-import { useProfileStore, ProfileDTO } from "../../../stores/kneo/profileStore";
+import { useProfileStore } from "../../../stores/kneo/profileStore";
 
 export default defineComponent({
   name: "ProfileForm",
