@@ -12,30 +12,30 @@
           </n-text>
         </n-space>
         <n-space size="medium">
-          <n-button 
-            type="primary" 
-            size="medium" 
-            :loading="isStartingStation" 
-            :disabled="isOnline"
-            @click="handleStart">
+          <n-button
+              type="primary"
+              size="medium"
+              :loading="isStartingStation"
+              :disabled="isOnline"
+              @click="handleStart">
             <template #icon>
-              <n-icon><Play /></n-icon>
+              <n-icon><PlayerPlay /></n-icon>
             </template>
             Start Station
           </n-button>
-          <n-button 
-            type="error" 
-            size="medium" 
-            :loading="isStoppingStation" 
-            :disabled="!isOnline"
-            @click="handleStop">
+          <n-button
+              type="error"
+              size="medium"
+              :loading="isStoppingStation"
+              :disabled="!isOnline"
+              @click="handleStop">
             <template #icon>
-              <n-icon><Stop /></n-icon>
+              <n-icon><PlayerStop /></n-icon>
             </template>
             Stop Station
           </n-button>
         </n-space>
-        
+
         <n-space vertical size="large">
           <n-space size="large">
             <n-card title="Live Playlist" style="flex: 1;">
@@ -45,9 +45,9 @@
                   <div v-if="stationDetails?.playlistManagerStats?.obtainedByPlaylist && stationDetails.playlistManagerStats.obtainedByPlaylist.length > 0">
                     <n-space vertical size="small">
                       <div
-                        v-for="(fragment, index) in stationDetails.playlistManagerStats.obtainedByPlaylist"
-                        :key="index"
-                        style="padding-left: 8px; border-left: 2px solid #e8e8e8; font-size: 0.875rem;"
+                          v-for="(fragment, index) in stationDetails.playlistManagerStats.obtainedByPlaylist"
+                          :key="index"
+                          style="padding-left: 8px; border-left: 2px solid #e8e8e8; font-size: 0.875rem;"
                       >
                         <n-text depth="3">{{ index + 1 }}. {{ cleanTitle(fragment) }}</n-text>
                       </div>
@@ -55,15 +55,15 @@
                   </div>
                   <n-text depth="3" v-else>No played fragments available.</n-text>
                 </div>
-                
+
                 <div>
                   <n-text depth="2" style="font-weight: 600; margin-bottom: 8px; display: block;">Ready to be queued:</n-text>
                   <div v-if="stationDetails?.playlistManagerStats?.readyToBeConsumed && stationDetails.playlistManagerStats.readyToBeConsumed.length > 0">
                     <n-space vertical size="small">
                       <div
-                        v-for="(fragment, index) in stationDetails.playlistManagerStats.readyToBeConsumed"
-                        :key="index"
-                        style="padding-left: 8px; border-left: 2px solid #e8e8e8; font-size: 0.875rem;"
+                          v-for="(fragment, index) in stationDetails.playlistManagerStats.readyToBeConsumed"
+                          :key="index"
+                          style="padding-left: 8px; border-left: 2px solid #e8e8e8; font-size: 0.875rem;"
                       >
                         <n-text depth="3">{{ index + 1 }}. {{ cleanTitle(fragment) }}</n-text>
                       </div>
@@ -73,7 +73,7 @@
                 </div>
               </n-space>
             </n-card>
-            
+
             <n-card size="small">
               <template #header>
                 <n-space justify="space-between" align="center">
@@ -107,7 +107,7 @@
                     </n-space>
                   </n-space>
                 </div>
-                
+
                 <div v-if="timelineDisplay" style="font-family: monospace; font-size: 0.9rem; background-color: #f0f0f0; padding: 10px 15px; border-radius: 4px; border: 1px solid #dcdcdc; white-space: nowrap; overflow-x: auto;">
                   {{ timelineDisplay }}
                 </div>
@@ -123,24 +123,17 @@
 <script lang="ts">
 import { defineComponent, ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useDashboardStore } from '../../../stores/kneo/dashboardStore';
-import { 
+import {
   NButton, NCard, NIcon, NTag, NStatistic, NProgress, NSpace, NH2, NText,
   useMessage
 } from 'naive-ui';
-import {
-  PlayerPlay as Play, PlayerStop as Stop, Refresh, Edit, Trash, Calendar,
-  Music, Cpu, DeviceDesktop as Memory, Clock, Users, Bulb as BrainIcon
-} from '@vicons/tabler';
-import { Chart, registerables } from 'chart.js';
-
-Chart.register(...registerables);
+import { PlayerPlay, PlayerStop } from '@vicons/tabler';
 
 export default defineComponent({
   name: 'StationDetail',
   components: {
     NButton, NCard, NIcon, NTag, NStatistic, NProgress, NSpace, NH2, NText,
-    Play, Stop, Refresh, Edit, Trash, Calendar,
-    Music, Cpu, Memory, Clock, Users, BrainIcon
+    PlayerPlay, PlayerStop
   },
   props: {
     brandName: {
@@ -166,41 +159,41 @@ export default defineComponent({
     });
 
     const lastUpdateTime = computed(() => {
-      const lastUpdate = dashboardStore.getLastUpdate();
+      const lastUpdate = dashboardStore.getStationLastUpdate(props.brandName);
       if (!lastUpdate) return 'N/A';
-      return lastUpdate.toLocaleTimeString([], { 
-        hour: '2-digit', 
-        minute: '2-digit', 
-        second: '2-digit' 
+      return lastUpdate.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
       });
     });
 
     const timelineDisplay = computed(() => {
       const timeline = stationDetails.value?.timeline;
       if (!timeline) return null;
-      
+
       const parts = [];
-      
+
       if (timeline.pastSegmentSequences?.length > 0) {
         parts.push(timeline.pastSegmentSequences.join('-'));
         parts.push('-');
       }
-      
+
       parts.push('||>');
-      
+
       if (timeline.visibleSegmentSequences?.length > 0) {
         parts.push(timeline.visibleSegmentSequences.join('-'));
       } else {
         parts.push('(empty)');
       }
-      
+
       parts.push('<||');
-      
+
       if (timeline.upcomingSegmentSequences?.length > 0) {
         parts.push('-');
         parts.push(timeline.upcomingSegmentSequences.join('-'));
       }
-      
+
       return parts.join(' ');
     });
 
@@ -251,6 +244,7 @@ export default defineComponent({
     const stationInitials = computed(() => {
       return props.brandName.substring(0, 2).toUpperCase();
     });
+
     const sendCommand = async (brandName: string, command: string) => {
       try {
         const success = await dashboardStore.triggerBroadcastAction(brandName, command);
@@ -290,53 +284,6 @@ export default defineComponent({
       return title.replace(/^#+\s*/, '').trim();
     };
 
-    const formatHlsTimestamp = (timestampSeconds: number | undefined | null): string => {
-      if (!timestampSeconds) return 'N/A';
-      try {
-        const date = new Date(timestampSeconds * 1000);
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      } catch (e) {
-        return 'Invalid Date';
-      }
-    };
-
-    const getCurrentTrackTitle = (): string => {
-      const songStats = stationDetails.value?.songStatistics;
-      if (!songStats) return 'N/A';
-      const songKeys = Object.keys(songStats);
-      if (songKeys.length === 0) return 'N/A';
-      return cleanTitle(songKeys[0]);
-    };
-
-    const getCurrentTrackTimestamp = (): number | null => {
-      return Date.now() / 1000;
-    };
-
-    const getCurrentRequestCount = (): number => {
-      const songStats = stationDetails.value?.songStatistics;
-      if (!songStats || typeof songStats !== 'object') return 0;
-      return songStats.requestCount || 0;
-    };
-
-    const getTimelineString = (): string => {
-      const timeline = stationDetails.value?.timeline;
-      if (!timeline) return 'No timeline data';
-      
-      const segments = timeline.visibleSegmentSequences || [];
-      if (segments.length === 0) return 'No visible segments';
-      
-      return `Segments: ${segments.join(', ')}`;
-    };
-
-    // Timeline helper functions
-    const hasTimelineData = (): boolean => {
-      return !!(stationDetails.value?.timeline && (
-        stationDetails.value.timeline.pastSegmentSequences.length > 0 ||
-        stationDetails.value.timeline.visibleSegmentSequences.length > 0 ||
-        stationDetails.value.timeline.upcomingSegmentSequences.length > 0
-      ));
-    };
-
     const hasHlsSongStats = (): boolean => {
       return !!(stationDetails.value?.songStatistics && Object.keys(stationDetails.value.songStatistics).length > 0);
     };
@@ -353,85 +300,47 @@ export default defineComponent({
       return formatHlsTimestamp(songStats.segmentTimestamp);
     };
 
-    const getHlsRequestCount = () => {
-      const rowData = getRowData()
-      if (rowData && typeof rowData.songStatistics === 'object' && rowData.songStatistics !== null) {
-        return rowData.songStatistics.requestCount || 0
+    const formatHlsTimestamp = (timestampSeconds: number | undefined | null): string => {
+      if (!timestampSeconds) return 'N/A';
+      try {
+        const date = new Date(timestampSeconds * 1000);
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      } catch (e) {
+        return 'Invalid Date';
       }
-      return 0
+    };
+
+    const getHlsRequestCount = () => {
+      if (stationDetails.value && typeof stationDetails.value.songStatistics === 'object' && stationDetails.value.songStatistics !== null) {
+        return stationDetails.value.songStatistics.requestCount || 0;
+      }
+      return 0;
     };
 
     const getHlsListenersCount = (): number => {
       return currentListeners.value;
     };
 
-    const getPastSegments = (): string[] => {
-      // Try to extract segment data from segmentSizeHistory or generate based on current state
-      const history = stationDetails.value?.segmentSizeHistory;
-      if (history && history.length > 0) {
-        // Generate segment numbers based on history length
-        const segmentCount = Math.min(history.length, 5); // Show last 5 segments
-        const segments = [];
-        for (let i = segmentCount; i > 0; i--) {
-          segments.push((Date.now() - i * 10000).toString().slice(-4)); // Mock segment IDs
-        }
-        return segments;
-      }
-      return [];
-    };
-
-    const getVisibleSegments = (): string[] => {
-      const queueSize = stationDetails.value?.queueSize || 0;
-      if (queueSize > 0) {
-        const currentSegment = Date.now().toString().slice(-4);
-        return [currentSegment];
-      }
-      return [];
-    };
-
-    const getUpcomingSegments = (): string[] => {
-      const queueSize = stationDetails.value?.queueSize || 0;
-      if (queueSize > 0) {
-        const segments = [];
-        for (let i = 1; i <= Math.min(queueSize, 3); i++) {
-          segments.push((Date.now() + i * 10000).toString().slice(-4));
-        }
-        return segments;
-      }
-      return [];
-    };
-
-    const getRowData = () => {
-      if (!stationDetails.value) return null;
-      
-      //console.log('StationDetail getRowData - stationDetails:', stationDetails.value);
-      //console.log('StationDetail getRowData - timeline:', stationDetails.value.timeline);
-      //console.log('StationDetail getRowData - songStatistics:', stationDetails.value.songStatistics);
-      //console.log('StationDetail getRowData - currentListeners:', stationDetails.value.currentListeners);
-      
-      if (stationDetails.value.timeline) {
-        //console.log('StationDetail - timeline pastSegmentSequences:', stationDetails.value.timeline.pastSegmentSequences);
-        //console.log('StationDetail - timeline visibleSegmentSequences:', stationDetails.value.timeline.visibleSegmentSequences);
-        //console.log('StationDetail - timeline upcomingSegmentSequences:', stationDetails.value.timeline.upcomingSegmentSequences);
-      }
-      
-      const rowData = {
-        ...stationDetails.value,
-        brandName: props.brandName,
-        status: stationDetails.value.status,
-        managedBy: stationDetails.value.managedBy,
-        timeline: stationDetails.value.timeline || null,
-        hlsSongStats: stationDetails.value.songStatistics || null,
-        listenersCount: stationDetails.value.currentListeners
-      };
-      
-      console.log('StationDetail getRowData - result:', rowData);
-      return rowData;
-    };
-
     onMounted(() => {
       console.log('StationDetail mounted for brand:', props.brandName);
+
+      // Connect to station WebSocket
       dashboardStore.ensureStationConnected(props.brandName);
+
+      // Add polling as backup (same pattern as global dashboard)
+      const intervalId = setInterval(() => {
+        dashboardStore.fetchStation(props.brandName);
+      }, 3000); // Same 3-second interval as global
+
+      onUnmounted(() => {
+        console.log('StationDetail unmounted for brand:', props.brandName);
+
+        // Cleanup polling
+        clearInterval(intervalId);
+
+        // Disconnect station WebSocket
+        dashboardStore.disconnectStation(props.brandName);
+      });
     });
 
     onUnmounted(() => {
@@ -461,21 +370,11 @@ export default defineComponent({
       isStartingStation,
       isStoppingStation,
       cleanTitle,
-      formatHlsTimestamp,
-      getCurrentTrackTitle,
-      getCurrentTrackTimestamp,
-      getCurrentRequestCount,
-      getTimelineString,
-      hasTimelineData,
       hasHlsSongStats,
       getHlsCurrentTrack,
       getHlsTimestamp,
       getHlsRequestCount,
-      getHlsListenersCount,
-      getPastSegments,
-      getVisibleSegments,
-      getUpcomingSegments,
-      getRowData
+      getHlsListenersCount
     };
   },
 });

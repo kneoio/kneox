@@ -64,17 +64,6 @@ export interface PlaylistManagerStats {
     brand: string;
 }
 
-export interface SongStatistics {
-    segmentCount: number;
-    totalDuration: number;
-    totalSize: number;
-    averageBitrate: number;
-    requestCount: number;
-    start: number;
-    end: number;
-    latestRequestedSegment: number;
-}
-
 export interface StationDetails {
     brandName: string;
     status: string;

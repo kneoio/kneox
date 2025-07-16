@@ -1,16 +1,17 @@
 import { defineStore } from 'pinia';
-import { computed, ref } from 'vue';
+import { computed, ref, nextTick } from 'vue';
 import apiClient from '../../api/apiClient';
 import keycloak from '../../keycloakFactory';
 import {DashboardResponse, StationEntry, StationResponse} from "../../types/dashboard";
 
 export const useDashboardStore = defineStore('dashboardStore', () => {
-    const response = ref<DashboardResponse | null>(null);
+    const globalDashboardResponse = ref<DashboardResponse | null>(null);
     const stationResponse = ref<Record<string, StationResponse>>({});
-    const websocket = ref<WebSocket | null>(null);
+    const globalWebsocket = ref<WebSocket | null>(null);
     const stationWebsockets = ref<Record<string, WebSocket>>({});
-    const isConnected = ref(false);
-    const lastUpdate = ref<Date | null>(null);
+    const isGlobalConnected = ref(false);
+    const globalLastUpdate = ref<Date | null>(null);
+    const stationLastUpdate = ref<Record<string, Date>>({});
     const isStartingBroadcast = ref(false);
 
     const buildWebSocketUrl = (endpoint: string): string => {
@@ -28,26 +29,27 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
             (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING);
     };
 
+    const connectGlobal = () => {
+        if (isWebSocketActive(globalWebsocket.value)) return;
 
-    const connect = () => {
-        if (isWebSocketActive(websocket.value)) return;
-
-        websocket.value = new WebSocket(buildWebSocketUrl('dashboard'));
-        Object.assign(websocket.value, createWebSocketHandlers({
+        globalWebsocket.value = new WebSocket(buildWebSocketUrl('dashboard'));
+        Object.assign(globalWebsocket.value, createWebSocketHandlers({
             type: 'dashboard',
             onMessage: (data) => {
-                response.value = data;
-                lastUpdate.value = new Date();
+                nextTick(() => {
+                    globalDashboardResponse.value = data;
+                    globalLastUpdate.value = new Date();
+                });
             },
-            onConnect: fetchDashboard
+            onConnect: fetchGlobalDashboard
         }));
     };
 
-    const disconnect = () => {
-        if (websocket.value) {
-            websocket.value.close();
-            websocket.value = null;
-            isConnected.value = false;
+    const disconnectGlobal = () => {
+        if (globalWebsocket.value) {
+            globalWebsocket.value.close();
+            globalWebsocket.value = null;
+            isGlobalConnected.value = false;
         }
     };
 
@@ -59,12 +61,12 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
             type: 'station',
             brandName,
             onMessage: (data) => {
-                //console.log(data);
                 if (data.payload?.station?.brandName) {
                     stationResponse.value = {
                         ...stationResponse.value,
                         [data.payload.station.brandName]: data
                     };
+                    stationLastUpdate.value[data.payload.station.brandName] = new Date();
                 }
             },
             onConnect: () => fetchStation(brandName)
@@ -75,6 +77,7 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
         if (stationWebsockets.value[brandName]) {
             stationWebsockets.value[brandName].close();
             delete stationWebsockets.value[brandName];
+            delete stationLastUpdate.value[brandName];
         }
     };
 
@@ -86,9 +89,9 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
         return stationResponse.value[brandName];
     };
 
-    const fetchDashboard = () => {
-        if (websocket.value?.readyState === WebSocket.OPEN) {
-            websocket.value.send(JSON.stringify({ action: 'getDashboard' }));
+    const fetchGlobalDashboard = () => {
+        if (globalWebsocket.value?.readyState === WebSocket.OPEN) {
+            globalWebsocket.value.send(JSON.stringify({ action: 'getDashboard' }));
         }
     };
 
@@ -98,8 +101,8 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
         }
     };
 
-    const stats = computed(() => {
-        return response.value?.payload.stats || {
+    const globalStats = computed(() => {
+        return globalDashboardResponse.value?.payload.stats || {
             totalStations: 0,
             onlineStations: 0,
             minimumSegments: 0,
@@ -121,16 +124,24 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
         };
     });
 
-    const stationsList = computed<StationEntry[]>(() => {
-        return stats.value.stations || [];
+    const globalStationsList = computed<StationEntry[]>(() => {
+        return globalStats.value.stations || [];
     });
 
-    const version = computed(() => {
-        return response.value?.payload.kneobroadcaster?.[0] || '';
+    const globalVersion = computed(() => {
+        return globalDashboardResponse.value?.payload.kneobroadcaster?.[0] || '';
     });
 
     const getStationDetails = (brandName: string) => {
         return stationResponse.value[brandName]?.payload.station || null;
+    };
+
+    const getGlobalLastUpdate = () => {
+        return globalLastUpdate.value;
+    };
+
+    const getStationLastUpdate = (brandName: string) => {
+        return stationLastUpdate.value[brandName] || null;
     };
 
     const triggerBroadcastAction = async (brandName: string, action: string = 'start') => {
@@ -154,16 +165,6 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
         }
     };
 
-    const setupPeriodicRefresh = (intervalMs = 10000) => {
-        const intervalId = setInterval(() => {
-            fetchDashboard();
-            Object.keys(stationWebsockets.value).forEach(fetchStation);
-        }, intervalMs);
-
-        return () => clearInterval(intervalId);
-    };
-
-
     const createWebSocketHandlers = (options: {
         type: 'dashboard' | 'station',
         brandName?: string,
@@ -174,14 +175,13 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
             onopen: () => {
                 console.log(`${options.type} ${options.brandName || ''} WebSocket opened`);
                 if (options.type === 'dashboard') {
-                    isConnected.value = true;
+                    isGlobalConnected.value = true;
                 }
                 options.onConnect?.();
             },
             onmessage: (event: MessageEvent) => {
                 try {
                     const data = JSON.parse(event.data);
-                  //  console.log(data);
                     if (data.error) {
                         console.error(`${options.brandName || ''} error:`, data.error);
                         return;
@@ -194,14 +194,14 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
             onclose: (event: CloseEvent) => {
                 console.log(`${options.type} ${options.brandName || ''} closed:`, event.code, event.reason);
                 if (options.type === 'dashboard') {
-                    isConnected.value = false;
+                    isGlobalConnected.value = false;
                 }
 
                 if ([1000, 1001, 1006].includes(event.code)) {
                     console.log(`Reconnecting ${options.type} ${options.brandName || ''} in 3s...`);
                     setTimeout(() => {
                         if (options.type === 'dashboard') {
-                            connect();
+                            connectGlobal();
                         } else if (options.brandName) {
                             connectStation(options.brandName);
                         }
@@ -211,35 +211,39 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
             onerror: (error: Event) => {
                 console.error(`${options.type} ${options.brandName || ''} error:`, error);
                 if (options.type === 'dashboard') {
-                    isConnected.value = false;
+                    isGlobalConnected.value = false;
                 }
             }
         };
     };
 
-    const getLastUpdate = () => {
-        return lastUpdate.value;
-    };
-
     return {
-        response,
+        // Global dashboard
+        globalDashboardResponse,
+        globalWebsocket,
+        isGlobalConnected,
+        globalLastUpdate,
+        globalStats,
+        globalStationsList,
+        globalVersion,
+        connectGlobal,
+        disconnectGlobal,
+        fetchGlobalDashboard,
+        getGlobalLastUpdate,
+
+        // Station-specific
         stationResponse,
-        isConnected,
-        lastUpdate,
-        isStartingBroadcast,
-        stats,
-        stationsList,
-        version,
-        connect,
-        disconnect,
+        stationWebsockets,
+        stationLastUpdate,
         connectStation,
         disconnectStation,
         ensureStationConnected,
-        fetchDashboard,
         fetchStation,
         getStationDetails,
-        getLastUpdate,
-        triggerBroadcastAction,
-        setupPeriodicRefresh
+        getStationLastUpdate,
+
+        // Shared
+        isStartingBroadcast,
+        triggerBroadcastAction
     };
 });

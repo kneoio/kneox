@@ -110,27 +110,6 @@ export default defineComponent({
       }
     };
 
-    const activeMenuKey = computed(() => {
-      
-      if (route.name === 'Dashboard') return 'dashboard';
-      if (route.name === 'Player') return 'player';
-      if (route.name === 'RadioStations') return 'radiostations';
-      if (route.name === 'SoundFragments') return 'fragments';
-      if (route.name === 'Memories') return 'memories';
-      if (route.name === 'AiAgents') return 'ai_agents';
-      if (route.name === 'EnvironmentProfiles') return 'environment_profiles';
-      if (route.name === 'StationDetail' && route.params.brandName) {
-        return `station-${route.params.brandName}-dashboard`;
-      }
-      if (route.name === 'StationPlaylist' && route.params.brandName) {
-        return `station-${route.params.brandName}-playlist`;
-      }
-      if (route.name === 'StationListeners' && route.params.brandName) {
-        return `station-${route.params.brandName}-listeners`;
-      }
-      return null;
-    });
-
     const getStatusColor = (status: BrandStatus) => {
       switch (status) {
         case BrandStatus.ON_LINE:
@@ -305,7 +284,27 @@ export default defineComponent({
       ];
     });
 
+    const activeMenuKey = computed(() => {
+      if (route.name === 'Dashboard') return 'dashboard';
+      if (route.name === 'Player') return 'player';
+      if (route.name === 'RadioStations') return 'radiostations';
+      if (route.name === 'SoundFragments') return 'fragments';
+      if (route.name === 'Memories') return 'memories';
+      if (route.name === 'AiAgents') return 'ai_agents';
+      if (route.name === 'EnvironmentProfiles') return 'environment_profiles';
 
+      // Fix: Change 'StationDetail' to 'StationDashboard'
+      if (route.name === 'StationDashboard' && route.params.brandName) {
+        return `station-${route.params.brandName}-dashboard`;
+      }
+      if (route.name === 'StationPlaylist' && route.params.brandName) {
+        return `station-${route.params.brandName}-playlist`;
+      }
+      if (route.name === 'StationListeners' && route.params.brandName) {
+        return `station-${route.params.brandName}-listeners`;
+      }
+      return null;
+    });
 
     const handleMenuSelect = async (key: string) => {
       if (isMobile.value) {
@@ -314,7 +313,8 @@ export default defineComponent({
 
       if (key.startsWith('station-') && key.endsWith('-dashboard')) {
         const brandName = key.replace('station-', '').replace('-dashboard', '');
-        await router.push({name: 'StationDetail', params: {brandName: brandName}});
+        // Fix: Change 'StationDetail' to 'StationDashboard'
+        await router.push({name: 'StationDashboard', params: {brandName: brandName}});
       } else if (key.startsWith('station-') && key.endsWith('-playlist')) {
         const brandName = key.replace('station-', '').replace('-playlist', '');
         await router.push({ name: 'StationPlaylist', params: { brandName: brandName } });

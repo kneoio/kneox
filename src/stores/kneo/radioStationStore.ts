@@ -1,5 +1,5 @@
 import {defineStore} from 'pinia';
-import {computed, ref} from 'vue';
+import {computed, ref, nextTick} from 'vue';
 import apiClient, {setupApiClient} from '../../api/apiClient';
 import {ApiFormResponse, ApiViewPageResponse} from "../../types";
 import {RadioStation, RadioStationSave, BrandStatus} from "../../types/kneoBroadcasterTypes";
@@ -53,7 +53,9 @@ export const useRadioStationStore = defineStore('radioStationStore', () => {
     const fetchRadioStations = async (page = 1, pageSize = 10) => {
         const response = await apiClient.get(`/radiostations?page=${page}&size=${pageSize}`);
         if (response?.data?.payload) {
-            apiViewResponse.value = response.data.payload;
+            nextTick(() => {
+                apiViewResponse.value = response.data.payload; // Line 56 - wrapped in nextTick
+            });
         } else {
             throw new Error('Invalid API response structure');
         }
@@ -62,7 +64,9 @@ export const useRadioStationStore = defineStore('radioStationStore', () => {
     const fetchRadioStation = async (id: string) => {
         const response = await apiClient.get(`/radiostations/${id}`);
         if (response?.data?.payload) {
-            apiFormResponse.value = response.data.payload;
+            nextTick(() => {
+                apiFormResponse.value = response.data.payload;
+            });
         } else {
             throw new Error('Invalid API response structure');
         }
@@ -71,17 +75,21 @@ export const useRadioStationStore = defineStore('radioStationStore', () => {
     const fetchStatus = async () => {
         const response = await apiClient.get(`/radio/status`, {});
         if (response?.data?.payload) {
-            apiViewResponse.value = response.data.payload;
+            nextTick(() => {
+                apiViewResponse.value = response.data.payload;
+            });
         } else {
             throw new Error('Invalid API response structure');
         }
     };
 
     const updateCurrent = (data: RadioStation, actions: any = {}) => {
-        apiFormResponse.value = {
-            docData: data,
-            actions: actions
-        };
+        nextTick(() => {
+            apiFormResponse.value = {
+                docData: data,
+                actions: actions
+            };
+        });
     };
 
     const save = async (data: RadioStationSave, id?: string) => {

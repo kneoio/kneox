@@ -5,8 +5,8 @@
         <div class="header">
           <p v-if="userData?.profile?.username" class="username">Hello, {{ userData.profile.username }}</p>
           <div class="controls">
-            <n-tag :type="dashboard.isConnected ? 'success' : 'error'" size="small">
-              {{ dashboard.isConnected ? 'Connected' : 'Disconnected' }}
+            <n-tag :type="dashboard.isGlobalConnected ? 'success' : 'error'" size="small">
+              {{ dashboard.isGlobalConnected ? 'Connected' : 'Disconnected' }}
             </n-tag>
             <n-select
                 v-model:value="selectedBrand"
@@ -27,11 +27,11 @@
             </n-button>
           </div>
           <div class="meta">
-            <n-text v-if="dashboard.lastUpdate" depth="3" class="text-sm">
-              Updated: {{ formatTime(dashboard.lastUpdate) }}
+            <n-text v-if="dashboard.globalLastUpdate" depth="3" class="text-sm">
+              Updated: {{ formatTime(dashboard.globalLastUpdate) }}
             </n-text>
-            <n-text v-if="dashboard.version" depth="3" class="text-sm">
-              v{{ dashboard.version }}
+            <n-text v-if="dashboard.globalVersion" depth="3" class="text-sm">
+              v{{ dashboard.globalVersion }}
             </n-text>
           </div>
         </div>
@@ -39,7 +39,7 @@
         <n-divider />
 
         <n-descriptions
-            v-if="dashboard.stats"
+            v-if="dashboard.globalStats"
             label-placement="top"
             :column="isMobile ? 2 : 3"
             size="small"
@@ -47,29 +47,29 @@
         >
           <n-descriptions-item label="Stations">
             <div class="stations-info">
-              <n-tag :type="dashboard.stats.totalStations > 0 ? 'info' : 'warning'" size="small">
-                Total: {{ dashboard.stats.totalStations }}
+              <n-tag :type="dashboard.globalStats.totalStations > 0 ? 'info' : 'warning'" size="small">
+                Total: {{ dashboard.globalStats.totalStations }}
               </n-tag>
               <div class="status-tags">
-                <n-tag type="success" size="small">Online: {{ dashboard.stats.onlineStations }}</n-tag>
-                <n-tag type="warning" size="small">Warming: {{ dashboard.stats.warmingStations }}</n-tag>
-                <n-tag type="error" size="small">Offline: {{ dashboard.stats.offlineStations }}</n-tag>
-              </div>              
+                <n-tag type="success" size="small">Online: {{ dashboard.globalStats.onlineStations }}</n-tag>
+                <n-tag type="warning" size="small">Warming: {{ dashboard.globalStats.warmingStations }}</n-tag>
+                <n-tag type="error" size="small">Offline: {{ dashboard.globalStats.offlineStations }}</n-tag>
+              </div>
             </div>
           </n-descriptions-item>
 
-          <n-descriptions-item label="Storage" v-if="dashboard?.stats?.fileMaintenanceStats">
+          <n-descriptions-item label="Storage" v-if="dashboard?.globalStats?.fileMaintenanceStats">
             <div class="storage-stats">
-              <div>Total: {{ (dashboard.stats.fileMaintenanceStats.totalSpaceBytes / (1024 * 1024 * 1024)).toFixed(2) }} GB</div>
-              <div>Available: {{ (dashboard.stats.fileMaintenanceStats.availableSpaceBytes / (1024 * 1024 * 1024)).toFixed(2) }} GB</div>
-              <div>Freed: {{ (dashboard.stats.fileMaintenanceStats.spaceFreedBytes / (1024 * 1024)).toFixed(2) }} MB</div>
-              <div>Files/Dirs: {{ dashboard.stats.fileMaintenanceStats.filesDeleted }}/{{ dashboard.stats.fileMaintenanceStats.directoriesDeleted }}</div>
+              <div>Total: {{ (dashboard.globalStats.fileMaintenanceStats.totalSpaceBytes / (1024 * 1024 * 1024)).toFixed(2) }} GB</div>
+              <div>Available: {{ (dashboard.globalStats.fileMaintenanceStats.availableSpaceBytes / (1024 * 1024 * 1024)).toFixed(2) }} GB</div>
+              <div>Freed: {{ (dashboard.globalStats.fileMaintenanceStats.spaceFreedBytes / (1024 * 1024)).toFixed(2) }} MB</div>
+              <div>Files/Dirs: {{ dashboard.globalStats.fileMaintenanceStats.filesDeleted }}/{{ dashboard.globalStats.fileMaintenanceStats.directoriesDeleted }}</div>
             </div>
           </n-descriptions-item>
 
           <n-descriptions-item label="Configuration">
             <div class="config-stats">
-              <div v-for="(section, sectionName) in dashboard.stats.configurationStats?.configDetails" :key="sectionName">
+              <div v-for="(section, sectionName) in dashboard.globalStats.configurationStats?.configDetails" :key="sectionName">
                 <div class="config-section-title">{{ sectionName }}</div>
                 <div v-for="(value, key) in section" :key="key" class="config-item">
                   <span class="config-key">{{ key }}:</span>
@@ -151,26 +151,28 @@ export default defineComponent({
       value: brand.slugName
     })));
 
-    watch(() => dashboard.stationsList, (newStations) => {
-      newStations.forEach(station => dashboard.ensureStationConnected(station.brandName));
+    watch(() => dashboard.globalStationsList, (newStations) => {
+      if (newStations && newStations.length > 0) {
+        newStations.forEach(station => dashboard.ensureStationConnected(station.brandName));
+      }
     }, { immediate: true });
 
     onMounted(() => {
-      dashboard.connect();
-      const cleanup = dashboard.setupPeriodicRefresh(3000);
+      dashboard.connectGlobal();
+      // Note: setupPeriodicRefresh needs to be added back to the store or implemented here
       brandStore.fetchAll();
       window.addEventListener('resize', () => isMobile.value = window.innerWidth < 768);
       parentTitle.value = 'Dashboard';
+
       onUnmounted(() => {
-        cleanup();
-        dashboard.disconnect();
-        dashboard.stationsList.forEach(station => dashboard.disconnectStation(station.brandName));
+        dashboard.disconnectGlobal();
+        dashboard.globalStationsList.forEach(station => dashboard.disconnectStation(station.brandName));
         window.removeEventListener('resize', () => isMobile.value = window.innerWidth < 768);
       });
     });
 
     const detailedStationsList = computed(() => {
-      return dashboard.stationsList.map(station => {
+      return dashboard.globalStationsList.map(station => {
         const details = dashboard.getStationDetails(station.brandName);
         return details ? { ...details } : {};
       });
