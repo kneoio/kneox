@@ -86,25 +86,17 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
-                <n-form-item label="Main Prompt">
-                  <CodeMirror v-model="localFormData.mainPrompt" basic :lang="lang" :style="{
-                    width: '60%',
-                    height: '200px',
-                    border: '1px solid #d9d9d9',
-                    borderRadius: '3px',
-                    overflow: 'auto'
-                  }" :extensions="editorExtensions" />
-                </n-form-item>
-              </n-gi>
-              <n-gi>
                 <n-form-item label="Prompts">
                   <n-dynamic-input v-model:value="localFormData.prompts" :on-create="createPromptItem"
                     style="width: 60%;">
                     <template #default="{ value, index }">
-                      <n-input :value="value" type="textarea" :autosize="{
-                        minRows: 3,
-                        maxRows: 6
-                      }" placeholder="Enter prompt text..." @input="(val) => localFormData.prompts[index] = val" />
+                      <n-space vertical size="small">
+                        <strong>{{ index + 1 }}</strong>
+                        <n-input :value="value" type="textarea" :autosize="{
+                          minRows: 3,
+                          maxRows: 6
+                        }" placeholder="Enter prompt text..." @input="(val) => localFormData.prompts[index] = val" />
+                      </n-space>
                     </template>
                   </n-dynamic-input>
                 </n-form-item>
@@ -212,7 +204,6 @@ export default defineComponent({
       lastModifier: "",
       lastModifiedDate: "",
       name: "",
-      mainPrompt: "",
       prompts: [],
       preferredLang: "en" as LanguageCode,
       fillerPrompt: [],
@@ -244,7 +235,6 @@ export default defineComponent({
         const saveData: Partial<AiAgent> = {
           name: localFormData.name || '',
           preferredLang: localFormData.preferredLang as LanguageCode,
-          mainPrompt: localFormData.mainPrompt || '',
           prompts: localFormData.prompts || [],
           fillerPrompt: localFormData.fillerPrompt || [],
           enabledTools: localFormData.enabledTools || [],

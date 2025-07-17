@@ -147,7 +147,6 @@ export interface AiAgent {
     lastModifiedDate: string;
     name: string;
     preferredLang: LanguageCode;
-    mainPrompt: string;
     prompts: string[];
     fillerPrompt: string[];
     preferredVoice: Voice[];
@@ -158,7 +157,6 @@ export interface AiAgent {
 export interface AiAgentSave {
     name: string;
     preferredLang: LanguageCode;
-    mainPrompt: string;
     fillerPrompt: string[];
     preferredVoice: Voice[];
     enabledTools: Tool[];
