@@ -292,6 +292,7 @@ export default defineComponent({
       if (route.name === 'Memories') return 'memories';
       if (route.name === 'AiAgents') return 'ai_agents';
       if (route.name === 'EnvironmentProfiles') return 'environment_profiles';
+      if (route.name === 'Listeners') return 'listeners';
 
       // Fix: Change 'StationDetail' to 'StationDashboard'
       if (route.name === 'StationDashboard' && route.params.brandName) {
