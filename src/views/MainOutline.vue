@@ -144,20 +144,20 @@ export default defineComponent({
             style: 'font-size: 0.75rem; color: #666; margin-left: auto;'
           }, station.country || '')
         ]),
-        key: `radiostation-${station.slugName}`,
+        key: `radiostation-${station.id}`,
         icon: () => h(Radio, { size: 16 }),
         children: [
           {
             label: 'Dashboard',
-            key: `station-${station.slugName}-dashboard`
+            key: `station-${station.id}-dashboard`
           },
           {
             label: 'Playlist',
-            key: `station-${station.slugName}-playlist`
+            key: `station-${station.id}-playlist`
           },
           {
             label: 'Listeners',
-            key: `station-${station.slugName}-listeners`
+            key: `station-${station.id}-listeners`
           }
         ]
       }));

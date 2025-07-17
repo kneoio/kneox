@@ -97,6 +97,19 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
+                <n-form-item label="Prompts">
+                  <n-dynamic-input v-model:value="localFormData.prompts" :on-create="createPromptItem"
+                    style="width: 60%;">
+                    <template #default="{ value, index }">
+                      <n-input :value="value" type="textarea" :autosize="{
+                        minRows: 3,
+                        maxRows: 6
+                      }" placeholder="Enter prompt text..." @input="(val) => localFormData.prompts[index] = val" />
+                    </template>
+                  </n-dynamic-input>
+                </n-form-item>
+              </n-gi>
+              <n-gi>
                 <n-form-item label="Filler Prompt">
                   <n-dynamic-tags v-model:value="localFormData.fillerPrompt" style="width: 60%;" />
                 </n-form-item>
@@ -200,6 +213,7 @@ export default defineComponent({
       lastModifiedDate: "",
       name: "",
       mainPrompt: "",
+      prompts: [],
       preferredLang: "en" as LanguageCode,
       fillerPrompt: [],
       preferredVoice: [],
@@ -221,6 +235,8 @@ export default defineComponent({
       description: ""
     });
 
+    const createPromptItem = () => "";
+
     const handleSave = async () => {
       try {
         loadingBar.start();
@@ -229,6 +245,7 @@ export default defineComponent({
           name: localFormData.name || '',
           preferredLang: localFormData.preferredLang as LanguageCode,
           mainPrompt: localFormData.mainPrompt || '',
+          prompts: localFormData.prompts || [],
           fillerPrompt: localFormData.fillerPrompt || [],
           enabledTools: localFormData.enabledTools || [],
           talkativity: localFormData.talkativity || 0.3,
@@ -325,6 +342,7 @@ export default defineComponent({
       createFillerItem,
       createVoiceItem,
       createToolItem,
+      createPromptItem,
       handleSave,
       goBack,
       editorExtensions,

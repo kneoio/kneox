@@ -38,7 +38,7 @@
 
         <n-space vertical size="large">
           <n-space size="large">
-            <n-card title="Live Playlist" style="flex: 1;">
+            <n-card title="Live Playlist" size="small" style="flex: 1; min-width: 0;">
               <n-space vertical size="medium">
                 <div>
                   <n-text depth="2" style="font-weight: 600; margin-bottom: 8px; display: block;">In Queue:</n-text>
@@ -47,9 +47,17 @@
                       <div
                           v-for="(fragment, index) in stationDetails.playlistManagerStats.obtainedByPlaylist"
                           :key="index"
-                          style="padding-left: 8px; border-left: 2px solid #e8e8e8; font-size: 0.875rem;"
+                          :style="{
+                            paddingLeft: '8px',
+                            borderLeft: '2px solid #e8e8e8',
+                            fontSize: '0.875rem',
+                            backgroundColor: isCurrentSong(fragment) ? '#e6f7ff' : 'transparent',
+                            padding: isCurrentSong(fragment) ? '4px 8px' : '0 0 0 8px',
+                            borderRadius: isCurrentSong(fragment) ? '4px' : '0',
+                            fontWeight: isCurrentSong(fragment) ? '600' : 'normal'
+                          }"
                       >
-                        <n-text depth="3">{{ index + 1 }}. {{ cleanTitle(fragment) }}</n-text>
+                        <n-text :depth="isCurrentSong(fragment) ? 1 : 3">{{ index + 1 }}. {{ cleanTitle(fragment) }}</n-text>
                       </div>
                     </n-space>
                   </div>
@@ -63,9 +71,17 @@
                       <div
                           v-for="(fragment, index) in stationDetails.playlistManagerStats.readyToBeConsumed"
                           :key="index"
-                          style="padding-left: 8px; border-left: 2px solid #e8e8e8; font-size: 0.875rem;"
+                          :style="{
+                            paddingLeft: '8px',
+                            borderLeft: '2px solid #e8e8e8',
+                            fontSize: '0.875rem',
+                            backgroundColor: isCurrentSong(fragment) ? '#e6f7ff' : 'transparent',
+                            padding: isCurrentSong(fragment) ? '4px 8px' : '0 0 0 8px',
+                            borderRadius: isCurrentSong(fragment) ? '4px' : '0',
+                            fontWeight: isCurrentSong(fragment) ? '600' : 'normal'
+                          }"
                       >
-                        <n-text depth="3">{{ index + 1 }}. {{ cleanTitle(fragment) }}</n-text>
+                        <n-text :depth="isCurrentSong(fragment) ? 1 : 3">{{ index + 1 }}. {{ cleanTitle(fragment) }}</n-text>
                       </div>
                     </n-space>
                   </div>
@@ -74,45 +90,51 @@
               </n-space>
             </n-card>
 
-            <n-card size="small">
-              <template #header>
-                <n-space justify="space-between" align="center">
-                  <span>Segments Timeline</span>
-                  <n-text depth="3" style="font-size: 0.85rem;">Updated: {{ lastUpdateTime }}</n-text>
-                </n-space>
-              </template>
-              <n-space vertical size="small">
-                <div v-if="hasHlsSongStats()">
-                  <n-space vertical size="small" style="padding: 12px; background-color: #f9f9f9; border-radius: 6px;">
-                    <n-space justify="space-between">
-                      <n-text strong>Current Track:</n-text>
-                      <span class="song-title" :title="cleanTitle(getHlsCurrentTrack())">{{ getHlsCurrentTrack() }}</span>
-                    </n-space>
-                    <n-space justify="space-between">
-                      <n-text strong>Est. Time:</n-text>
-                      <n-text>{{ getHlsTimestamp() }}</n-text>
-                    </n-space>
-                    <n-space justify="space-between">
-                      <n-text strong>Recent Requests:</n-text>
-                      <n-space align="center" size="small">
-                        <n-text>{{ getHlsRequestCount() }}</n-text>
-                        <n-text depth="3" style="font-size: 0.9em;">/ 5min</n-text>
-                        <span v-if="getHlsRequestCount() > 0" style="color: #28a745; font-size: 1.2em; animation: pulse 1.5s infinite ease-in-out;">●</span>
+            <div style="flex-shrink: 0; width: auto;">
+              <n-card size="small">
+                <template #header>
+                  <n-space justify="space-between" align="center">
+                    <span>Segments Timeline</span>
+                    <n-text depth="3" style="font-size: 0.85rem;">Updated: {{ lastUpdateTime }}</n-text>
+                  </n-space>
+                </template>
+                <n-space vertical size="small">
+                  <div v-if="hasHlsSongStats()">
+                    <n-space vertical size="small" style="padding: 12px; background-color: #f9f9f9; border-radius: 6px;">
+                      <n-space justify="space-between">
+                        <n-text strong>Current Track:</n-text>
+                        <span class="song-title" :title="cleanTitle(getHlsCurrentTrack())">{{ getHlsCurrentTrack() }}</span>
+                      </n-space>
+                      <n-space justify="space-between">
+                        <n-text strong>Est. Time:</n-text>
+                        <n-text>{{ getHlsTimestamp() }}</n-text>
+                      </n-space>
+                      <n-space justify="space-between">
+                        <n-text strong>Recent Requests:</n-text>
+                        <n-space align="center" size="small">
+                          <n-text>{{ getHlsRequestCount() }}</n-text>
+                          <n-text depth="3" style="font-size: 0.9em;">/ 5min</n-text>
+                          <span v-if="getHlsRequestCount() > 0" style="color: #28a745; font-size: 1.2em; animation: pulse 1.5s infinite ease-in-out;">●</span>
+                        </n-space>
+                      </n-space>
+                      <n-space justify="space-between">
+                        <n-text strong>Est. Listeners:</n-text>
+                        <n-text v-if="getHlsListenersCount() === -1" depth="3" title="Cannot determine listeners (check config/duration)">N/A</n-text>
+                        <n-text v-else>{{ getHlsListenersCount() }}</n-text>
                       </n-space>
                     </n-space>
-                    <n-space justify="space-between">
-                      <n-text strong>Est. Listeners:</n-text>
-                      <n-text v-if="getHlsListenersCount() === -1" depth="3" title="Cannot determine listeners (check config/duration)">N/A</n-text>
-                      <n-text v-else>{{ getHlsListenersCount() }}</n-text>
-                    </n-space>
-                  </n-space>
-                </div>
+                  </div>
+                </n-space>
+              </n-card>
+            </div>
 
-                <div v-if="timelineDisplay" style="font-family: monospace; font-size: 0.9rem; background-color: #f0f0f0; padding: 10px 15px; border-radius: 4px; border: 1px solid #dcdcdc; white-space: nowrap; overflow-x: auto;">
+            <div v-if="timelineDisplay" style="flex-shrink: 0; width: auto;">
+              <n-card size="small" title="Timeline">
+                <div style="font-family: monospace; font-size: 0.9rem; background-color: #f0f0f0; padding: 10px 15px; border-radius: 4px; border: 1px solid #dcdcdc; white-space: nowrap; overflow-x: auto;">
                   {{ timelineDisplay }}
                 </div>
-              </n-space>
-            </n-card>
+              </n-card>
+            </div>
           </n-space>
         </n-space>
       </n-space>
@@ -281,7 +303,7 @@ export default defineComponent({
 
     const cleanTitle = (title: string | undefined | null): string => {
       if (!title) return 'N/A';
-      return title.replace(/^#+\s*/, '').trim();
+      return title.replace(/^(#+|--+)\s*/, '').replace(/[#-]/g, '-').trim();
     };
 
     const hasHlsSongStats = (): boolean => {
@@ -321,6 +343,13 @@ export default defineComponent({
       return currentListeners.value;
     };
 
+    const isCurrentSong = (fragment: string): boolean => {
+      const currentTrack = getHlsCurrentTrack();
+      if (!currentTrack || currentTrack === 'N/A') return false;
+      const cleanFragment = cleanTitle(fragment);
+      return cleanFragment === currentTrack;
+    };
+
     onMounted(() => {
       console.log('StationDetail mounted for brand:', props.brandName);
 
@@ -347,12 +376,8 @@ export default defineComponent({
       console.log('StationDetail unmounted for brand:', props.brandName);
     });
 
-    watch(() => stationDetails.value?.timeline, (newTimeline, oldTimeline) => {
-      console.log('StationDetail timeline changed:', {
-        brand: props.brandName,
-        old: oldTimeline,
-        new: newTimeline
-      });
+    watch(() => stationDetails.value?.timeline, () => {
+      // Timeline changed - no logging needed
     }, { deep: true });
 
     return {
@@ -374,7 +399,8 @@ export default defineComponent({
       getHlsCurrentTrack,
       getHlsTimestamp,
       getHlsRequestCount,
-      getHlsListenersCount
+      getHlsListenersCount,
+      isCurrentSong
     };
   },
 });

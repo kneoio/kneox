@@ -148,6 +148,7 @@ export interface AiAgent {
     name: string;
     preferredLang: LanguageCode;
     mainPrompt: string;
+    prompts: string[];
     fillerPrompt: string[];
     preferredVoice: Voice[];
     enabledTools: Tool[];

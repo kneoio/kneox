@@ -190,17 +190,22 @@ export default defineComponent({
           fixed: 'left',
           width: 50
         },
-        {title: 'Name', key: 'name'},
-        {title: 'Preferred Language', key: 'preferredLang'},
+        {title: 'Name', key: 'name', width: 150},
+        {title: 'Preferred Language', key: 'preferredLang', width: 120},
         {
           title: 'Talkativity',
           key: 'talkativity',
+          width: 100,
           render: (row) => `${Math.round(row.talkativity * 100)}%`
         },
         {
-          title: 'Main Prompt',
-          key: 'mainPrompt',
-          ellipsis: {tooltip: true}
+          title: 'Prompts',
+          key: 'prompts',
+          ellipsis: {tooltip: true},
+          render: (row: AiAgent) => {
+            if (!row.prompts || row.prompts.length === 0) return 'N/A';
+            return row.prompts.map(prompt => prompt.substring(0, 30) + (prompt.length > 30 ? '...' : '')).join('; ');
+          }
         },
         {
           title: 'Preferred Voice',
