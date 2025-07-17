@@ -313,7 +313,6 @@ export default defineComponent({
 
       if (key.startsWith('station-') && key.endsWith('-dashboard')) {
         const brandName = key.replace('station-', '').replace('-dashboard', '');
-        // Fix: Change 'StationDetail' to 'StationDashboard'
         await router.push({name: 'StationDashboard', params: {brandName: brandName}});
       } else if (key.startsWith('station-') && key.endsWith('-playlist')) {
         const brandName = key.replace('station-', '').replace('-playlist', '');

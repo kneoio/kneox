@@ -389,7 +389,7 @@ export default defineComponent( {
         await store.save( saveDTO, localFormData.id );
         message.success( "Saved successfully" );
         if ( route.params.brandName ) {
-          await router.push( "/outline/station/" + route.params.brandName + "/soundfragments" );
+          await router.push({ name: 'StationSoundFragments', params: { brandName: route.params.brandName } });
         } else {
           await router.push( "/outline/soundfragments" );
         }

@@ -2,7 +2,7 @@
   <n-grid :cols="isMobile ? 1 : 6" x-gap="12" y-gap="12" class="p-4">
     <n-gi>
       <n-page-header>
-        <template #title>Sound Fragments</template>
+        <template #title>{{ brandName ? `${brandName} Sound Fragments` : 'Sound Fragments' }}</template>
         <template #footer>
           Total: {{ store.getPagination.itemCount }}
         </template>
@@ -88,7 +88,13 @@ import { useSoundFragmentStore } from '../../../stores/kneo/soundFragmentStore';
 export default defineComponent({
   name: 'SoundFragments',
   components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, NIcon, NInput },
-  setup() {
+  props: {
+    brandName: {
+      type: String,
+      required: false
+    }
+  },
+  setup(props) {
     const router = useRouter();
     const store = useSoundFragmentStore();
     const isMobile = ref(window.innerWidth < 768);
@@ -102,7 +108,6 @@ export default defineComponent({
 
     async function preFetch() {
       try {
-        loading.value = true;
         await store.fetchAll();
       } catch (error) {
         console.error('Failed to fetch initial data:', error);
@@ -173,7 +178,11 @@ export default defineComponent({
           if (target.closest('.n-checkbox') || target.closest('[data-n-checkbox]')) {
             return;
           }
-          router.push({ name: 'SoundFragment', params: { id: row.id } });
+          if (props.brandName) {
+            router.push({ name: 'EditSoundFragment', params: { brandName: props.brandName, id: row.id } });
+          } else {
+            router.push({ name: 'SoundFragment', params: { id: row.id } });
+          }
         }
       };
     };
@@ -182,13 +191,12 @@ export default defineComponent({
       return row.id ?? row.slugName;
     };
 
-    const fetchData = async (page = store.getPagination.page, pageSize = store.getPagination.pageSize) => {
+    const fetchData = async (page = 1, pageSize = 10) => {
       try {
         loading.value = true;
         await store.fetchAll(page, pageSize, searchQuery.value);
       } catch (error) {
         console.error('Failed to fetch data:', error);
-        message.error('Failed to load sound fragments');
       } finally {
         loading.value = false;
       }
@@ -220,7 +228,11 @@ export default defineComponent({
     };
 
     const handleNewClick = () => {
-      router.push('/outline/soundfragments/new');
+      if (props.brandName) {
+        router.push({ name: 'EditSoundFragment', params: { brandName: props.brandName, id: 'new' } });
+      } else {
+        router.push('/outline/soundfragments/new');
+      }
     };
 
     const handleDelete = async () => {
@@ -255,7 +267,8 @@ export default defineComponent({
       handlePageSizeChange,
       loading,
       checkedRowKeys,
-      hasSelection
+      hasSelection,
+      brandName: props.brandName
     };
   }
 });

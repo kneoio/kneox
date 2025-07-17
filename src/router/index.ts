@@ -83,17 +83,23 @@ const routes: Array<RouteRecordRaw> = [
                 name: 'StationListeners',
                 component: AvailableListeners,
                 props: true,
-            },
-            {
-                path: 'station/:brandName/listeners/new',
-                name: 'NewListener',
-                component: ListenerForm,
-                props: true,
-            },
+            },           
             {
                 path: 'station/:brandName/listeners/:id',
                 name: 'EditListener',
                 component: ListenerForm,
+                props: true,
+            },
+            {
+                path: 'station/:brandName/soundfragments',
+                name: 'StationSoundFragments',
+                component: SoundFragments,
+                props: true,
+            },
+            {
+                path: 'station/:brandName/soundfragments/:id',
+                name: 'EditSoundFragment',
+                component: SoundFragment,
                 props: true,
             },
             {
@@ -221,7 +227,7 @@ export function setupRouterGuard(keycloak: Keycloak) {
             try {
                 if (!keycloak.authenticated) {
                     return keycloak.login({
-                        redirectUri: window.location.origin + to.fullPath // Use to.fullPath for accuracy
+                        redirectUri: window.location.origin + to.fullPath 
                     });
                 }
 

@@ -125,7 +125,7 @@ export default defineComponent({
           if (target.closest('.n-checkbox') || target.closest('[data-n-checkbox]')) {
             return;
           }
-          router.push({ name: 'SoundFragment', params: { id: row.id } });
+          router.push({ name: 'EditSoundFragment', params: { brandName: props.brandName, id: row.id } });
         }
       };
     };
@@ -168,7 +168,7 @@ export default defineComponent({
     };
 
     const handleNewClick = () => {
-      router.push('/outline/soundfragments/new');
+      router.push({ name: 'EditSoundFragment', params: { brandName: props.brandName, id: 'new' } });
     };
 
     const handleDelete = async () => {
