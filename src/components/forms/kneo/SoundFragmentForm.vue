@@ -90,13 +90,6 @@
                           :border-radius="3"
                           color="#2080f0"
                           style="margin-bottom: 8px;" />
-                        
-                        <div v-if="file.status === 'finished'" 
-                             style="padding: 4px 8px; background-color: #f0f9ff; border: 1px solid #18a058; border-radius: 4px; color: #18a058; font-size: 12px; cursor: pointer;"
-                             @click.stop.prevent="handleDownload(file)">
-                          Click to download
-                        </div>
-                        
                         <div v-if="file.status === 'error'" 
                              style="padding: 4px 8px; background-color: #fef2f2; border: 1px solid #d03050; border-radius: 4px; color: #d03050; font-size: 12px;">
                           Upload failed - please try again
