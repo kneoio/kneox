@@ -184,6 +184,13 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
                     const data = JSON.parse(event.data);
                     if (data.error) {
                         console.error(`${options.brandName || ''} error:`, data.error);
+                        
+                        // Clear station data if station not found to prevent stale data
+                        if (options.type === 'station' && options.brandName && data.error.includes('Station not found')) {
+                            delete stationResponse.value[options.brandName];
+                            delete stationLastUpdate.value[options.brandName];
+                        }
+                        
                         return;
                     }
                     options.onMessage(data);
