@@ -3,7 +3,7 @@ import { computed, ref } from 'vue';
 import apiClient from '../../api/apiClient';
 import type { ApiFormResponse, ApiViewPageResponse } from "../../types";
 import type { SoundFragment, SoundFragmentSave } from "../../types/kneoBroadcasterTypes";
-import {downloadSoundFragmentWithProgress } from "../../utils/downloadService"
+import {downloadSoundFragment } from "../../utils/downloadService"
 
 export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
     const apiViewResponse = ref<ApiViewPageResponse<SoundFragment> | null>(null);
@@ -166,14 +166,10 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         return apiFormResponse.value;
     };
 
-    const downloadFile = async (id: string, fileId: string) => {
-        return await apiClient.get(`/soundfragments/files/${id}/${fileId}`, {
+    const downloadFile = async (url: string) => {
+        return await apiClient.get(url, {
             responseType: 'blob'
         });
-    };
-
-    const downloadFileWithProgress = async (id: string, fileId: string, fileName?: string, onProgress?: (percentage: number) => void) => {
-        return await downloadSoundFragmentWithProgress(id, fileId, fileName, onProgress);
     };
 
     const deleteSoundFragment = async (id: string) => {
@@ -243,7 +239,6 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         pollUploadProgress,
         updateCurrent,
         downloadFile,
-        downloadFileWithProgress,
         fetchAccessList
     };
 });

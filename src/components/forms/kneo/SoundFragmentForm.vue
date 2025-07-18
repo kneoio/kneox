@@ -333,20 +333,11 @@ export default defineComponent( {
     };
 
     const handleDownload = async ( file: UploadFileInfo ) => {
-      try {
-        const entityId = localFormData.id || "temp";
-        const fileKey = file.id || file.name || 'download';
-        const fileName = file.name; 
-
+      try {        
         loadingBar.start();
 
-        await store.downloadFileWithProgress(
-          entityId,
-          fileKey,
-          fileName,
-          ( percentage: number ) => {
-           // loadingBar.progress( percentage / 100 );
-          }
+        await store.downloadFile(
+          file.url || ""
         );
 
         loadingBar.finish();

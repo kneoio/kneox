@@ -1,9 +1,9 @@
 import apiClient from '../api/apiClient';
 
-export const downloadSoundFragmentWithProgress = async (
+export const downloadSoundFragment = async (
     entityId: string,
     fileId: string,
-    fileName?: string, // Add fileName parameter
+    fileName?: string, 
     onProgress?: (percentage: number) => void
 ) => {
     try {
@@ -17,30 +17,26 @@ export const downloadSoundFragmentWithProgress = async (
             }
         });
 
-        // Get filename from response headers or use provided fileName
-        let downloadFileName = fileName || fileId;
 
-        // Try to get filename from Content-Disposition header
         const contentDisposition = response.headers['content-disposition'];
         if (contentDisposition) {
             const fileNameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
             if (fileNameMatch && fileNameMatch[1]) {
-                downloadFileName = fileNameMatch[1].replace(/['"]/g, '');
+                fileName = fileNameMatch[1].replace(/['"]/g, '');
             }
         }
 
-        // If no extension and we can determine from content-type
-        if (!downloadFileName.includes('.')) {
+        if (!fileName?.includes('.')) {
             const contentType = response.headers['content-type'];
             if (contentType) {
                 if (contentType.includes('audio/mpeg') || contentType.includes('audio/mp3')) {
-                    downloadFileName += '.mp3';
+                    fileName += '.mp3';
                 } else if (contentType.includes('audio/wav')) {
-                    downloadFileName += '.wav';
+                    fileName += '.wav';
                 } else if (contentType.includes('audio/ogg')) {
-                    downloadFileName += '.ogg';
+                    fileName += '.ogg';
                 } else if (contentType.includes('audio/flac')) {
-                    downloadFileName += '.flac';
+                    fileName += '.flac';
                 }
             }
         }
@@ -52,7 +48,7 @@ export const downloadSoundFragmentWithProgress = async (
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = downloadFileName; // Use the proper filename
+        link.download = fileName || 'download.mp3';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
