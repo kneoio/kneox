@@ -332,19 +332,15 @@ export default defineComponent( {
       }
     };
 
-    const handleDownload = async ( file: UploadFileInfo ) => {
-      try {        
+    const handleDownload = async (file: UploadFileInfo) => {
+      try {
         loadingBar.start();
-
-        await store.downloadFile(
-          file.url || ""
-        );
-
+        await store.downloadFile(file.url || "", file.name);
         loadingBar.finish();
-        message.success( 'Download completed' );
-      } catch ( error ) {
-        console.error( 'Download failed:', error );
-        message.error( `Download failed: ${getErrorMessage( error )}` );
+        message.success('Download completed');
+      } catch (error) {
+        console.error('Download failed:', error);
+        message.error(`Download failed: ${getErrorMessage(error)}`);
         loadingBar.error();
       }
       return false;

@@ -3,7 +3,6 @@ import { computed, ref } from 'vue';
 import apiClient from '../../api/apiClient';
 import type { ApiFormResponse, ApiViewPageResponse } from "../../types";
 import type { SoundFragment, SoundFragmentSave } from "../../types/kneoBroadcasterTypes";
-import {downloadSoundFragment } from "../../utils/downloadService"
 
 export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
     const apiViewResponse = ref<ApiViewPageResponse<SoundFragment> | null>(null);
@@ -120,7 +119,6 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
                 maxBodyLength: 120 * 1024 * 1024,
             });
     
-            // Return the upload response immediately (contains uploadId)
             return response.data;
             
         } catch (error: any) {
@@ -154,7 +152,6 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         }
     };
 
-  
     const updateCurrent = (data: SoundFragment, actions: any = {}) => {
         apiFormResponse.value = { docData: data, actions };
     };
@@ -166,10 +163,27 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         return apiFormResponse.value;
     };
 
-    const downloadFile = async (url: string) => {
-        return await apiClient.get(url, {
-            responseType: 'blob'
-        });
+    const downloadFile = async (url: string, fileName?: string) => {
+        try {
+            const response = await apiClient.get(url, {
+                responseType: 'blob'
+            });
+            const blob = new Blob([response.data], {
+                type: response.headers['content-type'] || 'application/octet-stream'
+            });
+            const blobUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = fileName || url.split('/').pop()?.split('?')[0] || 'download';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(blobUrl);
+            return response;
+        } catch (error) {
+            console.error('Download failed:', error);
+            throw error;
+        }
     };
 
     const deleteSoundFragment = async (id: string) => {
