@@ -196,75 +196,165 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         return response.data;
     };
 
-    // Enhanced pollUploadProgress function in the store
     const pollUploadProgress = async (uploadId: string, onProgress: (percentage: number) => void): Promise<any> => {
         return new Promise((resolve, reject) => {
-            let lastReportedProgress = -1;
             let pollCount = 0;
             let consecutiveErrors = 0;
-            const maxRetries = 3;
-
-            const pollInterval = setInterval(async () => {
+            let currentInterval = 200;
+            let timeoutId: NodeJS.Timeout | null = null;
+            let overallTimeoutId: NodeJS.Timeout;
+            
+            const progressHistory: Array<{ percentage: number; timestamp: number }> = [];
+            const maxHistorySize = 10;
+            
+            console.log('Starting dynamic polling system...');
+            
+            const calculateProgressSpeed = (): number => {
+                if (progressHistory.length < 2) return 0;
+                
+                const recent = progressHistory.slice(-5);
+                if (recent.length < 2) return 0;
+                
+                const timeSpan = (recent[recent.length - 1].timestamp - recent[0].timestamp) / 1000;
+                const progressSpan = recent[recent.length - 1].percentage - recent[0].percentage;
+                
+                return timeSpan > 0 ? progressSpan / timeSpan : 0;
+            };
+            
+            const adjustInterval = (latency: number, progressSpeed: number): void => {
+                let newInterval = currentInterval;
+                
+                if (progressSpeed > 20) {
+                    newInterval = 100;
+                } else if (progressSpeed > 5) {
+                    newInterval = 300;
+                } else if (progressSpeed > 1) {
+                    newInterval = 800;
+                } else if (progressSpeed > 0) {
+                    newInterval = 2000;
+                } else {
+                    newInterval = Math.min(currentInterval * 1.2, 2000);
+                }
+                
+                if (latency > 1000) {
+                    newInterval = Math.min(newInterval * 1.3, 2000);
+                } else if (latency < 100) {
+                    newInterval = Math.max(newInterval * 0.8, 100);
+                }
+                
+                const maxChange = currentInterval * 0.5;
+                newInterval = Math.max(currentInterval - maxChange, Math.min(currentInterval + maxChange, newInterval));
+                newInterval = Math.max(100, Math.min(2000, Math.round(newInterval)));
+                
+                if (Math.abs(newInterval - currentInterval) > 10) {
+                    console.log(`Adjusting poll interval: ${currentInterval}ms → ${newInterval}ms`);
+                    if (progressSpeed > 20) {
+                        console.log('High progress speed detected, optimizing polling frequency');
+                    } else if (latency > 1000) {
+                        console.log('High latency detected, reducing polling frequency');
+                    } else if (progressSpeed < 1) {
+                        console.log('Slow progress detected, reducing polling frequency');
+                    }
+                }
+                
+                currentInterval = newInterval;
+            };
+            
+            const scheduleNextPoll = (): void => {
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                }
+                
+                timeoutId = setTimeout(poll, currentInterval);
+            };
+            
+            const poll = async (): Promise<void> => {
+                const startTime = Date.now();
+                
                 try {
                     pollCount++;
-                    console.log(`Poll #${pollCount} for uploadId: ${uploadId}`);
-
+                    
                     const progressResponse = await apiClient.get(`/soundfragments/upload-progress/${uploadId}`);
                     const progress = progressResponse.data;
-
-                    console.log(`Server response [${pollCount}]:`, {
-                        percentage: progress.percentage,
-                        status: progress.status,
-                        url: progress.url ? 'present' : 'null'
-                    });
-
-                    // Reset error counter on successful response
+                    const latency = Date.now() - startTime;
+                    
+                    console.log(`Poll #${pollCount} (interval: ${currentInterval}ms) completed in ${latency}ms: ${progress.percentage}% - ${progress.status}`);
+                    
                     consecutiveErrors = 0;
-
-                    if (progress.percentage !== lastReportedProgress || pollCount === 1) {
-                        lastReportedProgress = progress.percentage;
-                        onProgress(progress.percentage);
+                    
+                    progressHistory.push({ percentage: progress.percentage, timestamp: Date.now() });
+                    if (progressHistory.length > maxHistorySize) {
+                        progressHistory.shift();
                     }
-
+                    
+                    const progressSpeed = calculateProgressSpeed();
+                    if (progressSpeed > 0 && progressHistory.length >= 3) {
+                        console.log(`Progress speed: ${progressSpeed.toFixed(2)}% per second`);
+                    }
+                    
+                    onProgress(progress.percentage);
+                    
                     if (progress.status === 'finished') {
-                        clearInterval(pollInterval);
+                        if (timeoutId) clearTimeout(timeoutId);
+                        if (overallTimeoutId) clearTimeout(overallTimeoutId);
                         console.log(`Upload completed after ${pollCount} polls`);
                         resolve(progress);
+                        return;
                     } else if (progress.status === 'error') {
-                        clearInterval(pollInterval);
+                        if (timeoutId) clearTimeout(timeoutId);
+                        if (overallTimeoutId) clearTimeout(overallTimeoutId);
                         console.error(`Upload failed after ${pollCount} polls`);
                         reject(new Error('Upload processing failed on server'));
-                    }
-                } catch (error: any) {
-                    consecutiveErrors++;
-                    console.error(`Progress polling failed on poll #${pollCount}:`, error);
-
-                    // If it's a connection error and we haven't exceeded retries, continue
-                    if (error.response?.status >= 500 || error.code === 'NETWORK_ERROR') {
-                        if (consecutiveErrors <= maxRetries) {
-                            console.log(`Connection error, retrying... (${consecutiveErrors}/${maxRetries})`);
-                            return; // Continue polling
-                        }
-                    }
-
-                    // If it's a 404, the upload session might not exist yet
-                    if (error.response?.status === 404 && pollCount <= 3) {
-                        console.log('Upload session not found yet, continuing...');
                         return;
                     }
-
-                    clearInterval(pollInterval);
+                    
+                    adjustInterval(latency, progressSpeed);
+                    scheduleNextPoll();
+                    
+                } catch (error: any) {
+                    consecutiveErrors++;
+                    const latency = Date.now() - startTime;
+                    
+                    console.error(`Progress polling failed on poll #${pollCount}:`, error);
+                    
+                    if (error.response?.status === 404) {
+                        if (pollCount <= 5) {
+                            console.log('Upload session not found yet, reducing frequency...');
+                            currentInterval = Math.min(currentInterval * 1.5, 2000);
+                            scheduleNextPoll();
+                            return;
+                        }
+                    } else if (error.response?.status >= 500) {
+                        if (consecutiveErrors <= 3) {
+                            const backoffDelay = Math.min(1000 * Math.pow(2, consecutiveErrors - 1), 5000);
+                            console.log(`Server error, exponential backoff: ${backoffDelay}ms (attempt ${consecutiveErrors}/3)`);
+                            currentInterval = backoffDelay;
+                            scheduleNextPoll();
+                            return;
+                        }
+                    } else if (error.code === 'NETWORK_ERROR' || !error.response) {
+                        console.log('Network error detected, increasing interval by 50%');
+                        currentInterval = Math.min(currentInterval * 1.5, 2000);
+                        if (consecutiveErrors <= 3) {
+                            scheduleNextPoll();
+                            return;
+                        }
+                    }
+                    
+                    if (timeoutId) clearTimeout(timeoutId);
+                    if (overallTimeoutId) clearTimeout(overallTimeoutId);
                     console.error(`Progress polling failed permanently after ${pollCount} polls`);
                     reject(error);
                 }
-            }, 500); // Poll every 500ms
-
-            // Timeout after 10 minutes
-            setTimeout(() => {
-                clearInterval(pollInterval);
+            };
+            
+            overallTimeoutId = setTimeout(() => {
+                if (timeoutId) clearTimeout(timeoutId);
                 console.error(`Upload timeout after ${pollCount} polls`);
                 reject(new Error('Upload processing timeout'));
             }, 10 * 60 * 1000);
+            
+            poll();
         });
     };
 
