@@ -253,8 +253,12 @@ export default defineComponent( {
 
         updateProgress(0, 'uploading');
 
+        // Generate uploadId locally
+        const uploadId = crypto.randomUUID();
+        console.log('Generated uploadId:', uploadId);
+
         // Start upload and progress monitoring concurrently
-        const uploadPromise = store.uploadFile(entityId, file.file as File);
+        const uploadPromise = store.uploadFile(entityId, file.file as File, uploadId);
         let progressMonitoring = null;
 
         console.log('Upload request initiated...');
@@ -262,11 +266,8 @@ export default defineComponent( {
         try {
           const uploadResponse = await uploadPromise;
           console.log('Upload response received:', {
-            id: uploadResponse.id,
             status: uploadResponse.status
           });
-
-          const uploadId = uploadResponse.id;
 
           if (uploadId) {
             console.log('Starting progress monitoring immediately...');
@@ -329,7 +330,7 @@ export default defineComponent( {
               if (onFinish) onFinish(newFile);
               message.success(`File "${file.name}" uploaded and processed successfully`);
 
-            } catch (progressError) {
+            } catch (progressError: any) {
               console.error('Progress monitoring failed:', progressError);
 
               // Still mark as potentially successful since upload completed

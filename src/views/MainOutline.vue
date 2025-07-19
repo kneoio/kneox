@@ -13,7 +13,7 @@
         :class="{ 'drawer-open': isDrawerOpen }"
     >
       <div class="drawer-header">
-        <n-space><n-h2>MixpL^</n-h2><n-h6 style="color:#6c757d; font-size: small">manager v.1.7.9</n-h6></n-space>
+        <n-space><n-h2>MixpL^</n-h2><n-h6 style="color:#6c757d; font-size: small">manager v.1.7.10</n-h6></n-space>
       </div>
       <div class="drawer-content" style="overflow-y: auto; max-height: calc(100vh - 80px);">
         <n-menu

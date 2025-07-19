@@ -102,7 +102,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         apiFormResponse.value = response.data.payload;
     };
 
-    const uploadFile = async (id: string, file: File) => {
+    const uploadFile = async (id: string, file: File, uploadId: string) => {
         const maxSizeBytes = 100 * 1024 * 1024; // 100MB
     
         if (file.size > maxSizeBytes) {
@@ -111,6 +111,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
     
         const formData = new FormData();
         formData.append('file', file);
+        formData.append('uploadId', uploadId);
     
         try {
             const response = await apiClient.post('/soundfragments/files/' + id, formData, {
