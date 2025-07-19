@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
-import apiClient from '../../api/apiClient';
+import apiClient from '../../api/apiClient'; // Now includes SSE support
 import type { ApiFormResponse, ApiViewPageResponse } from "../../types";
 import type { SoundFragment, SoundFragmentSave } from "../../types/kneoBroadcasterTypes";
 
@@ -8,7 +8,6 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
     const apiViewResponse = ref<ApiViewPageResponse<SoundFragment> | null>(null);
     const apiFormResponse = ref<ApiFormResponse<SoundFragment> | null>(null);
     const availableApiViewResponse = ref<ApiViewPageResponse<SoundFragment> | null>(null);
-
 
     const getEntries = computed(() => apiViewResponse.value?.viewData.entries || []);
     const getAvailableSoundFragments = computed(() => availableApiViewResponse.value?.viewData.entries || []);
@@ -111,10 +110,9 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
     
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('uploadId', uploadId);
     
         try {
-            const response = await apiClient.post('/soundfragments/files/' + id, formData, {
+            const response = await apiClient.post(`/soundfragments/files/${id}?uploadId=${uploadId}`, formData, {
                 timeout: 600000, // 10 minutes
                 maxContentLength: 120 * 1024 * 1024,
                 maxBodyLength: 120 * 1024 * 1024,
@@ -197,96 +195,95 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         return response.data;
     };
 
-    const pollUploadProgress = async (uploadId: string, onProgress: (percentage: number) => void): Promise<any> => {
+    // Now using the centralized SSE client
+    const monitorUploadProgress = async (
+        uploadId: string, 
+        onProgress: (percentage: number) => void
+    ): Promise<any> => {
+        try {
+            return await apiClient.monitorUploadProgress(uploadId, onProgress);
+        } catch (error: any) {
+            console.error('Upload progress monitoring failed:', error);
+            throw new Error(`Upload monitoring failed: ${error.message}`);
+        }
+    };
+
+    // Alternative method using the raw SSE client for more control
+    const monitorUploadProgressAdvanced = async (
+        uploadId: string, 
+        onProgress: (percentage: number) => void,
+        onStatusChange?: (status: string) => void
+    ): Promise<any> => {
         return new Promise((resolve, reject) => {
-            let lastReportedProgress = -1;
-            let pollCount = 0;
-            let consecutiveErrors = 0;
-            const maxRetries = 3;
-
-            const pollInterval = setInterval(async () => {
-                try {
-                    pollCount++;
-                    console.log(`Poll #${pollCount} for uploadId: ${uploadId}`);
-
-                    const progressResponse = await apiClient.get(`/soundfragments/upload-progress/${uploadId}`);
-                    const progress = progressResponse.data;
-
-                    console.log(`Server response [${pollCount}]:`, {
-                        percentage: progress.percentage,
-                        status: progress.status,
-                        url: progress.url ? 'present' : 'null'
-                    });
-
-                    // Reset error counter on successful response
-                    consecutiveErrors = 0;
-
-                    if (progress.percentage !== lastReportedProgress || pollCount === 1) {
-                        lastReportedProgress = progress.percentage;
+            let lastProgress = -1;
+            
+            const connection = apiClient.sse.connect(`/soundfragments/upload-progress/${uploadId}/stream`, {
+                onMessage: (progress) => {
+                    console.log('Advanced upload progress:', progress);
+                    
+                    // Handle progress updates
+                    if (typeof progress.percentage === 'number' && progress.percentage !== lastProgress) {
+                        lastProgress = progress.percentage;
                         onProgress(progress.percentage);
                     }
-
-                    if (progress.status === 'finished') {
-                        clearInterval(pollInterval);
-                        console.log(`Upload completed after ${pollCount} polls`);
-                        resolve(progress);
-                    } else if (progress.status === 'error') {
-                        clearInterval(pollInterval);
-                        console.error(`Upload failed after ${pollCount} polls`);
-                        reject(new Error('Upload processing failed on server'));
+                    
+                    // Handle status changes
+                    if (progress.status && onStatusChange) {
+                        onStatusChange(progress.status);
                     }
-                } catch (error: any) {
-                    consecutiveErrors++;
-                    console.error(`Progress polling failed on poll #${pollCount}:`, error);
-
-                    // If it's a connection error and we haven't exceeded retries, continue
-                    if (error.response?.status >= 500 || error.code === 'NETWORK_ERROR') {
-                        if (consecutiveErrors <= maxRetries) {
-                            console.log(`Connection error, retrying... (${consecutiveErrors}/${maxRetries})`);
-                            return; // Continue polling
-                        }
-                    }
-
-                    // If it's a 404, the upload session might not exist yet
-                    if (error.response?.status === 404 && pollCount <= 3) {
-                        console.log('Upload session not found yet, continuing...');
-                        return;
-                    }
-
-                    clearInterval(pollInterval);
-                    console.error(`Progress polling failed permanently after ${pollCount} polls`);
+                },
+                onComplete: (data) => {
+                    console.log('Upload completed:', data);
+                    resolve(data);
+                },
+                onError: (error) => {
+                    console.error('Upload error:', error);
                     reject(error);
-                }
-            }, 500); // Poll every 500ms
-
-            // Timeout after 10 minutes
-            setTimeout(() => {
-                clearInterval(pollInterval);
-                console.error(`Upload timeout after ${pollCount} polls`);
-                reject(new Error('Upload processing timeout'));
-            }, 10 * 60 * 1000);
+                },
+                onOpen: () => {
+                    console.log('Upload monitoring connection established');
+                },
+                timeout: 15 * 60 * 1000 // 15 minutes for large files
+            });
         });
     };
 
+    // Generic streaming method for future use
+    const streamData = <T = any>(
+        endpoint: string, 
+        onData: (data: T) => void, 
+        onComplete?: (data: T) => void
+    ): Promise<T> => {
+        return apiClient.streamData(endpoint, onData, onComplete);
+    };
 
     return {
+        // State
         apiViewResponse,
         apiFormResponse,
         availableApiViewResponse,
+        
+        // Computed
         getEntries,
         getAvailableSoundFragments,
         getCurrent,
         getPagination,
         getAvailablePagination,
+        
+        // HTTP Methods
         fetchAll: fetchSoundFragments,
         fetchAvailable: fetchAvailableSoundFragments,
         fetch: fetchSoundFragment,
         save,
         delete: deleteSoundFragment,
         uploadFile,
-        pollUploadProgress,
         updateCurrent,
         downloadFile,
-        fetchAccessList
+        fetchAccessList,
+        
+        // SSE Methods
+        monitorUploadProgress,
+        monitorUploadProgressAdvanced,
+        streamData
     };
 });

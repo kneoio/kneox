@@ -216,7 +216,6 @@ export default defineComponent( {
       { immediate: true }
     );
 
-    // Fixed handleUpload function for Vue component
     const handleUpload = async ({ file, onFinish, onError, onProgress }: {
       file: UploadFileInfo,
       onFinish?: (file?: UploadFileInfo) => void,
@@ -272,8 +271,7 @@ export default defineComponent( {
           if (uploadId) {
             console.log('Starting progress monitoring immediately...');
 
-            // Start progress monitoring immediately with the upload ID
-            progressMonitoring = store.pollUploadProgress(uploadId, (percentage: number) => {
+            progressMonitoring = store.monitorUploadProgress(uploadId, (percentage: number) => {
               console.log(`Progress from server: ${percentage}%`);
               updateProgress(percentage, percentage >= 100 ? 'finished' : 'uploading');
             });
