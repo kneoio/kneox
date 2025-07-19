@@ -216,6 +216,7 @@ export default defineComponent( {
       { immediate: true }
     );
 
+    // Fixed handleUpload function for Vue component
     const handleUpload = async ({ file, onFinish, onError, onProgress }: {
       file: UploadFileInfo,
       onFinish?: (file?: UploadFileInfo) => void,
@@ -224,100 +225,170 @@ export default defineComponent( {
     }) => {
       try {
         const entityId = localFormData.id || "temp";
+        console.log(`Starting upload for file: ${file.name}, entityId: ${entityId}`);
 
         file.status = 'uploading';
         file.percentage = 0;
 
         const updateProgress = (percentage: number, status?: 'uploading' | 'finished' | 'error') => {
+          console.log(`Updating progress: ${percentage}% - ${status || file.status}`);
+
           file.percentage = percentage;
           if (status) file.status = status;
-          
+
           if (onProgress) {
             onProgress({ percent: percentage });
           }
-          
+
           const fileIndex = fileList.value.findIndex(f => f.id === file.id || f.name === file.name);
           if (fileIndex !== -1) {
-            fileList.value[fileIndex] = { ...fileList.value[fileIndex], percentage, status: status || fileList.value[fileIndex].status };
+            fileList.value[fileIndex] = {
+              ...fileList.value[fileIndex],
+              percentage,
+              status: status || fileList.value[fileIndex].status
+            };
             fileList.value = [...fileList.value];
           }
         };
 
         updateProgress(0, 'uploading');
 
-        console.log('Starting upload for file:', file.name);
-        const uploadResponse = await store.uploadFile(entityId, file.file as File);
-        const uploadId = uploadResponse.id;
+        // Start upload and progress monitoring concurrently
+        const uploadPromise = store.uploadFile(entityId, file.file as File);
+        let progressMonitoring = null;
 
-        if (uploadId) {
-          console.log('Starting progress polling for uploadId:', uploadId);
-          
-          const finalData = await store.pollUploadProgress(uploadId, (percentage: number) => {
-            console.log('Real progress from server:', percentage + '%');
-            updateProgress(percentage, 'uploading');
+        console.log('Upload request initiated...');
+
+        try {
+          const uploadResponse = await uploadPromise;
+          console.log('Upload response received:', {
+            id: uploadResponse.id,
+            status: uploadResponse.status
           });
 
-          if (finalData.metadata) {
-            const metadata = finalData.metadata;
-            if (metadata.title && !localFormData.title) localFormData.title = metadata.title;
-            if (metadata.artist && !localFormData.artist) localFormData.artist = metadata.artist;
-            if (metadata.album && !localFormData.album) localFormData.album = metadata.album;
-            if (metadata.genre && !localFormData.genre) {
-              const genreExists = referencesStore.genreOptions.some(
-                option => option.value === metadata.genre || option.label === metadata.genre
-              );
-              if (genreExists) localFormData.genre = metadata.genre;
+          const uploadId = uploadResponse.id;
+
+          if (uploadId) {
+            console.log('Starting progress monitoring immediately...');
+
+            // Start progress monitoring immediately with the upload ID
+            progressMonitoring = store.pollUploadProgress(uploadId, (percentage: number) => {
+              console.log(`Progress from server: ${percentage}%`);
+              updateProgress(percentage, percentage >= 100 ? 'finished' : 'uploading');
+            });
+
+            try {
+              const finalData = await progressMonitoring;
+              console.log('Progress monitoring completed:', {
+                status: finalData.status,
+                percentage: finalData.percentage,
+                hasMetadata: !!finalData.metadata
+              });
+
+              // Apply metadata if available
+              if (finalData.metadata) {
+                const metadata = finalData.metadata;
+                console.log('Applying metadata:', metadata);
+
+                if (metadata.title && !localFormData.title) {
+                  localFormData.title = metadata.title;
+                }
+                if (metadata.artist && !localFormData.artist) {
+                  localFormData.artist = metadata.artist;
+                }
+                if (metadata.album && !localFormData.album) {
+                  localFormData.album = metadata.album;
+                }
+                if (metadata.genre && !localFormData.genre) {
+                  const genreExists = referencesStore.genreOptions.some(
+                      option => option.value === metadata.genre || option.label === metadata.genre
+                  );
+                  if (genreExists) {
+                    localFormData.genre = metadata.genre;
+                  }
+                }
+              }
+
+              updateProgress(100, 'finished');
+              uploadedFileNames.value.push(file.name);
+
+              const newFile = {
+                ...file,
+                id: finalData.id || uploadResponse.id || file.name,
+                url: finalData.url || uploadResponse.url || uploadResponse.fileUrl,
+                status: 'finished' as const,
+                percentage: 100
+              };
+
+              const fileIndex = fileList.value.findIndex(f => f.id === file.id || f.name === file.name);
+              if (fileIndex !== -1) {
+                fileList.value[fileIndex] = newFile;
+                fileList.value = [...fileList.value];
+              }
+
+              if (onFinish) onFinish(newFile);
+              message.success(`File "${file.name}" uploaded and processed successfully`);
+
+            } catch (progressError) {
+              console.error('Progress monitoring failed:', progressError);
+
+              // Still mark as potentially successful since upload completed
+              updateProgress(100, 'finished');
+              uploadedFileNames.value.push(file.name);
+
+              const newFile = {
+                ...file,
+                id: uploadResponse.id || file.name,
+                url: uploadResponse.url || uploadResponse.fileUrl,
+                status: 'finished' as const,
+                percentage: 100
+              };
+
+              if (onFinish) onFinish(newFile);
+              message.warning(`File uploaded but progress monitoring failed: ${progressError.message}`);
             }
+
+          } else {
+            console.log('No upload ID returned, treating as simple completion');
+
+            updateProgress(100, 'finished');
+            uploadedFileNames.value.push(file.name);
+
+            const newFile = {
+              ...file,
+              id: uploadResponse.id || file.name,
+              url: uploadResponse.fileUrl || uploadResponse.url,
+              status: 'finished' as const,
+              percentage: 100
+            };
+
+            if (onFinish) onFinish(newFile);
+            message.success(`File "${file.name}" uploaded successfully`);
           }
 
-          updateProgress(100, 'finished');
-          uploadedFileNames.value.push(file.name);
-
-          const newFile = {
-            ...file,
-            id: finalData.id || file.name,
-            url: finalData.url || finalData.fileUrl,
-            status: 'finished' as const,
-            percentage: 100
-          };
-
-          const fileIndex = fileList.value.findIndex(f => f.id === file.id || f.name === file.name);
-          if (fileIndex !== -1) {
-            fileList.value[fileIndex] = newFile;
-            fileList.value = [...fileList.value];
-          }
-
-          if (onFinish) onFinish(newFile);
-          message.success(`File "${file.name}" uploaded successfully`);
-
-        } else {
-          updateProgress(100, 'finished');
-          uploadedFileNames.value.push(file.name);
-          const newFile = {
-            ...file,
-            id: uploadResponse.id || file.name,
-            url: uploadResponse.fileUrl || uploadResponse.url,
-            status: 'finished' as const,
-            percentage: 100
-          };
-
-          if (onFinish) onFinish(newFile);
-          message.success(`File "${file.name}" uploaded successfully`);
+        } catch (uploadError) {
+          console.error('Upload failed:', uploadError);
+          throw uploadError;
         }
 
       } catch (error: any) {
         console.error('Upload error:', error);
-        
+
         file.status = 'error';
         file.percentage = 0;
 
         const fileIndex = fileList.value.findIndex(f => f.id === file.id || f.name === file.name);
         if (fileIndex !== -1) {
-          fileList.value[fileIndex] = { ...fileList.value[fileIndex], status: 'error', percentage: 0 };
+          fileList.value[fileIndex] = {
+            ...fileList.value[fileIndex],
+            status: 'error',
+            percentage: 0
+          };
           fileList.value = [...fileList.value];
         }
 
         const errorMessage = error.message || 'Upload failed';
+        console.error('Final error message:', errorMessage);
         message.error(errorMessage);
 
         if (onError) onError(error as Error);

@@ -196,44 +196,78 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         return response.data;
     };
 
+    // Enhanced pollUploadProgress function in the store
     const pollUploadProgress = async (uploadId: string, onProgress: (percentage: number) => void): Promise<any> => {
         return new Promise((resolve, reject) => {
             let lastReportedProgress = -1;
-            
+            let pollCount = 0;
+            let consecutiveErrors = 0;
+            const maxRetries = 3;
+
             const pollInterval = setInterval(async () => {
                 try {
+                    pollCount++;
+                    console.log(`Poll #${pollCount} for uploadId: ${uploadId}`);
+
                     const progressResponse = await apiClient.get(`/soundfragments/upload-progress/${uploadId}`);
                     const progress = progressResponse.data;
-    
-                    console.log('Real progress from server:', progress);
-    
-                    if (progress.percentage !== lastReportedProgress) {
+
+                    console.log(`Server response [${pollCount}]:`, {
+                        percentage: progress.percentage,
+                        status: progress.status,
+                        url: progress.url ? 'present' : 'null'
+                    });
+
+                    // Reset error counter on successful response
+                    consecutiveErrors = 0;
+
+                    if (progress.percentage !== lastReportedProgress || pollCount === 1) {
                         lastReportedProgress = progress.percentage;
                         onProgress(progress.percentage);
                     }
-    
-                    if (progress.status === 'finished' || progress.status === 'error') {
+
+                    if (progress.status === 'finished') {
                         clearInterval(pollInterval);
-    
-                        if (progress.status === 'error') {
-                            reject(new Error('Upload processing failed on server'));
-                        } else {
-                            resolve(progress);
-                        }
+                        console.log(`Upload completed after ${pollCount} polls`);
+                        resolve(progress);
+                    } else if (progress.status === 'error') {
+                        clearInterval(pollInterval);
+                        console.error(`Upload failed after ${pollCount} polls`);
+                        reject(new Error('Upload processing failed on server'));
                     }
                 } catch (error: any) {
+                    consecutiveErrors++;
+                    console.error(`Progress polling failed on poll #${pollCount}:`, error);
+
+                    // If it's a connection error and we haven't exceeded retries, continue
+                    if (error.response?.status >= 500 || error.code === 'NETWORK_ERROR') {
+                        if (consecutiveErrors <= maxRetries) {
+                            console.log(`Connection error, retrying... (${consecutiveErrors}/${maxRetries})`);
+                            return; // Continue polling
+                        }
+                    }
+
+                    // If it's a 404, the upload session might not exist yet
+                    if (error.response?.status === 404 && pollCount <= 3) {
+                        console.log('Upload session not found yet, continuing...');
+                        return;
+                    }
+
                     clearInterval(pollInterval);
-                    console.error('Progress polling failed:', error);
+                    console.error(`Progress polling failed permanently after ${pollCount} polls`);
                     reject(error);
                 }
             }, 500); // Poll every 500ms
-            
+
+            // Timeout after 10 minutes
             setTimeout(() => {
                 clearInterval(pollInterval);
+                console.error(`Upload timeout after ${pollCount} polls`);
                 reject(new Error('Upload processing timeout'));
             }, 10 * 60 * 1000);
         });
     };
+
 
     return {
         apiViewResponse,
