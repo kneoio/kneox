@@ -17,13 +17,11 @@ const apiClient = axios.create({
     withCredentials: true,
 });
 
-// SSE Connection interface
 interface SSEConnection {
     close: () => void;
     eventSource: EventSource;
 }
 
-// SSE Options interface
 interface SSEOptions {
     withCredentials?: boolean;
     timeout?: number;
@@ -33,23 +31,19 @@ interface SSEOptions {
     onOpen?: () => void;
 }
 
-// SSE Client class
 class SSEClient {
-    private baseURL: string;
-    private defaultOptions: Partial<SSEOptions>;
+    private readonly baseURL: string;
+    private readonly defaultOptions: Partial<SSEOptions>;
 
     constructor(baseURL: string, defaultOptions: Partial<SSEOptions> = {}) {
         this.baseURL = baseURL;
         this.defaultOptions = {
             withCredentials: true,
-            timeout: 10 * 60 * 1000, // 10 minutes default
+            timeout: 10 * 60 * 1000,
             ...defaultOptions
         };
     }
 
-    /**
-     * Create an SSE connection to the specified endpoint
-     */
     connect(endpoint: string, options: SSEOptions): SSEConnection {
         const mergedOptions = { ...this.defaultOptions, ...options };
         const fullUrl = `${this.baseURL}/api${endpoint}`;
@@ -63,7 +57,6 @@ class SSEClient {
         let timeoutId: NodeJS.Timeout | null = null;
         let isConnected = false;
         
-        // Set up timeout if specified
         if (mergedOptions.timeout) {
             timeoutId = setTimeout(() => {
                 if (!isConnected) {
@@ -84,20 +77,17 @@ class SSEClient {
             }
         };
         
-        // Handle connection open
         eventSource.onopen = () => {
             isConnected = true;
             console.log('SSE connection established');
             mergedOptions.onOpen?.();
         };
         
-        // Handle messages
         eventSource.onmessage = (event) => {
             try {
                 const data = JSON.parse(event.data);
                 mergedOptions.onMessage(data);
                 
-                // Check for completion status
                 if (data.status === 'finished' || data.status === 'completed') {
                     cleanup();
                     mergedOptions.onComplete?.(data);
@@ -111,12 +101,9 @@ class SSEClient {
             }
         };
         
-        // Handle errors
         eventSource.onerror = (error) => {
             console.error('SSE connection error:', error);
             
-            // Only call onError if we haven't successfully connected yet
-            // or if this is an unexpected disconnection
             if (!isConnected || eventSource.readyState === EventSource.CLOSED) {
                 cleanup();
                 mergedOptions.onError?.(new Error('SSE connection failed or lost'));
@@ -129,17 +116,13 @@ class SSEClient {
         };
     }
 
-    /**
-     * Convenient method for monitoring upload progress
-     */
     monitorUploadProgress(uploadId: string, onProgress: (percentage: number) => void): Promise<any> {
         return new Promise((resolve, reject) => {
             let lastProgress = -1;
-            
-            const connection = this.connect(`/soundfragments/upload-progress/${uploadId}/stream`, {
+            this.connect(`/soundfragments/upload-progress/${uploadId}/stream`, {
                 onMessage: (progress) => {
                     console.log('Upload progress update:', progress);
-                    
+
                     if (typeof progress.percentage === 'number' && progress.percentage !== lastProgress) {
                         lastProgress = progress.percentage;
                         onProgress(Math.max(0, Math.min(100, progress.percentage)));
@@ -160,12 +143,9 @@ class SSEClient {
         });
     }
 
-    /**
-     * Generic method for streaming data from any endpoint
-     */
     stream<T = any>(endpoint: string, onData: (data: T) => void, onComplete?: (data: T) => void): Promise<T> {
         return new Promise((resolve, reject) => {
-            const connection = this.connect(endpoint, {
+            this.connect(endpoint, {
                 onMessage: onData,
                 onComplete: (data) => {
                     onComplete?.(data);
@@ -177,13 +157,11 @@ class SSEClient {
     }
 }
 
-// Create SSE client instance
 const sseClient = new SSEClient(apiServer, {
     withCredentials: true,
     timeout: 10 * 60 * 1000
 });
 
-// Existing interceptors setup
 unsecuredClient.interceptors.request.use(
     (config) => {
         config.headers['X-Client-ID'] = 'mixpla-web';
