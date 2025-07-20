@@ -516,7 +516,8 @@ export default defineComponent( {
       formTitle,
       referencesStore,
       aclData,
-      aclLoading
+      aclLoading,
+      isBackendProcessing
     };
   },
 } );

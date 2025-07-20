@@ -295,12 +295,13 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
                         }
                         
                         const elapsed = (Date.now() - startTime) / 1000;
-                        const progress = Math.min(99, Math.floor((elapsed / estimatedSeconds) * 99));
+                        // Simulate progress but cap at 70% to leave room for backend progress
+                        const simulationProgress = Math.min(70, Math.floor((elapsed / estimatedSeconds) * 70));
                         
-                        if (progress !== lastProgress && progress % 10 === 0) {
-                            logWithTimestamp(`FRONTEND SIM: ${progress}% complete (${elapsed.toFixed(1)}s elapsed)`);
-                            onProgress(progress, 'simulating');
-                            lastProgress = progress;
+                        if (simulationProgress !== lastProgress && simulationProgress % 10 === 0) {
+                            logWithTimestamp(`FRONTEND SIM: ${simulationProgress}% complete (${elapsed.toFixed(1)}s elapsed)`);
+                            onProgress(simulationProgress, 'simulating');
+                            lastProgress = simulationProgress;
                         }
                         
                         if (elapsed < estimatedSeconds) {
