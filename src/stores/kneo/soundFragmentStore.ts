@@ -311,7 +311,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
                         }
                     };
                     
-                    setTimeout(simulateProgress, 1000);
+                    simulateProgress(); // Start immediately
                 });
                 
                 // Start SSE monitoring concurrently

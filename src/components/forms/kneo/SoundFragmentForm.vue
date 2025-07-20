@@ -88,7 +88,7 @@
                             type="line"
                             :height="6"
                             :border-radius="3"
-                            color="#2080f0"
+                            :color="isBackendProcessing ? '#18a058' : '#2080f0'"
                             style="margin-bottom: 8px;" />
                         <div v-if="file.status === 'error'"
                              style="padding: 4px 8px; background-color: #fef2f2; border: 1px solid #d03050; border-radius: 4px; color: #d03050; font-size: 12px;">
@@ -176,6 +176,7 @@ export default defineComponent( {
     const fileList = ref<UploadFileInfo[]>( [] );
     const uploadedFileNames = ref<string[]>( [] );
     const tempFileIds = ref<string[]>( [] );
+    const isBackendProcessing = ref<boolean>(false);
 
     const aclData = ref<any[]>( [] );
     const aclLoading = ref( false );
@@ -240,6 +241,13 @@ export default defineComponent( {
 
         const updateProgress = (percentage: number, status: string) => {
           logWithTimestamp(`Updating progress: ${percentage}% - ${status}`);
+
+          // Update backend processing flag based on status
+          if (status === 'processing' || status === 'finished') {
+            isBackendProcessing.value = true;
+          } else if (status === 'uploading' || status === 'simulating') {
+            isBackendProcessing.value = false;
+          }
 
           file.percentage = percentage;
           if (status === 'finished') {
