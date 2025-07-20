@@ -52,9 +52,16 @@ class SSEClient {
      */
     connect(endpoint: string, options: SSEOptions): SSEConnection {
         const mergedOptions = { ...this.defaultOptions, ...options };
-        const fullUrl = `${this.baseURL}/api${endpoint}`;
+        let fullUrl = `${this.baseURL}/api${endpoint}`;
         
-        console.log('Creating SSE connection to:', fullUrl);
+        // Add authorization token to URL if available
+        const token = keycloak.token;
+        if (token) {
+            const separator = fullUrl.includes('?') ? '&' : '?';
+            fullUrl += `${separator}access_token=${encodeURIComponent(token)}`;
+        }
+        
+        console.log('Creating SSE connection to:', fullUrl.replace(/access_token=[^&]+/, 'access_token=***'));
         
         const eventSource = new EventSource(fullUrl, {
             withCredentials: mergedOptions.withCredentials
