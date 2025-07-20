@@ -34,7 +34,7 @@
               <n-gi>
                 <n-form-item label="Genre">
                   <n-select v-model:value="localFormData.genre" :options="referencesStore.genreOptions" filterable
-                    placeholder="Select Genre" style="width: 25%; max-width: 300px;" />
+                            placeholder="Select Genre" style="width: 25%; max-width: 300px;" />
                 </n-form-item>
               </n-gi>
               <n-gi>
@@ -45,26 +45,26 @@
               <n-gi>
                 <n-form-item label="Represented In">
                   <n-select v-model:value="localFormData.representedInBrands" :options="radioStationOptions" filterable
-                    multiple placeholder="Select Radio Stations" style="width: 50%; max-width: 600px;" />
+                            multiple placeholder="Select Radio Stations" style="width: 50%; max-width: 600px;" />
                 </n-form-item>
               </n-gi>
               <n-gi>
                 <n-form-item label="Upload File">
-                  <n-upload 
-                    v-model:file-list="fileList" 
-                    :multiple="false" 
-                    :max="1" 
-                    :show-download-button="true"
-                    :disabled="false" 
-                    @change="handleChange" 
-                    @finish="handleFinish" 
-                    @download="handleDownload"
-                    @preview="handleDownload" 
-                    style="width: 50%; max-width: 600px;" 
-                    :accept="audioAcceptTypes"
-                    :custom-request="handleUpload" 
-                    :show-remove-button="true"
-                    :default-upload="true">
+                  <n-upload
+                      v-model:file-list="fileList"
+                      :multiple="false"
+                      :max="1"
+                      :show-download-button="true"
+                      :disabled="false"
+                      @change="handleChange"
+                      @finish="handleFinish"
+                      @download="handleDownload"
+                      @preview="handleDownload"
+                      style="width: 50%; max-width: 600px;"
+                      :accept="audioAcceptTypes"
+                      :custom-request="handleUpload"
+                      :show-remove-button="true"
+                      :default-upload="true">
                     <n-button>Select File</n-button>
                     <template #file="{ file }">
                       <div class="upload-file" style="padding: 12px; border: 1px solid #e0e0e6; border-radius: 6px; margin-top: 8px;">
@@ -80,17 +80,17 @@
                             ✗ Failed
                           </span>
                         </div>
-                        
-                        <n-progress 
-                          v-if="file.status === 'uploading'" 
-                          :percentage="file.percentage || 0"
-                          :show-indicator="false" 
-                          type="line"
-                          :height="6"
-                          :border-radius="3"
-                          color="#2080f0"
-                          style="margin-bottom: 8px;" />
-                        <div v-if="file.status === 'error'" 
+
+                        <n-progress
+                            v-if="file.status === 'uploading'"
+                            :percentage="file.percentage || 0"
+                            :show-indicator="false"
+                            type="line"
+                            :height="6"
+                            :border-radius="3"
+                            color="#2080f0"
+                            style="margin-bottom: 8px;" />
+                        <div v-if="file.status === 'error'"
                              style="padding: 4px 8px; background-color: #fef2f2; border: 1px solid #d03050; border-radius: 4px; color: #d03050; font-size: 12px;">
                           Upload failed - please try again
                         </div>
@@ -209,11 +209,11 @@ export default defineComponent( {
     const formTitle = computed( () => localFormData.id ? 'Edit Sound Fragment' : 'Create New Sound Fragment' );
 
     watch(
-      () => store.getCurrent?.uploadedFiles,
-      ( files ) => {
-        fileList.value = files || [];
-      },
-      { immediate: true }
+        () => store.getCurrent?.uploadedFiles,
+        ( files ) => {
+          fileList.value = files || [];
+        },
+        { immediate: true }
     );
 
     const handleUpload = async ({ file, onFinish, onError, onProgress }: {
@@ -302,7 +302,27 @@ export default defineComponent( {
               }
             }
           }
+            if (metadata.title && !localFormData.title) {
+              localFormData.title = metadata.title;
+            }
+            if (metadata.artist && !localFormData.artist) {
+              localFormData.artist = metadata.artist;
+            }
+            if (metadata.album && !localFormData.album) {
+              localFormData.album = metadata.album;
+            }
+            if (metadata.genre && !localFormData.genre) {
+              const genreExists = referencesStore.genreOptions.some(
+                  option => option.value === metadata.genre || option.label === metadata.genre
+              );
+              if (genreExists) {
+                localFormData.genre = metadata.genre;
+              }
+            }
+          }
 
+          updateProgress(100, 'finished');
+          uploadedFileNames.value.push(file.name);
           updateProgress(100, 'finished');
           uploadedFileNames.value.push(file.name);
 
@@ -319,7 +339,14 @@ export default defineComponent( {
             fileList.value[fileIndex] = newFile;
             fileList.value = [...fileList.value];
           }
+          const fileIndex = fileList.value.findIndex(f => f.id === file.id || f.name === file.name);
+          if (fileIndex !== -1) {
+            fileList.value[fileIndex] = newFile;
+            fileList.value = [...fileList.value];
+          }
 
+          if (onFinish) onFinish(newFile);
+          message.success(`File "${file.name}" uploaded and processed successfully`);
           if (onFinish) onFinish(newFile);
           message.success(`File "${file.name}" uploaded and processed successfully`);
 
