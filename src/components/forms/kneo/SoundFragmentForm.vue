@@ -222,133 +222,103 @@ export default defineComponent( {
       onError?: (e: Error) => void,
       onProgress?: (e: { percent: number }) => void,
     }) => {
-      const entityId = localFormData.id || "temp";
-      console.log(`Starting upload for file: ${file.name}, entityId: ${entityId}`);
+      try {
+        const entityId = localFormData.id || "temp";
+        console.log(`Starting upload for file: ${file.name}, entityId: ${entityId}`);
 
-      file.status = 'uploading';
-      file.percentage = 0;
+        file.status = 'uploading';
+        file.percentage = 0;
 
-      const updateProgress = (percentage: number, status?: 'uploading' | 'finished' | 'error') => {
-        console.log(`Updating progress: ${percentage}% - ${status || file.status}`);
+        const updateProgress = (percentage: number, status: string) => {
+          console.log(`Updating progress: ${percentage}% - ${status}`);
 
-        file.percentage = percentage;
-        if (status) file.status = status;
+          file.percentage = percentage;
+          if (status === 'finished') {
+            file.status = 'finished';
+          } else if (status === 'error') {
+            file.status = 'error';
+          } else {
+            file.status = 'uploading';
+          }
 
-        if (onProgress) {
-          onProgress({ percent: percentage });
+          if (onProgress) {
+            onProgress({ percent: percentage });
+          }
+
+          const fileIndex = fileList.value.findIndex(f => f.id === file.id || f.name === file.name);
+          if (fileIndex !== -1) {
+            fileList.value[fileIndex] = {
+              ...fileList.value[fileIndex],
+              percentage,
+              status: file.status
+            };
+            fileList.value = [...fileList.value];
+          }
+        };
+
+        updateProgress(0, 'uploading');
+
+        // Generate uploadId locally
+        const uploadId = crypto.randomUUID();
+        console.log('Generated uploadId:', uploadId);
+
+        // Use the enhanced upload with simulation method
+        console.log('Starting upload with frontend simulation...');
+        const finalData = await store.uploadFileWithSimulation(
+          entityId, 
+          file.file as File, 
+          uploadId,
+          updateProgress
+        );
+        
+        console.log('Upload and processing completed:', {
+          status: finalData.status,
+          percentage: finalData.percentage
+        });
+        
+        // Apply metadata if available
+        if (finalData.metadata) {
+          const metadata = finalData.metadata;
+          console.log('Applying metadata:', metadata);
+
+          if (metadata.title && !localFormData.title) {
+            localFormData.title = metadata.title;
+          }
+          if (metadata.artist && !localFormData.artist) {
+            localFormData.artist = metadata.artist;
+          }
+          if (metadata.album && !localFormData.album) {
+            localFormData.album = metadata.album;
+          }
+          if (metadata.genre && !localFormData.genre) {
+            const genreExists = referencesStore.genreOptions.some(
+                option => option.value === metadata.genre || option.label === metadata.genre
+            );
+            if (genreExists) {
+              localFormData.genre = metadata.genre;
+            }
+          }
         }
+
+        updateProgress(100, 'finished');
+        uploadedFileNames.value.push(file.name);
+
+        const newFile = {
+          ...file,
+          id: finalData.id || file.name,
+          url: finalData.url || finalData.fileUrl,
+          status: 'finished' as const,
+          percentage: 100
+        };
 
         const fileIndex = fileList.value.findIndex(f => f.id === file.id || f.name === file.name);
         if (fileIndex !== -1) {
-          fileList.value[fileIndex] = {
-            ...fileList.value[fileIndex],
-            percentage,
-            status: status || fileList.value[fileIndex].status
-          };
+          fileList.value[fileIndex] = newFile;
           fileList.value = [...fileList.value];
         }
-      };
 
-      updateProgress(0, 'uploading');
-
-      // Generate uploadId locally
-      const uploadId = crypto.randomUUID();
-      console.log('Generated uploadId:', uploadId);
-
-      console.log('Starting enhanced upload with simulation...');
-
-      try {
-          // Use the enhanced upload method with frontend progress simulation
-          const finalData = await store.uploadFileWithSimulation(
-            entityId, 
-            file.file as File, 
-            uploadId,
-            (percentage: number, status: string) => {
-              console.log(`Progress update: ${percentage}% (${status})`);
-              const validStatus = status === 'simulating' || status === 'processing' ? 'uploading' : 
-                                status === 'finished' ? 'finished' : 
-                                status === 'error' ? 'error' : 'uploading';
-              updateProgress(percentage, validStatus);
-            }
-          );
-
-          // Enhanced upload with SSE simulation completed
-          console.log('Enhanced upload completed:', {
-            status: finalData.status,
-            percentage: finalData.percentage,
-            hasMetadata: !!finalData.metadata
-          });
-
-          // Apply metadata if available
-          if (finalData.metadata) {
-            const metadata = finalData.metadata;
-            console.log('Applying metadata:', metadata);
-
-            if (metadata.title && !localFormData.title) {
-              localFormData.title = metadata.title;
-            }
-            if (metadata.artist && !localFormData.artist) {
-              localFormData.artist = metadata.artist;
-            }
-            if (metadata.album && !localFormData.album) {
-              localFormData.album = metadata.album;
-            }
-            if (metadata.genre && !localFormData.genre) {
-              const genreExists = referencesStore.genreOptions.some(
-                  option => option.value === metadata.genre || option.label === metadata.genre
-              );
-              if (genreExists) {
-                localFormData.genre = metadata.genre;
-              }
-            }
-          }
-            if (metadata.title && !localFormData.title) {
-              localFormData.title = metadata.title;
-            }
-            if (metadata.artist && !localFormData.artist) {
-              localFormData.artist = metadata.artist;
-            }
-            if (metadata.album && !localFormData.album) {
-              localFormData.album = metadata.album;
-            }
-            if (metadata.genre && !localFormData.genre) {
-              const genreExists = referencesStore.genreOptions.some(
-                  option => option.value === metadata.genre || option.label === metadata.genre
-              );
-              if (genreExists) {
-                localFormData.genre = metadata.genre;
-              }
-            }
-          }
-
-          updateProgress(100, 'finished');
-          uploadedFileNames.value.push(file.name);
-          updateProgress(100, 'finished');
-          uploadedFileNames.value.push(file.name);
-
-          const newFile = {
-            ...file,
-            id: finalData.id || file.name,
-            url: finalData.url || finalData.fileUrl,
-            status: 'finished' as const,
-            percentage: 100
-          };
-
-          const fileIndex = fileList.value.findIndex(f => f.id === file.id || f.name === file.name);
-          if (fileIndex !== -1) {
-            fileList.value[fileIndex] = newFile;
-            fileList.value = [...fileList.value];
-          }
-          const fileIndex = fileList.value.findIndex(f => f.id === file.id || f.name === file.name);
-          if (fileIndex !== -1) {
-            fileList.value[fileIndex] = newFile;
-            fileList.value = [...fileList.value];
-          }
-
-          if (onFinish) onFinish(newFile);
-          message.success(`File "${file.name}" uploaded and processed successfully`);
-          if (onFinish) onFinish(newFile);
-          message.success(`File "${file.name}" uploaded and processed successfully`);
+        if (onFinish) onFinish(newFile);
+        message.success(`File "${file.name}" uploaded and processed successfully`);
 
       } catch (error: any) {
         console.error('Upload error:', error);
