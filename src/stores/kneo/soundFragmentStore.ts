@@ -110,7 +110,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         apiFormResponse.value = response.data.payload;
     };
 
-    const uploadFile = async (id: string, file: File, uploadId: string) => {
+    const uploadFile = async (id: string, file: File, uploadId: string, onUploadProgress?: (percentage: number) => void) => {
         const maxSizeBytes = 100 * 1024 * 1024; // 100MB
     
         if (file.size > maxSizeBytes) {
@@ -126,6 +126,13 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
                 timeout: 600000, // 10 minutes
                 maxContentLength: 120 * 1024 * 1024,
                 maxBodyLength: 120 * 1024 * 1024,
+                onUploadProgress: (progressEvent) => {
+                    if (progressEvent.total && onUploadProgress) {
+                        const percentage = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                        logWithTimestamp(`UPLOAD PROGRESS: ${percentage}% (${(progressEvent.loaded / 1024 / 1024).toFixed(1)}MB / ${(progressEvent.total / 1024 / 1024).toFixed(1)}MB)`);
+                        onUploadProgress(percentage);
+                    }
+                },
             });
     
             return response.data;
@@ -259,20 +266,18 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
     };
 
     // Enhanced upload with frontend progress simulation
-    const uploadFileWithSimulation = async (
-        id: string, 
-        file: File, 
-        uploadId: string,
-        onProgress: (percentage: number, status: string) => void
-    ): Promise<any> => {
+    const uploadFileWithSimulation = async (id: string, file: File, uploadId: string, onProgress: (percentage: number, status: string) => void): Promise<any> => {
         let frontendSimulationActive = true;
         let backendStarted = false;
         
-        // Start upload and get estimated time
-        const uploadPromise = uploadFile(id, file, uploadId);
-        
         try {
-            const uploadResponse = await uploadPromise;
+            logWithTimestamp('Starting upload with simulation...');
+            
+            // Track upload progress during file transfer
+            const uploadResponse = await uploadFile(id, file, uploadId, (uploadPercentage: number) => {
+                onProgress(uploadPercentage, 'uploading');
+            });
+            
             const estimatedSeconds = uploadResponse.estimatedDurationSeconds || 0;
             
             logWithTimestamp(`Server estimated duration: ${estimatedSeconds}s`);
