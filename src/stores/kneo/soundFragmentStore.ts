@@ -295,10 +295,11 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
                         }
                         
                         const elapsed = (Date.now() - startTime) / 1000;
-                        // Simulate progress but cap at 70% to leave room for backend progress
-                        const simulationProgress = Math.min(70, Math.floor((elapsed / estimatedSeconds) * 70));
+                        // Start from 100% (upload complete) and simulate processing, but don't go below 70%
+                        const progressDecrement = Math.floor((elapsed / estimatedSeconds) * 30); // Max 30% decrease
+                        const simulationProgress = Math.max(70, 100 - progressDecrement);
                         
-                        if (simulationProgress !== lastProgress && simulationProgress % 10 === 0) {
+                        if (simulationProgress !== lastProgress && (simulationProgress % 10 === 0 || elapsed % 5 === 0)) {
                             logWithTimestamp(`FRONTEND SIM: ${simulationProgress}% complete (${elapsed.toFixed(1)}s elapsed)`);
                             onProgress(simulationProgress, 'simulating');
                             lastProgress = simulationProgress;
