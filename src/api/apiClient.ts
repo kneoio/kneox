@@ -44,6 +44,15 @@ class SSEClient {
         };
     }
 
+    private getTimestamp(): string {
+        const now = new Date();
+        return now.toTimeString().split(' ')[0] + '.' + now.getMilliseconds().toString().padStart(3, '0');
+    }
+
+    private logWithTimestamp(message: string): void {
+        console.log(`[${this.getTimestamp()}] ${message}`);
+    }
+
     connect(endpoint: string, options: SSEOptions): SSEConnection {
         const mergedOptions = { ...this.defaultOptions, ...options };
         let fullUrl = `${this.baseURL}/api${endpoint}`;
@@ -55,7 +64,7 @@ class SSEClient {
             fullUrl += `${separator}access_token=${encodeURIComponent(token)}`;
         }
         
-        console.log('Creating SSE connection to:', fullUrl.replace(/access_token=[^&]+/, 'access_token=***'));
+        this.logWithTimestamp(`Creating SSE connection to: ${fullUrl.replace(/access_token=[^&]+/, 'access_token=***')}`);
         
         const eventSource = new EventSource(fullUrl, {
             withCredentials: mergedOptions.withCredentials
@@ -67,7 +76,7 @@ class SSEClient {
         if (mergedOptions.timeout) {
             timeoutId = setTimeout(() => {
                 if (!isConnected) {
-                    console.warn('SSE connection timeout');
+                    this.logWithTimestamp('SSE connection timeout');
                     eventSource.close();
                     mergedOptions.onError?.(new Error('Connection timeout'));
                 }
@@ -86,7 +95,7 @@ class SSEClient {
         
         eventSource.onopen = () => {
             isConnected = true;
-            console.log('SSE connection established');
+            this.logWithTimestamp('SSE connection established');
             mergedOptions.onOpen?.();
         };
         
@@ -103,13 +112,13 @@ class SSEClient {
                     mergedOptions.onError?.(new Error(data.error || data.message || 'Operation failed'));
                 }
             } catch (error) {
-                console.error('Failed to parse SSE data:', error, 'Raw data:', event.data);
+                this.logWithTimestamp(`Failed to parse SSE data: ${error}, Raw data: ${event.data}`);
                 mergedOptions.onError?.(new Error('Invalid server response format'));
             }
         };
         
         eventSource.onerror = (error) => {
-            console.error('SSE connection error:', error);
+            this.logWithTimestamp(`SSE connection error: ${error}`);
             
             if (!isConnected || eventSource.readyState === EventSource.CLOSED) {
                 cleanup();
@@ -128,7 +137,7 @@ class SSEClient {
             let lastProgress = -1;
             this.connect(`/soundfragments/upload-progress/${uploadId}/stream`, {
                 onMessage: (progress) => {
-                    console.log('Upload progress update:', progress);
+                    this.logWithTimestamp(`Upload progress update: ${JSON.stringify(progress)}`);
 
                     if (typeof progress.percentage === 'number' && progress.percentage !== lastProgress) {
                         lastProgress = progress.percentage;
@@ -136,15 +145,15 @@ class SSEClient {
                     }
                 },
                 onComplete: (data) => {
-                    console.log('Upload monitoring completed:', data);
+                    this.logWithTimestamp(`Upload monitoring completed: ${JSON.stringify(data)}`);
                     resolve(data);
                 },
                 onError: (error) => {
-                    console.error('Upload monitoring error:', error);
+                    this.logWithTimestamp(`Upload monitoring error: ${error}`);
                     reject(error);
                 },
                 onOpen: () => {
-                    console.log('Upload progress monitoring started for:', uploadId);
+                    this.logWithTimestamp(`Upload progress monitoring started for: ${uploadId}`);
                 }
             });
         });

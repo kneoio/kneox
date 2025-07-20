@@ -9,6 +9,15 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
     const apiFormResponse = ref<ApiFormResponse<SoundFragment> | null>(null);
     const availableApiViewResponse = ref<ApiViewPageResponse<SoundFragment> | null>(null);
 
+    const getTimestamp = () => {
+        const now = new Date();
+        return now.toTimeString().split(' ')[0] + '.' + now.getMilliseconds().toString().padStart(3, '0');
+    };
+
+    const logWithTimestamp = (message: string) => {
+        console.log(`[${getTimestamp()}] ${message}`);
+    };
+
     const getEntries = computed(() => apiViewResponse.value?.viewData.entries || []);
     const getAvailableSoundFragments = computed(() => availableApiViewResponse.value?.viewData.entries || []);
     const getCurrent = computed(() => apiFormResponse.value?.docData || {
@@ -266,7 +275,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
             const uploadResponse = await uploadPromise;
             const estimatedSeconds = uploadResponse.estimatedDurationSeconds || 0;
             
-            console.log(`Server estimated duration: ${estimatedSeconds}s`);
+            logWithTimestamp(`Server estimated duration: ${estimatedSeconds}s`);
             
             // Start frontend simulation if we have an estimate
             if (estimatedSeconds > 0) {
@@ -284,7 +293,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
                         const progress = Math.min(99, Math.floor((elapsed / estimatedSeconds) * 99));
                         
                         if (progress !== lastProgress && progress % 10 === 0) {
-                            console.log(`FRONTEND SIM: ${progress}% complete (${elapsed.toFixed(1)}s elapsed)`);
+                            logWithTimestamp(`FRONTEND SIM: ${progress}% complete (${elapsed.toFixed(1)}s elapsed)`);
                             onProgress(progress, 'simulating');
                             lastProgress = progress;
                         }
@@ -292,7 +301,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
                         if (elapsed < estimatedSeconds) {
                             setTimeout(simulateProgress, 1000);
                         } else {
-                            console.log('Estimation time reached - waiting for backend');
+                            logWithTimestamp('Estimation time reached - waiting for backend');
                             resolve();
                         }
                     };
@@ -306,17 +315,17 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
                         if (progress.percentage >= 10 && !backendStarted) {
                             backendStarted = true;
                             frontendSimulationActive = false;
-                            console.log('BACKEND TAKEOVER: Real processing started');
+                            logWithTimestamp('BACKEND TAKEOVER: Real processing started');
                         }
                         
                         if (backendStarted) {
-                            console.log(`BACKEND: ${JSON.stringify(progress)}`);
+                            logWithTimestamp(`BACKEND: ${JSON.stringify(progress)}`);
                             onProgress(progress.percentage, progress.status || 'processing');
                         }
                     },
                     onComplete: (data: any) => {
                         frontendSimulationActive = false;
-                        console.log('Backend processing finished');
+                        logWithTimestamp('Backend processing finished');
                         return data;
                     },
                     onError: (error: any) => {

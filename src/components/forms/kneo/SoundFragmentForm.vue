@@ -216,6 +216,15 @@ export default defineComponent( {
         { immediate: true }
     );
 
+    const getTimestamp = () => {
+      const now = new Date();
+      return now.toTimeString().split(' ')[0] + '.' + now.getMilliseconds().toString().padStart(3, '0');
+    };
+
+    const logWithTimestamp = (message: string) => {
+      console.log(`[${getTimestamp()}] ${message}`);
+    };
+
     const handleUpload = async ({ file, onFinish, onError, onProgress }: {
       file: UploadFileInfo,
       onFinish?: (file?: UploadFileInfo) => void,
@@ -224,13 +233,13 @@ export default defineComponent( {
     }) => {
       try {
         const entityId = localFormData.id || "temp";
-        console.log(`Starting upload for file: ${file.name}, entityId: ${entityId}`);
+        logWithTimestamp(`Starting upload for file: ${file.name}, entityId: ${entityId}`);
 
         file.status = 'uploading';
         file.percentage = 0;
 
         const updateProgress = (percentage: number, status: string) => {
-          console.log(`Updating progress: ${percentage}% - ${status}`);
+          logWithTimestamp(`Updating progress: ${percentage}% - ${status}`);
 
           file.percentage = percentage;
           if (status === 'finished') {
@@ -260,10 +269,10 @@ export default defineComponent( {
 
         // Generate uploadId locally
         const uploadId = crypto.randomUUID();
-        console.log('Generated uploadId:', uploadId);
+        logWithTimestamp(`Generated uploadId: ${uploadId}`);
 
         // Use the enhanced upload with simulation method
-        console.log('Starting upload with frontend simulation...');
+        logWithTimestamp('Starting upload with frontend simulation...');
         const finalData = await store.uploadFileWithSimulation(
           entityId, 
           file.file as File, 
@@ -271,15 +280,15 @@ export default defineComponent( {
           updateProgress
         );
         
-        console.log('Upload and processing completed:', {
+        logWithTimestamp(`Upload and processing completed: ${JSON.stringify({
           status: finalData.status,
           percentage: finalData.percentage
-        });
+        })}`);
         
         // Apply metadata if available
         if (finalData.metadata) {
           const metadata = finalData.metadata;
-          console.log('Applying metadata:', metadata);
+          logWithTimestamp(`Applying metadata: ${JSON.stringify(metadata)}`);
 
           if (metadata.title && !localFormData.title) {
             localFormData.title = metadata.title;
@@ -321,7 +330,7 @@ export default defineComponent( {
         message.success(`File "${file.name}" uploaded and processed successfully`);
 
       } catch (error: any) {
-        console.error('Upload error:', error);
+        logWithTimestamp(`Upload error: ${error.message || error}`);
 
         file.status = 'error';
         file.percentage = 0;
@@ -337,7 +346,7 @@ export default defineComponent( {
         }
 
         const errorMessage = error.message || 'Upload failed';
-        console.error('Final error message:', errorMessage);
+        logWithTimestamp(`Final error message: ${errorMessage}`);
         message.error(errorMessage);
 
         if (onError) onError(error as Error);
