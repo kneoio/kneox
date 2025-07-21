@@ -8,16 +8,6 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
     const apiViewResponse = ref<ApiViewPageResponse<SoundFragment> | null>(null);
     const apiFormResponse = ref<ApiFormResponse<SoundFragment> | null>(null);
     const availableApiViewResponse = ref<ApiViewPageResponse<SoundFragment> | null>(null);
-
-    const getTimestamp = () => {
-        const now = new Date();
-        return now.toTimeString().split(' ')[0] + '.' + now.getMilliseconds().toString().padStart(3, '0');
-    };
-
-    const logWithTimestamp = (message: string) => {
-        console.log(`[${getTimestamp()}] ${message}`);
-    };
-
     const getEntries = computed(() => apiViewResponse.value?.viewData.entries || []);
     const getAvailableSoundFragments = computed(() => availableApiViewResponse.value?.viewData.entries || []);
     const getCurrent = computed(() => apiFormResponse.value?.docData || {
@@ -110,7 +100,38 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         apiFormResponse.value = response.data.payload;
     };
 
-    const uploadFile = async (id: string, file: File, uploadId: string, onUploadProgress?: (percentage: number) => void) => {
+    const startUploadSession = async (id: string, uploadId: string, startTime: number) => {
+        try {
+            const response = await apiClient.post(`/soundfragments/files/${id}/start?uploadId=${uploadId}&startTime=${startTime}`);
+            return response.data;
+        } catch (error: any) {
+            if (error.response) {
+                const status = error.response.status;
+                const errorData = error.response.data;
+
+                switch (status) {
+                    case 400:
+                        const message = typeof errorData === 'string' ? errorData :
+                            (errorData?.error?.message || errorData?.message || 'Invalid upload session request');
+                        throw new Error(message);
+                    case 403:
+                        throw new Error('You do not have permission to upload files');
+                    case 500:
+                        throw new Error('Server error occurred. Please try again.');
+                    default:
+                        throw new Error(`Upload session failed: ${errorData?.error?.message || errorData?.message || `HTTP ${status}`}`);
+                }
+            } else if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+                throw new Error('Request timeout. Please try again.');
+            } else if (error.message.includes('Network Error')) {
+                throw new Error('Network error. Please check your connection and try again.');
+            } else {
+                throw new Error(`Upload session failed: ${error.message || 'Unknown error'}`);
+            }
+        }
+    };
+
+    const uploadFile = async (id: string, file: File, uploadId: string) => {
         const maxSizeBytes = 100 * 1024 * 1024; // 100MB
 
         if (file.size > maxSizeBytes) {
@@ -121,18 +142,10 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         formData.append('file', file);
 
         try {
-            const startTime = Date.now();
-            const response = await apiClient.post(`/soundfragments/files/${id}?uploadId=${uploadId}&startTime=${startTime}`, formData, {
+            const response = await apiClient.post(`/soundfragments/files/${id}?uploadId=${uploadId}`, formData, {
                 timeout: 600000, // 10 minutes
                 maxContentLength: 120 * 1024 * 1024,
                 maxBodyLength: 120 * 1024 * 1024,
-                onUploadProgress: (progressEvent) => {
-                    if (progressEvent.total && onUploadProgress) {
-                        const percentage = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                        logWithTimestamp(`UPLOAD PROGRESS: ${percentage}% (${(progressEvent.loaded / 1024 / 1024).toFixed(1)}MB / ${(progressEvent.total / 1024 / 1024).toFixed(1)}MB)`);
-                        onUploadProgress(percentage);
-                    }
-                },
             });
 
             return response.data;
@@ -232,6 +245,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         save,
         delete: deleteSoundFragment,
         uploadFile,
+        startUploadSession,
         updateCurrent,
         downloadFile,
         fetchAccessList

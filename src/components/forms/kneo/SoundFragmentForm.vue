@@ -60,29 +60,13 @@
                       @finish="handleFinish"
                       @download="handleDownload"
                       @preview="handleDownload"
+                      @remove="handleRemove"
                       style="width: 50%; max-width: 600px;"
                       :accept="audioAcceptTypes"
                       :custom-request="handleUpload"
                       :show-remove-button="true"
                       :default-upload="true">
                     <n-button>Select File</n-button>
-                    <template #file="{ file }">
-                      <div class="upload-file" style="padding: 12px; border: 1px solid #e0e0e6; border-radius: 6px; margin-top: 8px;">
-                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                          <span style="font-weight: 500;">{{ file.name }}</span>
-                          <span v-if="file.status === 'finished'" style="color: #18a058; font-size: 12px;">
-                            ✓ Complete
-                          </span>
-                          <span v-else-if="file.status === 'error'" style="color: #d03050; font-size: 12px;">
-                            ✗ Failed
-                          </span>
-                        </div>
-                        <div v-if="file.status === 'error'"
-                             style="padding: 4px 8px; background-color: #fef2f2; border: 1px solid #d03050; border-radius: 4px; color: #d03050; font-size: 12px; margin-top: 8px;">
-                          Upload failed - please try again
-                        </div>
-                      </div>
-                    </template>
                   </n-upload>
                 </n-form-item>
               </n-gi>
@@ -160,6 +144,7 @@ export default defineComponent({
     const activeTab = ref("properties");
     const fileList = ref<UploadFileInfo[]>([]);
     const uploadedFileNames = ref<string[]>([]);
+    const backendProgress = ref(0);
 
     const aclData = ref<any[]>([]);
     const aclLoading = ref(false);
@@ -209,6 +194,170 @@ export default defineComponent({
       console.log(`[${getTimestamp()}] ${message}`);
     };
 
+    // Global progress state
+    let globalProgressState = {
+      isSimulationActive: false,
+      hasSSEStarted: false,
+      currentProgress: 0,
+      stopSimulation: null as (() => void) | null,
+      eventSource: null as EventSource | null
+    };
+
+    const simulateProgress = (
+        estimatedDurationSeconds: number,
+        onProgressUpdate: (progress: number) => void,
+        onComplete: () => void
+    ): (() => void) => {
+      let simulationActive = true;
+      let simulationProgress = 0;
+      const targetProgress = 70;
+      const updateIntervalMs = 200;
+      const totalUpdates = (estimatedDurationSeconds * 1000) / updateIntervalMs;
+      const progressIncrement = targetProgress / totalUpdates;
+
+      globalProgressState.isSimulationActive = true;
+
+      const updateProgress = () => {
+        if (!simulationActive) return;
+
+        // If SSE has started and we're past 70%, stop simulation
+        if (globalProgressState.hasSSEStarted && simulationProgress >= 70) {
+          simulationActive = false;
+          globalProgressState.isSimulationActive = false;
+          onComplete();
+          return;
+        }
+
+        simulationProgress = Math.min(simulationProgress + progressIncrement, targetProgress);
+        globalProgressState.currentProgress = simulationProgress;
+        onProgressUpdate(simulationProgress);
+
+        if (simulationProgress < targetProgress) {
+          setTimeout(updateProgress, updateIntervalMs);
+        } else {
+          // Reached 70%, wait for SSE if not started yet
+          if (!globalProgressState.hasSSEStarted) {
+            logWithTimestamp('Simulation reached 70%, waiting for SSE...');
+            // Keep checking for SSE every 500ms
+            const waitForSSE = () => {
+              if (!simulationActive) return;
+
+              if (globalProgressState.hasSSEStarted) {
+                simulationActive = false;
+                globalProgressState.isSimulationActive = false;
+                onComplete();
+              } else {
+                setTimeout(waitForSSE, 500);
+              }
+            };
+            setTimeout(waitForSSE, 500);
+          } else {
+            simulationActive = false;
+            globalProgressState.isSimulationActive = false;
+            onComplete();
+          }
+        }
+      };
+
+      setTimeout(updateProgress, 100);
+
+      return () => {
+        simulationActive = false;
+        globalProgressState.isSimulationActive = false;
+      };
+    };
+
+    const connectSSE = (uploadId: string) => {
+      const eventSource = new EventSource(`http://localhost:38707/api/soundfragments/upload-progress/${uploadId}/stream`);
+      globalProgressState.eventSource = eventSource;
+
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          logWithTimestamp(`SSE Progress: ${JSON.stringify(data)}`);
+
+          // Mark SSE as started
+          if (!globalProgressState.hasSSEStarted) {
+            globalProgressState.hasSSEStarted = true;
+            logWithTimestamp('SSE connection established');
+
+            // If simulation hasn't reached 70% yet, jump to 70%
+            if (globalProgressState.currentProgress < 70) {
+              globalProgressState.currentProgress = 70;
+              if (fileList.value[0]) {
+                fileList.value[0].percentage = 70;
+              }
+              logWithTimestamp('Jumped to 70% as SSE started early');
+            }
+          }
+
+          const serverProgress = data.percentage || 0;
+          backendProgress.value = serverProgress;
+
+          // Map server progress 0-100% to display 70-100%
+          const displayProgress = 70 + (serverProgress * 0.3);
+          globalProgressState.currentProgress = displayProgress;
+
+          logWithTimestamp(`REAL PROGRESS: backend ${serverProgress}% → showing ${Math.round(displayProgress)}% to user`);
+
+          // Update the single file in list
+          if (fileList.value[0] && serverProgress > 0) {
+            fileList.value[0].percentage = displayProgress;
+            if (data.status === 'finished') {
+              fileList.value[0].status = 'finished';
+              fileList.value[0].percentage = 100;
+              globalProgressState.currentProgress = 100;
+              eventSource.close();
+              resetProgressState();
+            } else if (data.status === 'error') {
+              fileList.value[0].status = 'error';
+              eventSource.close();
+              resetProgressState();
+              message.error('File processing failed');
+            }
+          }
+        } catch (e) {
+          logWithTimestamp(`SSE parse error: ${e}`);
+        }
+      };
+
+      eventSource.onerror = (error) => {
+        logWithTimestamp(`SSE connection error for ${uploadId}: ${error}`);
+        eventSource.close();
+
+        // If SSE fails and simulation is still active, let it continue to 100%
+        if (globalProgressState.isSimulationActive && fileList.value[0]) {
+          logWithTimestamp('SSE failed, falling back to simulation completion');
+          setTimeout(() => {
+            if (fileList.value[0] && fileList.value[0].percentage < 100) {
+              fileList.value[0].percentage = 100;
+              fileList.value[0].status = 'finished';
+              globalProgressState.currentProgress = 100;
+              resetProgressState();
+            }
+          }, 2000);
+        }
+      };
+
+      return eventSource;
+    };
+
+    const resetProgressState = () => {
+      if (globalProgressState.stopSimulation) {
+        globalProgressState.stopSimulation();
+      }
+      if (globalProgressState.eventSource) {
+        globalProgressState.eventSource.close();
+      }
+      globalProgressState = {
+        isSimulationActive: false,
+        hasSSEStarted: false,
+        currentProgress: 0,
+        stopSimulation: null,
+        eventSource: null
+      };
+    };
+
     const applyMetadata = (metadata: any) => {
       if (!metadata) return;
 
@@ -233,57 +382,39 @@ export default defineComponent({
       }
     };
 
-    const handleUpload = async ({ file, onFinish, onError }: {
-      file: UploadFileInfo,
-      onFinish?: (file?: UploadFileInfo) => void,
-      onError?: (e: Error) => void,
-    }) => {
+    const handleUpload = async ({ file, onFinish, onError }) => {
       try {
+        resetProgressState();
+
         const entityId = localFormData.id || "temp";
-        logWithTimestamp(`Starting upload for file: ${file.name}, entityId: ${entityId}`);
-
         const uploadId = crypto.randomUUID();
-        logWithTimestamp(`Generated uploadId: ${uploadId}`);
-
-        logWithTimestamp('Starting file upload...');
-        const finalData = await store.uploadFile(
-            entityId,
-            file.file as File,
-            uploadId
+        const startTime = Date.now();
+        logWithTimestamp(`Start upload session, uploadId: ${uploadId}`);
+        const sessionData = await store.startUploadSession(entityId, uploadId, startTime);
+        globalProgressState.stopSimulation = simulateProgress(
+            sessionData.estimatedDurationSeconds,
+            (progress) => {
+              if (fileList.value[0]) {
+                fileList.value[0].percentage = progress;
+                logWithTimestamp(`SIMULATION: showing ${Math.round(progress)}% to user`);
+              }
+            },
+            () => {
+              logWithTimestamp('Simulation phase completed');
+            }
         );
+        logWithTimestamp(`Starting upload: ${file.name}, uploadId: ${uploadId}`);
+        logWithTimestamp(`Estimated duration: ${sessionData.estimatedDurationSeconds} seconds`);
+        store.uploadFile(entityId, file.file, uploadId);
+        connectSSE(uploadId);
 
-        logWithTimestamp(`Upload completed: ${JSON.stringify({
-          status: finalData.status
-        })}`);
 
-        uploadedFileNames.value.push(file.name);
-
-        file.id = finalData.id || file.name;
-        file.url = finalData.url || finalData.fileUrl;
-        file.status = 'finished';
-
-        if (onFinish) onFinish(file);
-        message.success(`File "${file.name}" uploaded successfully`);
+        if (onFinish) message.success(`File "${file.name}" uploaded successfully`);
 
       } catch (error: any) {
-        logWithTimestamp(`Upload error: ${error.message || error}`);
-
-        file.status = 'error';
-
-        const fileIndex = fileList.value.findIndex(f => f.id === file.id || f.name === file.name);
-        if (fileIndex !== -1) {
-          fileList.value[fileIndex] = {
-            ...fileList.value[fileIndex],
-            status: 'error',
-            percentage: 0
-          };
-          fileList.value = [...fileList.value];
-        }
-
-        const errorMessage = error.message || 'Upload failed';
-        logWithTimestamp(`Final error message: ${errorMessage}`);
-        message.error(errorMessage);
-
+        resetProgressState();
+        logWithTimestamp(`Upload error: ${error.message}`);
+        message.error(error.message || 'Upload failed');
         if (onError) onError(error as Error);
         throw error;
       }
@@ -308,6 +439,24 @@ export default defineComponent({
       fileList: UploadFileInfo[];
     }) => {
       fileList.value = data.fileList;
+
+      const currentFileNames = data.fileList.map(f => f.name);
+      uploadedFileNames.value = uploadedFileNames.value.filter(name =>
+          currentFileNames.includes(name)
+      );
+    };
+
+    const handleRemove = (file: UploadFileInfo) => {
+      // Remove from uploaded file names
+      uploadedFileNames.value = uploadedFileNames.value.filter(name => name !== file.name);
+
+      // Reset progress state if removing current uploading file
+      if (globalProgressState.isSimulationActive || globalProgressState.hasSSEStarted) {
+        resetProgressState();
+      }
+
+      logWithTimestamp(`Removed file: ${file.name}`);
+      return true;
     };
 
     const handleFinish = ({ file }: {
@@ -436,13 +585,15 @@ export default defineComponent({
       handleFinish,
       handleUpload,
       handleDownload,
+      handleRemove,
       fileList,
       audioAcceptTypes: referencesStore.audioAcceptTypes,
       radioStationOptions,
       formTitle,
       referencesStore,
       aclData,
-      aclLoading
+      aclLoading,
+      backendProgress
     };
   },
 });
