@@ -68,30 +68,17 @@
                     <n-button>Select File</n-button>
                     <template #file="{ file }">
                       <div class="upload-file" style="padding: 12px; border: 1px solid #e0e0e6; border-radius: 6px; margin-top: 8px;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
                           <span style="font-weight: 500;">{{ file.name }}</span>
-                          <span v-if="file.status === 'uploading'" style="color: #2080f0; font-size: 12px;">
-                            {{ Math.round(file.percentage || 0) }}%
-                          </span>
-                          <span v-else-if="file.status === 'finished'" style="color: #18a058; font-size: 12px;">
+                          <span v-if="file.status === 'finished'" style="color: #18a058; font-size: 12px;">
                             ✓ Complete
                           </span>
                           <span v-else-if="file.status === 'error'" style="color: #d03050; font-size: 12px;">
                             ✗ Failed
                           </span>
                         </div>
-
-                        <n-progress
-                            v-if="file.status === 'uploading'"
-                            :percentage="file.percentage || 0"
-                            :show-indicator="false"
-                            type="line"
-                            :height="6"
-                            :border-radius="3"
-                            :color="isBackendProcessing ? '#18a058' : '#2080f0'"
-                            style="margin-bottom: 8px;" />
                         <div v-if="file.status === 'error'"
-                             style="padding: 4px 8px; background-color: #fef2f2; border: 1px solid #d03050; border-radius: 4px; color: #d03050; font-size: 12px;">
+                             style="padding: 4px 8px; background-color: #fef2f2; border: 1px solid #d03050; border-radius: 4px; color: #d03050; font-size: 12px; margin-top: 8px;">
                           Upload failed - please try again
                         </div>
                       </div>
@@ -124,7 +111,6 @@ import {
   NIcon,
   NInput,
   NPageHeader,
-  NProgress,
   NSelect,
   NTabPane,
   NTabs,
@@ -159,7 +145,6 @@ export default defineComponent( {
     NGrid,
     NGi,
     NSelect,
-    NProgress,
     NDataTable,
     NIcon,
     AclTable,
@@ -176,7 +161,6 @@ export default defineComponent( {
     const fileList = ref<UploadFileInfo[]>( [] );
     const uploadedFileNames = ref<string[]>( [] );
     const tempFileIds = ref<string[]>( [] );
-    const isBackendProcessing = ref<boolean>(false);
 
     const aclData = ref<any[]>( [] );
     const aclLoading = ref( false );
@@ -226,122 +210,66 @@ export default defineComponent( {
       console.log(`[${getTimestamp()}] ${message}`);
     };
 
-    const handleUpload = async ({ file, onFinish, onError, onProgress }: {
+    const applyMetadata = (metadata: any) => {
+      if (!metadata) return;
+      
+      logWithTimestamp(`Applying metadata: ${JSON.stringify(metadata)}`);
+
+      if (metadata.title && !localFormData.title) {
+        localFormData.title = metadata.title;
+      }
+      if (metadata.artist && !localFormData.artist) {
+        localFormData.artist = metadata.artist;
+      }
+      if (metadata.album && !localFormData.album) {
+        localFormData.album = metadata.album;
+      }
+      if (metadata.genre && !localFormData.genre) {
+        const genreExists = referencesStore.genreOptions.some(
+            option => option.value === metadata.genre || option.label === metadata.genre
+        );
+        if (genreExists) {
+          localFormData.genre = metadata.genre;
+        }
+      }
+    };
+
+    const handleUpload = async ({ file, onFinish, onError }: {
       file: UploadFileInfo,
       onFinish?: (file?: UploadFileInfo) => void,
       onError?: (e: Error) => void,
-      onProgress?: (e: { percent: number }) => void,
     }) => {
       try {
         const entityId = localFormData.id || "temp";
         logWithTimestamp(`Starting upload for file: ${file.name}, entityId: ${entityId}`);
 
-        file.status = 'uploading';
-        file.percentage = 0;
-
-        const updateProgress = (percentage: number, status: string) => {
-          logWithTimestamp(`Updating progress: ${percentage}% - ${status}`);
-
-          // Update backend processing flag based on status
-          if (status === 'processing' || status === 'finished') {
-            isBackendProcessing.value = true;
-          } else if (status === 'uploading' || status === 'simulating') {
-            isBackendProcessing.value = false;
-          }
-
-          file.percentage = percentage;
-          if (status === 'finished') {
-            file.status = 'finished';
-          } else if (status === 'error') {
-            file.status = 'error';
-          } else {
-            file.status = 'uploading';
-          }
-
-          if (onProgress) {
-            onProgress({ percent: percentage });
-          }
-
-          const fileIndex = fileList.value.findIndex(f => f.id === file.id || f.name === file.name);
-          if (fileIndex !== -1) {
-            fileList.value[fileIndex] = {
-              ...fileList.value[fileIndex],
-              percentage,
-              status: file.status
-            };
-            fileList.value = [...fileList.value];
-          }
-        };
-
-        updateProgress(0, 'uploading');
-
-        // Generate uploadId locally
         const uploadId = crypto.randomUUID();
         logWithTimestamp(`Generated uploadId: ${uploadId}`);
 
-        // Use the enhanced upload with simulation method
-        logWithTimestamp('Starting upload with frontend simulation...');
-        const finalData = await store.uploadFileWithSimulation(
+        logWithTimestamp('Starting file upload...');
+        const finalData = await store.uploadFile(
           entityId, 
           file.file as File, 
-          uploadId,
-          updateProgress
+          uploadId
         );
         
-        logWithTimestamp(`Upload and processing completed: ${JSON.stringify({
-          status: finalData.status,
-          percentage: finalData.percentage
+        logWithTimestamp(`Upload completed: ${JSON.stringify({
+          status: finalData.status
         })}`);
-        
-        // Apply metadata if available
-        if (finalData.metadata) {
-          const metadata = finalData.metadata;
-          logWithTimestamp(`Applying metadata: ${JSON.stringify(metadata)}`);
 
-          if (metadata.title && !localFormData.title) {
-            localFormData.title = metadata.title;
-          }
-          if (metadata.artist && !localFormData.artist) {
-            localFormData.artist = metadata.artist;
-          }
-          if (metadata.album && !localFormData.album) {
-            localFormData.album = metadata.album;
-          }
-          if (metadata.genre && !localFormData.genre) {
-            const genreExists = referencesStore.genreOptions.some(
-                option => option.value === metadata.genre || option.label === metadata.genre
-            );
-            if (genreExists) {
-              localFormData.genre = metadata.genre;
-            }
-          }
-        }
-
-        updateProgress(100, 'finished');
         uploadedFileNames.value.push(file.name);
 
-        const newFile = {
-          ...file,
-          id: finalData.id || file.name,
-          url: finalData.url || finalData.fileUrl,
-          status: 'finished' as const,
-          percentage: 100
-        };
+        file.id = finalData.id || file.name;
+        file.url = finalData.url || finalData.fileUrl;
+        file.status = 'finished';
 
-        const fileIndex = fileList.value.findIndex(f => f.id === file.id || f.name === file.name);
-        if (fileIndex !== -1) {
-          fileList.value[fileIndex] = newFile;
-          fileList.value = [...fileList.value];
-        }
-
-        if (onFinish) onFinish(newFile);
-        message.success(`File "${file.name}" uploaded and processed successfully`);
+        if (onFinish) onFinish(file);
+        message.success(`File "${file.name}" uploaded successfully`);
 
       } catch (error: any) {
         logWithTimestamp(`Upload error: ${error.message || error}`);
 
         file.status = 'error';
-        file.percentage = 0;
 
         const fileIndex = fileList.value.findIndex(f => f.id === file.id || f.name === file.name);
         if (fileIndex !== -1) {
@@ -516,8 +444,7 @@ export default defineComponent( {
       formTitle,
       referencesStore,
       aclData,
-      aclLoading,
-      isBackendProcessing
+      aclLoading
     };
   },
 } );

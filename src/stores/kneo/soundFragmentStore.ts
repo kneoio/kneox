@@ -225,144 +225,9 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         }
     };
 
-    // Alternative method using the raw SSE client for more control
-    const monitorUploadProgressAdvanced = async (
-        uploadId: string, 
-        onProgress: (percentage: number) => void,
-        onStatusChange?: (status: string) => void
-    ): Promise<any> => {
-        return new Promise((resolve, reject) => {
-            let lastProgress = -1;
-            
-            (apiClient as any).sse.connect(`/soundfragments/upload-progress/${uploadId}/stream`, {
-                onMessage: (progress: any) => {
-                    console.log('Advanced upload progress:', progress);
-                    
-                    // Handle progress updates
-                    if (typeof progress.percentage === 'number' && progress.percentage !== lastProgress) {
-                        lastProgress = progress.percentage;
-                        onProgress(progress.percentage);
-                    }
-                    
-                    // Handle status changes
-                    if (progress.status && onStatusChange) {
-                        onStatusChange(progress.status);
-                    }
-                },
-                onComplete: (data: any) => {
-                    console.log('Upload completed:', data);
-                    resolve(data);
-                },
-                onError: (error: any) => {
-                    console.error('Upload error:', error);
-                    reject(error);
-                },
-                onOpen: () => {
-                    console.log('Upload monitoring connection established');
-                },
-                timeout: 15 * 60 * 1000 // 15 minutes for large files
-            });
-        });
-    };
 
-    // Enhanced upload with frontend progress simulation
-    const uploadFileWithSimulation = async (id: string, file: File, uploadId: string, onProgress: (percentage: number, status: string) => void): Promise<any> => {
-        let frontendSimulationActive = true;
-        let backendStarted = false;
-        
-        try {
-            logWithTimestamp('Starting upload with simulation...');
-            
-            // Track upload progress during file transfer
-            const uploadResponse = await uploadFile(id, file, uploadId, (uploadPercentage: number) => {
-                onProgress(uploadPercentage, 'uploading');
-            });
-            
-            const estimatedSeconds = uploadResponse.estimatedDurationSeconds || 0;
-            
-            logWithTimestamp(`Server estimated duration: ${estimatedSeconds}s`);
-            
-            // Start frontend simulation if we have an estimate
-            if (estimatedSeconds > 0) {
-                const simulationPromise = new Promise<void>((resolve) => {
-                    const startTime = Date.now();
-                    let lastProgress = -1;
-                    
-                    const simulateProgress = () => {
-                        if (!frontendSimulationActive || backendStarted) {
-                            resolve();
-                            return;
-                        }
-                        
-                        const elapsed = (Date.now() - startTime) / 1000;
-                        // Start simulation from 100% (where upload ended) and decrease to 70% over time
-                        const progressDecrement = Math.floor((elapsed / estimatedSeconds) * 30); // Max 30% decrease
-                        const simulationProgress = Math.max(70, 100 - progressDecrement);
-                        
-                        if (simulationProgress !== lastProgress && (simulationProgress % 5 === 0 || elapsed % 2 === 0)) {
-                            logWithTimestamp(`FRONTEND SIM: ${simulationProgress}% complete (${elapsed.toFixed(1)}s elapsed)`);
-                            onProgress(simulationProgress, 'simulating');
-                            lastProgress = simulationProgress;
-                        }
-                        
-                        if (elapsed < estimatedSeconds) {
-                            setTimeout(simulateProgress, 1000);
-                        } else {
-                            logWithTimestamp('Estimation time reached - waiting for backend');
-                            resolve();
-                        }
-                    };
-                    
-                    simulateProgress(); // Start immediately
-                });
-                
-                // Start SSE monitoring concurrently
-                const ssePromise = (apiClient as any).sse.connect(`/soundfragments/upload-progress/${uploadId}/stream`, {
-                    onMessage: (progress: any) => {
-                        if (progress.percentage >= 10 && !backendStarted) {
-                            backendStarted = true;
-                            frontendSimulationActive = false;
-                            logWithTimestamp('BACKEND TAKEOVER: Real processing started');
-                        }
-                        
-                        if (backendStarted) {
-                            // Scale backend progress (0-100%) to visual progress (70-100%)
-                            const scaledProgress = 70 + (progress.percentage * 0.3);
-                            logWithTimestamp(`BACKEND: ${progress.percentage}% → Visual: ${scaledProgress.toFixed(1)}%`);
-                            onProgress(Math.round(scaledProgress), progress.status || 'processing');
-                        }
-                    },
-                    onComplete: (data: any) => {
-                        frontendSimulationActive = false;
-                        logWithTimestamp('Backend processing finished');
-                        return data;
-                    },
-                    onError: (error: any) => {
-                        frontendSimulationActive = false;
-                        throw error;
-                    },
-                    timeout: 15 * 60 * 1000
-                });
-                
-                // Wait for either simulation to complete or backend to start
-                await Promise.race([simulationPromise, ssePromise]);
-                
-                // If backend started, wait for it to complete
-                if (backendStarted) {
-                    return await ssePromise;
-                }
-            }
-            
-            // Fallback to regular monitoring if no estimation
-            return await monitorUploadProgress(uploadId, (percentage) => {
-                onProgress(percentage, percentage >= 100 ? 'finished' : 'uploading');
-            });
-            
-        } catch (error: any) {
-            frontendSimulationActive = false;
-            throw error;
-        }
-    };
+
+
 
     // Generic streaming method for future use
     const streamData = <T = any>(
@@ -393,14 +258,12 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         save,
         delete: deleteSoundFragment,
         uploadFile,
-        uploadFileWithSimulation,
         updateCurrent,
         downloadFile,
         fetchAccessList,
         
-        // SSE Methods
+        // Progress monitoring
         monitorUploadProgress,
-        monitorUploadProgressAdvanced,
         streamData
     };
 });
