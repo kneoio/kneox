@@ -130,7 +130,7 @@ import {
   getErrorMessage
 } from '../../helpers/errorHandling';
 
-export default defineComponent( {
+export default defineComponent({
   name: "SoundFragmentForm",
   components: {
     NPageHeader,
@@ -158,14 +158,13 @@ export default defineComponent( {
     const radioStationStore = useRadioStationStore();
     const referencesStore = useReferencesStore();
     const activeTab = ref("properties");
-    const fileList = ref<UploadFileInfo[]>( [] );
-    const uploadedFileNames = ref<string[]>( [] );
-    const tempFileIds = ref<string[]>( [] );
+    const fileList = ref<UploadFileInfo[]>([]);
+    const uploadedFileNames = ref<string[]>([]);
 
-    const aclData = ref<any[]>( [] );
-    const aclLoading = ref( false );
+    const aclData = ref<any[]>([]);
+    const aclLoading = ref(false);
 
-    const localFormData = reactive<SoundFragment>( {
+    const localFormData = reactive<SoundFragment>({
       slugName: "",
       id: null,
       author: "",
@@ -182,20 +181,20 @@ export default defineComponent( {
       defaultBrandId: "",
       representedInBrands: [],
       uploadedFiles: []
-    } );
+    });
 
-    const radioStationOptions = computed( () => {
-      return radioStationStore.getEntries.map( station => ( {
+    const radioStationOptions = computed(() => {
+      return radioStationStore.getEntries.map(station => ({
         label: station.slugName,
         value: station.id
-      } ) );
-    } );
+      }));
+    });
 
-    const formTitle = computed( () => localFormData.id ? 'Edit Sound Fragment' : 'Create New Sound Fragment' );
+    const formTitle = computed(() => localFormData.id ? 'Edit Sound Fragment' : 'Create New Sound Fragment');
 
     watch(
         () => store.getCurrent?.uploadedFiles,
-        ( files ) => {
+        (files) => {
           fileList.value = files || [];
         },
         { immediate: true }
@@ -212,7 +211,7 @@ export default defineComponent( {
 
     const applyMetadata = (metadata: any) => {
       if (!metadata) return;
-      
+
       logWithTimestamp(`Applying metadata: ${JSON.stringify(metadata)}`);
 
       if (metadata.title && !localFormData.title) {
@@ -248,11 +247,11 @@ export default defineComponent( {
 
         logWithTimestamp('Starting file upload...');
         const finalData = await store.uploadFile(
-          entityId, 
-          file.file as File, 
-          uploadId
+            entityId,
+            file.file as File,
+            uploadId
         );
-        
+
         logWithTimestamp(`Upload completed: ${JSON.stringify({
           status: finalData.status
         })}`);
@@ -304,16 +303,16 @@ export default defineComponent( {
       return false;
     };
 
-    const handleChange = ( data: {
+    const handleChange = (data: {
       file: UploadFileInfo;
       fileList: UploadFileInfo[];
-    } ) => {
+    }) => {
       fileList.value = data.fileList;
     };
 
-    const handleFinish = ( { file }: {
+    const handleFinish = ({ file }: {
       file: UploadFileInfo;
-    } ) => {
+    }) => {
       return file;
     };
 
@@ -327,30 +326,29 @@ export default defineComponent( {
           genre: localFormData.genre,
           album: localFormData.album,
           representedInBrands: localFormData.representedInBrands,
-          newlyUploaded: uploadedFileNames.value,
-          tempFileIds: tempFileIds.value
+          newlyUploaded: uploadedFileNames.value
         };
 
-        await store.save( saveDTO, localFormData.id );
-        message.success( "Saved successfully" );
-        if ( route.params.brandName ) {
+        await store.save(saveDTO, localFormData.id);
+        message.success("Saved successfully");
+        if (route.params.brandName) {
           await router.push({ name: 'StationSoundFragments', params: { brandName: route.params.brandName } });
         } else {
-          await router.push( "/outline/soundfragments" );
+          await router.push("/outline/soundfragments");
         }
-      } catch ( error: unknown ) {
-        if ( isErrorWithResponse( error ) && error.response?.status === 400 ) {
+      } catch (error: unknown) {
+        if (isErrorWithResponse(error) && error.response?.status === 400) {
           const errorData = error.response.data as ErrorResponse;
 
-          if ( errorData.errors?.length ) {
-            errorData.errors.forEach( err => {
-              message.error( `${capitalizeFirstLetter( err.field )}: ${err.message}` );
-            } );
+          if (errorData.errors?.length) {
+            errorData.errors.forEach(err => {
+              message.error(`${capitalizeFirstLetter(err.field)}: ${err.message}`);
+            });
           } else {
-            message.error( errorData.message || "Validation failed" );
+            message.error(errorData.message || "Validation failed");
           }
         } else {
-          message.error( `Save failed: ${getErrorMessage( error )}` );
+          message.error(`Save failed: ${getErrorMessage(error)}`);
         }
       } finally {
         loadingBar.finish();
@@ -358,7 +356,7 @@ export default defineComponent( {
     };
 
     const handleArchive = () => {
-      message.info( "Archive functionality not implemented yet" );
+      message.info("Archive functionality not implemented yet");
     };
 
     const goBack = () => {
@@ -367,65 +365,65 @@ export default defineComponent( {
 
     const fetchAclData = async () => {
       const id = route.params.id as string;
-      if ( !id || id === 'new' ) {
+      if (!id || id === 'new') {
         aclData.value = [];
         return;
       }
 
       try {
         aclLoading.value = true;
-        const response = await store.fetchAccessList( id );
+        const response = await store.fetchAccessList(id);
         aclData.value = response.accessList || [];
-      } catch ( error ) {
-        console.error( 'Failed to fetch ACL data:', error );
-        message.error( 'Failed to fetch access control list' );
+      } catch (error) {
+        console.error('Failed to fetch ACL data:', error);
+        message.error('Failed to fetch access control list');
         aclData.value = [];
       } finally {
         aclLoading.value = false;
       }
     };
 
-    watch( activeTab, ( newTab ) => {
-      if ( newTab === 'acl' ) {
+    watch(activeTab, (newTab) => {
+      if (newTab === 'acl') {
         fetchAclData();
       }
-    } );
+    });
 
-    onMounted( async () => {
+    onMounted(async () => {
       const id = route.params.id as string;
-      if ( id && id !== 'new' ) {
+      if (id && id !== 'new') {
         try {
           loadingBar.start();
-          await store.fetch( id );
-          Object.assign( localFormData, store.getCurrent );
+          await store.fetch(id);
+          Object.assign(localFormData, store.getCurrent);
 
-          if ( localFormData.uploadedFiles?.length ) {
-            fileList.value = localFormData.uploadedFiles.map( f => ( {
+          if (localFormData.uploadedFiles?.length) {
+            fileList.value = localFormData.uploadedFiles.map(f => ({
               id: f.name,
               name: f.name,
               status: 'finished' as const,
               url: f.url
-            } ) );
-            uploadedFileNames.value = localFormData.uploadedFiles.map( f => f.name );
+            }));
+            uploadedFileNames.value = localFormData.uploadedFiles.map(f => f.name);
           }
-        } catch ( error ) {
-          console.error( "Failed to fetch sound fragment:", error );
-          message.error( 'Failed to fetch sound fragment' );
+        } catch (error) {
+          console.error("Failed to fetch sound fragment:", error);
+          message.error('Failed to fetch sound fragment');
         } finally {
           loadingBar.finish();
         }
       } else {
-        await store.fetch( id );
-        Object.assign( localFormData, store.getCurrent );
+        await store.fetch(id);
+        Object.assign(localFormData, store.getCurrent);
       }
 
       try {
-        await radioStationStore.fetchAll( 1, 100 );
+        await radioStationStore.fetchAll(1, 100);
         await referencesStore.fetchGenres();
-      } catch ( error ) {
-        console.error( "Failed to fetch data:", error );
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
       }
-    } );
+    });
 
     return {
       store,
@@ -447,5 +445,5 @@ export default defineComponent( {
       aclLoading
     };
   },
-} );
+});
 </script>

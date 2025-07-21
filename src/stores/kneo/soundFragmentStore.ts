@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
-import apiClient from '../../api/apiClient'; // Now includes SSE support
+import apiClient from '../../api/apiClient';
 import type { ApiFormResponse, ApiViewPageResponse } from "../../types";
 import type { SoundFragment, SoundFragmentSave } from "../../types/kneoBroadcasterTypes";
 
@@ -112,14 +112,14 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
 
     const uploadFile = async (id: string, file: File, uploadId: string, onUploadProgress?: (percentage: number) => void) => {
         const maxSizeBytes = 100 * 1024 * 1024; // 100MB
-    
+
         if (file.size > maxSizeBytes) {
             throw new Error(`File too large. Maximum size is ${maxSizeBytes / 1024 / 1024}MB`);
         }
-    
+
         const formData = new FormData();
         formData.append('file', file);
-    
+
         try {
             const startTime = Date.now();
             const response = await apiClient.post(`/soundfragments/files/${id}?uploadId=${uploadId}&startTime=${startTime}`, formData, {
@@ -134,14 +134,14 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
                     }
                 },
             });
-    
+
             return response.data;
-            
+
         } catch (error: any) {
             if (error.response) {
                 const status = error.response.status;
                 const errorData = error.response.data;
-    
+
                 switch (status) {
                     case 413:
                         throw new Error('File size exceeds server limits. Please choose a smaller file.');
@@ -212,45 +212,19 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         return response.data;
     };
 
-    // Now using the centralized SSE client
-    const monitorUploadProgress = async (
-        uploadId: string, 
-        onProgress: (percentage: number) => void
-    ): Promise<any> => {
-        try {
-            return await (apiClient as any).monitorUploadProgress(uploadId, onProgress);
-        } catch (error: any) {
-            console.error('Upload progress monitoring failed:', error);
-            throw new Error(`Upload monitoring failed: ${error.message}`);
-        }
-    };
-
-
-
-
-
-    // Generic streaming method for future use
-    const streamData = <T = any>(
-        endpoint: string, 
-        onData: (data: T) => void, 
-        onComplete?: (data: T) => void
-    ): Promise<T> => {
-        return (apiClient as any).streamData(endpoint, onData, onComplete);
-    };
-
     return {
         // State
         apiViewResponse,
         apiFormResponse,
         availableApiViewResponse,
-        
+
         // Computed
         getEntries,
         getAvailableSoundFragments,
         getCurrent,
         getPagination,
         getAvailablePagination,
-        
+
         // HTTP Methods
         fetchAll: fetchSoundFragments,
         fetchAvailable: fetchAvailableSoundFragments,
@@ -260,10 +234,6 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         uploadFile,
         updateCurrent,
         downloadFile,
-        fetchAccessList,
-        
-        // Progress monitoring
-        monitorUploadProgress,
-        streamData
+        fetchAccessList
     };
 });
