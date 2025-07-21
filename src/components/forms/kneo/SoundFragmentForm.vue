@@ -23,29 +23,29 @@
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
               <n-gi>
                 <n-form-item label="Title">
-                  <n-input v-model:value="localFormData.title" style="width: 50%; max-width: 600px;" />
+                  <n-input v-model:value="localFormData.title" style="width: 50%; max-width: 600px;"/>
                 </n-form-item>
               </n-gi>
               <n-gi>
                 <n-form-item label="Artist">
-                  <n-input v-model:value="localFormData.artist" style="width: 50%; max-width: 600px;" />
+                  <n-input v-model:value="localFormData.artist" style="width: 50%; max-width: 600px;"/>
                 </n-form-item>
               </n-gi>
               <n-gi>
                 <n-form-item label="Genre">
                   <n-select v-model:value="localFormData.genre" :options="referencesStore.genreOptions" filterable
-                            placeholder="Select Genre" style="width: 25%; max-width: 300px;" />
+                            placeholder="Select Genre" style="width: 25%; max-width: 300px;"/>
                 </n-form-item>
               </n-gi>
               <n-gi>
                 <n-form-item label="Album">
-                  <n-input v-model:value="localFormData.album" style="width: 50%; max-width: 600px;" />
+                  <n-input v-model:value="localFormData.album" style="width: 50%; max-width: 600px;"/>
                 </n-form-item>
               </n-gi>
               <n-gi>
                 <n-form-item label="Represented In">
                   <n-select v-model:value="localFormData.representedInBrands" :options="radioStationOptions" filterable
-                            multiple placeholder="Select Radio Stations" style="width: 50%; max-width: 600px;" />
+                            multiple placeholder="Select Radio Stations" style="width: 50%; max-width: 600px;"/>
                 </n-form-item>
               </n-gi>
               <n-gi>
@@ -74,7 +74,7 @@
           </n-form>
         </n-tab-pane>
         <n-tab-pane name="acl" tab="ACL">
-          <acl-table :acl-data="aclData" :loading="aclLoading" />
+          <acl-table :acl-data="aclData" :loading="aclLoading"/>
         </n-tab-pane>
       </n-tabs>
     </n-gi>
@@ -82,8 +82,8 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, reactive, ref, watch, computed } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import {defineComponent, onMounted, reactive, ref, watch, computed} from "vue";
+import {useRoute, useRouter} from "vue-router";
 import {
   NButton,
   NButtonGroup,
@@ -104,10 +104,10 @@ import {
   type UploadFileInfo
 } from "naive-ui";
 import AclTable from '../../common/AclTable.vue';
-import { useSoundFragmentStore } from "../../../stores/kneo/soundFragmentStore";
-import { useRadioStationStore } from "../../../stores/kneo/radioStationStore";
-import { useReferencesStore } from "../../../stores/kneo/referencesStore";
-import { FragmentType, SoundFragment, SoundFragmentSave } from "../../../types/kneoBroadcasterTypes";
+import {useSoundFragmentStore} from "../../../stores/kneo/soundFragmentStore";
+import {useRadioStationStore} from "../../../stores/kneo/radioStationStore";
+import {useReferencesStore} from "../../../stores/kneo/referencesStore";
+import {FragmentType, SoundFragment, SoundFragmentSave} from "../../../types/kneoBroadcasterTypes";
 import {
   isErrorWithResponse,
   capitalizeFirstLetter,
@@ -182,7 +182,7 @@ export default defineComponent({
         (files) => {
           fileList.value = files || [];
         },
-        { immediate: true }
+        {immediate: true}
     );
 
     const getTimestamp = () => {
@@ -194,7 +194,6 @@ export default defineComponent({
       console.log(`[${getTimestamp()}] ${message}`);
     };
 
-    // Global progress state
     let globalProgressState = {
       isSimulationActive: false,
       hasSSEStarted: false,
@@ -218,10 +217,7 @@ export default defineComponent({
       globalProgressState.isSimulationActive = true;
 
       const updateProgress = () => {
-        if (!simulationActive) return;
-
-        // If SSE has started and we're past 70%, stop simulation
-        if (globalProgressState.hasSSEStarted && simulationProgress >= 70) {
+        if (!simulationActive || globalProgressState.hasSSEStarted) {
           simulationActive = false;
           globalProgressState.isSimulationActive = false;
           onComplete();
@@ -230,32 +226,31 @@ export default defineComponent({
 
         simulationProgress = Math.min(simulationProgress + progressIncrement, targetProgress);
         globalProgressState.currentProgress = simulationProgress;
+
+        if (fileList.value[0]) {
+          fileList.value = [{
+            ...fileList.value[0],
+            percentage: simulationProgress,
+            status: 'uploading'
+          }];
+        }
+
         onProgressUpdate(simulationProgress);
 
         if (simulationProgress < targetProgress) {
           setTimeout(updateProgress, updateIntervalMs);
         } else {
-          // Reached 70%, wait for SSE if not started yet
-          if (!globalProgressState.hasSSEStarted) {
-            logWithTimestamp('Simulation reached 70%, waiting for SSE...');
-            // Keep checking for SSE every 500ms
-            const waitForSSE = () => {
-              if (!simulationActive) return;
-
-              if (globalProgressState.hasSSEStarted) {
-                simulationActive = false;
-                globalProgressState.isSimulationActive = false;
-                onComplete();
-              } else {
-                setTimeout(waitForSSE, 500);
-              }
-            };
+          logWithTimestamp('Simulation reached 70%, waiting for SSE...');
+          const waitForSSE = () => {
+            if (!simulationActive || globalProgressState.hasSSEStarted) {
+              simulationActive = false;
+              globalProgressState.isSimulationActive = false;
+              onComplete();
+              return;
+            }
             setTimeout(waitForSSE, 500);
-          } else {
-            simulationActive = false;
-            globalProgressState.isSimulationActive = false;
-            onComplete();
-          }
+          };
+          setTimeout(waitForSSE, 500);
         }
       };
 
@@ -268,7 +263,7 @@ export default defineComponent({
     };
 
     const connectSSE = (uploadId: string) => {
-      const eventSource = new EventSource(`http://localhost:38707/api/soundfragments/upload-progress/${uploadId}/stream`);
+      const eventSource = new EventSource(`https://api.kneo.io/api/soundfragments/upload-progress/${uploadId}/stream`);
       globalProgressState.eventSource = eventSource;
 
       eventSource.onmessage = (event) => {
@@ -276,16 +271,17 @@ export default defineComponent({
           const data = JSON.parse(event.data);
           logWithTimestamp(`SSE Progress: ${JSON.stringify(data)}`);
 
-          // Mark SSE as started
           if (!globalProgressState.hasSSEStarted) {
             globalProgressState.hasSSEStarted = true;
             logWithTimestamp('SSE connection established');
 
-            // If simulation hasn't reached 70% yet, jump to 70%
             if (globalProgressState.currentProgress < 70) {
               globalProgressState.currentProgress = 70;
               if (fileList.value[0]) {
-                fileList.value[0].percentage = 70;
+                fileList.value[0] = {
+                  ...fileList.value[0],
+                  percentage: 70
+                };
               }
               logWithTimestamp('Jumped to 70% as SSE started early');
             }
@@ -293,24 +289,34 @@ export default defineComponent({
 
           const serverProgress = data.percentage || 0;
           backendProgress.value = serverProgress;
-
-          // Map server progress 0-100% to display 70-100%
           const displayProgress = 70 + (serverProgress * 0.3);
           globalProgressState.currentProgress = displayProgress;
 
-          logWithTimestamp(`REAL PROGRESS: backend ${serverProgress}% → showing ${Math.round(displayProgress)}% to user`);
+          logWithTimestamp(`PROGRESS: backend ${serverProgress}% → showing ${Math.round(displayProgress)}% to user`);
 
-          // Update the single file in list
           if (fileList.value[0] && serverProgress > 0) {
-            fileList.value[0].percentage = displayProgress;
+            const updatedFile = {
+              ...fileList.value[0],
+              percentage: displayProgress,
+              status: 'uploading'
+            };
+
+            fileList.value = [updatedFile];
+
             if (data.status === 'finished') {
-              fileList.value[0].status = 'finished';
-              fileList.value[0].percentage = 100;
+              fileList.value[0] = {
+                ...fileList.value[0],
+                percentage: 100
+              };
               globalProgressState.currentProgress = 100;
               eventSource.close();
               resetProgressState();
             } else if (data.status === 'error') {
-              fileList.value[0].status = 'error';
+              fileList.value = [{
+                ...fileList.value[0],
+                status: 'error',
+                percentage: undefined
+              }];
               eventSource.close();
               resetProgressState();
               message.error('File processing failed');
@@ -325,13 +331,15 @@ export default defineComponent({
         logWithTimestamp(`SSE connection error for ${uploadId}: ${error}`);
         eventSource.close();
 
-        // If SSE fails and simulation is still active, let it continue to 100%
         if (globalProgressState.isSimulationActive && fileList.value[0]) {
           logWithTimestamp('SSE failed, falling back to simulation completion');
           setTimeout(() => {
             if (fileList.value[0] && fileList.value[0].percentage < 100) {
-              fileList.value[0].percentage = 100;
-              fileList.value[0].status = 'finished';
+              fileList.value[0] = {
+                ...fileList.value[0],
+                percentage: 100,
+                status: 'finished'
+              };
               globalProgressState.currentProgress = 100;
               resetProgressState();
             }
@@ -382,7 +390,7 @@ export default defineComponent({
       }
     };
 
-    const handleUpload = async ({ file, onFinish, onError }) => {
+    const handleUpload = async ({file, onFinish, onError}) => {
       try {
         resetProgressState();
 
@@ -447,10 +455,7 @@ export default defineComponent({
     };
 
     const handleRemove = (file: UploadFileInfo) => {
-      // Remove from uploaded file names
       uploadedFileNames.value = uploadedFileNames.value.filter(name => name !== file.name);
-
-      // Reset progress state if removing current uploading file
       if (globalProgressState.isSimulationActive || globalProgressState.hasSSEStarted) {
         resetProgressState();
       }
@@ -459,7 +464,7 @@ export default defineComponent({
       return true;
     };
 
-    const handleFinish = ({ file }: {
+    const handleFinish = ({file}: {
       file: UploadFileInfo;
     }) => {
       return file;
@@ -481,7 +486,7 @@ export default defineComponent({
         await store.save(saveDTO, localFormData.id);
         message.success("Saved successfully");
         if (route.params.brandName) {
-          await router.push({ name: 'StationSoundFragments', params: { brandName: route.params.brandName } });
+          await router.push({name: 'StationSoundFragments', params: {brandName: route.params.brandName}});
         } else {
           await router.push("/outline/soundfragments");
         }
