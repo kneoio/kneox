@@ -17,8 +17,6 @@ const apiClient = axios.create({
     withCredentials: true,
 });
 
-
-
 unsecuredClient.interceptors.request.use(
     (config) => {
         config.headers['X-Client-ID'] = 'mixpla-web';
@@ -64,5 +62,5 @@ export const getBaseURL = () => {
     return apiClient.defaults.baseURL;
 };
 
-export { unsecuredClient };
+export { unsecuredClient, apiServer };
 export default apiClient;

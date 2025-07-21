@@ -113,6 +113,7 @@ import {
   capitalizeFirstLetter,
   getErrorMessage
 } from '../../helpers/errorHandling';
+import {apiServer} from "../../../api/apiClient";
 
 export default defineComponent({
   name: "SoundFragmentForm",
@@ -263,7 +264,7 @@ export default defineComponent({
     };
 
     const connectSSE = (uploadId: string) => {
-      const eventSource = new EventSource(`https://api.kneo.io/api/soundfragments/upload-progress/${uploadId}/stream`);
+      const eventSource = new EventSource(`${apiServer}/api/soundfragments/upload-progress/${uploadId}/stream`);
       globalProgressState.eventSource = eventSource;
 
       eventSource.onmessage = (event) => {
@@ -311,6 +312,11 @@ export default defineComponent({
               globalProgressState.currentProgress = 100;
               eventSource.close();
               resetProgressState();
+              if (data.metadata) {
+                const metadata = data.metadata;
+                console.log('Applying metadata:', metadata);
+                applyMetadata(metadata);
+              }
             } else if (data.status === 'error') {
               fileList.value = [{
                 ...fileList.value[0],
