@@ -385,9 +385,9 @@ export default defineComponent( {
     const currentTime = ref( new Date() );
     const clockIntervalId = ref<number | null>( null );
     const managedByOptions = [
-      { value: ManagedBy.ITSELF, label: "Itself" },
-      { value: ManagedBy.AI_AGENT, label: "AI Agent" },
-      { value: ManagedBy.MIX, label: "Mix" }
+      { value: ManagedBy.ITSELF, label: "Autonomous" },
+      /*{ value: ManagedBy.AI_AGENT, label: "AI Agent" },*/
+      { value: ManagedBy.MIX, label: "Curated by AI" }
     ];
 
     const targetOptions = [

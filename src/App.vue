@@ -65,13 +65,12 @@ const lightThemeOverrides = {
 
   }
 }
-
 const darkThemeOverrides = {
   common: {
-    primaryColor: '#4CAF50',
-    primaryColorHover: '#66BB6A',
-    primaryColorPressed: '#388E3C',
-    primaryColorSuppl: '#66BB6A',
+    primaryColor: '#2196F3',
+    primaryColorHover: '#42A5F5',
+    primaryColorPressed: '#1E88E5',
+    primaryColorSuppl: '#42A5F5',
     infoColor: '#2196F3',
     infoColorHover: '#42A5F5',
     infoColorPressed: '#1E88E5',
@@ -84,10 +83,10 @@ const darkThemeOverrides = {
     errorColorHover: '#EF5350',
     errorColorPressed: '#E53935',
     errorColorSuppl: '#EF5350',
-    successColor: '#8BC34A',
-    successColorHover: '#9CCC65',
-    successColorPressed: '#7CB342',
-    successColorSuppl: '#9CCC65',
+    successColor: '#4FC3F7',
+    successColorHover: '#81D4FA',
+    successColorPressed: '#29B6F6',
+    successColorSuppl: '#81D4FA',
 
     bodyColor: '#1a1a1a',
     textColorBase: '#f0f0f0',
@@ -142,7 +141,7 @@ const darkThemeOverrides = {
     subtitleTextColor: '#d0d0d0',
     footerTextColor: '#d0d0d0'
   }
-}
+};
 
 function getCookie(name) {
   const value = `; ${document.cookie}`;

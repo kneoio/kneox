@@ -49,9 +49,9 @@
                           :key="index"
                           :style="{
                             paddingLeft: '8px',
-                            borderLeft: '2px solid #e8e8e8',
+                            borderLeft: '2px solid var(--n-border-color)',
                             fontSize: '0.875rem',
-                            backgroundColor: isCurrentSong(fragment) ? '#e6f7ff' : 'transparent',
+                            backgroundColor: isCurrentSong(fragment) ? 'var(--n-color-target)' : 'transparent',
                             padding: isCurrentSong(fragment) ? '4px 8px' : '0 0 0 8px',
                             borderRadius: isCurrentSong(fragment) ? '4px' : '0',
                             fontWeight: isCurrentSong(fragment) ? '600' : 'normal'
@@ -73,9 +73,9 @@
                           :key="index"
                           :style="{
                             paddingLeft: '8px',
-                            borderLeft: '2px solid #e8e8e8',
+                            borderLeft: '2px solid var(--n-border-color)',
                             fontSize: '0.875rem',
-                            backgroundColor: isCurrentSong(fragment) ? '#e6f7ff' : 'transparent',
+                            backgroundColor: isCurrentSong(fragment) ? 'var(--n-color-target)' : 'transparent',
                             padding: isCurrentSong(fragment) ? '4px 8px' : '0 0 0 8px',
                             borderRadius: isCurrentSong(fragment) ? '4px' : '0',
                             fontWeight: isCurrentSong(fragment) ? '600' : 'normal'
@@ -100,7 +100,7 @@
                 </template>
                 <n-space vertical size="small">
                   <div v-if="hasHlsSongStats()">
-                    <n-space vertical size="small" style="padding: 12px; background-color: #f9f9f9; border-radius: 6px;">
+                    <n-space vertical size="small" class="current-track-info">
                       <n-space justify="space-between">
                         <n-text strong>Current Track:</n-text>
                         <span class="song-title" :title="cleanTitle(getHlsCurrentTrack())">{{ getHlsCurrentTrack() }}</span>
@@ -130,7 +130,7 @@
 
             <div v-if="timelineDisplay" style="flex-shrink: 0; width: auto;">
               <n-card size="small" title="Timeline">
-                <div style="font-family: monospace; font-size: 0.9rem; background-color: #f0f0f0; padding: 10px 15px; border-radius: 4px; border: 1px solid #dcdcdc; white-space: nowrap; overflow-x: auto;">
+                <div class="timeline-display">
                   {{ timelineDisplay }}
                 </div>
               </n-card>
@@ -411,5 +411,32 @@ export default defineComponent({
   0% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.1); opacity: 0.7; }
   100% { transform: scale(1); opacity: 1; }
+}
+
+.current-track-info {
+  padding: 12px;
+  background-color: var(--n-color);
+  border-radius: 6px;
+  border: 1px solid var(--n-border-color);
+}
+
+.timeline-display {
+  font-family: monospace;
+  font-size: 0.9rem;
+  background-color: var(--n-input-color);
+  color: var(--n-text-color);
+  padding: 10px 15px;
+  border-radius: 4px;
+  border: 1px solid var(--n-border-color);
+  white-space: nowrap;
+  overflow-x: auto;
+}
+
+.song-title {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
 }
 </style>
