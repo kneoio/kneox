@@ -15,7 +15,10 @@
     >
       <div class="drawer-header">
         <n-space justify="space-between" align="center">
-          <n-space><n-h2>MixpL^</n-h2><n-h6 style="color:#6c757d; font-size: small">manager v.1.8.1</n-h6></n-space>
+          <n-space>
+            <n-h2>MixpL^</n-h2>
+            <n-h6 style="color:#6c757d; font-size: small">manager v.1.8.1</n-h6>
+          </n-space>
           <n-switch
               :value="isDarkTheme"
               size="small"
@@ -23,10 +26,14 @@
               :round="false"
           >
             <template #checked-icon>
-              <n-icon :component="Moon"/>
+              <n-icon color="#0e7a0d">
+                <Moon/>
+              </n-icon>
             </template>
             <template #unchecked-icon>
-              <n-icon :component="Sun"/>
+              <n-icon>
+                <Sun/>
+              </n-icon>
             </template>
           </n-switch>
         </n-space>
@@ -55,7 +62,21 @@
 </template>
 
 <script lang="ts">
-import {NFlex, NButton, NDrawer, NDrawerContent, NMenu, NSelect, NIcon, NH2, NH6, NSpace, MenuOption, useThemeVars, NSwitch} from 'naive-ui';
+import {
+  NFlex,
+  NButton,
+  NDrawer,
+  NDrawerContent,
+  NMenu,
+  NSelect,
+  NIcon,
+  NH2,
+  NH6,
+  NSpace,
+  MenuOption,
+  useThemeVars,
+  NSwitch
+} from 'naive-ui';
 import {
   defineComponent,
   onMounted,
@@ -70,7 +91,20 @@ import {
   type Ref,
 } from 'vue';
 import {useRouter, useRoute} from 'vue-router';
-import {AlignJustified, List, Music, Dashboard, Robot, Grain, Radio, Logout, BrandAirtable, Headphones, Sun, Moon} from '@vicons/tabler';
+import {
+  AlignJustified,
+  List,
+  Music,
+  Dashboard,
+  Robot,
+  Grain,
+  Radio,
+  Logout,
+  BrandAirtable,
+  Headphones,
+  Sun,
+  Moon
+} from '@vicons/tabler';
 import {useRadioStationStore} from "../stores/kneo/radioStationStore";
 import {RadioStation, BrandStatus} from "../types/kneoBroadcasterTypes";
 import keycloakInst from '../keycloakFactory.js';
@@ -95,7 +129,9 @@ export default defineComponent({
     SoundFragments,
     StationPlaylist,
     Listeners,
-    DashboardView
+    DashboardView,
+    Moon,
+    Sun
   },
   setup() {
     const themeVars = useThemeVars();
@@ -106,7 +142,8 @@ export default defineComponent({
 
     // Inject theme state from App.vue
     const isDarkTheme = inject<Ref<boolean>>('isDarkTheme', ref(false));
-    const toggleTheme = inject<(value: boolean) => void>('toggleTheme', () => {});
+    const toggleTheme = inject<(value: boolean) => void>('toggleTheme', () => {
+    });
 
     const isMobile = ref(window.innerWidth <= 768);
     const isDrawerOpen = ref(!isMobile.value);
@@ -134,7 +171,7 @@ export default defineComponent({
     const getStatusColor = (status: BrandStatus) => {
       switch (status) {
         case BrandStatus.ON_LINE:
-          return '#00aa00';     
+          return '#00aa00';
         case BrandStatus.WARMING_UP:
           return '#ffa500';
         case BrandStatus.WAITING_FOR_CURATOR:
@@ -166,7 +203,7 @@ export default defineComponent({
           }, station.country || '')
         ]),
         key: `radiostation-${station.slugName}`,
-        icon: () => h(Radio, { size: 16 }),
+        icon: () => h(Radio, {size: 16}),
         children: [
           {
             label: 'Dashboard',
@@ -190,9 +227,9 @@ export default defineComponent({
       };
 
       const logoutOption: MenuOption = {
-        label: () => h('div', { style: 'display: flex; flex-direction: column;' }, [
+        label: () => h('div', {style: 'display: flex; flex-direction: column;'}, [
           h('div', 'Logout'),
-          h('div', { 
+          h('div', {
             style: 'font-size: 0.75rem; color: #666; margin-top: 2px;',
             title: keycloakInst.tokenParsed?.email || keycloakInst.tokenParsed?.preferred_username || ''
           }, keycloakInst.tokenParsed?.preferred_username || '')
@@ -274,9 +311,9 @@ export default defineComponent({
           key: 'd1'
         },
         {
-          label: () => h('div', { style: 'display: flex; flex-direction: column;' }, [
+          label: () => h('div', {style: 'display: flex; flex-direction: column;'}, [
             h('div', 'Logout'),
-            h('div', { 
+            h('div', {
               style: 'font-size: 0.75rem; color: #666; margin-top: 2px;',
               title: keycloakInst.tokenParsed?.email || keycloakInst.tokenParsed?.preferred_username || ''
             }, keycloakInst.tokenParsed?.preferred_username || '')
@@ -338,16 +375,16 @@ export default defineComponent({
         await router.push({name: 'StationDashboard', params: {brandName: brandName}});
       } else if (key.startsWith('station-') && key.endsWith('-playlist')) {
         const brandName = key.replace('station-', '').replace('-playlist', '');
-        await router.push({ name: 'StationPlaylist', params: { brandName: brandName } });
+        await router.push({name: 'StationPlaylist', params: {brandName: brandName}});
       } else if (key.startsWith('station-') && key.endsWith('-listeners')) {
         const brandName = key.replace('station-', '').replace('-listeners', '');
-        await router.push({ name: 'StationListeners', params: { brandName: brandName } });
+        await router.push({name: 'StationListeners', params: {brandName: brandName}});
       } else if (key === 'radiostations') {
         await router.push({name: 'RadioStations'});
       } else if (key === 'listeners') {
         await router.push({name: 'Listeners'});
       } else if (key === 'logout') {
-        keycloakInst.logout({ redirectUri: window.location.origin });
+        keycloakInst.logout({redirectUri: window.location.origin});
       } else if (key === 'djs') {
         await router.push({name: 'EnvironmentProfiles'});
       } else if (key === 'dashboard') {
@@ -377,7 +414,7 @@ export default defineComponent({
     const updateDrawerState = () => {
       const newIsMobile = window.innerWidth <= 768;
       isMobile.value = newIsMobile;
-      
+
       isDrawerOpen.value = !newIsMobile;
     };
 
@@ -435,6 +472,7 @@ export default defineComponent({
       toggleTheme,
       Sun,
       Moon
+
     };
   }
 });

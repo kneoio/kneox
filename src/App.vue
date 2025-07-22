@@ -21,7 +21,6 @@ import {useRoute} from 'vue-router'
 const route = useRoute()
 const isDarkTheme = ref(false)
 
-// Provide theme state to child components
 provide('isDarkTheme', isDarkTheme)
 provide('toggleTheme', (newValue) => {
   isDarkTheme.value = newValue
