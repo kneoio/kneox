@@ -1,5 +1,5 @@
 <template>
-  <n-layout-header :inverted="inverted" bordered>
+  <n-layout-header :inverted="inverted" bordered :style="headerStyle">
     <n-grid x-gap="12" :cols="4">
       <n-gi>
         <n-h1 class="title">&nbsp;&nbsp;Mixpla</n-h1>
@@ -18,8 +18,8 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, inject, ref } from "vue";
-import { NButton, NGi, NGrid, NH1, NH6, NLayoutHeader, NSpace } from "naive-ui";
+import { defineComponent, inject, ref, computed } from "vue";
+import { NButton, NGi, NGrid, NH1, NH6, NLayoutHeader, NSpace, useThemeVars } from "naive-ui";
 import { KeycloakInstance } from "keycloak-js";
 
 export default defineComponent({
@@ -39,6 +39,7 @@ export default defineComponent({
     },
   },
   setup() {
+    const themeVars = useThemeVars();
     const kc = inject<KeycloakInstance>("keycloak");
     const userData = inject<any>("userData");
 
@@ -67,11 +68,16 @@ export default defineComponent({
       }
     };
 
+    const headerStyle = computed(() => ({
+      backgroundColor: themeVars.value.baseColor
+    }));
+
     return {
       login,
       handleLogout,
       userData,
       inverted: ref(false),
+      headerStyle,
     };
   },
 });

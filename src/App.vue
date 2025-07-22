@@ -4,6 +4,7 @@
       <n-config-provider
           :theme="currentTheme"
           :theme-overrides="currentThemeOverrides"
+          :style="{ backgroundColor: isDarkTheme ? '#1a1a1a' : '#f8f8f8', minHeight: '100vh' }"
           class="theme-provider"
       >
         <n-switch
@@ -134,6 +135,11 @@ const darkThemeOverrides = {
     tableColorHover: 'rgba(255, 255, 255, 0.09)',
     tableColorStriped: 'rgba(255, 255, 255, 0.05)',
     pressedColor: 'rgba(255, 255, 255, 0.13)'
+  },
+  PageHeader: {
+    titleTextColor: '#f0f0f0',
+    subtitleTextColor: '#d0d0d0',
+    footerTextColor: '#d0d0d0'
   }
 }
 
@@ -155,5 +161,28 @@ body {
   body {
     margin: 10px;
   }
+}
+
+/* Global text color approach for both themes */
+.theme-provider {
+  color: #333; /* Default fallback */
+}
+
+/* Light theme text color */
+.theme-provider[style*="background-color: rgb(248, 248, 248)"] {
+  color: #333 !important;
+}
+
+.theme-provider[style*="background-color: rgb(248, 248, 248)"] * {
+  color: inherit !important;
+}
+
+/* Dark theme text color */
+.theme-provider[style*="background-color: rgb(26, 26, 26)"] {
+  color: #f0f0f0 !important;
+}
+
+.theme-provider[style*="background-color: rgb(26, 26, 26)"] * {
+  color: inherit !important;
 }
 </style>
