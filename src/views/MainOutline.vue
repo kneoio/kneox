@@ -18,8 +18,9 @@
           <n-space><n-h2>MixpL^</n-h2><n-h6 style="color:#6c757d; font-size: small">manager v.1.8.1</n-h6></n-space>
           <n-switch
               :value="isDarkTheme"
-              size="large"
+              size="small"
               @update:value="toggleTheme"
+              :round="false"
           >
             <template #checked-icon>
               <n-icon :component="Moon"/>
