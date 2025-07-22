@@ -43,8 +43,8 @@
       <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-xl p-8 text-white">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
           <div>
-            <h2 class="text-3xl font-bold mb-4">Introducing Mixpla</h2>
-            <p class="text-blue-100 mb-6 leading-relaxed">
+            <h2 class="text-3xl font-bold mb-4" style="color: white !important;">Introducing Mixpla</h2>
+            <p class="mb-6 leading-relaxed" style="color: white !important;">
               Our flagship project revolutionizing the audio streaming landscape. Experience personalized radio stations powered by AI, where every beat tells your story.
             </p>
             <router-link
@@ -52,7 +52,7 @@
               class="inline-flex items-center px-8 py-4 bg-white text-blue-600 font-bold text-lg rounded-lg hover:bg-blue-50 transition-all duration-300 transform hover:scale-105 shadow-lg"
             >
               <span>Explore Mixpla</span>
-              <n-icon class="ml-3" size="20">
+              <n-icon class="ml-3" size="20" style="color: white !important;">
                 <ArrowRight />
               </n-icon>
             </router-link>

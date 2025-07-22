@@ -14,7 +14,21 @@
         :style="drawerStyle"
     >
       <div class="drawer-header">
-        <n-space><n-h2>MixpL^</n-h2><n-h6 style="color:#6c757d; font-size: small">manager v.1.8.1</n-h6></n-space>
+        <n-space justify="space-between" align="center">
+          <n-space><n-h2>MixpL^</n-h2><n-h6 style="color:#6c757d; font-size: small">manager v.1.8.1</n-h6></n-space>
+          <n-switch
+              :value="isDarkTheme"
+              size="large"
+              @update:value="toggleTheme"
+          >
+            <template #checked-icon>
+              <n-icon :component="Moon"/>
+            </template>
+            <template #unchecked-icon>
+              <n-icon :component="Sun"/>
+            </template>
+          </n-switch>
+        </n-space>
       </div>
       <div class="drawer-content" style="overflow-y: auto; max-height: calc(100vh - 80px);">
         <n-menu
@@ -40,7 +54,7 @@
 </template>
 
 <script lang="ts">
-import {NFlex, NButton, NDrawer, NDrawerContent, NMenu, NSelect, NIcon, NH2, NH6, NSpace, MenuOption, useThemeVars} from 'naive-ui';
+import {NFlex, NButton, NDrawer, NDrawerContent, NMenu, NSelect, NIcon, NH2, NH6, NSpace, MenuOption, useThemeVars, NSwitch} from 'naive-ui';
 import {
   defineComponent,
   onMounted,
@@ -51,9 +65,11 @@ import {
   h,
   nextTick,
   watchEffect,
+  inject,
+  type Ref,
 } from 'vue';
 import {useRouter, useRoute} from 'vue-router';
-import { AlignJustified, List, Music, Dashboard, Robot, Grain, Radio, Logout, BrandAirtable, Headphones } from '@vicons/tabler';
+import {AlignJustified, List, Music, Dashboard, Robot, Grain, Radio, Logout, BrandAirtable, Headphones, Sun, Moon} from '@vicons/tabler';
 import {useRadioStationStore} from "../stores/kneo/radioStationStore";
 import {RadioStation, BrandStatus} from "../types/kneoBroadcasterTypes";
 import keycloakInst from '../keycloakFactory.js';
@@ -74,6 +90,7 @@ export default defineComponent({
     NH2,
     NH6,
     NSpace,
+    NSwitch,
     SoundFragments,
     StationPlaylist,
     Listeners,
@@ -85,6 +102,10 @@ export default defineComponent({
     const router = useRouter();
     const route = useRoute();
     const radioStationStore = useRadioStationStore();
+
+    // Inject theme state from App.vue
+    const isDarkTheme = inject<Ref<boolean>>('isDarkTheme', ref(false));
+    const toggleTheme = inject<(value: boolean) => void>('toggleTheme', () => {});
 
     const isMobile = ref(window.innerWidth <= 768);
     const isDrawerOpen = ref(!isMobile.value);
@@ -408,11 +429,38 @@ export default defineComponent({
       drawerWidth,
       AlignJustified,
       isLoadingStations,
-      drawerStyle
+      drawerStyle,
+      isDarkTheme,
+      toggleTheme,
+      Sun,
+      Moon
     };
   }
 });
 </script>
+
+<style>
+/* Global theme styles for the protected area */
+.theme-provider {
+  color: #333;
+}
+
+.theme-provider[style*="background-color: rgb(248, 248, 248)"] {
+  color: #333 !important;
+}
+
+.theme-provider[style*="background-color: rgb(248, 248, 248)"] *:not(.n-button):not(.n-button *) {
+  color: inherit !important;
+}
+
+.theme-provider[style*="background-color: rgb(26, 26, 26)"] {
+  color: #f0f0f0 !important;
+}
+
+.theme-provider[style*="background-color: rgb(26, 26, 26)"] *:not(.n-button):not(.n-button *) {
+  color: inherit !important;
+}
+</style>
 
 <style scoped>
 .home {
