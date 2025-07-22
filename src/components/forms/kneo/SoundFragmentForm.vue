@@ -101,7 +101,8 @@ import {
   NUpload,
   useLoadingBar,
   useMessage,
-  type UploadFileInfo
+  type UploadFileInfo,
+  type UploadCustomRequestOptions
 } from "naive-ui";
 import AclTable from '../../common/AclTable.vue';
 import {useSoundFragmentStore} from "../../../stores/kneo/soundFragmentStore";
@@ -270,7 +271,7 @@ export default defineComponent({
       eventSource.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          logWithTimestamp(`SSE Progress: ${JSON.stringify(data)}`);
+          //logWithTimestamp(`SSE Progress: ${JSON.stringify(data)}`);
 
           if (!globalProgressState.hasSSEStarted) {
             globalProgressState.hasSSEStarted = true;
@@ -305,14 +306,15 @@ export default defineComponent({
             if (data.status === 'finished') {
               fileList.value[0] = {
                 ...fileList.value[0],
-                percentage: 100
+                percentage: 100,
+                status: 'finished'
               };
               globalProgressState.currentProgress = 100;
               eventSource.close();
               resetProgressState();
               if (data.metadata) {
                 const metadata = data.metadata;
-                console.log('Applying metadata:', metadata);
+               // console.log('Applying metadata:', metadata);
                 applyMetadata(metadata);
               }
               message.success(`File "${currentFile.name}" uploaded successfully`);
@@ -395,7 +397,7 @@ export default defineComponent({
       }
     };
 
-    const handleUpload = async ({file, onFinish, onError}) => {
+    const handleUpload = async ({file, onFinish, onError}: UploadCustomRequestOptions) => {
       try {
         resetProgressState();
 
