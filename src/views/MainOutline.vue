@@ -11,6 +11,7 @@
     <div
         class="drawer"
         :class="{ 'drawer-open': isDrawerOpen }"
+        :style="drawerStyle"
     >
       <div class="drawer-header">
         <n-space><n-h2>MixpL^</n-h2><n-h6 style="color:#6c757d; font-size: small">manager v.1.7.10</n-h6></n-space>
@@ -42,7 +43,7 @@
 </template>
 
 <script lang="ts">
-import {NFlex, NButton, NDrawer, NDrawerContent, NMenu, NSelect, NIcon, NH2, NH6, NSpace, MenuOption} from 'naive-ui';
+import {NFlex, NButton, NDrawer, NDrawerContent, NMenu, NSelect, NIcon, NH2, NH6, NSpace, MenuOption, useThemeVars} from 'naive-ui';
 import {
   defineComponent,
   onMounted,
@@ -82,6 +83,7 @@ export default defineComponent({
     DashboardView
   },
   setup() {
+    const themeVars = useThemeVars();
 
     const router = useRouter();
     const route = useRoute();
@@ -392,6 +394,10 @@ export default defineComponent({
       });
     });
 
+    const drawerStyle = computed(() => ({
+      backgroundColor: themeVars.value.baseColor
+    }));
+
     return {
       active,
       dynamicMenuOptions,
@@ -404,7 +410,8 @@ export default defineComponent({
       handleContentClick,
       drawerWidth,
       AlignJustified,
-      isLoadingStations
+      isLoadingStations,
+      drawerStyle
     };
   }
 });
