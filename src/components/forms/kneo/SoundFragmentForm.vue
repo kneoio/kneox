@@ -203,7 +203,7 @@ export default defineComponent({
       eventSource: null as EventSource | null
     };
 
-    const simulateProgress = (
+    const uploadProgress = (
         estimatedDurationSeconds: number,
         onProgressUpdate: (progress: number) => void,
         onComplete: () => void
@@ -241,7 +241,7 @@ export default defineComponent({
         if (simulationProgress < targetProgress) {
           setTimeout(updateProgress, updateIntervalMs);
         } else {
-          logWithTimestamp('Simulation reached 70%, waiting for SSE...');
+          //logWithTimestamp('Simulation reached 70%, waiting for SSE...');
           const waitForSSE = () => {
             if (!simulationActive || globalProgressState.hasSSEStarted) {
               simulationActive = false;
@@ -274,7 +274,6 @@ export default defineComponent({
 
           if (!globalProgressState.hasSSEStarted) {
             globalProgressState.hasSSEStarted = true;
-            logWithTimestamp('SSE connection established');
 
             if (globalProgressState.currentProgress < 70) {
               globalProgressState.currentProgress = 70;
@@ -293,11 +292,10 @@ export default defineComponent({
           const displayProgress = 70 + (serverProgress * 0.3);
           globalProgressState.currentProgress = displayProgress;
 
-          logWithTimestamp(`PROGRESS: backend ${serverProgress}% → showing ${Math.round(displayProgress)}% to user`);
-
           if (fileList.value[0] && serverProgress > 0) {
+            const currentFile = fileList.value[0];
             const updatedFile = {
-              ...fileList.value[0],
+              ...currentFile,
               percentage: displayProgress,
               status: 'uploading'
             };
@@ -317,6 +315,7 @@ export default defineComponent({
                 console.log('Applying metadata:', metadata);
                 applyMetadata(metadata);
               }
+              message.success(`File "${currentFile.name}" uploaded successfully`);
             } else if (data.status === 'error') {
               fileList.value = [{
                 ...fileList.value[0],
@@ -337,12 +336,12 @@ export default defineComponent({
         logWithTimestamp(`SSE connection error for ${uploadId}: ${error}`);
         eventSource.close();
 
-        if (globalProgressState.isSimulationActive && fileList.value[0]) {
-          logWithTimestamp('SSE failed, falling back to simulation completion');
+        const currentFile = fileList.value[0];
+        if (globalProgressState.isSimulationActive && currentFile) {
           setTimeout(() => {
-            if (fileList.value[0] && fileList.value[0].percentage < 100) {
+            if (currentFile && (currentFile.percentage ?? 0) < 100) {
               fileList.value[0] = {
-                ...fileList.value[0],
+                ...currentFile,
                 percentage: 100,
                 status: 'finished'
               };
@@ -405,25 +404,21 @@ export default defineComponent({
         const startTime = Date.now();
         logWithTimestamp(`Start upload session, uploadId: ${uploadId}`);
         const sessionData = await store.startUploadSession(entityId, uploadId, startTime);
-        globalProgressState.stopSimulation = simulateProgress(
+        globalProgressState.stopSimulation = uploadProgress(
             sessionData.estimatedDurationSeconds,
             (progress) => {
               if (fileList.value[0]) {
                 fileList.value[0].percentage = progress;
-                logWithTimestamp(`SIMULATION: showing ${Math.round(progress)}% to user`);
+               // logWithTimestamp(`SIMULATION: showing ${Math.round(progress)}% to user`);
               }
             },
             () => {
-              logWithTimestamp('Simulation phase completed');
+             // logWithTimestamp('Simulation phase completed');
             }
         );
-        logWithTimestamp(`Starting upload: ${file.name}, uploadId: ${uploadId}`);
-        logWithTimestamp(`Estimated duration: ${sessionData.estimatedDurationSeconds} seconds`);
+        logWithTimestamp(`Starting upload: ${file.name}, Estimated: ${sessionData.estimatedDurationSeconds}`);
         store.uploadFile(entityId, file.file, uploadId);
         connectSSE(uploadId);
-
-
-        if (onFinish) message.success(`File "${file.name}" uploaded successfully`);
 
       } catch (error: any) {
         resetProgressState();
@@ -477,6 +472,15 @@ export default defineComponent({
     };
 
     const handleSave = async () => {
+      const isUploading = fileList.value.some(file =>
+          file.status === 'uploading' || globalProgressState.isSimulationActive || globalProgressState.hasSSEStarted
+      );
+
+      if (isUploading) {
+        message.warning("Please wait for the file upload to complete before saving.");
+        return;
+      }
+
       try {
         loadingBar.start();
         const saveDTO: SoundFragmentSave = {
