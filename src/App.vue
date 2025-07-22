@@ -11,6 +11,7 @@
             v-model:value="isDarkTheme"
             size="large"
             style="position: fixed; top: 20px; right: 20px; z-index: 1000;"
+            @update:value="saveThemePreference"
         >
           <template #checked-icon>
             <n-icon :component="Moon"/>
@@ -27,7 +28,7 @@
 
 <script setup>
 import {NConfigProvider, NSwitch, NIcon, darkTheme, NLoadingBarProvider, NMessageProvider} from 'naive-ui'
-import {ref, computed} from 'vue'
+import {ref, computed, onMounted} from 'vue'
 import {Sun, Moon} from '@vicons/tabler'
 
 const isDarkTheme = ref(false)
@@ -143,6 +144,30 @@ const darkThemeOverrides = {
   }
 }
 
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+}
+
+function setCookie(name, value, days = 365) {
+  const expires = new Date();
+  expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+  document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+}
+
+function saveThemePreference() {
+  setCookie('theme-preference', isDarkTheme.value ? 'dark' : 'light');
+}
+
+onMounted(() => {
+  const savedTheme = getCookie('theme-preference');
+  if (savedTheme) {
+    isDarkTheme.value = savedTheme === 'dark';
+  }
+});
+
 const currentTheme = computed(() => {
   return isDarkTheme.value ? darkTheme : null
 })
@@ -163,26 +188,23 @@ body {
   }
 }
 
-/* Global text color approach for both themes */
 .theme-provider {
-  color: #333; /* Default fallback */
+  color: #333;
 }
 
-/* Light theme text color */
 .theme-provider[style*="background-color: rgb(248, 248, 248)"] {
   color: #333 !important;
 }
 
-.theme-provider[style*="background-color: rgb(248, 248, 248)"] * {
+.theme-provider[style*="background-color: rgb(248, 248, 248)"] *:not(.n-button):not(.n-button *) {
   color: inherit !important;
 }
 
-/* Dark theme text color */
 .theme-provider[style*="background-color: rgb(26, 26, 26)"] {
   color: #f0f0f0 !important;
 }
 
-.theme-provider[style*="background-color: rgb(26, 26, 26)"] * {
+.theme-provider[style*="background-color: rgb(26, 26, 26)"] *:not(.n-button):not(.n-button *) {
   color: inherit !important;
 }
 </style>
