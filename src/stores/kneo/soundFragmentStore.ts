@@ -83,13 +83,12 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         if (!response?.data?.payload?.viewData?.entries) throw new Error('Invalid API response structure for available sound fragments');
 
         const rawPayload = response.data.payload;
-        const transformedEntries = rawPayload.viewData.entries.map((entry: any) => entry.soundfragment);
 
         availableApiViewResponse.value = {
             ...rawPayload,
             viewData: {
                 ...rawPayload.viewData,
-                entries: transformedEntries,
+                entries: rawPayload.viewData.entries,
             },
         };
     };

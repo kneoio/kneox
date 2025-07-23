@@ -68,15 +68,15 @@ const columns: DataTableColumns<SoundFragment> = [
   { type: 'selection' },
   {
     title: 'Title',
-    key: 'title'
+    key: 'soundfragment.title'
   },
   {
     title: 'Artist',
-    key: 'artist'
+    key: 'soundfragment.artist'
   },
   {
     title: 'Album',
-    key: 'album'
+    key: 'soundfragment.album'
   },
   {
     title: 'Played Count',
