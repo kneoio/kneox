@@ -163,7 +163,7 @@ body {
   color: #333 !important;
 }
 
-.theme-provider[style*="background-color: rgb(248, 248, 248)"] *:not(.n-button):not(.n-button *) {
+.theme-provider[style*="background-color: rgb(248, 248, 248)"] *:not(.n-button):not(.n-button *):not(.n-upload *):not(.n-upload-file-list *) {
   color: inherit !important;
 }
 
@@ -171,7 +171,7 @@ body {
   color: #f0f0f0 !important;
 }
 
-.theme-provider[style*="background-color: rgb(26, 26, 26)"] *:not(.n-button):not(.n-button *) {
+.theme-provider[style*="background-color: rgb(26, 26, 26)"] *:not(.n-button):not(.n-button *):not(.n-upload *):not(.n-upload-file-list *) {
   color: inherit !important;
 }
 </style>

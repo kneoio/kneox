@@ -4,7 +4,7 @@
       <n-space vertical size="medium">
         <n-h2 style="margin: 0;">{{ brandName }} Dashboard</n-h2>
         <n-space align="center" size="small">
-          <n-tag :type="getStatusInfo.type" size="small">
+          <n-tag :type="getStatusInfo.type" size="large"  :bordered="false">
             {{ getStatusInfo.text }}
           </n-tag>
           <n-text depth="3" style="font-size: 14px;">
@@ -57,7 +57,7 @@
                             fontWeight: isCurrentSong(fragment) ? '600' : 'normal'
                           }"
                       >
-                        <n-text :depth="isCurrentSong(fragment) ? 1 : 3">{{ index + 1 }}. {{ cleanTitle(fragment) }}</n-text>
+                        <n-text :depth="isCurrentSong(fragment) ? 1 : 3" :style="{ color: isCurrentSong(fragment) ? 'white !important' : undefined }">{{ index + 1 }}. {{ cleanTitle(fragment) }}</n-text>
                       </div>
                     </n-space>
                   </div>
@@ -81,7 +81,7 @@
                             fontWeight: isCurrentSong(fragment) ? '600' : 'normal'
                           }"
                       >
-                        <n-text :depth="isCurrentSong(fragment) ? 1 : 3">{{ index + 1 }}. {{ cleanTitle(fragment) }}</n-text>
+                        <n-text :depth="isCurrentSong(fragment) ? 1 : 3" :style="{ color: isCurrentSong(fragment) ? 'white !important' : undefined }">{{ index + 1 }}. {{ cleanTitle(fragment) }}</n-text>
                       </div>
                     </n-space>
                   </div>
@@ -353,21 +353,15 @@ export default defineComponent({
     onMounted(() => {
       console.log('StationDetail mounted for brand:', props.brandName);
 
-      // Connect to station WebSocket
       dashboardStore.ensureStationConnected(props.brandName);
 
-      // Add polling as backup (same pattern as global dashboard)
       const intervalId = setInterval(() => {
         dashboardStore.fetchStation(props.brandName);
-      }, 3000); // Same 3-second interval as global
+      }, 3000); 
 
       onUnmounted(() => {
         console.log('StationDetail unmounted for brand:', props.brandName);
-
-        // Cleanup polling
         clearInterval(intervalId);
-
-        // Disconnect station WebSocket
         dashboardStore.disconnectStation(props.brandName);
       });
     });
@@ -377,7 +371,6 @@ export default defineComponent({
     });
 
     watch(() => stationDetails.value?.timeline, () => {
-      // Timeline changed - no logging needed
     }, { deep: true });
 
     return {

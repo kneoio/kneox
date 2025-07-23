@@ -226,19 +226,14 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
     };
 
     return {
-        // State
         apiViewResponse,
         apiFormResponse,
         availableApiViewResponse,
-
-        // Computed
         getEntries,
         getAvailableSoundFragments,
         getCurrent,
         getPagination,
         getAvailablePagination,
-
-        // HTTP Methods
         fetchAll: fetchSoundFragments,
         fetchAvailable: fetchAvailableSoundFragments,
         fetch: fetchSoundFragment,

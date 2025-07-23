@@ -43,7 +43,7 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
-                <n-form-item label="Represented In">
+                <n-form-item label="Assign To">
                   <n-select v-model:value="localFormData.representedInBrands" :options="radioStationOptions" filterable
                             multiple placeholder="Select Radio Stations" style="width: 50%; max-width: 600px;"/>
                 </n-form-item>
@@ -64,8 +64,7 @@
                       style="width: 50%; max-width: 600px;"
                       :accept="audioAcceptTypes"
                       :custom-request="handleUpload"
-                      :show-remove-button="true"
-                      :default-upload="true">
+                      :show-remove-button="true">
                     <n-button>Select File</n-button>
                   </n-upload>
                 </n-form-item>
@@ -264,99 +263,6 @@ export default defineComponent({
       };
     };
 
-    const connectSSE = (uploadId: string) => {
-      const eventSource = new EventSource(`${apiServer}/api/soundfragments/upload-progress/${uploadId}/stream`);
-      globalProgressState.eventSource = eventSource;
-
-      eventSource.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          //logWithTimestamp(`SSE Progress: ${JSON.stringify(data)}`);
-
-          if (!globalProgressState.hasSSEStarted) {
-            globalProgressState.hasSSEStarted = true;
-
-            if (globalProgressState.currentProgress < 70) {
-              globalProgressState.currentProgress = 70;
-              if (fileList.value[0]) {
-                fileList.value[0] = {
-                  ...fileList.value[0],
-                  percentage: 70
-                };
-              }
-              logWithTimestamp('Jumped to 70% as SSE started early');
-            }
-          }
-
-          const serverProgress = data.percentage || 0;
-          backendProgress.value = serverProgress;
-          const displayProgress = 70 + (serverProgress * 0.3);
-          globalProgressState.currentProgress = displayProgress;
-
-          if (fileList.value[0] && serverProgress > 0) {
-            const currentFile = fileList.value[0];
-            const updatedFile = {
-              ...currentFile,
-              percentage: displayProgress,
-              status: 'uploading'
-            };
-
-            fileList.value = [updatedFile];
-
-            if (data.status === 'finished') {
-              fileList.value[0] = {
-                ...fileList.value[0],
-                percentage: 100,
-                status: 'finished'
-              };
-              globalProgressState.currentProgress = 100;
-              eventSource.close();
-              resetProgressState();
-              if (data.metadata) {
-                const metadata = data.metadata;
-               // console.log('Applying metadata:', metadata);
-                applyMetadata(metadata);
-              }
-              message.success(`File "${currentFile.name}" uploaded successfully`);
-            } else if (data.status === 'error') {
-              fileList.value = [{
-                ...fileList.value[0],
-                status: 'error',
-                percentage: undefined
-              }];
-              eventSource.close();
-              resetProgressState();
-              message.error('File processing failed');
-            }
-          }
-        } catch (e) {
-          logWithTimestamp(`SSE parse error: ${e}`);
-        }
-      };
-
-      eventSource.onerror = (error) => {
-        logWithTimestamp(`SSE connection error for ${uploadId}: ${error}`);
-        eventSource.close();
-
-        const currentFile = fileList.value[0];
-        if (globalProgressState.isSimulationActive && currentFile) {
-          setTimeout(() => {
-            if (currentFile && (currentFile.percentage ?? 0) < 100) {
-              fileList.value[0] = {
-                ...currentFile,
-                percentage: 100,
-                status: 'finished'
-              };
-              globalProgressState.currentProgress = 100;
-              resetProgressState();
-            }
-          }, 2000);
-        }
-      };
-
-      return eventSource;
-    };
-
     const resetProgressState = () => {
       if (globalProgressState.stopSimulation) {
         globalProgressState.stopSimulation();
@@ -411,7 +317,6 @@ export default defineComponent({
             (progress) => {
               if (fileList.value[0]) {
                 fileList.value[0].percentage = progress;
-               // logWithTimestamp(`SIMULATION: showing ${Math.round(progress)}% to user`);
               }
             },
             () => {
@@ -547,6 +452,103 @@ export default defineComponent({
       } finally {
         aclLoading.value = false;
       }
+    };
+
+    const connectSSE = (uploadId: string) => {
+      const eventSource = new EventSource(`${apiServer}/api/soundfragments/upload-progress/${uploadId}/stream`);
+      globalProgressState.eventSource = eventSource;
+
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          //logWithTimestamp(`SSE Progress: ${JSON.stringify(data)}`);
+
+          if (!globalProgressState.hasSSEStarted) {
+            globalProgressState.hasSSEStarted = true;
+
+            if (globalProgressState.currentProgress < 70) {
+              globalProgressState.currentProgress = 70;
+              if (fileList.value[0]) {
+                fileList.value[0] = {
+                  ...fileList.value[0],
+                  percentage: 70
+                };
+              }
+              logWithTimestamp('Jumped to 70% as SSE started early');
+            }
+          }
+
+          const serverProgress = data.percentage || 0;
+          backendProgress.value = serverProgress;
+          const displayProgress = 70 + (serverProgress * 0.3);
+          globalProgressState.currentProgress = displayProgress;
+
+          if (fileList.value[0] && serverProgress > 0) {
+            const currentFile = fileList.value[0];
+            const updatedFile = {
+              ...currentFile,
+              percentage: displayProgress,
+              status: 'uploading'
+            };
+
+            fileList.value = [updatedFile];
+
+            if (data.status === 'finished') {
+              if (currentFile?.name && !uploadedFileNames.value.includes(currentFile.name)) {
+                uploadedFileNames.value.push(currentFile.name);
+              }
+              fileList.value[0] = {
+                ...fileList.value[0],
+                percentage: 100,
+                status: 'finished',
+                id: data.fileId || data.id || currentFile.id
+              };
+              globalProgressState.currentProgress = 100;
+              eventSource.close();
+              resetProgressState();
+              if (data.metadata) {
+                const metadata = data.metadata;
+               // console.log('Applying metadata:', metadata);
+                applyMetadata(metadata);
+              }
+              message.success(`File "${currentFile.name}" uploaded successfully`);
+            } else if (data.status === 'error') {
+              fileList.value = [{
+                ...fileList.value[0],
+                status: 'error',
+                percentage: undefined
+              }];
+              eventSource.close();
+              resetProgressState();
+              message.error('File processing failed');
+            }
+          }
+        } catch (e) {
+          logWithTimestamp(`SSE parse error: ${e}`);
+        }
+      };
+
+      eventSource.onerror = (error) => {
+        logWithTimestamp(`SSE connection error for ${uploadId}: ${error}`);
+        eventSource.close();
+
+        const currentFile = fileList.value[0];
+        if (globalProgressState.isSimulationActive && currentFile) {
+          setTimeout(() => {
+            if (currentFile && (currentFile.percentage ?? 0) < 100) {
+              fileList.value[0] = {
+                ...currentFile,
+                percentage: 100,
+                status: 'finished'
+              };
+              globalProgressState.currentProgress = 100;
+              resetProgressState();
+            }
+          }, 2000);
+        }
+      };
+
+      return eventSource;
     };
 
     watch(activeTab, (newTab) => {
