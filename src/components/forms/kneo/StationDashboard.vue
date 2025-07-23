@@ -37,6 +37,18 @@
         </n-space>
 
         <n-space vertical size="large">
+          <n-card title="Status History" size="small" v-if="statusHistoryTimeline.length > 0">
+            <n-timeline horizontal>
+              <n-timeline-item
+                v-for="(event, index) in statusHistoryTimeline"
+                :key="index"
+                :type="getStatusTimelineType(event.newStatus)"
+                :title="event.newStatus.replace(/_/g, ' ')"
+                :content="formatTimestamp(event.timestamp)"
+              />
+            </n-timeline>
+          </n-card>
+
           <n-space size="large">
             <n-card title="Live Playlist" size="small" style="flex: 1; min-width: 0;">
               <n-space vertical size="medium">
@@ -147,6 +159,7 @@ import { defineComponent, ref, computed, onMounted, onUnmounted, watch } from 'v
 import { useDashboardStore } from '../../../stores/kneo/dashboardStore';
 import {
   NButton, NCard, NIcon, NTag, NStatistic, NProgress, NSpace, NH2, NText,
+  NTimeline, NTimelineItem,
   useMessage
 } from 'naive-ui';
 import { PlayerPlay, PlayerStop } from '@vicons/tabler';
@@ -155,6 +168,7 @@ export default defineComponent({
   name: 'StationDetail',
   components: {
     NButton, NCard, NIcon, NTag, NStatistic, NProgress, NSpace, NH2, NText,
+    NTimeline, NTimelineItem,
     PlayerPlay, PlayerStop
   },
   props: {
@@ -319,17 +333,12 @@ export default defineComponent({
     const getHlsTimestamp = (): string => {
       const songStats = stationDetails.value?.songStatistics;
       if (!songStats) return 'N/A';
-      return formatHlsTimestamp(songStats.segmentTimestamp);
+      return formatTimestamp(songStats.segmentTimestamp);
     };
 
-    const formatHlsTimestamp = (timestampSeconds: number | undefined | null): string => {
-      if (!timestampSeconds) return 'N/A';
-      try {
-        const date = new Date(timestampSeconds * 1000);
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      } catch (e) {
-        return 'Invalid Date';
-      }
+    const formatTimestamp = (timestamp: string): string => {
+      const date = new Date(timestamp);
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     };
 
     const getHlsRequestCount = () => {
@@ -349,6 +358,27 @@ export default defineComponent({
       const cleanFragment = cleanTitle(fragment);
       return cleanFragment === currentTrack;
     };
+
+    const getStatusTimelineType = (status: string): 'success' | 'warning' | 'error' | 'default' => {
+      switch (status) {
+        case 'ON_LINE':
+          return 'success';
+        case 'WARMING_UP':
+        case 'WAITING_FOR_CURATOR':
+          return 'warning';
+        case 'IDLE':
+        case 'SYSTEM_ERROR':
+          return 'error';
+        case 'OFF_LINE':
+        default:
+          return 'default';
+      }
+    };
+
+    const statusHistoryTimeline = computed(() => {
+      const history = stationDetails.value?.statusHistory || [];
+      return history.slice(-5);
+    });
 
     onMounted(() => {
       console.log('StationDetail mounted for brand:', props.brandName);
@@ -393,7 +423,10 @@ export default defineComponent({
       getHlsTimestamp,
       getHlsRequestCount,
       getHlsListenersCount,
-      isCurrentSong
+      isCurrentSong,
+      statusHistoryTimeline,
+      getStatusTimelineType,
+      formatTimestamp
     };
   },
 });
