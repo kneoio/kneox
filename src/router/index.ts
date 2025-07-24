@@ -175,11 +175,11 @@ const routes: Array<RouteRecordRaw> = [
         component: { template: '<div></div>' },
         meta: { requiresAuth: false },
         beforeEnter: (to) => {
-          // Redirect to the player in the public folder with the radio parameter
+          // Redirect to player subdomain to avoid auth conflicts
           const radio = Array.isArray(to.query.radio) ? to.query.radio[0] : to.query.radio || '';
-          const radioParam = radio ? `?radio=${encodeURIComponent(radio)}` : '';
-          window.location.href = `/player/index.html${radioParam}`;
-          return false; // Prevent the actual navigation
+          const playerUrl = `https://player.${window.location.host}/index.html${radio ? '?radio=' + encodeURIComponent(radio) : ''}`;
+          window.location.href = playerUrl;
+          return false;
         }
     },
     {
