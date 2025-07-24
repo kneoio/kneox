@@ -173,7 +173,7 @@ import {
   useMessage
 } from 'naive-ui';
 import { PlayerPlay, PlayerStop, ExternalLink } from '@vicons/tabler';
-import Hls from 'hls.js';
+
 
 export default defineComponent({
   name: 'StationDashboard',
@@ -193,8 +193,7 @@ export default defineComponent({
     const message = useMessage();
     const isStartingStation = ref(false);
     const isStoppingStation = ref(false);
-    const videoElement = ref<HTMLVideoElement | null>(null);
-    let hls: Hls | null = null;
+
     const stationDetails = computed(() => {
       return dashboardStore.getStationDetails(props.brandName);
     });
@@ -429,43 +428,9 @@ export default defineComponent({
     watch(() => stationDetails.value?.timeline, () => {
     }, { deep: true });
 
-    const playStream = () => {
-      if (!videoElement.value) return;
 
-      const streamUrl = 'http://localhost:38707/nitroglycerin/radio/stream.m3u8';
 
-      if (Hls.isSupported()) {
-        if (!hls) {
-          hls = new Hls({
-            debug: false,
-            enableWorker: true
-          });
-          hls.loadSource(streamUrl);
-          hls.attachMedia(videoElement.value);
-        }
-      } else if (videoElement.value.canPlayType('application/vnd.apple.mpegurl')) {
-        videoElement.value.src = streamUrl;
-      } else {
-        message.error('HLS is not supported in this browser');
-      }
-    };
 
-    const stopStream = () => {
-      if (videoElement.value) {
-        videoElement.value.pause();
-        videoElement.value.currentTime = 0;
-      }
-      if (hls) {
-        hls.destroy();
-        hls = null;
-      }
-    };
-
-    onUnmounted(() => {
-      if (hls) {
-        hls.destroy();
-      }
-    });
 
     return {
       stationDetails,
@@ -493,9 +458,7 @@ export default defineComponent({
       statusHistoryTimeline,
       getStatusTimelineType,
       formatTimestamp,
-      videoElement,
-      playStream,
-      stopStream
+
     };
   },
 });
