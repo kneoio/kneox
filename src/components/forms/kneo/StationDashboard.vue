@@ -37,8 +37,8 @@
         </n-space>
 
         <n-space vertical size="large">
-          <n-card title="Status History" size="small" v-if="statusHistoryTimeline.length > 0">
-            <n-timeline horizontal>
+          <n-card title="Status History" size="small">
+            <n-timeline horizontal v-if="statusHistoryTimeline.length > 0">
               <n-timeline-item
                 v-for="(event, index) in statusHistoryTimeline"
                 :key="index"
@@ -47,6 +47,7 @@
                 :content="formatTimestamp(event.timestamp)"
               />
             </n-timeline>
+            <n-text depth="3" v-else>No status history available</n-text>
           </n-card>
 
           <n-space size="large">
@@ -140,13 +141,15 @@
               </n-card>
             </div>
 
-            <div v-if="timelineDisplay" style="flex-shrink: 0; width: auto;">
+            <div style="flex-shrink: 0; width: auto;">
               <n-card size="small" title="Timeline">
                 <div class="timeline-display">
-                  {{ timelineDisplay }}
+                  {{ timelineDisplay || 'Station offline - no timeline data' }}
                 </div>
               </n-card>
             </div>
+
+
           </n-space>
         </n-space>
       </n-space>
@@ -163,6 +166,7 @@ import {
   useMessage
 } from 'naive-ui';
 import { PlayerPlay, PlayerStop } from '@vicons/tabler';
+import Hls from 'hls.js';
 
 export default defineComponent({
   name: 'StationDetail',
@@ -182,6 +186,8 @@ export default defineComponent({
     const message = useMessage();
     const isStartingStation = ref(false);
     const isStoppingStation = ref(false);
+    const videoElement = ref<HTMLVideoElement | null>(null);
+    let hls: Hls | null = null;
     const stationDetails = computed(() => {
       return dashboardStore.getStationDetails(props.brandName);
     });
@@ -403,6 +409,44 @@ export default defineComponent({
     watch(() => stationDetails.value?.timeline, () => {
     }, { deep: true });
 
+    const playStream = () => {
+      if (!videoElement.value) return;
+
+      const streamUrl = 'http://localhost:38707/nitroglycerin/radio/stream.m3u8';
+
+      if (Hls.isSupported()) {
+        if (!hls) {
+          hls = new Hls({
+            debug: false,
+            enableWorker: true
+          });
+          hls.loadSource(streamUrl);
+          hls.attachMedia(videoElement.value);
+        }
+      } else if (videoElement.value.canPlayType('application/vnd.apple.mpegurl')) {
+        videoElement.value.src = streamUrl;
+      } else {
+        message.error('HLS is not supported in this browser');
+      }
+    };
+
+    const stopStream = () => {
+      if (videoElement.value) {
+        videoElement.value.pause();
+        videoElement.value.currentTime = 0;
+      }
+      if (hls) {
+        hls.destroy();
+        hls = null;
+      }
+    };
+
+    onUnmounted(() => {
+      if (hls) {
+        hls.destroy();
+      }
+    });
+
     return {
       stationDetails,
       isOnline,
@@ -426,7 +470,10 @@ export default defineComponent({
       isCurrentSong,
       statusHistoryTimeline,
       getStatusTimelineType,
-      formatTimestamp
+      formatTimestamp,
+      videoElement,
+      playStream,
+      stopStream
     };
   },
 });
