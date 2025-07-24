@@ -97,7 +97,7 @@ const stationsData = ref<Array<Station>>([]);
 const isLoading = ref(true);
 const error = ref<Error | null>(null);
 
-const radioPlayerHost = ref('https://mixpla250.windsurf.build');
+const radioPlayerHost = ref('/player/');
 const referencesStore = useReferencesStore();
 
 const fetchStations = async () => {
