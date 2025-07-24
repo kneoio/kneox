@@ -48,19 +48,24 @@
             <div v-else-if="error" class="text-red-500">
               Error loading stations. Please try again later.
             </div>
-            <a v-else v-for="station in stationsData" 
-               :key="station.name" 
-               :href="`${radioPlayerHost}?radio=${station.name.toLowerCase()}`" 
-               target="_blank" 
-               rel="noopener noreferrer" 
-               class="block pt-2 group relative pl-5">
+            <div v-else v-for="station in stationsData" 
+                 :key="station.name" 
+                 @click="selectStation(station)"
+                 class="block pt-2 group relative pl-5 cursor-pointer hover:bg-gray-50 rounded p-2">
               <div 
                 class="absolute left-0 top-0 bottom-0 w-1 rounded-full" 
                 :style="{ backgroundColor: station.color }"
               ></div>
               <h3 class="text-xl font-bold text-gray-700 group-hover:text-blue-600 transition-colors">{{ station.name }}</h3>
               <p class="text-gray-600 group-hover:text-gray-700 transition-colors">{{ station.description }}</p>
-            </a>
+              <iframe 
+                v-if="selectedStation && selectedStation.name === station.name"
+                :src="`/player/?radio=${encodeURIComponent(station.name.toLowerCase())}`" 
+                class="w-full h-24 mt-2 rounded border border-gray-200"
+                frameborder="0"
+                allow="autoplay"
+              ></iframe>
+            </div>
           </div>
         </div>
 
@@ -97,8 +102,12 @@ const stationsData = ref<Array<Station>>([]);
 const isLoading = ref(true);
 const error = ref<Error | null>(null);
 
-const radioPlayerHost = ref('/player/');
+const selectedStation = ref<Station | null>(null);
 const referencesStore = useReferencesStore();
+
+const selectStation = (station: Station) => {
+  selectedStation.value = selectedStation.value?.name === station.name ? null : station;
+};
 
 const fetchStations = async () => {
   try {
