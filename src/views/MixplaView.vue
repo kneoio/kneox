@@ -50,7 +50,7 @@
             </div>
             <a v-else v-for="station in stationsData" 
                :key="station.name" 
-               :href="`/player/?radio=${encodeURIComponent(station.name.toLowerCase())}`" 
+               :href="`https://mixpla.kneo.io/index.html?radio=${encodeURIComponent(station.name.toLowerCase())}`" 
                target="_blank" 
                rel="noopener noreferrer" 
                class="block pt-2 group relative pl-5">
