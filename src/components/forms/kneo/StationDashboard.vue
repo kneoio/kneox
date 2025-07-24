@@ -386,24 +386,26 @@ export default defineComponent({
       return history.slice(-5);
     });
 
+    let intervalId: NodeJS.Timeout | null = null;
+
     onMounted(() => {
       console.log('StationDetail mounted for brand:', props.brandName);
 
       dashboardStore.ensureStationConnected(props.brandName);
 
-      const intervalId = setInterval(() => {
+      intervalId = setInterval(() => {
+        console.log('Polling station data for:', props.brandName);
         dashboardStore.fetchStation(props.brandName);
       }, 3000); 
-
-      onUnmounted(() => {
-        console.log('StationDetail unmounted for brand:', props.brandName);
-        clearInterval(intervalId);
-        dashboardStore.disconnectStation(props.brandName);
-      });
     });
 
     onUnmounted(() => {
       console.log('StationDetail unmounted for brand:', props.brandName);
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+      dashboardStore.disconnectStation(props.brandName);
     });
 
     watch(() => stationDetails.value?.timeline, () => {
