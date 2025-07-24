@@ -177,7 +177,7 @@ const routes: Array<RouteRecordRaw> = [
         beforeEnter: (to) => {
           // Redirect to player subdomain to avoid auth conflicts
           const radio = Array.isArray(to.query.radio) ? to.query.radio[0] : to.query.radio || '';
-          const playerUrl = `https://player.${window.location.host}/index.html${radio ? '?radio=' + encodeURIComponent(radio) : ''}`;
+          const playerUrl = `https://mixpla.kneo.io/index.html${radio ? '?radio=' + encodeURIComponent(radio) : ''}`;
           window.location.href = playerUrl;
           return false;
         }
