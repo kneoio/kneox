@@ -34,6 +34,16 @@
             </template>
             Stop Station
           </n-button>
+          <n-button
+              type="info"
+              size="medium"
+              :disabled="!isOnline"
+              @click="openMixpla">
+            <template #icon>
+              <n-icon><ExternalLink /></n-icon>
+            </template>
+            Listen Live
+          </n-button>
         </n-space>
 
         <n-space vertical size="large">
@@ -148,8 +158,6 @@
                 </div>
               </n-card>
             </div>
-
-
           </n-space>
         </n-space>
       </n-space>
@@ -165,15 +173,15 @@ import {
   NTimeline, NTimelineItem,
   useMessage
 } from 'naive-ui';
-import { PlayerPlay, PlayerStop } from '@vicons/tabler';
+import { PlayerPlay, PlayerStop, ExternalLink } from '@vicons/tabler';
 import Hls from 'hls.js';
 
 export default defineComponent({
-  name: 'StationDetail',
+  name: 'StationDashboard',
   components: {
     NButton, NCard, NIcon, NTag, NStatistic, NProgress, NSpace, NH2, NText,
     NTimeline, NTimelineItem,
-    PlayerPlay, PlayerStop
+    PlayerPlay, PlayerStop, ExternalLink
   },
   props: {
     brandName: {
@@ -321,6 +329,12 @@ export default defineComponent({
       }
     };
 
+    const openMixpla = () => {
+      const mixplaUrl = import.meta.env.VITE_MIXPLA_URL;
+      const url = `${mixplaUrl}/index.html?radio=${encodeURIComponent(props.brandName.toLowerCase())}`;
+      window.open(url, '_blank', 'noopener,noreferrer');
+    };
+
     const cleanTitle = (title: string | undefined | null): string => {
       if (!title) return 'N/A';
       return title.replace(/^(#+|--+)\s*/, '').replace(/[#-]/g, '-').trim();
@@ -461,6 +475,7 @@ export default defineComponent({
       stationInitials,
       handleStart,
       handleStop,
+      openMixpla,
       isStartingStation,
       isStoppingStation,
       cleanTitle,
