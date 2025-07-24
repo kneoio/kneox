@@ -19,7 +19,7 @@ import EnvironmentProfiles from '../components/lists/kneo/EnvironmentProfiles.vu
 import ProfileForm from '../components/forms/kneo/EnvironmentProfileForm.vue';
 import WelcomeView from '../views/WelcomeView.vue';
 import MixplaView from '../views/MixplaView.vue';
-import Player from "../views/HlsStreamView.vue";
+// Player is served directly from public/player
 import Keycloak from "keycloak-js";
 import apiClient from "../api/apiClient";
 
@@ -172,8 +172,15 @@ const routes: Array<RouteRecordRaw> = [
     {
         path: '/player',
         name: 'Player',
-        component: Player,
-        meta: { requiresAuth: false }
+        component: { template: '<div></div>' },
+        meta: { requiresAuth: false },
+        beforeEnter: (to) => {
+          // Redirect to the player in the public folder with the radio parameter
+          const radio = Array.isArray(to.query.radio) ? to.query.radio[0] : to.query.radio || '';
+          const radioParam = radio ? `?radio=${encodeURIComponent(radio)}` : '';
+          window.location.href = `/player/index.html${radioParam}`;
+          return false; // Prevent the actual navigation
+        }
     },
     {
         path: '/api/soundfragments/files/:uuid/:name',
