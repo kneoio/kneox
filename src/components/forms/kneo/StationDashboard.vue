@@ -331,7 +331,7 @@ export default defineComponent({
 
     const openMixpla = () => {
       const mixplaUrl = import.meta.env.VITE_MIXPLA_URL;
-      const url = `${mixplaUrl}/index.html?radio=${encodeURIComponent(props.brandName.toLowerCase())}`;
+      const url = `${mixplaUrl}?radio=${encodeURIComponent(props.brandName.toLowerCase())}`;
       window.open(url, '_blank', 'noopener,noreferrer');
     };
 
