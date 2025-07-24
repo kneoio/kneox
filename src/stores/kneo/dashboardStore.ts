@@ -129,7 +129,7 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
     });
 
     const globalVersion = computed(() => {
-        return globalDashboardResponse.value?.payload.kneobroadcaster?.[0] || '';
+        return globalDashboardResponse.value?.payload.kneobroadcaster || '';
     });
 
     const getStationDetails = (brandName: string) => {
