@@ -167,12 +167,13 @@ const routes: Array<RouteRecordRaw> = [
                 component: ProfileForm,
                 props: true
             },
-            {
-                path: '/player',
-                name: 'Player',
-                component: Player
-            }
         ]
+    },
+    {
+        path: '/player',
+        name: 'Player',
+        component: Player,
+        meta: { requiresAuth: false }
     },
     {
         path: '/api/soundfragments/files/:uuid/:name',
