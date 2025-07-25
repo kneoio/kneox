@@ -53,7 +53,7 @@
                 :key="index"
                 :type="getStatusTimelineType(event.newStatus)"
                 :title="event.newStatus.replace(/_/g, ' ')"
-                :content="formatTimestamp(event.timestamp)"
+                :content="formatTimestamp(event.timestamp) + (event.timeDiff ? ' (' + event.timeDiff + ')' : '')"
               />
             </n-timeline>
             <n-text depth="3" v-else>No status history available</n-text>
@@ -441,7 +441,22 @@ export default defineComponent({
 
     const statusHistoryTimeline = computed(() => {
       const history = stationDetails.value?.statusHistory || [];
-      return history.slice(-5);
+      const recentHistory = history.slice(-5);
+      
+      return recentHistory.map((event, index) => {
+        let timeDiff = '';
+        if (index > 0) {
+          const prevEvent = recentHistory[index - 1];
+          const diffMs = new Date(event.timestamp).getTime() - new Date(prevEvent.timestamp).getTime();
+          const diffMins = Math.round(diffMs / (1000 * 60));
+          timeDiff = `+${diffMins}m`;
+        }
+        
+        return {
+          ...event,
+          timeDiff
+        };
+      });
     });
 
     let intervalId: NodeJS.Timeout | null = null;
