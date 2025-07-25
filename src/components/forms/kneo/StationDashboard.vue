@@ -173,6 +173,7 @@ import {
   useMessage
 } from 'naive-ui';
 import { PlayerPlay, PlayerStop, ExternalLink } from '@vicons/tabler';
+import { MIXPLA_URL } from '../../../constants/config';
 
 
 export default defineComponent({
@@ -294,7 +295,7 @@ export default defineComponent({
     });
 
     const mixplaUrl = computed(() => {
-      const baseUrl = import.meta.env.VITE_MIXPLA_URL;
+      const baseUrl = MIXPLA_URL;
       return `${baseUrl}?radio=${encodeURIComponent(props.brandName.toLowerCase())}`;
     });
 
@@ -333,7 +334,7 @@ export default defineComponent({
     };
 
     const openMixpla = () => {
-      const mixplaUrl = import.meta.env.VITE_MIXPLA_URL;
+      const mixplaUrl = MIXPLA_URL;
       const url = `${mixplaUrl}?radio=${encodeURIComponent(props.brandName.toLowerCase())}`;
       window.open(url, '_blank', 'noopener,noreferrer');
     };

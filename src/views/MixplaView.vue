@@ -74,6 +74,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { NIcon, NSkeleton } from 'naive-ui';
 import { ArrowRight, ArrowLeft } from '@vicons/tabler';
 import { useReferencesStore } from '../stores/kneo/referencesStore';
+import { MIXPLA_URL } from '../constants/config';
 
 interface Station {
   name: string;
@@ -100,7 +101,7 @@ const error = ref<Error | null>(null);
 const referencesStore = useReferencesStore();
 
 const mixplaBaseUrl = computed(() => {
-  return import.meta.env.VITE_MIXPLA_URL || 'https://mixpla.kneo.io';
+  return MIXPLA_URL;
 });
 
 const fetchStations = async () => {
