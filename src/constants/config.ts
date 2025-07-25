@@ -1,1 +1,1 @@
-export const MIXPLA_URL = 'https://friendly-maamoul-c0722a.netlify.app/';
+export const MIXPLA_URL = 'https://mixpla.netlify.app/';
