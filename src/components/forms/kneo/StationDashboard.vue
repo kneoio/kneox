@@ -152,9 +152,16 @@
 
             <div style="flex-shrink: 0; width: auto;">
               <n-card size="small" title="Timeline">
-                <div class="timeline-display">
-                  {{ timelineDisplay || 'Station offline - no timeline data' }}
-                </div>
+                <n-timeline v-if="timelineItems.length > 0">
+                  <n-timeline-item
+                    v-for="(item, index) in timelineItems"
+                    :key="index"
+                    :type="item.type"
+                    :title="item.title"
+                    :content="item.content"
+                  />
+                </n-timeline>
+                <n-text depth="3" v-else>Station offline - no timeline data</n-text>
               </n-card>
             </div>
           </n-space>
@@ -244,6 +251,39 @@ export default defineComponent({
       }
 
       return parts.join(' ');
+    });
+
+    const timelineItems = computed(() => {
+      const timeline = stationDetails.value?.timeline;
+      if (!timeline) return [];
+
+      const items = [];
+
+      if (timeline.pastSegmentSequences?.length > 0) {
+        items.push({
+          type: 'default' as const,
+          title: 'Past Segments',
+          content: timeline.pastSegmentSequences.join(', ')
+        });
+      }
+
+      if (timeline.visibleSegmentSequences?.length > 0) {
+        items.push({
+          type: 'success' as const,
+          title: 'Current Segments',
+          content: timeline.visibleSegmentSequences.join(', ')
+        });
+      }
+
+      if (timeline.upcomingSegmentSequences?.length > 0) {
+        items.push({
+          type: 'info' as const,
+          title: 'Upcoming Segments',
+          content: timeline.upcomingSegmentSequences.join(', ')
+        });
+      }
+
+      return items;
     });
 
     const stationColor = computed(() => {
@@ -458,6 +498,7 @@ export default defineComponent({
       isCurrentSong,
       statusHistoryTimeline,
       getStatusTimelineType,
+      timelineItems,
       formatTimestamp,
 
     };
