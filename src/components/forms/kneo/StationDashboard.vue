@@ -34,6 +34,15 @@
             </template>
             Stop Station
           </n-button>
+          <n-space size="large" style="margin-left: 30px;">
+            <a :href="mixplaUrl" target="_blank" rel="noopener noreferrer" 
+               class="mixpla-link">
+              {{ mixplaUrl }}
+              <n-icon style="margin-left: 4px; vertical-align: middle;" size="14">
+                <ExternalLink />
+              </n-icon>
+            </a>
+          </n-space>
         </n-space>
 
         <n-space vertical size="large">
@@ -50,7 +59,7 @@
             <n-text depth="3" v-else>No status history available</n-text>
           </n-card>
 
-          <n-space size="large">
+          <n-space size="medium">
             <n-card title="Live Playlist" size="small" style="flex: 1; min-width: 0;">
               <n-space vertical size="medium">
                 <div>
@@ -148,8 +157,6 @@
                 </div>
               </n-card>
             </div>
-
-
           </n-space>
         </n-space>
       </n-space>
@@ -165,15 +172,16 @@ import {
   NTimeline, NTimelineItem,
   useMessage
 } from 'naive-ui';
-import { PlayerPlay, PlayerStop } from '@vicons/tabler';
-import Hls from 'hls.js';
+import { PlayerPlay, PlayerStop, ExternalLink } from '@vicons/tabler';
+import { MIXPLA_URL } from '../../../constants/config';
+
 
 export default defineComponent({
-  name: 'StationDetail',
+  name: 'StationDashboard',
   components: {
     NButton, NCard, NIcon, NTag, NStatistic, NProgress, NSpace, NH2, NText,
     NTimeline, NTimelineItem,
-    PlayerPlay, PlayerStop
+    PlayerPlay, PlayerStop, ExternalLink
   },
   props: {
     brandName: {
@@ -186,8 +194,7 @@ export default defineComponent({
     const message = useMessage();
     const isStartingStation = ref(false);
     const isStoppingStation = ref(false);
-    const videoElement = ref<HTMLVideoElement | null>(null);
-    let hls: Hls | null = null;
+
     const stationDetails = computed(() => {
       return dashboardStore.getStationDetails(props.brandName);
     });
@@ -287,6 +294,11 @@ export default defineComponent({
       return props.brandName.substring(0, 2).toUpperCase();
     });
 
+    const mixplaUrl = computed(() => {
+      const baseUrl = MIXPLA_URL;
+      return `${baseUrl}?radio=${encodeURIComponent(props.brandName.toLowerCase())}`;
+    });
+
     const sendCommand = async (brandName: string, command: string) => {
       try {
         const success = await dashboardStore.triggerBroadcastAction(brandName, command);
@@ -319,6 +331,12 @@ export default defineComponent({
       } finally {
         isStoppingStation.value = false;
       }
+    };
+
+    const openMixpla = () => {
+      const mixplaUrl = MIXPLA_URL;
+      const url = `${mixplaUrl}?radio=${encodeURIComponent(props.brandName.toLowerCase())}`;
+      window.open(url, '_blank', 'noopener,noreferrer');
     };
 
     const cleanTitle = (title: string | undefined | null): string => {
@@ -411,43 +429,9 @@ export default defineComponent({
     watch(() => stationDetails.value?.timeline, () => {
     }, { deep: true });
 
-    const playStream = () => {
-      if (!videoElement.value) return;
 
-      const streamUrl = 'http://localhost:38707/nitroglycerin/radio/stream.m3u8';
 
-      if (Hls.isSupported()) {
-        if (!hls) {
-          hls = new Hls({
-            debug: false,
-            enableWorker: true
-          });
-          hls.loadSource(streamUrl);
-          hls.attachMedia(videoElement.value);
-        }
-      } else if (videoElement.value.canPlayType('application/vnd.apple.mpegurl')) {
-        videoElement.value.src = streamUrl;
-      } else {
-        message.error('HLS is not supported in this browser');
-      }
-    };
 
-    const stopStream = () => {
-      if (videoElement.value) {
-        videoElement.value.pause();
-        videoElement.value.currentTime = 0;
-      }
-      if (hls) {
-        hls.destroy();
-        hls = null;
-      }
-    };
-
-    onUnmounted(() => {
-      if (hls) {
-        hls.destroy();
-      }
-    });
 
     return {
       stationDetails,
@@ -459,8 +443,10 @@ export default defineComponent({
       getStatusInfo,
       managedByInfo,
       stationInitials,
+      mixplaUrl,
       handleStart,
       handleStop,
+      openMixpla,
       isStartingStation,
       isStoppingStation,
       cleanTitle,
@@ -473,9 +459,7 @@ export default defineComponent({
       statusHistoryTimeline,
       getStatusTimelineType,
       formatTimestamp,
-      videoElement,
-      playStream,
-      stopStream
+
     };
   },
 });
@@ -484,8 +468,30 @@ export default defineComponent({
 <style scoped>
 @keyframes pulse {
   0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.1); opacity: 0.7; }
+  50% { transform: scale(1.05); opacity: 0.8; }
   100% { transform: scale(1); opacity: 1; }
+}
+
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+.timeline-display {
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  background-color: #f5f5f5;
+  padding: 12px;
+  border-radius: 4px;
+  border: 1px solid #e0e0e0;
+  white-space: pre-wrap;
+  word-break: break-all;
+  line-height: 1.4;
+}
+
+.dark .timeline-display {
+  background-color: #2d2d2d;
+  border-color: #404040;
+  color: #e0e0e0;
 }
 
 .current-track-info {
@@ -495,17 +501,6 @@ export default defineComponent({
   border: 1px solid var(--n-border-color);
 }
 
-.timeline-display {
-  font-family: monospace;
-  font-size: 0.9rem;
-  background-color: var(--n-input-color);
-  color: var(--n-text-color);
-  padding: 10px 15px;
-  border-radius: 4px;
-  border: 1px solid var(--n-border-color);
-  white-space: nowrap;
-  overflow-x: auto;
-}
 
 .song-title {
   max-width: 200px;

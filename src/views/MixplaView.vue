@@ -50,7 +50,7 @@
             </div>
             <a v-else v-for="station in stationsData" 
                :key="station.name" 
-               :href="`https://mixpla.kneo.io/index.html?radio=${encodeURIComponent(station.name.toLowerCase())}`" 
+               :href="`${mixplaBaseUrl}?radio=${encodeURIComponent(station.name.toLowerCase())}`" 
                target="_blank" 
                rel="noopener noreferrer" 
                class="block pt-2 group relative pl-5">
@@ -70,10 +70,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { NIcon, NSkeleton } from 'naive-ui';
 import { ArrowRight, ArrowLeft } from '@vicons/tabler';
 import { useReferencesStore } from '../stores/kneo/referencesStore';
+import { MIXPLA_URL } from '../constants/config';
 
 interface Station {
   name: string;
@@ -98,6 +99,10 @@ const isLoading = ref(true);
 const error = ref<Error | null>(null);
 
 const referencesStore = useReferencesStore();
+
+const mixplaBaseUrl = computed(() => {
+  return MIXPLA_URL;
+});
 
 const fetchStations = async () => {
   try {
