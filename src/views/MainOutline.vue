@@ -103,7 +103,8 @@ import {
   BrandAirtable,
   Headphones,
   Sun,
-  Moon
+  Moon,
+  Calendar
 } from '@vicons/tabler';
 import {useRadioStationStore} from "../stores/kneo/radioStationStore";
 import {RadioStation, BrandStatus} from "../types/kneoBroadcasterTypes";
@@ -302,6 +303,11 @@ export default defineComponent({
           icon: () => h(Grain)
         },
         {
+          label: 'Events',
+          key: 'events',
+          icon: () => h(Calendar)
+        },
+        {
           label: 'AiAgents',
           key: 'ai_agents',
           icon: () => h(Robot)
@@ -348,6 +354,7 @@ export default defineComponent({
       if (route.name === 'RadioStations') return 'radiostations';
       if (route.name === 'SoundFragments') return 'fragments';
       if (route.name === 'Memories') return 'memories';
+      if (route.name === 'Events') return 'events';
       if (route.name === 'AiAgents') return 'ai_agents';
       if (route.name === 'EnvironmentProfiles') return 'environment_profiles';
       if (route.name === 'Listeners') return 'listeners';
@@ -395,6 +402,8 @@ export default defineComponent({
         await router.push({name: 'SoundFragments'});
       } else if (key === 'memories') {
         await router.push({name: 'Memories'});
+      } else if (key === 'events') {
+        await router.push({name: 'Events'});
       } else if (key === 'ai_agents') {
         await router.push({name: 'AiAgents'});
       } else if (key === 'environment_profiles') {

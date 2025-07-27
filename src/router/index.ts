@@ -17,6 +17,8 @@ import AiAgents from '../components/lists/kneo/AiAgents.vue';
 import AiAgentForm from '../components/forms/kneo/AiAgentForm.vue';
 import EnvironmentProfiles from '../components/lists/kneo/EnvironmentProfiles.vue';
 import ProfileForm from '../components/forms/kneo/EnvironmentProfileForm.vue';
+import Events from '../components/lists/kneo/Events.vue';
+import EventForm from '../components/forms/kneo/EventForm.vue';
 import WelcomeView from '../views/WelcomeView.vue';
 import MixplaView from '../views/MixplaView.vue';
 // Player is served directly from public/player
@@ -165,6 +167,17 @@ const routes: Array<RouteRecordRaw> = [
                 path: 'profiles/:id',
                 name: 'ProfileForm',
                 component: ProfileForm,
+                props: true
+            },
+            {
+                path: 'events',
+                name: 'Events',
+                component: Events
+            },
+            {
+                path: 'events/:id',
+                name: 'EventForm',
+                component: EventForm,
                 props: true
             },
         ]

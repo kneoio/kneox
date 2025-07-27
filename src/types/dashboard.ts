@@ -85,6 +85,10 @@ export interface StationDetails {
     } | null;
     segmentSizeHistory: number[];
     currentListeners: number;
+    statusHistory: {
+        timestamp: string;
+        status: string;
+    }[];
 }
 
 export interface StationResponse {

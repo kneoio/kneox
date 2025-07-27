@@ -200,3 +200,34 @@ export interface ListenerSave {
   userId?: number; // Assuming userId might be set on creation or editable
   listenerOf?: string[]; // Array of radio station IDs this listener is associated with
 }
+
+// Types for Events Feature
+
+export interface EventEntry {
+    id: string;
+    author: string;
+    regDate: string;
+    lastModifier: string;
+    lastModifiedDate: string;
+    brand: string;
+    type: string;
+    timestampEvent: string;
+    description: string;
+    priority: string;
+}
+
+export interface EventViewData {
+    count: number;
+    pageNum: number;
+    maxPage: number;
+    pageSize: number;
+    entries: EventEntry[];
+}
+
+export interface EventSave {
+    brand?: string;
+    type: string;
+    timestampEvent: string;
+    description: string;
+    priority?: string;
+}

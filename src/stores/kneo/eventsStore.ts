@@ -1,0 +1,83 @@
+import { defineStore } from 'pinia';
+import { computed, ref } from 'vue';
+import apiClient from '../../api/apiClient';
+import type { ApiFormResponse, ApiViewPageResponse } from "../../types";
+import type { EventEntry, EventSave } from "../../types/kneoBroadcasterTypes";
+
+export const useEventsStore = defineStore('eventsStore', () => {
+    const apiViewResponse = ref<ApiViewPageResponse<EventEntry> | null>(null);
+    const apiFormResponse = ref<ApiFormResponse<EventEntry> | null>(null);
+
+    const getEntries = computed(() => apiViewResponse.value?.viewData?.entries || []);
+    const getCurrent = computed(() => apiFormResponse.value?.docData || {
+        id: '',
+        author: '',
+        regDate: '',
+        lastModifier: '',
+        lastModifiedDate: '',
+        brand: '',
+        type: '',
+        timestampEvent: '',
+        description: '',
+        priority: '',
+    } as EventEntry);
+
+    const getPagination = computed(() => {
+        if (!apiViewResponse.value?.viewData) {
+            return {
+                page: 1,
+                pageSize: 10,
+                itemCount: 0,
+                pageCount: 1,
+                showSizePicker: true,
+                pageSizes: [10, 20, 30, 40]
+            };
+        }
+
+        return {
+            page: apiViewResponse.value.viewData.pageNum,
+            pageSize: apiViewResponse.value.viewData.pageSize,
+            itemCount: apiViewResponse.value.viewData.count,
+            pageCount: apiViewResponse.value.viewData.maxPage,
+            showSizePicker: true,
+            pageSizes: [10, 20, 30, 40]
+        };
+    });
+
+    const fetchEvents = async (page = 1, pageSize = 10) => {
+        try {
+            const response = await apiClient.get(`/events?page=${page}&size=${pageSize}`);
+            apiViewResponse.value = response.data;
+        } catch (error) {
+            console.error('Error fetching events:', error);
+            throw error;
+        }
+    };
+
+    const fetchEvent = async (id: string) => {
+        const response = await apiClient.get(`/events/${id}`);
+        apiFormResponse.value = response.data;
+    };
+
+    const saveEvent = async (data: EventSave, id: string | null) => {
+        const method = id ? 'put' : 'post';
+        const url = id ? `/events/${id}` : '/events';
+        return await apiClient[method](url, data);
+    };
+
+    const deleteEvent = async (id: string) => {
+        return await apiClient.delete(`/events/${id}`);
+    };
+
+    return {
+        apiViewResponse,
+        apiFormResponse,
+        getEntries,
+        getCurrent,
+        getPagination,
+        fetchEvents,
+        fetchEvent,
+        saveEvent,
+        deleteEvent
+    };
+});

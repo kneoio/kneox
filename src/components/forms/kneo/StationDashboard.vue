@@ -51,8 +51,8 @@
               <n-timeline-item
                 v-for="(event, index) in statusHistoryTimeline"
                 :key="index"
-                :type="getStatusTimelineType(event.newStatus)"
-                :title="event.newStatus.replace(/_/g, ' ')"
+                :type="getStatusTimelineType(event.status)"
+                :title="event.status.replace(/_/g, ' ')"
                 :content="formatTimestamp(event.timestamp) + (event.timeDiff ? ' (' + event.timeDiff + ')' : '')"
               />
             </n-timeline>
@@ -397,7 +397,7 @@ export default defineComponent({
     const getHlsTimestamp = (): string => {
       const songStats = stationDetails.value?.songStatistics;
       if (!songStats) return 'N/A';
-      return formatTimestamp(songStats.segmentTimestamp);
+      return formatTimestamp(songStats.segmentTimestamp.toString());
     };
 
     const formatTimestamp = (timestamp: string): string => {
@@ -429,8 +429,8 @@ export default defineComponent({
           return 'success';
         case 'WARMING_UP':
         case 'WAITING_FOR_CURATOR':
-          return 'warning';
         case 'IDLE':
+          return 'warning';
         case 'SYSTEM_ERROR':
           return 'error';
         case 'OFF_LINE':
