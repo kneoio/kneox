@@ -1,1 +1,1 @@
-export const MIXPLA_URL = 'https://mixpla.netlify.app/';
+export const MIXPLA_URL = 'https://mixpla.kneo.io/';
