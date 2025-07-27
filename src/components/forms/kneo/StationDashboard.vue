@@ -56,7 +56,7 @@
                 v-for="(event, index) in statusHistoryTimeline"
                 :key="index"
                 :type="getStatusTimelineType(event.status)"
-                :title="event.status.replace(/_/g, ' ')"
+                :title="event.status ? event.status.replace(/_/g, ' ') : 'Unknown'"
                 :content="formatTimestamp(event.timestamp) + (event.timeDiff ? ' (' + event.timeDiff + ')' : '')"
               />
             </n-timeline>
@@ -457,7 +457,8 @@ export default defineComponent({
       return cleanFragment === currentTrack;
     };
 
-    const getStatusTimelineType = (status: string): 'success' | 'warning' | 'error' | 'default' => {
+    const getStatusTimelineType = (status: string | null | undefined): 'success' | 'warning' | 'error' | 'default' => {
+      if (!status) return 'default';
       switch (status) {
         case 'ON_LINE':
           return 'success';
@@ -494,6 +495,7 @@ export default defineComponent({
     });
 
     let intervalId: NodeJS.Timeout | null = null;
+    const isDestroyed = ref(false);
 
     onMounted(() => {
       console.log('StationDetail mounted for brand:', props.brandName);
@@ -501,13 +503,16 @@ export default defineComponent({
       dashboardStore.ensureStationConnected(props.brandName);
 
       intervalId = setInterval(() => {
-        console.log('Polling station data for:', props.brandName);
-        dashboardStore.fetchStation(props.brandName);
+        if (!isDestroyed.value) {
+          console.log('Polling station data for:', props.brandName);
+          dashboardStore.fetchStation(props.brandName);
+        }
       }, 3000);
     });
 
     onUnmounted(() => {
       console.log('StationDetail unmounted for brand:', props.brandName);
+      isDestroyed.value = true;
       if (intervalId) {
         clearInterval(intervalId);
         intervalId = null;
