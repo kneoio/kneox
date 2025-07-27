@@ -55,8 +55,8 @@
               <n-timeline-item
                   v-for="(event, index) in statusHistoryTimeline"
                   :key="index"
-                  :type="getStatusTimelineType(event.status)"
-                  :title="formatStatus(event.status)"
+                  :type="getStatusTimelineType(event.newStatus)"
+                  :title="event.newStatus.replace(/_/g, ' ')"
                   :content="formatTimestamp(event.timestamp) + (event.timeDiff ? ' (' + event.timeDiff + ')' : '')"
               />
             </n-timeline>
