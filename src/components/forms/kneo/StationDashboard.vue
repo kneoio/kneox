@@ -53,11 +53,11 @@
           <n-card title="Status History" size="small">
             <n-timeline horizontal v-if="statusHistoryTimeline.length > 0">
               <n-timeline-item
-                v-for="(event, index) in statusHistoryTimeline"
-                :key="index"
-                :type="getStatusTimelineType(event.status)"
-                :title="event.status ? event.status.replace(/_/g, ' ') : 'Unknown'"
-                :content="formatTimestamp(event.timestamp) + (event.timeDiff ? ' (' + event.timeDiff + ')' : '')"
+                  v-for="(event, index) in statusHistoryTimeline"
+                  :key="index"
+                  :type="getStatusTimelineType(event.status)"
+                  :title="formatStatus(event.status)"
+                  :content="formatTimestamp(event.timestamp) + (event.timeDiff ? ' (' + event.timeDiff + ')' : '')"
               />
             </n-timeline>
             <n-text depth="3" v-else>No status history available</n-text>
@@ -344,7 +344,7 @@ export default defineComponent({
         case 'WAITING_FOR_CURATOR':
           return {text: 'Waiting for Curator', type: 'warning' as const};
         case 'IDLE':
-          return {text: 'Idle', type: 'error' as const};
+          return {text: 'Idle', type: 'warning' as const};
         case 'SYSTEM_ERROR':
           return {text: 'System Error', type: 'error' as const};
         case 'OFF_LINE':
@@ -439,6 +439,29 @@ export default defineComponent({
       return date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', second: '2-digit'});
     };
 
+    const formatStatus = (status: string | null | undefined): string => {
+      if (!status) return 'Unknown';
+
+      const statusMap: Record<string, string> = {
+        'ON_LINE': 'Online',
+        'ONLINE': 'Online',
+        'OFF_LINE': 'Offline',
+        'OFFLINE': 'Offline',
+        'IDLE': 'Idle',
+        'WARMING_UP': 'Warming Up',
+        'WAITING_FOR_CURATOR': 'Waiting for Curator',
+        'SYSTEM_ERROR': 'System Error',
+        'STARTING': 'Starting',
+        'STOPPING': 'Stopping',
+        'ERROR': 'Error',
+        'UNKNOWN': 'Unknown',
+        'CONNECTED': 'Connected',
+        'DISCONNECTED': 'Disconnected'
+      };
+
+      return statusMap[status.toUpperCase()] || status.replace(/_/g, ' ');
+    };
+
     const getHlsRequestCount = () => {
       if (stationDetails.value && typeof stationDetails.value.songStatistics === 'object' && stationDetails.value.songStatistics !== null) {
         return stationDetails.value.songStatistics.requestCount || 0;
@@ -459,16 +482,19 @@ export default defineComponent({
 
     const getStatusTimelineType = (status: string | null | undefined): 'success' | 'warning' | 'error' | 'default' => {
       if (!status) return 'default';
-      switch (status) {
+      switch (status.toUpperCase()) {
         case 'ON_LINE':
+        case 'ONLINE':
           return 'success';
         case 'WARMING_UP':
         case 'WAITING_FOR_CURATOR':
         case 'IDLE':
           return 'warning';
         case 'SYSTEM_ERROR':
+        case 'ERROR':
           return 'error';
         case 'OFF_LINE':
+        case 'OFFLINE':
         default:
           return 'default';
       }
@@ -551,7 +577,7 @@ export default defineComponent({
       getStatusTimelineType,
       timelineItems,
       formatTimestamp,
-
+      formatStatus,
     };
   },
 });
@@ -572,6 +598,4 @@ export default defineComponent({
     opacity: 1;
   }
 }
-
-
 </style>
