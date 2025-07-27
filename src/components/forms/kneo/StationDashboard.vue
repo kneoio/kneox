@@ -4,7 +4,7 @@
       <n-space vertical size="medium">
         <n-h2 style="margin: 0;">{{ brandName }} Dashboard</n-h2>
         <n-space align="center" size="small">
-          <n-tag :type="getStatusInfo.type" size="large"  :bordered="false">
+          <n-tag :type="getStatusInfo.type" size="large" :bordered="false">
             {{ getStatusInfo.text }}
           </n-tag>
           <n-text depth="3" style="font-size: 14px;">
@@ -19,7 +19,9 @@
               :disabled="isOnline"
               @click="handleStart">
             <template #icon>
-              <n-icon><PlayerPlay /></n-icon>
+              <n-icon>
+                <PlayerPlay/>
+              </n-icon>
             </template>
             Start Station
           </n-button>
@@ -30,16 +32,18 @@
               :disabled="!isOnline"
               @click="handleStop">
             <template #icon>
-              <n-icon><PlayerStop /></n-icon>
+              <n-icon>
+                <PlayerStop/>
+              </n-icon>
             </template>
             Stop Station
           </n-button>
           <n-space size="large" style="margin-left: 30px;">
-            <a :href="mixplaUrl" target="_blank" rel="noopener noreferrer" 
+            <a :href="mixplaUrl" target="_blank" rel="noopener noreferrer"
                class="mixpla-link">
               {{ mixplaUrl }}
               <n-icon style="margin-left: 4px; vertical-align: middle;" size="14">
-                <ExternalLink />
+                <ExternalLink/>
               </n-icon>
             </a>
           </n-space>
@@ -64,14 +68,15 @@
               <n-space vertical size="medium">
                 <div>
                   <n-text depth="2" style="font-weight: 600; margin-bottom: 8px; display: block;">In Queue:</n-text>
-                  <div v-if="stationDetails?.playlistManagerStats?.obtainedByPlaylist && stationDetails.playlistManagerStats.obtainedByPlaylist.length > 0">
+                  <div
+                      v-if="stationDetails?.playlistManagerStats?.obtainedByPlaylist && stationDetails.playlistManagerStats.obtainedByPlaylist.length > 0">
                     <n-space vertical size="small">
                       <div
                           v-for="(fragment, index) in stationDetails.playlistManagerStats.obtainedByPlaylist"
                           :key="index"
                           :style="{
                             paddingLeft: '8px',
-                            borderLeft: '2px solid var(--n-border-color)',
+                            borderLeft: '2px solid',
                             fontSize: '0.875rem',
                             backgroundColor: isCurrentSong(fragment) ? 'var(--n-color-target)' : 'transparent',
                             padding: isCurrentSong(fragment) ? '4px 8px' : '0 0 0 8px',
@@ -79,7 +84,10 @@
                             fontWeight: isCurrentSong(fragment) ? '600' : 'normal'
                           }"
                       >
-                        <n-text :depth="isCurrentSong(fragment) ? 1 : 3" :style="{ color: isCurrentSong(fragment) ? 'white !important' : undefined }">{{ index + 1 }}. {{ cleanTitle(fragment) }}</n-text>
+                        <n-text :depth="isCurrentSong(fragment) ? 1 : 3"
+                                :style="{ color: isCurrentSong(fragment) ? 'white !important' : undefined }">
+                          {{ index + 1 }}. {{ cleanTitle(fragment) }}
+                        </n-text>
                       </div>
                     </n-space>
                   </div>
@@ -87,15 +95,17 @@
                 </div>
 
                 <div>
-                  <n-text depth="2" style="font-weight: 600; margin-bottom: 8px; display: block;">Ready to be queued:</n-text>
-                  <div v-if="stationDetails?.playlistManagerStats?.readyToBeConsumed && stationDetails.playlistManagerStats.readyToBeConsumed.length > 0">
+                  <n-text depth="2" style="font-weight: 600; margin-bottom: 8px; display: block;">Ready to be queued:
+                  </n-text>
+                  <div
+                      v-if="stationDetails?.playlistManagerStats?.readyToBeConsumed && stationDetails.playlistManagerStats.readyToBeConsumed.length > 0">
                     <n-space vertical size="small">
                       <div
                           v-for="(fragment, index) in stationDetails.playlistManagerStats.readyToBeConsumed"
                           :key="index"
                           :style="{
                             paddingLeft: '8px',
-                            borderLeft: '2px solid var(--n-border-color)',
+                            borderLeft: '2px solid',
                             fontSize: '0.875rem',
                             backgroundColor: isCurrentSong(fragment) ? 'var(--n-color-target)' : 'transparent',
                             padding: isCurrentSong(fragment) ? '4px 8px' : '0 0 0 8px',
@@ -103,7 +113,10 @@
                             fontWeight: isCurrentSong(fragment) ? '600' : 'normal'
                           }"
                       >
-                        <n-text :depth="isCurrentSong(fragment) ? 1 : 3" :style="{ color: isCurrentSong(fragment) ? 'white !important' : undefined }">{{ index + 1 }}. {{ cleanTitle(fragment) }}</n-text>
+                        <n-text :depth="isCurrentSong(fragment) ? 1 : 3"
+                                :style="{ color: isCurrentSong(fragment) ? 'white !important' : undefined }">
+                          {{ index + 1 }}. {{ cleanTitle(fragment) }}
+                        </n-text>
                       </div>
                     </n-space>
                   </div>
@@ -125,7 +138,9 @@
                     <n-space vertical size="small" class="current-track-info">
                       <n-space justify="space-between">
                         <n-text strong>Current Track:</n-text>
-                        <span class="song-title" :title="cleanTitle(getHlsCurrentTrack())">{{ getHlsCurrentTrack() }}</span>
+                        <span class="song-title" :title="cleanTitle(getHlsCurrentTrack())">{{
+                            getHlsCurrentTrack()
+                          }}</span>
                       </n-space>
                       <n-space justify="space-between">
                         <n-text strong>Est. Time:</n-text>
@@ -136,12 +151,17 @@
                         <n-space align="center" size="small">
                           <n-text>{{ getHlsRequestCount() }}</n-text>
                           <n-text depth="3" style="font-size: 0.9em;">/ 5min</n-text>
-                          <span v-if="getHlsRequestCount() > 0" style="color: #28a745; font-size: 1.2em; animation: pulse 1.5s infinite ease-in-out;">●</span>
+                          <span v-if="getHlsRequestCount() > 0">
+                            <n-icon size="18" color="green">
+                              <Activity/>
+                          </n-icon></span>
                         </n-space>
                       </n-space>
                       <n-space justify="space-between">
                         <n-text strong>Est. Listeners:</n-text>
-                        <n-text v-if="getHlsListenersCount() === -1" depth="3" title="Cannot determine listeners (check config/duration)">N/A</n-text>
+                        <n-text v-if="getHlsListenersCount() === -1" depth="3"
+                                title="Cannot determine listeners (check config/duration)">N/A
+                        </n-text>
                         <n-text v-else>{{ getHlsListenersCount() }}</n-text>
                       </n-space>
                     </n-space>
@@ -154,11 +174,11 @@
               <n-card size="small" title="Timeline">
                 <n-timeline v-if="timelineItems.length > 0">
                   <n-timeline-item
-                    v-for="(item, index) in timelineItems"
-                    :key="index"
-                    :type="item.type"
-                    :title="item.title"
-                    :content="item.content"
+                      v-for="(item, index) in timelineItems"
+                      :key="index"
+                      :type="item.type"
+                      :title="item.title"
+                      :content="item.content"
                   />
                 </n-timeline>
                 <n-text depth="3" v-else>Station offline - no timeline data</n-text>
@@ -172,15 +192,24 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted, onUnmounted, watch } from 'vue';
-import { useDashboardStore } from '../../../stores/kneo/dashboardStore';
+import {computed, defineComponent, onMounted, onUnmounted, ref, watch} from 'vue';
+import {useDashboardStore} from '../../../stores/kneo/dashboardStore';
 import {
-  NButton, NCard, NIcon, NTag, NStatistic, NProgress, NSpace, NH2, NText,
-  NTimeline, NTimelineItem,
+  NButton,
+  NCard,
+  NH2,
+  NIcon,
+  NProgress,
+  NSpace,
+  NStatistic,
+  NTag,
+  NText,
+  NTimeline,
+  NTimelineItem,
   useMessage
 } from 'naive-ui';
-import { PlayerPlay, PlayerStop, ExternalLink } from '@vicons/tabler';
-import { MIXPLA_URL } from '../../../constants/config';
+import {ExternalLink, PlayerPlay, PlayerStop, Activity} from '@vicons/tabler';
+import {MIXPLA_URL} from '../../../constants/config';
 
 
 export default defineComponent({
@@ -188,7 +217,7 @@ export default defineComponent({
   components: {
     NButton, NCard, NIcon, NTag, NStatistic, NProgress, NSpace, NH2, NText,
     NTimeline, NTimelineItem,
-    PlayerPlay, PlayerStop, ExternalLink
+    PlayerPlay, PlayerStop, ExternalLink, Activity
   },
   props: {
     brandName: {
@@ -289,13 +318,19 @@ export default defineComponent({
     const stationColor = computed(() => {
       const status = stationDetails.value?.status;
       switch (status) {
-        case 'ON_LINE': return '#18a058';
-        case 'WARMING_UP': return '#f0a020';
-        case 'WAITING_FOR_CURATOR': return '#f0a020';
-        case 'IDLE': return '#d03050';
-        case 'SYSTEM_ERROR': return '#d03050';
+        case 'ON_LINE':
+          return '#18a058';
+        case 'WARMING_UP':
+          return '#f0a020';
+        case 'WAITING_FOR_CURATOR':
+          return '#f0a020';
+        case 'IDLE':
+          return '#d03050';
+        case 'SYSTEM_ERROR':
+          return '#d03050';
         case 'OFF_LINE':
-        default: return '#606266';
+        default:
+          return '#606266';
       }
     });
 
@@ -303,18 +338,18 @@ export default defineComponent({
       const status = stationDetails.value?.status;
       switch (status) {
         case 'ON_LINE':
-          return { text: 'Online', type: 'success' as const };
+          return {text: 'Online', type: 'success' as const};
         case 'WARMING_UP':
-          return { text: 'Warming Up', type: 'warning' as const };
+          return {text: 'Warming Up', type: 'warning' as const};
         case 'WAITING_FOR_CURATOR':
-          return { text: 'Waiting for Curator', type: 'warning' as const };
+          return {text: 'Waiting for Curator', type: 'warning' as const};
         case 'IDLE':
-          return { text: 'Idle', type: 'error' as const };
+          return {text: 'Idle', type: 'error' as const};
         case 'SYSTEM_ERROR':
-          return { text: 'System Error', type: 'error' as const };
+          return {text: 'System Error', type: 'error' as const};
         case 'OFF_LINE':
         default:
-          return { text: 'Offline', type: 'default' as const };
+          return {text: 'Offline', type: 'default' as const};
       }
     });
 
@@ -322,11 +357,11 @@ export default defineComponent({
       const managedBy = stationDetails.value?.managedBy;
       switch (managedBy) {
         case 'AI_AGENT':
-          return { text: 'AI-managed', type: 'info' as const };
+          return {text: 'AI-managed', type: 'info' as const};
         case 'ITSELF':
-          return { text: 'Self-managed', type: 'default' as const };
+          return {text: 'Self-managed', type: 'default' as const};
         default:
-          return { text: managedBy || 'Unknown', type: 'default' as const };
+          return {text: managedBy || 'Unknown', type: 'default' as const};
       }
     });
 
@@ -335,8 +370,7 @@ export default defineComponent({
     });
 
     const mixplaUrl = computed(() => {
-      const baseUrl = MIXPLA_URL;
-      return `${baseUrl}?radio=${encodeURIComponent(props.brandName.toLowerCase())}`;
+      return `${MIXPLA_URL}?radio=${encodeURIComponent(props.brandName.toLowerCase())}`;
     });
 
     const sendCommand = async (brandName: string, command: string) => {
@@ -402,7 +436,7 @@ export default defineComponent({
 
     const formatTimestamp = (timestamp: string): string => {
       const date = new Date(timestamp);
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      return date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', second: '2-digit'});
     };
 
     const getHlsRequestCount = () => {
@@ -442,7 +476,7 @@ export default defineComponent({
     const statusHistoryTimeline = computed(() => {
       const history = stationDetails.value?.statusHistory || [];
       const recentHistory = history.slice(-5);
-      
+
       return recentHistory.map((event, index) => {
         let timeDiff = '';
         if (index > 0) {
@@ -451,7 +485,7 @@ export default defineComponent({
           const diffMins = Math.round(diffMs / (1000 * 60));
           timeDiff = `+${diffMins}m`;
         }
-        
+
         return {
           ...event,
           timeDiff
@@ -469,7 +503,7 @@ export default defineComponent({
       intervalId = setInterval(() => {
         console.log('Polling station data for:', props.brandName);
         dashboardStore.fetchStation(props.brandName);
-      }, 3000); 
+      }, 3000);
     });
 
     onUnmounted(() => {
@@ -482,10 +516,7 @@ export default defineComponent({
     });
 
     watch(() => stationDetails.value?.timeline, () => {
-    }, { deep: true });
-
-
-
+    }, {deep: true});
 
 
     return {
@@ -523,46 +554,19 @@ export default defineComponent({
 
 <style scoped>
 @keyframes pulse {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.05); opacity: 0.8; }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-.pulse {
-  animation: pulse 2s infinite;
-}
-
-.timeline-display {
-  font-family: 'Courier New', monospace;
-  font-size: 14px;
-  background-color: #f5f5f5;
-  padding: 12px;
-  border-radius: 4px;
-  border: 1px solid #e0e0e0;
-  white-space: pre-wrap;
-  word-break: break-all;
-  line-height: 1.4;
-}
-
-.dark .timeline-display {
-  background-color: #2d2d2d;
-  border-color: #404040;
-  color: #e0e0e0;
-}
-
-.current-track-info {
-  padding: 12px;
-  background-color: var(--n-color);
-  border-radius: 6px;
-  border: 1px solid var(--n-border-color);
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 
-.song-title {
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  display: inline-block;
-}
 </style>
