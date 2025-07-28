@@ -184,6 +184,38 @@
                 <n-text depth="3" v-else>Station offline - no timeline data</n-text>
               </n-card>
             </div>
+
+            <div style="flex-shrink: 0; width: auto;">
+              <n-card size="small" title="Scheduled Tasks">
+                <n-space vertical size="small">
+                  <div v-if="stationDetails?.runningTasks && stationDetails.runningTasks.length > 0">
+                    <n-space vertical size="small">
+                      <div
+                          v-for="(task, index) in stationDetails.runningTasks"
+                          :key="index"
+                          style="padding: 8px; border: 1px solid var(--n-border-color); border-radius: 4px; font-size: 0.875rem;"
+                      >
+                        <n-space vertical size="small">
+                          <n-space justify="space-between">
+                            <n-text strong>{{ formatTaskType(task.taskType) }}</n-text>
+                            <n-tag size="small" type="info">{{ task.target }}</n-tag>
+                          </n-space>
+                          <n-space justify="space-between">
+                            <n-text depth="3">Started:</n-text>
+                            <n-text>{{ formatTimestamp(task.startTime) }}</n-text>
+                          </n-space>
+                          <n-space justify="space-between">
+                            <n-text depth="3">Duration:</n-text>
+                            <n-text>{{ getTaskDuration(task.startTime) }}</n-text>
+                          </n-space>
+                        </n-space>
+                      </div>
+                    </n-space>
+                  </div>
+                  <n-text depth="3" v-else>No running tasks</n-text>
+                </n-space>
+              </n-card>
+            </div>
           </n-space>
         </n-space>
       </n-space>
@@ -236,7 +268,7 @@ export default defineComponent({
     });
 
     const isOnline = computed(() => {
-      return stationDetails.value?.status === 'ON_LINE';
+      return stationDetails.value?.status === 'ON_LINE' || stationDetails.value?.status === 'WARMING_UP';
     });
 
     const currentListeners = computed(() => {
@@ -439,6 +471,27 @@ export default defineComponent({
       return date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', second: '2-digit'});
     };
 
+    const formatTaskType = (taskType: string): string => {
+      return taskType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    };
+
+    const getTaskDuration = (startTime: string): string => {
+      const start = new Date(startTime);
+      const now = new Date();
+      const diffMs = now.getTime() - start.getTime();
+      const hours = Math.floor(diffMs / (1000 * 60 * 60));
+      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+
+      if (hours > 0) {
+        return `${hours}h ${minutes}m ${seconds}s`;
+      } else if (minutes > 0) {
+        return `${minutes}m ${seconds}s`;
+      } else {
+        return `${seconds}s`;
+      }
+    };
+
     const formatStatus = (status: string | null | undefined): string => {
       if (!status) return 'Unknown';
 
@@ -578,6 +631,8 @@ export default defineComponent({
       timelineItems,
       formatTimestamp,
       formatStatus,
+      formatTaskType,
+      getTaskDuration,
     };
   },
 });
