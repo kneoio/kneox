@@ -22,6 +22,10 @@
         </n-button>
       </n-button-group>
 
+      <n-button @click="toggleFilters" type="default" size="large" class="mr-4">
+        Filter
+      </n-button>
+
       <n-input
           v-model:value="searchQuery"
           placeholder="Search..."
@@ -30,18 +34,26 @@
           style="width: 250px"
           @keydown.enter="handleSearch"
           @clear="handleSearch"
-      >
-        <template #suffix>
-          <n-button text @click="handleSearch">
-            <n-icon>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
-            </n-icon>
-          </n-button>
-        </template>
-      </n-input>
+      />
+    </n-gi>
+
+    <n-gi :span="isMobile ? 1 : 6">
+      <n-collapse-transition :show="showFilters">
+        <div style="width: 50%;">
+          <n-grid :cols="1" x-gap="12" y-gap="0">
+            <n-gi>
+              <n-form-item label="Country" size="small" :show-feedback="false">
+                <n-select
+                    v-model:value="filters.country"
+                    :options="referencesStore.countryOptions"
+                    placeholder="Select country"
+                    clearable
+                />
+              </n-form-item>
+            </n-gi>
+          </n-grid>
+        </div>
+      </n-collapse-transition>
     </n-gi>
 
     <n-gi :span="isMobile ? 1 : 6">
@@ -49,8 +61,8 @@
           remote
           :columns="columns"
           :row-key="rowKey"
-          :data="store.getEntries"
-          :pagination="store.getPagination"
+          :data="listenersStore.getEntries"
+          :pagination="listenersStore.getPagination"
           :bordered="false"
           :loading="loading"
           :row-props="getRowProps"
@@ -78,16 +90,20 @@ import {
   NIcon,
   NInput,
   NPageHeader,
+  NCollapseTransition,
+  NFormItem,
+  NSelect,
   useMessage
 } from 'naive-ui';
 import { useRouter } from 'vue-router';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
 import { ListenerEntry } from "../../../types/kneoBroadcasterTypes";
 import { useListenersStore } from '../../../stores/kneo/listenersStore';
+import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 
 export default defineComponent({
   name: 'Listeners',
-  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, NIcon, NInput },
+  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, NIcon, NInput, NCollapseTransition, NFormItem, NSelect },
   props: {
     brandName: {
       type: String,
@@ -95,7 +111,8 @@ export default defineComponent({
     },
   },
   setup(props) {
-    const store = useListenersStore();
+    const listenersStore = useListenersStore();
+    const referencesStore = useReferencesStore();
     const router = useRouter();
     const isMobile = ref(window.innerWidth < 768);
     const loading = ref(false);
@@ -105,10 +122,14 @@ export default defineComponent({
     const message = useMessage();
     const searchQuery = ref('');
     const debounceTimer = ref<number | null>(null);
+    const showFilters = ref(false);
+    const filters = ref({
+      country: undefined
+    });
 
     const columns: DataTableColumns<ListenerEntry> = [
       { type: 'selection' },
-      { title: 'Localized Name', key: 'localizedName.en' },
+      { title: 'Name', key: 'localizedName.en' },
       { title: 'Nickname', key: 'nickName.en' },
       { title: 'Country', key: 'country' },
       { title: 'Registered', key: 'regDate' }
@@ -122,9 +143,9 @@ export default defineComponent({
       try {
         loading.value = true;
         if (props.brandName) {
-          await store.fetchListeners(props.brandName);
+          await listenersStore.fetchListeners(props.brandName);
         } else {
-          await store.fetchAllListeners();
+          await listenersStore.fetchAllListeners();
         }
       } catch (error) {
         console.error('Failed to fetch initial data:', error);
@@ -137,7 +158,7 @@ export default defineComponent({
       if (!intervalId.value) {
         intervalId.value = window.setInterval(async () => {
           try {
-            await fetchData(store.getPagination.page, store.getPagination.pageSize);
+            await fetchData(listenersStore.getPagination.page, listenersStore.getPagination.pageSize);
           } catch (error) {
             console.error('Periodic refresh failed:', error);
           }
@@ -156,13 +177,22 @@ export default defineComponent({
       isMobile.value = window.innerWidth < 768;
     };
 
-    const fetchData = async (page = store.getPagination.page, pageSize = store.getPagination.pageSize) => {
+    const fetchData = async (page = listenersStore.getPagination.page, pageSize = listenersStore.getPagination.pageSize) => {
       try {
         loading.value = true;
+        let activeFilters = {};
+        if (showFilters.value) {
+          const hasFilters = filters.value.country;
+          if (hasFilters) {
+            activeFilters = filters.value;
+          } else {
+            return;
+          }
+        }
         if (props.brandName) {
-          await store.fetchListeners(props.brandName, page, pageSize);
+          await listenersStore.fetchListeners(props.brandName, page, pageSize);
         } else {
-          await store.fetchAllListeners(page, pageSize);
+          await listenersStore.fetchAllListeners(page, pageSize, searchQuery.value, activeFilters);
         }
       } catch (error) {
         console.error('Failed to fetch listeners:', error);
@@ -173,14 +203,19 @@ export default defineComponent({
     };
 
     const handleSearch = () => {
-      fetchData(1, store.getPagination.pageSize);
+      fetchData(1, listenersStore.getPagination.pageSize);
+    };
+
+    const toggleFilters = () => {
+      showFilters.value = !showFilters.value;
+      fetchData(1, listenersStore.getPagination.pageSize);
     };
 
     preFetch();
     startPeriodicRefresh();
 
     const handlePageChange = async (page: number) => {
-      await fetchData(page, store.getPagination.pageSize);
+      await fetchData(page, listenersStore.getPagination.pageSize);
       checkedRowKeys.value = [];
     };
 
@@ -213,10 +248,10 @@ export default defineComponent({
       }
       try {
         loading.value = true;
-        await Promise.all(checkedRowKeys.value.map(id => store.deleteListener(id.toString())));
+        await Promise.all(checkedRowKeys.value.map(id => listenersStore.deleteListener(id.toString())));
         message.success(`Deleted ${checkedRowKeys.value.length} item(s) successfully`);
         checkedRowKeys.value = [];
-        await fetchData(store.getPagination.page, store.getPagination.pageSize);
+        await fetchData(listenersStore.getPagination.page, listenersStore.getPagination.pageSize);
       } catch (error) {
         message.error('Failed to delete items');
       } finally {
@@ -244,12 +279,19 @@ export default defineComponent({
       }
     });
 
+    watch(() => filters.value.country, () => {
+      if (showFilters.value) {
+        fetchData(1, listenersStore.getPagination.pageSize);
+      }
+    });
+
     watch(() => props.brandName, () => {
       fetchData();
     }, { immediate: true });
 
     return {
-      store,
+      listenersStore,
+      referencesStore,
       columns,
       rowKey,
       isMobile,
@@ -262,7 +304,10 @@ export default defineComponent({
       handlePageSizeChange,
       loading,
       checkedRowKeys,
-      hasSelection
+      hasSelection,
+      toggleFilters,
+      showFilters,
+      filters
     };
   }
 });

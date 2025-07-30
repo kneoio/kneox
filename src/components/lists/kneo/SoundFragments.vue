@@ -12,52 +12,51 @@
     <n-gi :span="isMobile ? 1 : 6" class="flex items-center">
       <n-button-group class="mr-4">
         <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
-        <n-button
-            type="error"
-            :disabled="!hasSelection"
-            @click="handleDelete"
-            size="large"
-        >
+        <n-button type="error" :disabled="!hasSelection" @click="handleDelete" size="large">
           Delete ({{ checkedRowKeys.length }})
         </n-button>
       </n-button-group>
 
-      <n-input
-          v-model:value="searchQuery"
-          placeholder="Search..."
-          clearable
-          size="large"
-          style="width: 250px"
-          @keydown.enter="handleSearch"
-          @clear="handleSearch"
-      >
-        <template #suffix>
-          <n-button text @click="handleSearch">
-            <n-icon>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
-            </n-icon>
-          </n-button>
-        </template>
-      </n-input>
+      <n-button @click="toggleFilters" type="default" size="large" class="mr-4">
+        Filter
+      </n-button>
+
+      <n-input v-model:value="searchQuery" placeholder="Search..." clearable size="large" style="width: 250px"
+        @keydown.enter="handleSearch" @clear="handleSearch" />
     </n-gi>
 
     <n-gi :span="isMobile ? 1 : 6">
-      <n-data-table
-          remote
-          :columns="columns"
-          :row-key="rowKey"
-          :data="store.getEntries"
-          :pagination="store.getPagination"
-          :bordered="false"
-          :row-props="getRowProps"
-          :loading="loading"
-          v-model:checked-row-keys="checkedRowKeys"
-          @update:page="handlePageChange"
-          @update:page-size="handlePageSizeChange"
-      >
+      <n-collapse-transition :show="showFilters">
+        <div style="width: 50%;">
+          <n-grid :cols="3" x-gap="12" y-gap="0">
+            <n-gi>
+              <n-form-item label="Genre" size="small" :show-feedback="false">
+                <n-select v-model:value="filters.genre" :options="referencesStore.genreOptions" multiple filterable
+                  placeholder="Select genres" clearable />
+              </n-form-item>
+            </n-gi>
+            <n-gi>
+              <n-form-item label="Type" size="small" :show-feedback="false">
+                <n-select v-model:value="filters.type" :options="typeOptions" placeholder="Select type" clearable />
+              </n-form-item>
+            </n-gi>
+            <n-gi>
+              <n-form-item label="Source" size="small" :show-feedback="false">
+                <n-select v-model:value="filters.source" :options="sourceOptions" placeholder="Select source"
+                  clearable />
+              </n-form-item>
+            </n-gi>
+          </n-grid>
+
+        </div>
+      </n-collapse-transition>
+    </n-gi>
+
+    <n-gi :span="isMobile ? 1 : 6">
+      <n-data-table remote :columns="columns" :row-key="rowKey" :data="store.getEntries"
+        :pagination="store.getPagination" :bordered="false" :row-props="getRowProps" :loading="loading"
+        v-model:checked-row-keys="checkedRowKeys" @update:page="handlePageChange"
+        @update:page-size="handlePageSizeChange">
         <template #loading>
           <loader-icon />
         </template>
@@ -72,65 +71,91 @@ import {
   DataTableColumns,
   NButton,
   NButtonGroup,
+  NCard,
+  NCollapseTransition,
   NDataTable,
+  NFormItem,
   NGi,
   NGrid,
   NIcon,
   NInput,
   NPageHeader,
+  NSelect,
+  NSpace,
   useMessage
 } from 'naive-ui';
 import { useRouter } from 'vue-router';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
-import { SoundFragment } from "../../../types/kneoBroadcasterTypes";
+import { SoundFragment, FragmentType } from "../../../types/kneoBroadcasterTypes";
 import { useSoundFragmentStore } from '../../../stores/kneo/soundFragmentStore';
+import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 
-export default defineComponent({
+export default defineComponent( {
   name: 'SoundFragments',
-  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, NIcon, NInput },
+  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, NIcon, NInput, NCard, NFormItem, NSelect, NCollapseTransition, NSpace },
   props: {
     brandName: {
       type: String,
       required: false
     }
   },
-  setup(props) {
+  setup( props ) {
     const router = useRouter();
     const store = useSoundFragmentStore();
-    const isMobile = ref(window.innerWidth < 768);
-    const loading = ref(false);
-    const intervalId = ref<number | null>(null);
-    const checkedRowKeys = ref<(string | number)[]>([]);
-    const hasSelection = computed(() => checkedRowKeys.value.length > 0);
+    const referencesStore = useReferencesStore();
+    const isMobile = ref( window.innerWidth < 768 );
+    const loading = ref( false );
+    const intervalId = ref<number | null>( null );
+    const checkedRowKeys = ref<( string | number )[]>( [] );
+    const hasSelection = computed( () => checkedRowKeys.value.length > 0 );
     const message = useMessage();
-    const searchQuery = ref('');
-    const debounceTimer = ref<number | null>(null);
+    const searchQuery = ref( '' );
+    const debounceTimer = ref<number | null>( null );
+    const showFilters = ref( false );
+    const filters = ref( {
+      genre: [],
+      type: undefined,
+      source: undefined
+    } );
+
+    const typeOptions = [
+      { label: 'Song', value: FragmentType.SONG }
+    ];
+
+    const sourceOptions = [
+      { label: 'Users Upload', value: 'USERS_UPLOAD' },
+      { label: 'System', value: 'SYSTEM' },
+      { label: 'Import', value: 'IMPORT' }
+    ];
 
     async function preFetch() {
       try {
-        await store.fetchAll();
-      } catch (error) {
-        console.error('Failed to fetch initial data:', error);
+        await Promise.all( [
+          store.fetchAll(),
+          referencesStore.fetchGenres()
+        ] );
+      } catch ( error ) {
+        console.error( 'Failed to fetch initial data:', error );
       } finally {
         loading.value = false;
       }
     }
 
     const startPeriodicRefresh = () => {
-      if (!intervalId.value) {
-        intervalId.value = window.setInterval(async () => {
+      if ( !intervalId.value ) {
+        intervalId.value = window.setInterval( async () => {
           try {
-            await fetchData(store.getPagination.page, store.getPagination.pageSize);
-          } catch (error) {
-            console.error('Periodic refresh failed:', error);
+            await fetchData( store.getPagination.page, store.getPagination.pageSize );
+          } catch ( error ) {
+            console.error( 'Periodic refresh failed:', error );
           }
-        }, 30000);
+        }, 30000 );
       }
     };
 
     const stopPeriodicRefresh = () => {
-      if (intervalId.value) {
-        clearInterval(intervalId.value);
+      if ( intervalId.value ) {
+        clearInterval( intervalId.value );
         intervalId.value = null;
       }
     };
@@ -142,16 +167,16 @@ export default defineComponent({
     preFetch();
     startPeriodicRefresh();
 
-    onMounted(() => {
-      window.addEventListener('resize', handleResize);
-    });
+    onMounted( () => {
+      window.addEventListener( 'resize', handleResize );
+    } );
 
-    onUnmounted(() => {
+    onUnmounted( () => {
       stopPeriodicRefresh();
-      window.removeEventListener('resize', handleResize);
-    });
+      window.removeEventListener( 'resize', handleResize );
+    } );
 
-    const columns = computed<DataTableColumns<SoundFragment>>(() => {
+    const columns = computed<DataTableColumns<SoundFragment>>( () => {
       const baseColumns: DataTableColumns<SoundFragment> = [
         {
           type: 'selection',
@@ -164,90 +189,121 @@ export default defineComponent({
         { title: 'Source', key: 'source' }
       ];
 
-      if (!isMobile.value) {
-        baseColumns.push({ title: 'Type', key: 'type' });
+      if ( !isMobile.value ) {
+        baseColumns.push( { title: 'Type', key: 'type' } );
       }
       return baseColumns;
-    });
+    } );
 
-    const getRowProps = (row: SoundFragment) => {
+    const getRowProps = ( row: SoundFragment ) => {
       return {
         style: 'cursor: pointer;',
-        onClick: (e: MouseEvent) => {
+        onClick: ( e: MouseEvent ) => {
           const target = e.target as HTMLElement;
-          if (target.closest('.n-checkbox') || target.closest('[data-n-checkbox]')) {
+          if ( target.closest( '.n-checkbox' ) || target.closest( '[data-n-checkbox]' ) ) {
             return;
           }
-          if (props.brandName) {
-            router.push({ name: 'EditSoundFragment', params: { brandName: props.brandName, id: row.id } });
+          if ( props.brandName ) {
+            router.push( { name: 'EditSoundFragment', params: { brandName: props.brandName, id: row.id } } );
           } else {
-            router.push({ name: 'SoundFragment', params: { id: row.id } });
+            router.push( { name: 'SoundFragment', params: { id: row.id } } );
           }
         }
       };
     };
 
-    const rowKey = (row: SoundFragment): string | number => {
+    const rowKey = ( row: SoundFragment ): string | number => {
       return row.id ?? row.slugName;
     };
 
-    const fetchData = async (page = 1, pageSize = 10) => {
+    const fetchData = async ( page = 1, pageSize = 10 ) => {
       try {
         loading.value = true;
-        await store.fetchAll(page, pageSize, searchQuery.value);
-      } catch (error) {
-        console.error('Failed to fetch data:', error);
+        let activeFilters = {};
+        if ( showFilters.value ) {
+          const hasFilters = filters.value.genre?.length > 0 || filters.value.type || filters.value.source;
+          if ( hasFilters ) {
+            activeFilters = filters.value;
+          } else {
+            return;
+          }
+        }
+        await store.fetchAll( page, pageSize, searchQuery.value, activeFilters );
+      } catch ( error ) {
+        console.error( 'Failed to fetch data:', error );
       } finally {
         loading.value = false;
       }
     };
 
     const handleSearch = () => {
-      fetchData(1, store.getPagination.pageSize);
+      fetchData( 1, store.getPagination.pageSize );
     };
 
-    watch(searchQuery, (newVal, oldVal) => {
-      if (newVal !== oldVal) {
-        if (debounceTimer.value) {
-          clearTimeout(debounceTimer.value);
-        }
-        debounceTimer.value = window.setTimeout(() => {
-          handleSearch();
-        }, 500);
-      }
-    });
+    const toggleFilters = () => {
+      showFilters.value = !showFilters.value;
+      fetchData( 1, store.getPagination.pageSize );
+    };
 
-    const handlePageChange = async (page: number) => {
-      await fetchData(page, store.getPagination.pageSize);
+    const clearFilters = () => {
+      filters.value = {
+        genre: [],
+        type: undefined,
+        source: undefined
+      };
+      applyFilters();
+    };
+
+    const applyFilters = () => {
+      fetchData( 1, store.getPagination.pageSize );
+    };
+
+    watch( searchQuery, ( newVal, oldVal ) => {
+      if ( newVal !== oldVal ) {
+        if ( debounceTimer.value ) {
+          clearTimeout( debounceTimer.value );
+        }
+        debounceTimer.value = window.setTimeout( () => {
+          handleSearch();
+        }, 500 );
+      }
+    } );
+
+    watch( () => filters.value, () => {
+      fetchData( 1, store.getPagination.pageSize );
+    }, { deep: true } );
+
+    const handlePageChange = async ( page: number ) => {
+      await fetchData( page, store.getPagination.pageSize );
       checkedRowKeys.value = [];
     };
 
-    const handlePageSizeChange = async (pageSize: number) => {
-      await fetchData(1, pageSize);
+    const handlePageSizeChange = async ( pageSize: number ) => {
+      await fetchData( 1, pageSize );
       checkedRowKeys.value = [];
     };
 
     const handleNewClick = () => {
-      if (props.brandName) {
-        router.push({ name: 'EditSoundFragment', params: { brandName: props.brandName, id: 'new' } });
+      if ( props.brandName ) {
+        router.push( { name: 'EditSoundFragment', params: { brandName: props.brandName, id: 'new' } } );
       } else {
-        router.push('/outline/soundfragments/new');
+        router.push( '/outline/soundfragments/new' );
       }
     };
 
     const handleDelete = async () => {
-      if (checkedRowKeys.value.length === 0) {
-        message.info("No items selected for deletion.");
+      if ( checkedRowKeys.value.length === 0 ) {
+        message.info( "No items selected for deletion." );
         return;
       }
       try {
         loading.value = true;
-        await Promise.all(checkedRowKeys.value.map(id => store.delete(id.toString())));
-        message.success(`Deleted ${checkedRowKeys.value.length} item(s) successfully`);
+        await Promise.all( checkedRowKeys.value.map( id => store.delete( id.toString() ) ) );
+        message.success( `Deleted ${checkedRowKeys.value.length} item(s) successfully` );
         checkedRowKeys.value = [];
-        await fetchData(store.getPagination.page, store.getPagination.pageSize);
-      } catch (error) {
-        message.error('Failed to delete items');
+        await fetchData( store.getPagination.page, store.getPagination.pageSize );
+      } catch ( error ) {
+        message.error( 'Failed to delete items' );
       } finally {
         loading.value = false;
       }
@@ -255,8 +311,10 @@ export default defineComponent({
 
     return {
       store,
+      referencesStore,
       columns,
       rowKey,
+      fetchData,
       isMobile,
       searchQuery,
       handleSearch,
@@ -268,10 +326,17 @@ export default defineComponent({
       loading,
       checkedRowKeys,
       hasSelection,
-      brandName: props.brandName
+      brandName: props.brandName,
+      showFilters,
+      filters,
+      typeOptions,
+      sourceOptions,
+      toggleFilters,
+      clearFilters,
+      applyFilters
     };
   }
-});
+} );
 </script>
 
 <style scoped>

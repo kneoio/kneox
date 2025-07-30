@@ -68,11 +68,31 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         };
     });
 
-    const fetchSoundFragments = async (page = 1, pageSize = 10, searchQuery = '') => {
+    const fetchSoundFragments = async (page = 1, pageSize = 10, searchQuery = '', filters: {genre?: string[], type?: string, source?: string} = {}) => {
         let url = `/soundfragments?page=${page}&size=${pageSize}`;
         if (searchQuery) {
             url = `/soundfragments/search?q=${encodeURIComponent(searchQuery)}&page=${page}&size=${pageSize}`;
         }
+        
+        const params = new URLSearchParams();
+        params.append('page', page.toString());
+        params.append('size', pageSize.toString());
+        if (searchQuery) {
+            params.append('q', searchQuery);
+        }
+        if (filters.genre && filters.genre.length > 0) {
+            filters.genre.forEach(genre => params.append('genre', genre));
+        }
+        if (filters.type) {
+            params.append('type', filters.type);
+        }
+        if (filters.source) {
+            params.append('source', filters.source);
+        }
+        
+        const baseUrl = searchQuery ? '/soundfragments/search' : '/soundfragments';
+        url = `${baseUrl}?${params.toString()}`;
+        
         const response = await apiClient.get(url);
         if (!response?.data?.payload) throw new Error('Invalid API response for sound fragments');
         apiViewResponse.value = response.data.payload;

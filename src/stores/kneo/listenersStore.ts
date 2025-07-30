@@ -56,9 +56,20 @@ export const useListenersStore = defineStore('listenersStore', () => {
         }
     };
 
-    const fetchAllListeners = async (page = 1, pageSize = 10) => {
+    const fetchAllListeners = async (page = 1, pageSize = 10, searchQuery = '', filters: {country?: string} = {}) => {
         try {
-            const response = await apiClient.get(`/listeners?page=${page}&size=${pageSize}`);
+            const params = new URLSearchParams();
+            params.append('page', page.toString());
+            params.append('size', pageSize.toString());
+            if (searchQuery) {
+                params.append('q', searchQuery);
+            }
+            if (filters.country) {
+                params.append('country', filters.country);
+            }
+            const baseUrl = searchQuery ? '/listeners/search' : '/listeners';
+            const url = `${baseUrl}?${params.toString()}`;
+            const response = await apiClient.get(url);
             if (!response?.data?.payload) throw new Error('Invalid API response for all listeners');
             apiViewResponse.value = response.data.payload;
         } catch (error) {
