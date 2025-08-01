@@ -15,6 +15,9 @@
         <n-button type="error" :disabled="!hasSelection" @click="handleDelete" size="large">
           Delete ({{ checkedRowKeys.length }})
         </n-button>
+        <n-button type="warning" :disabled="!hasSelection" @click="handleBulkBrandUpdate" size="large">
+          Update Brands ({{ checkedRowKeys.length }})
+        </n-button>
       </n-button-group>
 
       <n-button @click="toggleFilters" type="default" size="large" class="mr-4">
@@ -63,6 +66,46 @@
       </n-data-table>
     </n-gi>
   </n-grid>
+
+  <!-- Bulk Brand Update Dialog -->
+  <n-modal v-model:show="showBrandUpdateDialog" preset="dialog" title="Bulk Brand Update">
+    <n-space vertical>
+      <n-form-item label="Operation">
+        <n-radio-group v-model:value="brandUpdateOperation">
+          <n-radio value="SET">Set Brands</n-radio>
+          <n-radio value="UNSET">Remove All Brands</n-radio>
+        </n-radio-group>
+      </n-form-item>
+      
+      <n-form-item v-if="brandUpdateOperation === 'SET'" label="Select Brands">
+        <n-select 
+          v-model:value="selectedBrands" 
+          :options="brandOptions" 
+          multiple 
+          filterable 
+          placeholder="Select brands to assign" 
+          clearable 
+        />
+      </n-form-item>
+      
+      <n-text depth="3">
+        This will update {{ checkedRowKeys.length }} sound fragment(s).
+      </n-text>
+    </n-space>
+    
+    <template #action>
+      <n-space>
+        <n-button @click="showBrandUpdateDialog = false">Cancel</n-button>
+        <n-button 
+          type="primary" 
+          @click="confirmBrandUpdate" 
+          :disabled="brandUpdateOperation === 'SET' && (!selectedBrands || selectedBrands.length === 0)"
+        >
+          Update
+        </n-button>
+      </n-space>
+    </template>
+  </n-modal>
 </template>
 
 <script lang="ts">
@@ -79,9 +122,13 @@ import {
   NGrid,
   NIcon,
   NInput,
+  NModal,
   NPageHeader,
+  NRadio,
+  NRadioGroup,
   NSelect,
   NSpace,
+  NText,
   useMessage
 } from 'naive-ui';
 import { useRouter } from 'vue-router';
@@ -89,10 +136,11 @@ import LoaderIcon from '../../helpers/LoaderWrapper.vue';
 import { SoundFragment, FragmentType } from "../../../types/kneoBroadcasterTypes";
 import { useSoundFragmentStore } from '../../../stores/kneo/soundFragmentStore';
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
+import { useRadioStationStore } from '../../../stores/kneo/radioStationStore';
 
 export default defineComponent( {
   name: 'SoundFragments',
-  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, NIcon, NInput, NCard, NFormItem, NSelect, NCollapseTransition, NSpace },
+  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, NIcon, NInput, NCard, NFormItem, NSelect, NCollapseTransition, NSpace, NModal, NRadio, NRadioGroup, NText },
   props: {
     brandName: {
       type: String,
@@ -103,6 +151,7 @@ export default defineComponent( {
     const router = useRouter();
     const store = useSoundFragmentStore();
     const referencesStore = useReferencesStore();
+    const radioStationStore = useRadioStationStore();
     const isMobile = ref( window.innerWidth < 768 );
     const loading = ref( false );
     const intervalId = ref<number | null>( null );
@@ -118,6 +167,11 @@ export default defineComponent( {
       source: undefined
     } );
 
+    // Bulk brand update variables
+    const showBrandUpdateDialog = ref(false);
+    const brandUpdateOperation = ref<'SET' | 'UNSET'>('SET');
+    const selectedBrands = ref<string[]>([]);
+
     const typeOptions = [
       { label: 'Song', value: FragmentType.SONG }
     ];
@@ -128,11 +182,51 @@ export default defineComponent( {
       { label: 'Import', value: 'IMPORT' }
     ];
 
+    const brandOptions = computed(() => radioStationStore.getEntries.map(brand => ({
+      label: brand.slugName,
+      value: brand.slugName
+    })));
+
+    const handleBulkBrandUpdate = () => {
+      if (checkedRowKeys.value.length === 0) {
+        message.info("No items selected for brand update.");
+        return;
+      }
+      showBrandUpdateDialog.value = true;
+      brandUpdateOperation.value = 'SET';
+      selectedBrands.value = [];
+    };
+
+    const confirmBrandUpdate = async () => {
+      if (checkedRowKeys.value.length === 0) {
+        message.info("No items selected for brand update.");
+        return;
+      }
+      
+      try {
+        loading.value = true;
+        const documentIds = checkedRowKeys.value.map(id => id.toString());
+        const brands = brandUpdateOperation.value === 'SET' ? selectedBrands.value : [];
+        
+        const result = await store.bulkBrandUpdate(documentIds, brands, brandUpdateOperation.value);
+        
+        message.success(`Updated ${result.updatedCount} sound fragment(s) successfully`);
+        showBrandUpdateDialog.value = false;
+        checkedRowKeys.value = [];
+        await fetchData(store.getPagination.page, store.getPagination.pageSize);
+      } catch (error) {
+        message.error('Failed to update brands');
+      } finally {
+        loading.value = false;
+      }
+    };
+
     async function preFetch() {
       try {
         await Promise.all( [
           store.fetchAll(),
-          referencesStore.fetchGenres()
+          referencesStore.fetchGenres(),
+          radioStationStore.fetchAll()
         ] );
       } catch ( error ) {
         console.error( 'Failed to fetch initial data:', error );
@@ -333,7 +427,13 @@ export default defineComponent( {
       sourceOptions,
       toggleFilters,
       clearFilters,
-      applyFilters
+      applyFilters,
+      brandOptions,
+      handleBulkBrandUpdate,
+      confirmBrandUpdate,
+      showBrandUpdateDialog,
+      brandUpdateOperation,
+      selectedBrands
     };
   }
 } );

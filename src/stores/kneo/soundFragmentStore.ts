@@ -244,6 +244,16 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         return response.data;
     };
 
+    const bulkBrandUpdate = async (documentIds: string[], brands: string[], operation: 'SET' | 'UNSET') => {
+        const response = await apiClient.post('/soundfragments/bulk-brand-update', {
+            documentIds,
+            brands,
+            operation
+        });
+        if (!response?.data) throw new Error('Invalid API response');
+        return response.data;
+    };
+
     return {
         apiViewResponse,
         apiFormResponse,
@@ -262,6 +272,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         startUploadSession,
         updateCurrent,
         downloadFile,
-        fetchAccessList
+        fetchAccessList,
+        bulkBrandUpdate
     };
 });
