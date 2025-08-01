@@ -12,6 +12,17 @@ export const useMemoryStore = defineStore('memoryStore', () => {
         return apiViewResponse.value?.viewData.entries || [];
     });
 
+    const getBrandOptions = computed(() => {
+        const entries = apiViewResponse.value?.viewData.entries || [];
+        const uniqueBrands = [...new Set(entries.map(entry => entry.brand).filter(brand => brand && brand.trim() !== ''))];
+        
+        // Add some common fallback brands if no data exists
+        const fallbackBrands = ['mixpla', 'radio', 'podcast', 'music'];
+        const allBrands = [...new Set([...uniqueBrands, ...fallbackBrands])];
+        
+        return allBrands.map(brand => ({ label: brand, value: brand }));
+    });
+
     const getCurrent = computed(() => {
         const defaultData: Memory = {
             id: '',
@@ -80,23 +91,43 @@ export const useMemoryStore = defineStore('memoryStore', () => {
         return response.data;
     };
 
-    const initListenersMemory = async (brand: string) => {
-        const response = await apiClient.put(`/memories/init-listeners/${brand}`);
-        if (!response?.data) throw new Error('Invalid API response');
+    async function initListenersMemory(brand: string) {
+        const response = await apiClient.post(`/api/memories/listeners/${brand}`);
+        apiFormResponse.value = response.data;
+        return response.data;
+    }
+
+    async function triggerEvent(brand: string, content: any, memoryType: string) {
+        const response = await apiClient.post('/memories/events', {
+            brand,
+            content,
+            memoryType
+        });
         return response.data;
     };
+
+    async function saveMemory(data: any, id?: string) {
+        const response = await apiClient.post(`/memories/${id || ''}`, data);
+        if (response?.data?.payload) {
+            apiFormResponse.value = response.data.payload;
+        }
+        return response.data;
+    }
 
     return {
         apiViewResponse,
         apiFormResponse,
         setupApiClient,
-        fetchAll: fetchMemories,
-        fetch: fetchMemory,
-        delete: deleteMemory,
         getEntries,
-        getPagination,
+        getBrandOptions,
         getCurrent,
+        getPagination,
+        fetchAll: fetchMemories,
+        fetchMemory,
+        deleteMemory,
         fetchAccessList,
         initListenersMemory,
+        triggerEvent,
+        save: saveMemory
     };
 });

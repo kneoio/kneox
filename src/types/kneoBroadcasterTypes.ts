@@ -230,4 +230,8 @@ export interface EventSave {
     timestampEvent: string;
     description: string;
     priority?: string;
+    schedule?: {
+        enabled?: boolean;
+        tasks?: any[];
+    };
 }

@@ -4,7 +4,7 @@
       <n-page-header subtitle="Memory" @back="goBack">
         <template #title>{{ store.getCurrent.brand || 'New Memory' }} - {{ store.getCurrent.memoryType }}</template>
         <template #footer>
-          Registered: {{ new Date(store.getCurrent.regDate).toLocaleString() }}, Last Modified: {{ new Date(store.getCurrent.lastModDate).toLocaleString() }}
+          Registered: {{ new Date(store.getCurrent.regDate).toLocaleString() }}, Last Modified: {{ new Date(store.getCurrent.lastModifiedDate).toLocaleString() }}
           <br>
           Author: {{ store.getCurrent.author }}, Last Modifier: {{ store.getCurrent.lastModUser }}
         </template>
@@ -200,7 +200,7 @@ export default defineComponent({
       if (id && id !== 'new') { 
         loadingBar.start();
         try {
-          await store.fetch(id);
+          await store.fetchMemory(id);
           Object.assign(localFormData, store.getCurrent);
           localContentString.value = JSON.stringify(store.getCurrent.content, null, 2);
         } catch (error) {

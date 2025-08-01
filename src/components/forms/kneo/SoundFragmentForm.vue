@@ -4,6 +4,8 @@
       <n-page-header :subtitle="formTitle" @back="goBack">
         <template #title>{{ localFormData.title || 'New Sound Fragment' }}</template>
         <template #footer>
+          Source: {{ sourceDisplayValue }}
+          <br>
           Registered: {{ store.getCurrent.regDate }}, Last Modified: {{ store.getCurrent.lastModifiedDate }}
           <br>
           Author: {{ store.getCurrent.author }}, Last Modifier: {{ store.getCurrent.lastModifier }}
@@ -26,9 +28,16 @@
                   <n-input v-model:value="localFormData.title" style="width: 50%; max-width: 600px;"/>
                 </n-form-item>
               </n-gi>
+
               <n-gi>
                 <n-form-item label="Artist">
                   <n-input v-model:value="localFormData.artist" style="width: 50%; max-width: 600px;"/>
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="Type">
+                  <n-select v-model:value="localFormData.type" :options="typeOptions" 
+                            placeholder="Select Type" style="width: 25%; max-width: 300px;"/>
                 </n-form-item>
               </n-gi>
               <n-gi>
@@ -174,6 +183,22 @@ export default defineComponent({
         label: station.slugName,
         value: station.id
       }));
+    });
+
+    const typeOptions = [
+      { label: 'Song', value: 'SONG' },
+      { label: 'Advertisement', value: 'ADVERTISEMENT' }      
+    ];
+
+    const sourceDisplayValue = computed(() => {
+      const sourceMap: Record<string, string> = {
+        'USERS_UPLOAD': 'Users Upload',
+        'RECOVERED_FROM_SPACES': 'Recovered from Spaces',
+        'ORPHAN_RECOVERY': 'Orphan Recovery',
+        'SUNO_PROMPT': 'Suno Prompt',
+        'TEXT_FOR_TTS': 'Text for TTS'
+      };
+      return sourceMap[localFormData.source] || localFormData.source;
     });
 
     const formTitle = computed(() => localFormData.id ? 'Edit Sound Fragment' : 'Create New Sound Fragment');
@@ -608,6 +633,8 @@ export default defineComponent({
       fileList,
       audioAcceptTypes: referencesStore.audioAcceptTypes,
       radioStationOptions,
+      typeOptions,
+      sourceDisplayValue,
       formTitle,
       referencesStore,
       aclData,

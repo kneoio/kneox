@@ -19,6 +19,13 @@
         >
           Delete ({{ checkedRowKeys.length }})
         </n-button>
+        <n-button
+            type="primary"
+            @click="showTriggerEventModal = true"
+            size="large"
+        >
+          Trigger Event
+        </n-button>
       </n-button-group>
     </n-gi>
 
@@ -42,6 +49,41 @@
       </n-data-table>
     </n-gi>
   </n-grid>
+
+  <n-modal v-model:show="showTriggerEventModal" preset="dialog" title="Trigger Event">
+    <n-form ref="formRef" :model="eventForm" :rules="eventRules">
+      <n-form-item path="brand" label="Brand">
+        <n-select 
+          v-model:value="eventForm.brand" 
+          :options="brandOptions" 
+          placeholder="Select brand"
+          filterable
+          tag
+        />
+      </n-form-item>
+      <n-form-item path="memoryType" label="Memory Type">
+        <n-select 
+          v-model:value="eventForm.memoryType" 
+          :options="memoryTypeOptions" 
+          placeholder="Select memory type"
+        />
+      </n-form-item>
+      <n-form-item path="content" label="Content">
+        <n-input
+          v-model:value="eventForm.content"
+          type="textarea"
+          placeholder="Enter event content (JSON format)"
+          :rows="4"
+        />
+      </n-form-item>
+    </n-form>
+    <template #action>
+      <n-button @click="showTriggerEventModal = false">Cancel</n-button>
+      <n-button type="primary" @click="handleTriggerEvent" :loading="triggerEventLoading">
+        Trigger Event
+      </n-button>
+    </template>
+  </n-modal>
 </template>
 
 <script lang="ts">
@@ -56,29 +98,71 @@ import {
   NPageHeader,
   NTag,
   NCode,
+  NModal,
+  NForm,
+  NFormItem,
+  NInput,
+  NSelect,
   useMessage
 } from 'naive-ui';
 import {useRouter} from 'vue-router';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
 import {Memory} from "../../../types/kneoBroadcasterTypes";
 import {useMemoryStore} from "../../../stores/kneo/memoryStore";
+import {useRadioStationStore} from "../../../stores/kneo/radioStationStore";
 
 export default defineComponent({
-  components: {NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon},
+  components: {NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, NModal, NForm, NFormItem, NInput, NSelect},
   setup() {
     const router = useRouter();
     const store = useMemoryStore();
+    const radioStationStore = useRadioStationStore();
     const message = useMessage();
     const isMobile = ref(window.innerWidth < 768);
     const loading = ref(false);
     const intervalId = ref<number | null>(null);
     const checkedRowKeys = ref<(string | number)[]>([]);
     const hasSelection = computed(() => checkedRowKeys.value.length > 0);
+    
+    const brandOptions = computed(() => {
+      const radioStations = radioStationStore.getEntries || [];
+      const brands = radioStations.map(station => station.slugName).filter(name => name && name.trim() !== '');
+      const uniqueBrands = [...new Set(brands)];
+      return uniqueBrands.map(brand => ({ label: brand, value: brand }));
+    });
+    
+    const memoryTypeOptions = [
+      { label: 'EVENT', value: 'EVENT' },
+      { label: 'INSTANT_MESSAGE', value: 'INSTANT_MESSAGE' }
+    ];
+    
+    const showTriggerEventModal = ref(false);
+    const triggerEventLoading = ref(false);
+    const eventForm = ref({
+      brand: '',
+      content: '',
+      memoryType: 'EVENT'
+    });
+    const eventRules = {
+      brand: {
+        required: true,
+        message: 'Brand is required',
+        trigger: 'blur'
+      },
+      content: {
+        required: true,
+        message: 'Content is required',
+        trigger: 'blur'
+      }
+    };
 
     async function preFetch() {
       try {
         loading.value = true;
-        await store.fetchAll();
+        await Promise.all([
+          store.fetchAll(),
+          radioStationStore.fetchAll()
+        ]);
       } catch (error) {
         console.error('Failed to fetch initial data:', error);
       } finally {
@@ -147,7 +231,7 @@ export default defineComponent({
       }
       try {
         loading.value = true;
-        await Promise.all(checkedRowKeys.value.map(id => store.delete(id.toString())));
+        await Promise.all(checkedRowKeys.value.map(id => store.deleteMemory(id.toString())));
         message.success(`Deleted ${checkedRowKeys.value.length} item(s) successfully`);
         checkedRowKeys.value = [];
         await store.fetchAll(store.getPagination.page, store.getPagination.pageSize);
@@ -155,6 +239,30 @@ export default defineComponent({
         message.error('Failed to delete items');
       } finally {
         loading.value = false;
+      }
+    };
+
+    const handleTriggerEvent = async () => {
+      try {
+        triggerEventLoading.value = true;
+        let content;
+        try {
+          content = JSON.parse(eventForm.value.content);
+        } catch {
+          content = eventForm.value.content;
+        }
+        
+        await store.triggerEvent(eventForm.value.brand, content, eventForm.value.memoryType);
+        message.success('Event triggered successfully');
+        showTriggerEventModal.value = false;
+        eventForm.value.brand = '';
+        eventForm.value.content = '';
+        eventForm.value.memoryType = 'EVENT';
+        await store.fetchAll(store.getPagination.page, store.getPagination.pageSize);
+      } catch (error) {
+        message.error('Failed to trigger event');
+      } finally {
+        triggerEventLoading.value = false;
       }
     };
 
@@ -193,7 +301,8 @@ export default defineComponent({
             let tagType: 'success' | 'warning' | 'info' | 'default' = 'default';
             if (row.memoryType === 'LISTENERS') tagType = 'success';
             if (row.memoryType === 'AUDIENCE_CONTEXT') tagType = 'warning';
-            if (row.memoryType === 'INSTANT_MESSAGE') tagType = 'info';
+            if (row.memoryType === 'INSTANT_MESSAGE') tagType = 'warning';
+            if (row.memoryType === 'EVENT') tagType = 'success';
             return h(NTag, { type: tagType, bordered: false }, { default: () => row.memoryType });
           }
         },
@@ -243,12 +352,19 @@ export default defineComponent({
       rowKey: (row: Memory) => row.id,
       isMobile,
       handleDelete,
+      handleTriggerEvent,
       getRowProps,
       handlePageChange,
       handlePageSizeChange,
       loading,
       checkedRowKeys,
-      hasSelection
+      hasSelection,
+      showTriggerEventModal,
+      triggerEventLoading,
+      eventForm,
+      eventRules,
+      brandOptions,
+      memoryTypeOptions
     };
   },
 });
