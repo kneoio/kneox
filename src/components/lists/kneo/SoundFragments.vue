@@ -15,7 +15,7 @@
         <n-button type="error" :disabled="!hasSelection" @click="handleDelete" size="large">
           Delete ({{ checkedRowKeys.length }})
         </n-button>
-        <n-button type="warning" :disabled="!hasSelection" @click="handleBulkBrandUpdate" size="large">
+        <n-button type="primary" :disabled="!hasSelection" @click="handleBulkBrandUpdate" size="large">
           Update Brands ({{ checkedRowKeys.length }})
         </n-button>
       </n-button-group>
@@ -167,7 +167,6 @@ export default defineComponent( {
       source: undefined
     } );
 
-    // Bulk brand update variables
     const showBrandUpdateDialog = ref(false);
     const brandUpdateOperation = ref<'SET' | 'UNSET'>('SET');
     const selectedBrands = ref<string[]>([]);
@@ -178,8 +177,10 @@ export default defineComponent( {
 
     const sourceOptions = [
       { label: 'Users Upload', value: 'USERS_UPLOAD' },
-      { label: 'System', value: 'SYSTEM' },
-      { label: 'Import', value: 'IMPORT' }
+      { label: 'Recovered', value: 'RECOVERED_FROM_SPACES' },
+      { label: 'Recovered', value: 'ORPHAN_RECOVERY' },
+      { label: 'Generative prompt', value: 'SUNO_PROMPT' },
+      { label: 'Text to Speach', value: 'TEXT_FOR_TTS' }
     ];
 
     const brandOptions = computed(() => radioStationStore.getEntries.map(brand => ({

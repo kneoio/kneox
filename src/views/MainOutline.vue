@@ -534,7 +534,7 @@ export default defineComponent({
 
 .drawer-header {
   padding: 16px;
-  border-bottom: 1px solid #ac4070;
+  border-bottom: 1px solid #9336f7;
 }
 
 .drawer-header h2 {
