@@ -128,6 +128,8 @@ export default defineComponent({
       switch (status) {
         case 'ON_LINE':
           return { color: '#00aa00', text: '● ONLINE' };
+        case 'QUEUE_SATURATED':
+          return { color: '#00aa00', text: '● QUEUE SATURATED' };
         case 'WARMING_UP':
           return { color: '#ffa500', text: '● WARMING UP' };
         case 'WAITING_FOR_CURATOR':

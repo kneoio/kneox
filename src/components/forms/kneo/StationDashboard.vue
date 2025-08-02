@@ -243,7 +243,7 @@ export default defineComponent( {
     } );
 
     const isOnline = computed( () => {
-      return stationDetails.value?.status === 'ON_LINE' || stationDetails.value?.status === 'WARMING_UP';
+      return stationDetails.value?.status === 'ON_LINE' || stationDetails.value?.status === 'WARMING_UP' || stationDetails.value?.status === 'QUEUE_SATURATED';
     } );
 
     const currentListeners = computed( () => {
@@ -327,6 +327,8 @@ export default defineComponent( {
       switch ( status ) {
         case 'ON_LINE':
           return '#18a058';
+        case 'QUEUE_SATURATED':
+          return '#18a058';
         case 'WARMING_UP':
           return '#f0a020';
         case 'WAITING_FOR_CURATOR':
@@ -346,6 +348,8 @@ export default defineComponent( {
       switch ( status ) {
         case 'ON_LINE':
           return { text: 'Online', type: 'success' as const };
+        case 'QUEUE_SATURATED':
+          return { text: 'Queue Saturated', type: 'success' as const };
         case 'WARMING_UP':
           return { text: 'Warming Up', type: 'warning' as const };
         case 'WAITING_FOR_CURATOR':
@@ -472,11 +476,10 @@ export default defineComponent( {
 
       const statusMap: Record<string, string> = {
         'ON_LINE': 'Online',
-        'ONLINE': 'Online',
         'OFF_LINE': 'Offline',
-        'OFFLINE': 'Offline',
         'IDLE': 'Idle',
         'WARMING_UP': 'Warming Up',
+        'QUEUE_SATURATED': 'Queue Saturated',
         'WAITING_FOR_CURATOR': 'Waiting for Curator',
         'SYSTEM_ERROR': 'System Error',
         'STARTING': 'Starting',
@@ -512,7 +515,7 @@ export default defineComponent( {
       if ( !status ) return 'default';
       switch ( status.toUpperCase() ) {
         case 'ON_LINE':
-        case 'ONLINE':
+        case 'QUEUE_SATURATED':
           return 'success';
         case 'WARMING_UP':
         case 'WAITING_FOR_CURATOR':
@@ -522,7 +525,6 @@ export default defineComponent( {
         case 'ERROR':
           return 'error';
         case 'OFF_LINE':
-        case 'OFFLINE':
         default:
           return 'default';
       }

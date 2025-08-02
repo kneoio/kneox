@@ -1,20 +1,16 @@
 <template>
   <div class="mobile-row">
-    <!-- Station Name -->
     <div class="station-name">{{ row.brandName }}</div>
 
-    <!-- Status Indicator -->
     <div :class="['status-indicator', { online: isOnline }]">
       {{ isOnline ? '● ONLINE' : '○ OFFLINE' }}
     </div>
 
-    <!-- Segments and Bitrate -->
     <div class="station-details">
       <div>Segments: {{ row.segmentsSize || 0 }}</div>
       <div v-if="row.bitrate">Bitrate: {{ row.bitrate }} kbps</div>
     </div>
 
-    <!-- Recently Played Titles -->
     <div v-if="row.recentlyPlayedTitles && row.recentlyPlayedTitles.length > 0" class="recently-played">
       <div class="recently-played-label">Recently played:</div>
       <div v-for="(title, index) in row.recentlyPlayedTitles" :key="index" class="recently-played-item" :title="title">
@@ -55,7 +51,7 @@ export default defineComponent({
     }
   },
   setup(props) {
-    const isOnline = computed(() => props.row.status === 'ON_LINE');
+    const isOnline = computed(() => props.row.status === 'ON_LINE' || props.row.status === 'QUEUE_SATURATED');
 
     return {
       isOnline

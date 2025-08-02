@@ -4,19 +4,18 @@ import DesktopRow from "./DesktopRow.vue";
 import MobileRow from "./MobileRow.vue";
 import type { StationDetails } from '../../types/dashboard';
 
-// Define type for NTag component's type prop
 type NTagType = 'success' | 'warning' | 'error' | 'default' | 'info';
 
-// Define all possible radio station statuses
+//dublicated
 type RadioStationStatus =
     | 'ON_LINE'
+    | 'QUEUE_SATURATED'
     | 'WARMING_UP'
     | 'WAITING_FOR_CURATOR'
     | 'IDLE'
     | 'SYSTEM_ERROR'
     | 'OFF_LINE';
 
-// Define structure for status information
 interface StatusInfo {
     text: string;
     type: NTagType;
@@ -47,6 +46,8 @@ export const useStationColumns = (
         switch (status) {
             case 'ON_LINE':
                 return { text: 'Online', type: 'success' };          
+            case 'QUEUE_SATURATED':
+                return { text: 'Queue Saturated', type: 'warning' };
             case 'WARMING_UP':
                 return { text: 'Warming Up', type: 'warning' };
             case 'WAITING_FOR_CURATOR':

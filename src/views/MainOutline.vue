@@ -173,6 +173,8 @@ export default defineComponent({
       switch (status) {
         case BrandStatus.ON_LINE:
           return '#00aa00';
+        case BrandStatus.QUEUE_SATURATED:
+          return '#00aa00';
         case BrandStatus.WARMING_UP:
           return '#ffa500';
         case BrandStatus.WAITING_FOR_CURATOR:
