@@ -258,7 +258,7 @@ export default defineComponent({
           }
         },
         {
-          title: 'Name',
+          title: 'Identifier',
           key: 'slugName',
           render: (row: RadioStation) => {
             return h('div', {
