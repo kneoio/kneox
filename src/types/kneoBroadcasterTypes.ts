@@ -59,6 +59,10 @@ export interface RadioStation {
     profileId?: string;
     timeZone?: string;
     managedBy?: ManagedBy;
+    aiControlAllowed?: boolean;
+    schedule?: {
+        enabled: boolean;
+    };
 }
 
 export interface RadioStationSave {

@@ -4,7 +4,7 @@
       <n-page-header>
         <template #title>All Listeners</template>
         <template #footer>
-          Total: {{ store.getPagination.itemCount }}
+          Total: {{ listenersStore.getPagination.itemCount }}
         </template>
       </n-page-header>
     </n-gi>

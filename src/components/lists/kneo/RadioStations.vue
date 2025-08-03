@@ -32,6 +32,7 @@
           :pagination="store.getPagination"
           :bordered="false"
           :row-props="getRowProps"
+          :row-class-name="rowClassName"
           :loading="loading"
           v-model:checked-row-keys="checkedRowKeys"
           @update:page="handlePageChange"
@@ -244,9 +245,7 @@ export default defineComponent({
           title: 'AI Control',
           key: 'aiControlAllowed',
           render: (row: RadioStation) => {
-            return h('div', {
-              style: `color: ${row.aiControlAllowed ? '#df9710' : '#888888'};`
-            }, row.aiControlAllowed ? 'Accepting' : 'Doesn\'t allow');
+            return row.aiControlAllowed ? 'Accepting' : 'Doesn\'t allow';
           }
         },
         {
@@ -293,7 +292,9 @@ export default defineComponent({
               style: 'display: flex; align-items: center; cursor: pointer;',
               onClick: (e: MouseEvent) => {
                 e.stopPropagation();
-                handleCopyUrl(row.mixplaUrl);
+                if (row.mixplaUrl) {
+                  handleCopyUrl(row.mixplaUrl);
+                }
               },
               title: 'Click to copy URL'
             }, [
@@ -347,7 +348,9 @@ export default defineComponent({
                   style: 'cursor: pointer; font-size: 0.8rem;',
                   onClick: (e: MouseEvent) => {
                     e.stopPropagation();
-                    handleCopyUrl(row.mixplaUrl);
+                    if (row.mixplaUrl) {
+                      handleCopyUrl(row.mixplaUrl);
+                    }
                   }
                 }, 'Click to copy URL')
               ]);
@@ -363,6 +366,12 @@ export default defineComponent({
       store,
       columns,
       rowKey: (row: any) => row.id,
+      rowClassName: (row: RadioStation) => {
+        if (row.aiControlAllowed) {
+          return 'ai-accepting';
+        }
+        return 'ai-not-allowed';
+      },
       isMobile,
       currentSongName,
       handleNewClick,
@@ -381,5 +390,13 @@ export default defineComponent({
 <style scoped>
 .p-4 {
   padding: 1rem;
+}
+
+:deep(.ai-accepting) {
+  color: rgba(255, 140, 0, 1) !important;
+}
+
+:deep(.ai-not-allowed) {
+  color: #888888 !important;
 }
 </style>
