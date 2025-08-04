@@ -134,21 +134,21 @@
               <n-gi v-if=" selectedAgent ">
                 <n-form-item label="Preferred Language">
                   <n-input :value="selectedAgent.preferredLang"
-                    style="width: 50%; max-width: 600px; background-color: #f5f5f5; cursor: not-allowed;" readonly
+                    style="width: 50%; max-width: 600px; cursor: not-allowed;" readonly
                     disabled />
                 </n-form-item>
               </n-gi>
               <n-gi v-if=" selectedAgent ">
                 <n-form-item label="Talkativity">
                   <n-input-number :value="selectedAgent.talkativity" :min="0" :max="100" :step="1"
-                    style="width: 200px; background-color: #f5f5f5; cursor: not-allowed;" readonly
+                    style="width: 200px; cursor: not-allowed;" readonly
                     disabled />
                 </n-form-item>
               </n-gi>
               <n-gi v-if=" selectedAgent ">
                 <n-form-item label="Preferred Voice">
                   <n-input :value="selectedAgent.preferredVoice[0]?.name"
-                    style="width: 50%; max-width: 600px; background-color: #f5f5f5; cursor: not-allowed;" readonly
+                    style="width: 50%; max-width: 600px; cursor: not-allowed;" readonly
                     disabled />
                 </n-form-item>
               </n-gi>
@@ -168,7 +168,7 @@
               <n-gi v-if=" selectedProfile ">
                 <n-form-item label="Description">
                   <n-input :value="selectedProfile.description" type="textarea" :autosize="{ minRows: 3, maxRows: 5 }"
-                    style="width: 50%; max-width: 600px; background-color: #f5f5f5; cursor: not-allowed;" disabled />
+                    style="width: 50%; max-width: 600px; cursor: not-allowed;" disabled />
                 </n-form-item>
               </n-gi>
 
