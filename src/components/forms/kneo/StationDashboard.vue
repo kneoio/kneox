@@ -553,28 +553,50 @@ export default defineComponent( {
     let intervalId: NodeJS.Timeout | null = null;
     const isDestroyed = ref( false );
 
-    onMounted( () => {
-      console.log( 'StationDetail mounted for brand:', props.brandName );
-
-      dashboardStore.ensureStationConnected( props.brandName );
-
-      intervalId = setInterval( () => {
-        if ( !isDestroyed.value ) {
-          console.log( 'Polling station data for:', props.brandName );
-          dashboardStore.fetchStation( props.brandName );
+    const startPolling = (brandName: string) => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+      
+      console.log('Starting polling for brand:', brandName);
+      dashboardStore.ensureStationConnected(brandName);
+      
+      intervalId = setInterval(() => {
+        if (!isDestroyed.value) {
+          console.log('Polling station data for:', brandName);
+          dashboardStore.fetchStation(brandName);
         }
-      }, 3000 );
-    } );
+      }, 3000);
+    };
 
-    onUnmounted( () => {
-      console.log( 'StationDetail unmounted for brand:', props.brandName );
-      isDestroyed.value = true;
-      if ( intervalId ) {
-        clearInterval( intervalId );
+    const stopPolling = () => {
+      if (intervalId) {
+        clearInterval(intervalId);
         intervalId = null;
       }
-      dashboardStore.disconnectStation( props.brandName );
-    } );
+    };
+
+    onMounted(() => {
+      console.log('StationDetail mounted for brand:', props.brandName);
+      startPolling(props.brandName);
+    });
+
+    watch(() => props.brandName, (newBrandName, oldBrandName) => {
+      if (newBrandName !== oldBrandName) {
+        console.log('Brand changed from', oldBrandName, 'to', newBrandName);
+        if (oldBrandName) {
+          dashboardStore.disconnectStation(oldBrandName);
+        }
+        startPolling(newBrandName);
+      }
+    });
+
+    onUnmounted(() => {
+      console.log('StationDetail unmounted for brand:', props.brandName);
+      isDestroyed.value = true;
+      stopPolling();
+      dashboardStore.disconnectStation(props.brandName);
+    });
 
     watch( () => stationDetails.value?.timeline, () => {
     }, { deep: true } );

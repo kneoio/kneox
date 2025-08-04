@@ -139,16 +139,10 @@
                 </n-form-item>
               </n-gi>
               <n-gi v-if=" selectedAgent ">
-                <n-form-item label="Main Prompt">
-                  <CodeMirror :modelValue="selectedAgent.mainPrompt" basic :lang="lang" :style="{
-                    width: '60%',
-                    height: '200px',
-                    border: '1px solid #d9d9d9',
-                    borderRadius: '3px',
-                    backgroundColor: '#f5f5f5',
-                    opacity: '0.6',
-                    cursor: 'not-allowed'
-                  }" :extensions="editorExtensions" :disabled="true" />
+                <n-form-item label="Talkativity">
+                  <n-input-number :value="selectedAgent.talkativity" :min="0" :max="100" :step="1"
+                    style="width: 200px; background-color: #f5f5f5; cursor: not-allowed;" readonly
+                    disabled />
                 </n-form-item>
               </n-gi>
               <n-gi v-if=" selectedAgent ">
@@ -305,6 +299,7 @@ import {
   NGi,
   NGrid,
   NInput,
+  NInputNumber,
   NPageHeader,
   NSelect,
   NSlider,
@@ -348,6 +343,7 @@ export default defineComponent( {
     NForm,
     NFormItem,
     NInput,
+    NInputNumber,
     NButton,
     NSlider,
     NSpace,
