@@ -109,6 +109,14 @@ export const useReferencesStore = defineStore('references', () => {
     }
   };
 
+  const eventTypeOptions = [
+    { label: 'Advertisement', value: 'AD' },
+    { label: 'Weather', value: 'WEATHER' },
+    { label: 'Shift Started', value: 'SHIFT_STARTED' },
+    { label: 'Shift Ending', value: 'SHIFT_ENDING' },
+    { label: 'Remainder', value: 'REMAINDER' }
+  ];
+
   const timezones = [
     { label: 'UTC', value: 'UTC' },
     { label: 'Europe/London', value: 'Europe/London' },
@@ -144,6 +152,7 @@ export const useReferencesStore = defineStore('references', () => {
     voiceOptions,
     timezones,
     genreOptions,
+    eventTypeOptions,
     audioAcceptTypes,
     fetchGenres,
     fetchVoices,

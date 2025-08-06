@@ -47,7 +47,8 @@ export const useEventsStore = defineStore('eventsStore', () => {
     const fetchEvents = async (page = 1, pageSize = 10) => {
         try {
             const response = await apiClient.get(`/events?page=${page}&size=${pageSize}`);
-            apiViewResponse.value = response.data;
+            if (!response?.data?.payload) throw new Error('Invalid API response for events');
+            apiViewResponse.value = response.data.payload;
         } catch (error) {
             console.error('Error fetching events:', error);
             throw error;
@@ -56,14 +57,17 @@ export const useEventsStore = defineStore('eventsStore', () => {
 
     const fetchEvent = async (id: string) => {
         const response = await apiClient.get(`/events/${id}`);
-        apiFormResponse.value = response.data;
+        if (!response?.data?.payload) throw new Error('Invalid API response for a single event');
+        apiFormResponse.value = response.data.payload;
     };
 
     const saveEvent = async (data: EventSave, id: string | null) => {
-        const method = id ? 'put' : 'post';
-        const url = id ? `/events/${id}` : '/events';
-        return await apiClient[method](url, data);
+        const response = await apiClient.post(`/events/${id || ''}`, data);
+        if (!response?.data) throw new Error('Invalid API response');
+        apiFormResponse.value = response.data;
+        return apiFormResponse.value;
     };
+   
 
     const deleteEvent = async (id: string) => {
         return await apiClient.delete(`/events/${id}`);

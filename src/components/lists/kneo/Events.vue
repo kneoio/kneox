@@ -52,6 +52,7 @@
           :loading="loading"
           :pagination="paginationReactive"
           :row-key="rowKey"
+          :row-props="getRowProps"
           v-model:checked-row-keys="checkedRowKeys"
           @update:page="handlePageChange"
           @update:page-size="handlePageSizeChange"
@@ -61,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, h } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useMessage } from 'naive-ui';
 import {
@@ -82,8 +83,17 @@ const isMobile = ref(window.innerWidth < 768);
 
 const hasSelection = computed(() => checkedRowKeys.value.length > 0);
 
-const handleEditClick = (id: string) => {
-  router.push({ name: 'EventForm', params: { id } });
+const getRowProps = (row: EventEntry) => {
+  return {
+    style: 'cursor: pointer;',
+    onClick: (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('.n-checkbox') || target.closest('[data-n-checkbox]')) {
+        return;
+      }
+      router.push({ name: 'EventForm', params: { id: row.id } });
+    }
+  };
 };
 
 const columns: DataTableColumns<EventEntry> = [
@@ -100,14 +110,7 @@ const columns: DataTableColumns<EventEntry> = [
     key: 'type',
     sorter: 'default'
   },
-  {
-    title: 'Timestamp',
-    key: 'timestampEvent',
-    sorter: 'default',
-    render: (row) => {
-      return new Date(row.timestampEvent).toLocaleString();
-    }
-  },
+
   {
     title: 'Description',
     key: 'description',
@@ -120,20 +123,7 @@ const columns: DataTableColumns<EventEntry> = [
     key: 'priority',
     sorter: 'default'
   },
-  {
-    title: 'Actions',
-    key: 'actions',
-    render: (row) => {
-      return h(
-        NButton,
-        {
-          size: 'small',
-          onClick: () => handleEditClick(row.id)
-        },
-        { default: () => 'Edit' }
-      );
-    }
-  }
+
 ];
 
 const paginationReactive = reactive({

@@ -216,7 +216,6 @@ export interface EventEntry {
     lastModifiedDate: string;
     brand: string;
     type: string;
-    timestampEvent: string;
     description: string;
     priority: string;
 }
@@ -232,7 +231,6 @@ export interface EventViewData {
 export interface EventSave {
     brand?: string;
     type: string;
-    timestampEvent: string;
     description: string;
     priority?: string;
     schedule?: {
