@@ -66,14 +66,21 @@
           v-model:value="eventForm.memoryType" 
           :options="memoryTypeOptions" 
           placeholder="Select memory type"
+          @update:value="updateContentForMemoryType"
         />
       </n-form-item>
       <n-form-item path="content" label="Content">
-        <n-input
-          v-model:value="eventForm.content"
-          type="textarea"
-          placeholder="Enter event content (JSON format)"
-          :rows="4"
+        <CodeMirror
+          v-model="eventForm.content"
+          basic
+          :style="{
+            width: '100%',
+            height: '120px',
+            border: '1px solid #d9d9d9',
+            borderRadius: '3px',
+            overflow: 'auto'
+          }"
+          :extensions="editorExtensions"
         />
       </n-form-item>
     </n-form>
@@ -87,7 +94,7 @@
 </template>
 
 <script lang="ts">
-import {computed, defineComponent, h, onMounted, onUnmounted, ref} from 'vue';
+import {computed, defineComponent, h, onMounted, onUnmounted, ref, watch} from 'vue';
 import {
   DataTableColumns,
   NButton,
@@ -105,6 +112,9 @@ import {
   NSelect,
   useMessage
 } from 'naive-ui';
+import {json} from "@codemirror/lang-json";
+import {EditorView} from "@codemirror/view";
+import CodeMirror from 'vue-codemirror6';
 import {useRouter} from 'vue-router';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
 import {Memory} from "../../../types/kneoBroadcasterTypes";
@@ -112,7 +122,7 @@ import {useMemoryStore} from "../../../stores/kneo/memoryStore";
 import {useRadioStationStore} from "../../../stores/kneo/radioStationStore";
 
 export default defineComponent({
-  components: {NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, NModal, NForm, NFormItem, NInput, NSelect},
+  components: {NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, NModal, NForm, NFormItem, NInput, NSelect, CodeMirror},
   setup() {
     const router = useRouter();
     const store = useMemoryStore();
@@ -138,11 +148,27 @@ export default defineComponent({
     
     const showTriggerEventModal = ref(false);
     const triggerEventLoading = ref(false);
+    const formRef = ref();
     const eventForm = ref({
       brand: '',
-      content: '',
+      content: '{\n  "type": "weather"\n}',
       memoryType: 'EVENT'
     });
+    
+    const editorExtensions = computed(() => [
+      json(),
+      EditorView.lineWrapping
+    ]);
+    
+    const updateContentForMemoryType = (memoryType: string) => {
+      if (memoryType === 'INSTANT_MESSAGE') {
+        eventForm.value.content = '{\n  "from": "ana",\n  "content": "hello everyone"\n}';
+      } else if (memoryType === 'EVENT') {
+        eventForm.value.content = '{\n  "type": "weather"\n}';
+      }
+    };
+    
+    watch(() => eventForm.value.memoryType, updateContentForMemoryType);
     const eventRules = {
       brand: {
         required: true,
@@ -244,6 +270,13 @@ export default defineComponent({
 
     const handleTriggerEvent = async () => {
       try {
+        await formRef.value?.validate();
+      } catch (validationErrors) {
+        message.error('Please fill in all required fields');
+        return;
+      }
+      
+      try {
         triggerEventLoading.value = true;
         let content;
         try {
@@ -256,8 +289,8 @@ export default defineComponent({
         message.success('Event triggered successfully');
         showTriggerEventModal.value = false;
         eventForm.value.brand = '';
-        eventForm.value.content = '';
         eventForm.value.memoryType = 'EVENT';
+        updateContentForMemoryType('EVENT');
         await store.fetchAll(store.getPagination.page, store.getPagination.pageSize);
       } catch (error) {
         message.error('Failed to trigger event');
@@ -292,7 +325,10 @@ export default defineComponent({
         {
           title: 'Brand',
           key: 'brand',
-          render: (row: Memory) => h(NTag, { type: 'info', bordered: false }, { default: () => row.brand })
+          render: (row: Memory) => h(NTag, { 
+            bordered: true,
+            color: row.color ? { color: '#BBB', textColor: '#555', borderColor: row.color } : { color: '#BBB', textColor: '#555', borderColor: '#BBB' }
+          }, { default: () => row.brand })
         },
         {
           title: 'Memory Type',
@@ -364,7 +400,10 @@ export default defineComponent({
       eventForm,
       eventRules,
       brandOptions,
-      memoryTypeOptions
+      memoryTypeOptions,
+      editorExtensions,
+      updateContentForMemoryType,
+      formRef
     };
   },
 });

@@ -57,6 +57,7 @@ import {
   NGi,
   NGrid,
   NPageHeader,
+  NTag,
   useMessage
 } from 'naive-ui';
 import {useRouter} from 'vue-router';
@@ -66,7 +67,7 @@ import {RadioStation} from "../../../types/kneoBroadcasterTypes";
 import {useRadioStationStore} from "../../../stores/kneo/radioStationStore";
 
 export default defineComponent({
-  components: {NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, PlayerPlay, PlayerStop},
+  components: {NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, NTag, LoaderIcon, PlayerPlay, PlayerStop},
   setup() {
     const router = useRouter();
     const message = useMessage();
@@ -261,9 +262,10 @@ export default defineComponent({
           title: 'Identifier',
           key: 'slugName',
           render: (row: RadioStation) => {
-            return h('div', {
-              style: 'font-weight: bold; font-size: 0.9rem;'
-            }, row.slugName);
+            return h(NTag, { 
+              bordered: true,
+              color: row.color ? {  textColor: '#555', borderColor: row.color } : { textColor: '#555', borderColor: '#BBB' }
+            }, { default: () => row.slugName });
           }
         },
         {title: 'Country', key: 'country'},

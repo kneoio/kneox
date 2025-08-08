@@ -114,6 +114,7 @@ export interface Memory {
     lastModUser: number;
     lastModifiedDate: string;
     brand: string;
+    color?: string;
     memoryType: 'LISTENERS' | 'AUDIENCE_CONTEXT' | 'CONVERSATION_HISTORY' | string;
     content: Record<string, any>;
     archived: boolean;
@@ -121,6 +122,7 @@ export interface Memory {
 
 export interface MemorySave {
     brand: string;
+    color?: string;
     memoryType: string;
     content: Record<string, any>;
     archived?: boolean;
