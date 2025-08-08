@@ -237,16 +237,19 @@ export default defineComponent({
           key: 'status',
           render: (row: RadioStation) => {
             const statusInfo = getStatusStyle(row.status);
-            return h('div', {
-              style: `color: ${statusInfo.color};`
-            }, statusInfo.text);
+            return h(NTag, {
+              bordered: true,
+              color: { textColor: statusInfo.color, borderColor: statusInfo.color }
+            }, { default: () => statusInfo.text });
           }
         },
         {
           title: 'AI Control',
           key: 'aiControlAllowed',
           render: (row: RadioStation) => {
-            return row.aiControlAllowed ? 'Accepting' : 'Doesn\'t allow';
+            return h('div', {
+              style: `color: ${row.aiControlAllowed ? '#00aa00' : '#888888'}; font-weight: ${row.aiControlAllowed ? 'bold' : 'normal'};`
+            }, row.aiControlAllowed ? 'Accepting' : 'Doesn\'t allow');
           }
         },
         {
@@ -254,7 +257,7 @@ export default defineComponent({
           key: 'scheduleEnabled',
           render: (row: RadioStation) => {
             return h('div', {
-              style: `color: ${row.schedule?.enabled ? '#033b81' : '#888888'};`
+              style: `color: ${row.schedule?.enabled ? '#033b81' : '#888888'}; font-weight: ${row.schedule?.enabled ? 'bold' : 'normal'};`
             }, row.schedule?.enabled ? 'Enabled' : 'Disabled');
           }
         },

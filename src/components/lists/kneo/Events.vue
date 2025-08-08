@@ -62,12 +62,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted, h } from 'vue';
 import { useRouter } from 'vue-router';
 import { useMessage } from 'naive-ui';
 import {
   NGrid, NGi, NPageHeader, NButton, NButtonGroup, NInput, NIcon,
-  NDataTable, type DataTableColumns
+  NDataTable, NTag, type DataTableColumns
 } from 'naive-ui';
 import { useEventsStore } from '../../../stores/kneo/eventsStore';
 import type { EventEntry } from "../../../types/kneoBroadcasterTypes";
@@ -103,25 +103,32 @@ const columns: DataTableColumns<EventEntry> = [
   {
     title: 'Brand',
     key: 'brand',
-    sorter: 'default'
+    width: 200
   },
   {
     title: 'Type',
     key: 'type',
-    sorter: 'default'
+    width: 120
   },
 
+
+  {
+    title: 'Priority',
+    key: 'priority',
+    width: 120,
+    render: (row: EventEntry) => {
+      return h(NTag, { 
+        bordered: true,
+        color: { textColor: '#555', borderColor: '#BBB' }
+      }, { default: () => row.priority });
+    }
+  },
   {
     title: 'Description',
     key: 'description',
     ellipsis: {
       tooltip: true
     }
-  },
-  {
-    title: 'Priority',
-    key: 'priority',
-    sorter: 'default'
   },
 
 ];

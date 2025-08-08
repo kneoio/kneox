@@ -15,7 +15,7 @@
     <n-gi class="mt-2" span="6">
       <n-button-group>
         <n-button type="primary" @click="handleSave" size="large">Save</n-button>
-        <n-button type="default" @click="handleDelete" size="large" :disabled="!localFormData.id">Delete</n-button>
+        <n-button type="error" @click="handleDelete" size="large" :disabled="!localFormData.id">Delete</n-button>
       </n-button-group>
     </n-gi>
     <n-gi span="6">
@@ -64,6 +64,20 @@
                       placeholder="Select Radio Station"
                       style="width: 25%; max-width: 300px;"
                   />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="Timezone">
+                  <n-select
+                      v-model:value="localFormData.timeZone"
+                      :options="referencesStore.timezones"
+                      filterable
+                      placeholder="Select Timezone"
+                      style="width: 25%; max-width: 300px;"
+                  />
+                  <n-text depth="3" style="font-size: 12px; margin-top: 4px; display: block;">
+                    ⚠️ Timezone should usually match the radio station location
+                  </n-text>
                 </n-form-item>
               </n-gi>
             </n-grid>
@@ -204,6 +218,7 @@ const localFormData = reactive<LocalEventFormData>({
   lastModifier: '',
   lastModifiedDate: '',
   brand: '',
+  timeZone: '',
   type: '',
   description: '',
   priority: '',
@@ -239,14 +254,14 @@ const priorityOptions = [
 ];
 
 const taskTypeOptions = [
-  { label: 'Event Trigger', value: 'EVENT_TRIGGER' },
-  { label: 'Notification', value: 'NOTIFICATION' },
-  { label: 'Action', value: 'ACTION' }
+  { label: 'Event Trigger', value: 'EVENT_TRIGGER' }  
 ];
 
 const targetOptions = [
   { value: 'default', label: 'default' }
 ];
+
+
 
 const timeMarks = {
   0: '00:00',
@@ -367,6 +382,7 @@ const handleSave = async () => {
     // Prepare schedule data with tasks
     const scheduleData = {
       enabled: localFormData.schedule?.enabled || false,
+      timeZone: localFormData.timeZone,
       tasks: scheduleTasksArray.value.map(task => ({
         triggerType: task.triggerType,
         type: task.type,
@@ -381,6 +397,7 @@ const handleSave = async () => {
 
     const saveData: EventSave = {
       brand: localFormData.brand,
+      timeZone: localFormData.timeZone,
       type: localFormData.type,
       description: localFormData.description,
       priority: localFormData.priority,

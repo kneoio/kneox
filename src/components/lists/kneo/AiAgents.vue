@@ -199,26 +199,21 @@ export default defineComponent({
           render: (row) => `${Math.round(row.talkativity * 100)}%`
         },
         {
-          title: 'Prompts',
-          key: 'prompts',
-          ellipsis: {tooltip: true},
-          render: (row: AiAgent) => {
-            if (!row.prompts || row.prompts.length === 0) return 'N/A';
-            return row.prompts.map(prompt => prompt.substring(0, 30) + (prompt.length > 30 ? '...' : '')).join('; ');
-          }
-        },
-        {
           title: 'Preferred Voice',
           key: 'preferredVoice',
+          width: 165,
           render: (row: AiAgent) => {
             return h('span', {}, row.preferredVoice?.map(voice => voice.name).join(', ') || 'N/A');
           }
         },
         {
-          title: 'Enabled Tools',
-          key: 'enabledTools',
+          title: 'Prompts',
+          key: 'prompts',
+          ellipsis: {tooltip: true},
           render: (row: AiAgent) => {
-            return h('span', {}, row.enabledTools?.map(tool => tool.name).join(', ') || 'None');
+            if (!row.prompts || row.prompts.length === 0) return 'N/A';
+            const maxLength = isMobile.value ? 40 : 80;
+            return row.prompts.map(prompt => prompt.substring(0, maxLength) + (prompt.length > maxLength ? '...' : '')).join('; ');
           }
         }
       ];

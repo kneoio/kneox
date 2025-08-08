@@ -217,6 +217,7 @@ export interface EventEntry {
     lastModifier: string;
     lastModifiedDate: string;
     brand: string;
+    timeZone?: string;
     type: string;
     description: string;
     priority: string;
@@ -232,11 +233,13 @@ export interface EventViewData {
 
 export interface EventSave {
     brand?: string;
+    timeZone?: string;
     type: string;
     description: string;
     priority?: string;
     schedule?: {
         enabled?: boolean;
+        timeZone?: string;
         tasks?: any[];
     };
 }
