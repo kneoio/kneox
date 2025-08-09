@@ -146,6 +146,12 @@ export const useReferencesStore = defineStore('references', () => {
     { label: 'Australia/Sydney', value: 'Australia/Sydney' }
   ];
 
+  const llmTypeOptions = [
+    { label: 'Claude', value: 'CLAUDE' },
+    { label: 'OpenAI', value: 'OPENAI' },
+    { label: 'Groq', value: 'GROQ' }
+  ];
+
   return {
     countryOptions,
     languageOptions,
@@ -153,6 +159,7 @@ export const useReferencesStore = defineStore('references', () => {
     timezones,
     genreOptions,
     eventTypeOptions,
+    llmTypeOptions,
     audioAcceptTypes,
     fetchGenres,
     fetchVoices,

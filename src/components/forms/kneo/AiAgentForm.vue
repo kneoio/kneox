@@ -33,6 +33,12 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
+                <n-form-item label="LLM Type">
+                  <n-select v-model:value="localFormData.llmType" :options="llmTypeOptions"
+                    style="width: 25%; max-width: 300px;" />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
                 <n-form-item label="Enabled Tools">
                   <n-dynamic-input v-model:value="localFormData.enabledTools" :on-create="createToolItem"
                     style="width: 60%;">
@@ -206,6 +212,7 @@ export default defineComponent({
       name: "",
       prompts: [],
       preferredLang: "en" as LanguageCode,
+      llmType: "",
       fillerPrompt: [],
       preferredVoice: [],
       preferredVoiceId: "",
@@ -235,6 +242,7 @@ export default defineComponent({
         const saveData: Partial<AiAgent> = {
           name: localFormData.name || '',
           preferredLang: localFormData.preferredLang as LanguageCode,
+          llmType: localFormData.llmType || '',
           prompts: localFormData.prompts || [],
           fillerPrompt: localFormData.fillerPrompt || [],
           enabledTools: localFormData.enabledTools || [],
@@ -327,6 +335,7 @@ export default defineComponent({
     return {
       localFormData,
       langOptions: referencesStore.languageOptions,
+      llmTypeOptions: referencesStore.llmTypeOptions,
       voiceOptions,
       formTitle,
       createFillerItem,
