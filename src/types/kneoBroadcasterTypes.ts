@@ -140,12 +140,6 @@ export interface Tool {
     name: string;
 }
 
-// Extend the base AiAgent interface to include form-specific fields
-export interface AiAgentForm extends Omit<AiAgent, 'preferredVoice'> {
-    preferredVoiceId?: string;
-    preferredVoice: Voice[];
-}
-
 export interface AiAgent {
     id: string;
     author: string;
@@ -160,16 +154,30 @@ export interface AiAgent {
     preferredVoice: Voice[];
     enabledTools: Tool[];
     talkativity: number;
+    merger?: {
+        method: string;
+        gainIntro: number;
+    };
 }
 
 export interface AiAgentSave {
     name: string;
     preferredLang: LanguageCode;
     llmType?: string;
+    prompts: string[];
     fillerPrompt: string[];
     preferredVoice: Voice[];
     enabledTools: Tool[];
     talkativity: number;
+    merger?: {
+        method: string;
+        gainIntro: number;
+    };
+}
+
+// Extend the base AiAgent interface to include form-specific fields
+export interface AiAgentForm extends AiAgent {
+    preferredVoiceId?: string;
 }
 
 // Types for Listeners Feature

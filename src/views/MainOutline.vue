@@ -141,7 +141,6 @@ export default defineComponent({
     const route = useRoute();
     const radioStationStore = useRadioStationStore();
 
-    // Inject theme state from App.vue
     const isDarkTheme = inject<Ref<boolean>>('isDarkTheme', ref(false));
     const toggleTheme = inject<(value: boolean) => void>('toggleTheme', () => {
     });

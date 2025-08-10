@@ -152,6 +152,10 @@ export const useReferencesStore = defineStore('references', () => {
     { label: 'Groq', value: 'GROQ' }
   ];
 
+  const mergerMethodOptions = [
+    { label: 'Intro Song', value: 'INTRO_SONG' }
+  ];
+
   return {
     countryOptions,
     languageOptions,
@@ -160,6 +164,7 @@ export const useReferencesStore = defineStore('references', () => {
     genreOptions,
     eventTypeOptions,
     llmTypeOptions,
+    mergerMethodOptions,
     audioAcceptTypes,
     fetchGenres,
     fetchVoices,

@@ -112,6 +112,12 @@
                   <n-dynamic-tags v-model:value="localFormData.fillerPrompt" style="width: 60%;" />
                 </n-form-item>
               </n-gi>
+            </n-grid>
+          </n-form>
+        </n-tab-pane>
+        <n-tab-pane name="tts" tab="TTS">
+          <n-form label-placement="left" label-width="auto">
+            <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
               <n-gi>
                 <n-form-item label="Preferred Voice">
                   <n-select 
@@ -123,12 +129,28 @@
                   />
                 </n-form-item>
               </n-gi>
-
               <n-gi>
                 <n-form-item label="Talkativity">
                   <n-slider v-model:value="localFormData.talkativity" :min="0" :max="1" :step="0.05" :tooltip="false"
                     style="width: 50%; max-width: 600px;" />
                   <span style="margin-left: 12px;">{{ localFormData.talkativity }}</span>
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="Merger Method">
+                  <n-select 
+                    v-model:value="localFormData.merger!.method" 
+                    :options="referencesStore.mergerMethodOptions" 
+                    placeholder="Select merger method"
+                    style="width: 30%; max-width: 300px;"
+                  />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="Gain Intro">
+                  <n-slider v-model:value="localFormData.merger!.gainIntro" :min="-5" :max="5" :step="0.1" :tooltip="false"
+                    style="width: 50%; max-width: 600px;" />
+                  <span style="margin-left: 12px;">{{ localFormData.merger!.gainIntro }}</span>
                 </n-form-item>
               </n-gi>
             </n-grid>
@@ -145,8 +167,8 @@
 <script lang="ts">
 import { computed, defineComponent, onMounted, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { AiAgent, AiAgentForm, LanguageCode } from '../../../types/kneoBroadcasterTypes';
-import { NButton, NButtonGroup, NForm, NFormItem, NGi, NGrid, NInput, NPageHeader, NSlider, NSelect, NTabs, NTabPane, NDynamicInput, NTag, NSpace, NCard, NDynamicTags } from 'naive-ui';
+import { AiAgentForm, AiAgentSave, LanguageCode } from '../../../types/kneoBroadcasterTypes';
+import { NButton, NButtonGroup, NForm, NFormItem, NGi, NGrid, NInput, NPageHeader, NSlider, NSelect, NTabs, NTabPane, NDynamicInput, NTag, NSpace, NCard, NDynamicTags, NInputNumber } from 'naive-ui';
 import { useLoadingBar, useMessage } from 'naive-ui';
 import { useAiAgentStore } from '../../../stores/kneo/aiAgentStore';
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
@@ -175,6 +197,7 @@ export default defineComponent({
     NSpace,
     NCard,
     NDynamicTags,
+    NInputNumber,
     AclTable,
     CodeMirror
   },
@@ -203,6 +226,8 @@ export default defineComponent({
       }))
     );
 
+
+
     const localFormData = reactive<AiAgentForm>({
       id: "",
       author: "",
@@ -217,7 +242,11 @@ export default defineComponent({
       preferredVoice: [],
       preferredVoiceId: "",
       enabledTools: [],
-      talkativity: 0.3
+      talkativity: 0.3,
+      merger: {
+        method: "INTRO_SONG",
+        gainIntro: 0
+      }
     });
 
     const createFillerItem = () => "";
@@ -239,7 +268,7 @@ export default defineComponent({
       try {
         loadingBar.start();
 
-        const saveData: Partial<AiAgent> = {
+        const saveData: AiAgentSave = {
           name: localFormData.name || '',
           preferredLang: localFormData.preferredLang as LanguageCode,
           llmType: localFormData.llmType || '',
@@ -247,7 +276,11 @@ export default defineComponent({
           fillerPrompt: localFormData.fillerPrompt || [],
           enabledTools: localFormData.enabledTools || [],
           talkativity: localFormData.talkativity || 0.3,
-          preferredVoice: []
+          preferredVoice: [],
+          merger: localFormData.merger ? {
+            method: localFormData.merger.method,
+            gainIntro: localFormData.merger.gainIntro
+          } : undefined
         };
 
         if (localFormData.preferredVoiceId) {
@@ -319,6 +352,13 @@ export default defineComponent({
             agentData.preferredVoiceId = agentData.preferredVoice[0]?.id || '';
           }
 
+          if (!agentData.merger) {
+            agentData.merger = {
+              method: "INTRO_SONG",
+              gainIntro: 0
+            };
+          }
+
           Object.assign(localFormData, agentData);
         }
       } catch (error) {
@@ -337,6 +377,7 @@ export default defineComponent({
       langOptions: referencesStore.languageOptions,
       llmTypeOptions: referencesStore.llmTypeOptions,
       voiceOptions,
+      referencesStore,
       formTitle,
       createFillerItem,
       createVoiceItem,
