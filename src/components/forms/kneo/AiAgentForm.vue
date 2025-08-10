@@ -45,71 +45,89 @@
                     <template #default=" { value, index } ">
                       <n-grid cols="3" x-gap="12">
                         <n-gi>
-                          <n-input v-model:value="value.name" placeholder="Tool Name" />
+                          <n-input v-model:value="value.name" />
                         </n-gi>
                         <n-gi>
-                          <n-input v-model:value="value.variableName" placeholder="Variable Name" />
+                          <n-input v-model:value="value.variableName" />
                         </n-gi>
                         <n-gi>
-                          <n-input v-model:value="value.description" placeholder="Description" />
+                          <n-input v-model:value="value.description" />
                         </n-gi>
                       </n-grid>
                     </template>
                   </n-dynamic-input>
                 </n-form-item>
               </n-gi>
-              <n-gi>
-                <n-form-item label="Available Variables">
-                  <div style="width: 60%;">
-                    <n-card size="small" style="margin-bottom: 16px;">
-                      <n-space vertical size="small">
-                        <div><n-tag type="info" size="small"><strong>ai_dj_name</strong></n-tag> - The current DJ's name
-                        </div>
-                        <div><n-tag type="info" size="small"><strong>brand</strong></n-tag> - Radio station
-                          name/identity
-                          for consistent branding</div>
-                        <div><n-tag type="info" size="small"><strong>song_title</strong></n-tag> - Name of the song
-                          being
-                          introduced to listeners</div>
-                        <div><n-tag type="info" size="small"><strong>artist</strong></n-tag> - Performer/band name for
-                          proper attribution</div>
-                        <div><n-tag type="info" size="small"><strong>listeners</strong></n-tag> - Target audience
-                          description to tailor messaging appropriately</div>
-                        <div><n-tag type="info" size="small"><strong>context</strong></n-tag> - Current situational
-                          context
-                          like time of day, events, or show theme</div>
-                        <div><n-tag type="info" size="small"><strong>history</strong></n-tag> - Previous show
-                          interactions
-                          to maintain conversational flow</div>
-                        <div><n-tag type="info" size="small"><strong>instant_message</strong></n-tag> - Priority user
-                          message content that takes precedence in introduction</div>
-                        <div><n-tag type="info" size="small"><strong>events</strong></n-tag> - Various events that may
-                          affect the introduction (DJ shifts, station events, etc.)</div>
 
-                      </n-space>
-                    </n-card>
-                  </div>
+
+              <n-gi>
+                <n-form-item label="Filler Prompt">
+                  <n-dynamic-tags v-model:value="localFormData.fillerPrompt" style="width: 60%;" />
                 </n-form-item>
+              </n-gi>
+            </n-grid>
+          </n-form>
+        </n-tab-pane>
+        <n-tab-pane name="prompts" tab="Prompts">
+          <n-form label-placement="left" label-width="auto">
+            <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
+              <n-gi>
+                <n-button @click="showVariables = !showVariables" type="default" size="small" class="mb-3">
+                  {{ showVariables ? 'Hide' : 'Show' }} Available Variables
+                </n-button>
+                <n-collapse-transition :show="showVariables">
+                  <n-card size="small" style="margin-bottom: 16px; width: 90%;">
+                    <n-space vertical size="small">
+                      <div><n-tag type="info" size="small"><strong>ai_dj_name</strong></n-tag> - The current DJ's name
+                      </div>
+                      <div><n-tag type="info" size="small"><strong>brand</strong></n-tag> - Radio station
+                        name/identity
+                        for consistent branding</div>
+                      <div><n-tag type="info" size="small"><strong>song_title</strong></n-tag> - Name of the song
+                        being
+                        introduced to listeners</div>
+                      <div><n-tag type="info" size="small"><strong>artist</strong></n-tag> - Performer/band name for
+                        proper attribution</div>
+                      <div><n-tag type="info" size="small"><strong>listeners</strong></n-tag> - Target audience
+                        description to tailor messaging appropriately</div>
+                      <div><n-tag type="info" size="small"><strong>context</strong></n-tag> - Current situational
+                        context
+                        like time of day, events, or show theme</div>
+                      <div><n-tag type="info" size="small"><strong>history</strong></n-tag> - Previous show
+                        interactions
+                        to maintain conversational flow</div>
+                      <div><n-tag type="info" size="small"><strong>instant_message</strong></n-tag> - Priority user
+                        message content that takes precedence in introduction</div>
+                      <div><n-tag type="info" size="small"><strong>events</strong></n-tag> - Various events that may
+                        affect the introduction (DJ shifts, station events, etc.)</div>
+                    </n-space>
+                  </n-card>
+                </n-collapse-transition>
               </n-gi>
               <n-gi>
                 <n-form-item label="Prompts">
                   <n-dynamic-input v-model:value="localFormData.prompts" :on-create="createPromptItem"
-                    style="width: 60%;">
+                    style="width: 90%;">
                     <template #default="{ value, index }">
                       <n-space vertical size="small">
                         <strong>{{ index + 1 }}</strong>
-                        <n-input :value="value" type="textarea" :autosize="{
-                          minRows: 3,
-                          maxRows: 6
-                        }" placeholder="Enter prompt text..." @input="(val) => localFormData.prompts[index] = val" />
+                        <CodeMirror
+                          :model-value="value"
+                          @update:model-value="(val) => localFormData.prompts[index] = val"
+                          basic
+                          :style="{
+                            width: '800px',
+                            height: '300px',
+                            border: '1px solid #d9d9d9',
+                            borderRadius: '3px',
+                            overflow: 'auto'
+                          }"
+                          :extensions="editorExtensions"
+
+                        />
                       </n-space>
                     </template>
                   </n-dynamic-input>
-                </n-form-item>
-              </n-gi>
-              <n-gi>
-                <n-form-item label="Filler Prompt">
-                  <n-dynamic-tags v-model:value="localFormData.fillerPrompt" style="width: 60%;" />
                 </n-form-item>
               </n-gi>
             </n-grid>
@@ -124,7 +142,7 @@
                     v-model:value="localFormData.preferredVoiceId" 
                     :options="voiceOptions" 
                     filterable
-                    placeholder="Select a voice"
+
                     style="width: 30%; max-width: 300px;"
                   />
                 </n-form-item>
@@ -141,7 +159,7 @@
                   <n-select 
                     v-model:value="localFormData.merger!.method" 
                     :options="referencesStore.mergerMethodOptions" 
-                    placeholder="Select merger method"
+
                     style="width: 30%; max-width: 300px;"
                   />
                 </n-form-item>
@@ -167,39 +185,60 @@
 <script lang="ts">
 import { computed, defineComponent, onMounted, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { AiAgentForm, AiAgentSave, LanguageCode } from '../../../types/kneoBroadcasterTypes';
-import { NButton, NButtonGroup, NForm, NFormItem, NGi, NGrid, NInput, NPageHeader, NSlider, NSelect, NTabs, NTabPane, NDynamicInput, NTag, NSpace, NCard, NDynamicTags, NInputNumber } from 'naive-ui';
-import { useLoadingBar, useMessage } from 'naive-ui';
+import {
+  NButton,
+  NButtonGroup,
+  NCard,
+  NCollapseTransition,
+  NDynamicInput,
+  NDynamicTags,
+  NForm,
+  NFormItem,
+  NGi,
+  NGrid,
+  NInput,
+  NPageHeader,
+  NSelect,
+  NSlider,
+  NSpace,
+  NTabPane,
+  NTabs,
+  NTag,
+  useLoadingBar,
+  useMessage
+} from 'naive-ui';
+import { EditorView } from "@codemirror/view";
+
+import { json } from "@codemirror/lang-json";
+import CodeMirror from 'vue-codemirror6';
 import { useAiAgentStore } from '../../../stores/kneo/aiAgentStore';
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
-import { json } from "@codemirror/lang-json";
-import { EditorView } from "@codemirror/view";
-import CodeMirror from 'vue-codemirror6';
 import AclTable from '../../common/AclTable.vue';
+import { AiAgent, AiAgentSave } from '../../../types/kneoBroadcasterTypes';
 
 export default defineComponent({
   name: "AiAgentForm",
   components: {
-    NButton,
+    NPageHeader,
     NButtonGroup,
     NForm,
     NFormItem,
-    NGi,
-    NGrid,
     NInput,
-    NPageHeader,
-    NSlider,
-    NSelect,
+    NButton,
     NTabs,
     NTabPane,
+    NGrid,
+    NGi,
+    NSelect,
+    NSlider,
     NDynamicInput,
-    NTag,
+    NDynamicTags,
     NSpace,
     NCard,
-    NDynamicTags,
-    NInputNumber,
-    AclTable,
-    CodeMirror
+    NTag,
+    NCollapseTransition,
+    CodeMirror,
+    AclTable
   },
   setup() {
     const loadingBar = useLoadingBar();
@@ -208,12 +247,13 @@ export default defineComponent({
     const store = useAiAgentStore();
     const referencesStore = useReferencesStore();
     const route = useRoute();
-    const lang = ref(json());
     const editorExtensions = computed(() => [
+      json(),
       EditorView.lineWrapping
     ]);
 
-    const activeTab = ref('properties');
+    const activeTab = ref("properties");
+    const showVariables = ref(false);
     const aclData = ref([]);
     const aclLoading = ref(false);
 
@@ -386,8 +426,8 @@ export default defineComponent({
       handleSave,
       goBack,
       editorExtensions,
-      lang,
       activeTab,
+      showVariables,
       aclData,
       aclLoading
     };

@@ -35,12 +35,12 @@
                         <n-select
                             v-model:value="value.language"
                             :options="languageOptions"
-                            placeholder="Language"
+
                             style="width: 120px;"
                         />
                         <n-input
                             v-model:value="value.name"
-                            placeholder="Name"
+
                             style="flex: 2;"
                         />
                       </n-space>
@@ -60,12 +60,12 @@
                         <n-select
                             v-model:value="value.language"
                             :options="languageOptions"
-                            placeholder="Language"
+
                             style="width: 120px;"
                         />
                         <n-input
                             v-model:value="value.name"
-                            placeholder="Nick Name"
+
                             style="flex: 1;"
                         />
                       </n-space>
@@ -85,7 +85,7 @@
               <n-gi>
                 <n-form-item label="Listener of" path="listenerOf">
                   <n-select v-model:value="localFormData.listenerOf" :options="radioStationOptions" filterable
-                            multiple placeholder="Select Radio Stations" style="width: 50%; max-width: 600px;" />
+                            multiple style="width: 50%; max-width: 600px;" />
                 </n-form-item>
               </n-gi>
             </n-grid>

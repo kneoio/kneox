@@ -33,9 +33,9 @@
                     style="width: 50%; max-width: 600px;">
                     <template #default=" { value, index } ">
                       <n-space align="center" style="width: 100%;">
-                        <n-select v-model:value="value.language" :options="languageOptions" placeholder="Language"
+                        <n-select v-model:value="value.language" :options="languageOptions"
                           style="width: 120px;" />
-                        <n-input v-model:value="value.name" placeholder="Name" style="flex: 1;" />
+                        <n-input v-model:value="value.name" style="flex: 1;" />
                       </n-space>
                     </template>
                   </n-dynamic-input>
@@ -60,14 +60,14 @@
               </n-gi>
               <n-gi>
                 <n-form-item label="Time Zone">
-                  <n-select v-model:value="localFormData.timeZone" :options="timezones" placeholder="Select Time Zone"
+                  <n-select v-model:value="localFormData.timeZone" :options="timezones"
                     style="width: 25%; max-width: 300px;" />
                 </n-form-item>
               </n-gi>
               <n-gi>
                 <n-form-item label="Managed By">
                   <n-select v-model:value="localFormData.managedBy" :options="managedByOptions"
-                    placeholder="Select Management Type" style="width: 25%; max-width: 300px;" />
+                    style="width: 25%; max-width: 300px;" />
                 </n-form-item>
               </n-gi>
               <n-gi>
@@ -208,7 +208,7 @@
                             </n-form-item>
                             <n-form-item label="Target" style="margin-bottom: 0;">
                               <n-select v-model:value="value.target" :options="targetOptions" filterable tag
-                                placeholder="Select or type target" style="width: 150px;" />
+                                style="width: 150px;" />
                             </n-form-item>
                           </n-space>
 

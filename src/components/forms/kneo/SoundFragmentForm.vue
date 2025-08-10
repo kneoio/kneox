@@ -25,36 +25,36 @@
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
               <n-gi>
                 <n-form-item label="Title">
-                  <n-input v-model:value="localFormData.title" style="width: 50%; max-width: 600px;"/>
+                  <n-input v-model:value="localFormData.title" style="width: 50%; max-width: 600px;" placeholder=""/>
                 </n-form-item>
               </n-gi>
 
               <n-gi>
                 <n-form-item label="Artist">
-                  <n-input v-model:value="localFormData.artist" style="width: 50%; max-width: 600px;"/>
+                  <n-input v-model:value="localFormData.artist" style="width: 50%; max-width: 600px;" placeholder=""/>
                 </n-form-item>
               </n-gi>
               <n-gi>
                 <n-form-item label="Type">
                   <n-select v-model:value="localFormData.type" :options="typeOptions" 
-                            placeholder="Select Type" style="width: 25%; max-width: 300px;"/>
+                            style="width: 25%; max-width: 300px;"/>
                 </n-form-item>
               </n-gi>
               <n-gi>
                 <n-form-item label="Genre">
                   <n-select v-model:value="localFormData.genre" :options="referencesStore.genreOptions" filterable
-                            placeholder="Select Genre" style="width: 25%; max-width: 300px;"/>
+                            style="width: 25%; max-width: 300px;"/>
                 </n-form-item>
               </n-gi>
               <n-gi>
                 <n-form-item label="Album">
-                  <n-input v-model:value="localFormData.album" style="width: 50%; max-width: 600px;"/>
+                  <n-input v-model:value="localFormData.album" style="width: 50%; max-width: 600px;" placeholder=""/>
                 </n-form-item>
               </n-gi>
               <n-gi>
                 <n-form-item label="Assign To">
                   <n-select v-model:value="localFormData.representedInBrands" :options="radioStationOptions" filterable
-                            multiple placeholder="Select Radio Stations" style="width: 50%; max-width: 600px;"/>
+                            multiple style="width: 50%; max-width: 600px;"/>
                 </n-form-item>
               </n-gi>
               <n-gi>
@@ -608,6 +608,11 @@ export default defineComponent({
       } else {
         await store.fetch(id);
         Object.assign(localFormData, store.getCurrent);
+        
+        // Clear default "Please Input" values for new forms
+        if (localFormData.title === 'Please Input') localFormData.title = '';
+        if (localFormData.artist === 'Please Input') localFormData.artist = '';
+        if (localFormData.album === 'Please Input') localFormData.album = '';
       }
 
       try {

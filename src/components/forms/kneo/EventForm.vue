@@ -28,7 +28,7 @@
                   <n-select
                       v-model:value="localFormData.type"
                       :options="referencesStore.eventTypeOptions"
-                      placeholder="Select Event Type"
+
                       style="width: 25%; max-width: 300px;"
                   />
                 </n-form-item>
@@ -39,7 +39,7 @@
                   <n-input
                       v-model:value="localFormData.description"
                       type="textarea"
-                      placeholder="Event Description"
+
                       :autosize="{ minRows: 3, maxRows: 6 }"
                       style="width: 80%; max-width: 800px;"
                   />
@@ -50,7 +50,7 @@
                   <n-select
                       v-model:value="localFormData.priority"
                       :options="priorityOptions"
-                      placeholder="Select Priority"
+
                       style="width: 25%; max-width: 300px;"
                   />
                 </n-form-item>
@@ -61,7 +61,7 @@
                       v-model:value="localFormData.brand"
                       :options="radioStationOptions"
                       filterable
-                      placeholder="Select Radio Station"
+
                       style="width: 25%; max-width: 300px;"
                   />
                 </n-form-item>
@@ -72,7 +72,7 @@
                       v-model:value="localFormData.timeZone"
                       :options="referencesStore.timezones"
                       filterable
-                      placeholder="Select Timezone"
+
                       style="width: 25%; max-width: 300px;"
                   />
                   <n-text depth="3" style="font-size: 12px; margin-top: 4px; display: block;">
@@ -114,7 +114,7 @@
                             <n-date-picker
                                 v-model:value="value.timestampValue"
                                 type="datetime"
-                                placeholder="Event Time"
+
                                 style="width: 300px;"
                             />
                           </n-form-item>
@@ -127,7 +127,7 @@
                               </n-form-item>
                               <n-form-item label="Target" style="margin-bottom: 0;">
                                 <n-select v-model:value="value.target" :options="targetOptions" filterable tag
-                                  placeholder="Select or type target" style="width: 150px;" />
+                                  style="width: 150px;" />
                               </n-form-item>
                             </n-space>
 
