@@ -38,11 +38,6 @@ export default defineComponent({
   setup() {
     const aclColumns = computed(() => [
       {
-        title: 'User ID',
-        key: 'userId',
-        width: 100
-      },
-      {
         title: 'User Name',
         key: 'userLogin',
         width: 150

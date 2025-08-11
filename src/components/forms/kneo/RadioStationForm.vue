@@ -71,6 +71,14 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
+                <n-form-item label="Bit Rate">
+                  <n-slider v-model:value="localFormData.bitRate" 
+                    :marks="{ 128000: '128 kbps', 192000: '192 kbps', 256000: '256 kbps', 320000: '320 kbps' }"
+                    :min="128000" :max="320000" :step="64000"
+                    style="width: 50%; max-width: 400px;" />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
                 <n-form-item label="HLS URL">
                   <n-text style="width: 50%; max-width: 600px; font-family: monospace; cursor: pointer; color: #1890ff;"
                     @click="openUrl( localFormData.hlsUrl )">
@@ -386,6 +394,8 @@ export default defineComponent( {
       { value: ManagedBy.MIX, label: "AI DJ" }
     ];
 
+
+
     const targetOptions = [
       { value: "default", label: "default" }
     ];
@@ -413,6 +423,7 @@ export default defineComponent( {
       profileId: undefined,
       timeZone: "",
       managedBy: undefined,
+      bitRate: undefined,
       schedule: undefined
     } );
 
@@ -515,6 +526,7 @@ export default defineComponent( {
           profileId: localFormData.profileId,
           timeZone: localFormData.timeZone,
           managedBy: localFormData.managedBy,
+          bitRate: localFormData.bitRate,
           schedule: localFormData.schedule ? JSON.parse( JSON.stringify( localFormData.schedule ) ) : undefined
         };
 
@@ -732,6 +744,7 @@ export default defineComponent( {
       createLocalizedName,
       countryOptions: referencesStore.countryOptions,
       languageOptions: referencesStore.languageOptions,
+      bitRateOptions: referencesStore.bitRateOptions,
       agentOptions,
       profileOptions,
       selectedAgent,

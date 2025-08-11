@@ -55,6 +55,7 @@ export interface RadioStation {
     iceCastUrl?: string;
     mixplaUrl?: string;
     actionUrl: string;
+    bitRate?: string;
     aiAgentId?: string;
     profileId?: string;
     timeZone?: string;
@@ -70,6 +71,7 @@ export interface RadioStationSave {
     country: string;
     description: string;
     color: string;
+    bitRate?: string;
     aiAgentId?: string;
     profileId?: string;
     timeZone?: string;

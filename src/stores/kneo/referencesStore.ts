@@ -156,6 +156,12 @@ export const useReferencesStore = defineStore('references', () => {
     { label: 'Intro Song', value: 'INTRO_SONG' }
   ];
 
+  const bitRateOptions = [
+    { value: 128000, label: "128 kbps" },
+    { value: 192000, label: "192 kbps" },
+    { value: 320000, label: "320 kbps" }
+  ];
+
   return {
     countryOptions,
     languageOptions,
@@ -165,6 +171,7 @@ export const useReferencesStore = defineStore('references', () => {
     eventTypeOptions,
     llmTypeOptions,
     mergerMethodOptions,
+    bitRateOptions,
     audioAcceptTypes,
     fetchGenres,
     fetchVoices,

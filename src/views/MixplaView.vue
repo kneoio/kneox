@@ -87,16 +87,26 @@ onMounted(() => {
   document.body.style.fontFamily = `'Inter', sans-serif`;
   document.body.style.backgroundColor = '#f9fafb';
   fetchStations();
+  
+  refreshInterval = setInterval(() => {
+    fetchStations();
+  }, 60000);
 });
 
 onUnmounted(() => {
   document.body.style.fontFamily = '';
   document.body.style.backgroundColor = '';
+  
+  if (refreshInterval) {
+    clearInterval(refreshInterval);
+    refreshInterval = null;
+  }
 });
 
 const stationsData = ref<Array<Station>>([]);
 const isLoading = ref(true);
 const error = ref<Error | null>(null);
+let refreshInterval: NodeJS.Timeout | null = null;
 
 const referencesStore = useReferencesStore();
 
