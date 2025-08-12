@@ -39,7 +39,7 @@
                   <n-input
                       v-model:value="localFormData.description"
                       type="textarea"
-
+                      placeholder=""
                       :autosize="{ minRows: 3, maxRows: 6 }"
                       style="width: 80%; max-width: 800px;"
                   />

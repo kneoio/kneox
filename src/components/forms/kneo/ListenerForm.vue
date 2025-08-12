@@ -38,11 +38,7 @@
 
                             style="width: 120px;"
                         />
-                        <n-input
-                            v-model:value="value.name"
-
-                            style="flex: 2;"
-                        />
+                        <n-input v-model:value="value.name" style="flex: 2;" placeholder=""/>
                       </n-space>
                     </template>
                   </n-dynamic-input>
@@ -65,7 +61,7 @@
                         />
                         <n-input
                             v-model:value="value.name"
-
+                            placeholder=""
                             style="flex: 1;"
                         />
                       </n-space>

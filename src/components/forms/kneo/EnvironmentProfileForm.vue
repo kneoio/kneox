@@ -23,13 +23,14 @@
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
               <n-gi>
                 <n-form-item label="Name">
-                  <n-input v-model:value="localFormData.name" style="width: 50%; max-width: 600px;"/>
+                  <n-input v-model:value="localFormData.name" style="width: 50%; max-width: 600px;" placeholder=""/>
                 </n-form-item>
               </n-gi>
               <n-gi>
                 <n-form-item label="Description">
                   <n-input
                       v-model:value="localFormData.description"
+                      placeholder=""
                       type="textarea"
                       :autosize="{ minRows: 3, maxRows: 5 }"
                       style="width: 50%; max-width: 600px;"

@@ -35,7 +35,7 @@
                       <n-space align="center" style="width: 100%;">
                         <n-select v-model:value="value.language" :options="languageOptions"
                           style="width: 120px;" />
-                        <n-input v-model:value="value.name" style="flex: 1;" />
+                        <n-input v-model:value="value.name" style="flex: 1;" placeholder="" />
                       </n-space>
                     </template>
                   </n-dynamic-input>
@@ -49,7 +49,7 @@
               </n-gi>
               <n-gi>
                 <n-form-item label="Description">
-                  <n-input v-model:value="localFormData.description" type="textarea"
+                  <n-input v-model:value="localFormData.description" type="textarea" placeholder=""
                     :autosize="{ minRows: 3, maxRows: 6 }" style="width: 50%; max-width: 600px;" />
                 </n-form-item>
               </n-gi>
