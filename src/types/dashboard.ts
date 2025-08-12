@@ -25,6 +25,34 @@ export interface FileMaintenanceStats {
     directoriesDeleted: number;
 }
 
+export interface SchedulerTask {
+    entityId: string;
+    entityType: string;
+    entityName: string;
+    taskType: string;
+    triggerType: string;
+    status: string;
+    timeZone: string;
+    nextExecution: string | null;
+    lastExecution: string | null;
+    cronExpression: string | null;
+    upcomingExecutions: string[];
+    enabled: boolean;
+}
+
+export interface SchedulerStats {
+    schedulerRunning: boolean;
+    schedulerName: string;
+    totalScheduledTasks: number;
+    activeJobs: number;
+    pausedJobs: number;
+    completedJobs: number;
+    errorJobs: number;
+    jobGroups: string[];
+    tasks: SchedulerTask[];
+    lastUpdated: string;
+}
+
 export interface DashboardStats {
     totalStations: number;
     onlineStations: number;
@@ -36,6 +64,7 @@ export interface DashboardStats {
     timelines: PeriodicTask[];
     configurationStats: ConfigDetails;
     fileMaintenanceStats: FileMaintenanceStats;
+    schedulerStats: SchedulerStats;
 }
 
 export interface PeriodicTask {

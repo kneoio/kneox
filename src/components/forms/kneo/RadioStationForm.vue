@@ -220,42 +220,46 @@
                             </n-form-item>
                           </n-space>
 
-                          <!-- Time Slider -->
-                          <n-form-item label="Time Range" style="margin-bottom: 0;">
+                          <!-- Start Time Slider -->
+                          <n-form-item label="Start Time" style="margin-bottom: 0;">
                             <n-space vertical style="width: 100%;">
                               <n-space align="center">
-                                <!-- Start time controls -->
                                 <n-button-group style="align-self: center;">
-                                  <n-button size="small" @click="value.timeRange[0] = Math.max(0, value.timeRange[0] - 1)" style="margin-bottom: 16px;">
+                                  <n-button size="small" @click="value.startTime = Math.max(0, value.startTime - 15)" style="margin-bottom: 16px;">
                                     -
                                   </n-button>
-                                  <n-button size="small" @click="value.timeRange[0] = Math.min(value.timeRange[1] - 1, value.timeRange[0] + 1)" style="margin-bottom: 16px;">
+                                  <n-button size="small" @click="value.startTime = Math.min(1440, value.startTime + 15)" style="margin-bottom: 16px;">
                                     +
                                   </n-button>
                                 </n-button-group>
                                 
-                                <n-slider v-model:value="value.timeRange" range :marks="timeMarks" :step="15" :min="0"
+                                <n-slider v-model:value="value.startTime" :marks="timeMarks" :step="15" :min="0"
                                   :max="1440" style="width: 400px;" />
-                                
-                                <!-- End time controls -->
-                                <n-button-group style="align-self: center;">
-                                  <n-button size="small" @click="value.timeRange[1] = Math.max(value.timeRange[0] + 1, value.timeRange[1] - 1)" style="margin-bottom: 16px;">
-                                    -
-                                  </n-button>
-                                  <n-button size="small" @click="value.timeRange[1] = Math.min(1440, value.timeRange[1] + 1)" style="margin-bottom: 16px;">
-                                    +
-                                  </n-button>
-                                </n-button-group>
                               </n-space>
                               <n-space>
-                                <n-text depth="3" style="font-size: 12px;">{{ formatMinutesToTime( value.timeRange[0] )
-                                }}</n-text>
-                                <n-text depth="3" style="font-size: 12px;">to</n-text>
-                                <n-text depth="3" style="font-size: 12px;">{{ formatMinutesToTime( value.timeRange[1] )
-                                }}</n-text>
-                                <n-text depth="3" style="font-size: 12px;">({{
-                                  calculateDurationFromMinutes( value.timeRange[0],
-                                    value.timeRange[1] ) }})</n-text>
+                                <n-text depth="3" style="font-size: 12px;">{{ formatMinutesToTime( value.startTime ) }}</n-text>
+                              </n-space>
+                            </n-space>
+                          </n-form-item>
+
+                          <!-- End Time Slider -->
+                          <n-form-item label="End Time" style="margin-bottom: 0;">
+                            <n-space vertical style="width: 100%;">
+                              <n-space align="center">
+                                <n-button-group style="align-self: center;">
+                                  <n-button size="small" @click="value.endTime = Math.max(0, value.endTime - 15)" style="margin-bottom: 16px;">
+                                    -
+                                  </n-button>
+                                  <n-button size="small" @click="value.endTime = Math.min(1440, value.endTime + 15)" style="margin-bottom: 16px;">
+                                    +
+                                  </n-button>
+                                </n-button-group>
+                                
+                                <n-slider v-model:value="value.endTime" :marks="timeMarks" :step="15" :min="0"
+                                  :max="1440" style="width: 400px;" />
+                              </n-space>
+                              <n-space>
+                                <n-text depth="3" style="font-size: 12px;">{{ formatMinutesToTime( value.endTime ) }}</n-text>
                               </n-space>
                             </n-space>
                           </n-form-item>
@@ -628,8 +632,8 @@ export default defineComponent( {
         target: task.target,
         triggerType: 'TIME_WINDOW',
         timeWindowTrigger: {
-          startTime: formatMinutesToTime( task.timeRange[0] ),
-          endTime: formatMinutesToTime( task.timeRange[1] ),
+          startTime: formatMinutesToTime( task.startTime ),
+          endTime: formatMinutesToTime( task.endTime ),
           weekdays: task.weekdays
         }
       } ) );
@@ -638,7 +642,8 @@ export default defineComponent( {
     const createScheduleTask = () => ( {
       type: 'PROCESS_DJ_CONTROL',
       target: 'default',
-      timeRange: [540, 600], // 09:00 to 10:00
+      startTime: 540, // 09:00
+      endTime: 600,   // 10:00
       weekdays: ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY']
     } );
 
@@ -704,10 +709,8 @@ export default defineComponent( {
           scheduleTasksArray.value = localFormData.schedule.tasks.map( task => ( {
             type: task.type,
             target: task.target,
-            timeRange: task.timeWindowTrigger ? [
-              timeToMinutes( task.timeWindowTrigger.startTime ),
-              timeToMinutes( task.timeWindowTrigger.endTime )
-            ] : [540, 600],
+            startTime: task.timeWindowTrigger ? timeToMinutes( task.timeWindowTrigger.startTime ) : 540,
+            endTime: task.timeWindowTrigger ? timeToMinutes( task.timeWindowTrigger.endTime ) : 600,
             weekdays: task.timeWindowTrigger ? task.timeWindowTrigger.weekdays : []
           } ) );
         } else {

@@ -119,7 +119,7 @@
                             />
                           </n-form-item>
                           
-                          <!-- PERIODIC: Show Type, Target, single time point, and weekdays -->
+                          <!-- PERIODIC: Show type, target, startTime, endTime, interval, and weekdays -->
                           <template v-if="value.triggerType === 'PERIODIC'">
                             <n-space>
                               <n-form-item label="Type" style="margin-bottom: 0;">
@@ -131,25 +131,50 @@
                               </n-form-item>
                             </n-space>
 
-                            <n-form-item label="Time" style="margin-bottom: 0;">
+                            <n-form-item label="Start Time" style="margin-bottom: 0;">
                               <n-space vertical style="width: 100%;">
                                 <n-space align="center">
                                   <n-button-group style="align-self: center;">
-                                    <n-button size="small" @click="value.time = Math.max(0, value.time - 15)" style="margin-bottom: 16px;">
+                                    <n-button size="small" @click="value.startTime = Math.max(0, value.startTime - 15)" style="margin-bottom: 16px;">
                                       -
                                     </n-button>
-                                    <n-button size="small" @click="value.time = Math.min(1440, value.time + 15)" style="margin-bottom: 16px;">
+                                    <n-button size="small" @click="value.startTime = Math.min(1440, value.startTime + 15)" style="margin-bottom: 16px;">
                                       +
                                     </n-button>
                                   </n-button-group>
                                   
-                                  <n-slider v-model:value="value.time" :marks="timeMarks" :step="15" :min="0"
+                                  <n-slider v-model:value="value.startTime" :marks="timeMarks" :step="15" :min="0"
                                     :max="1440" style="width: 400px;" />
                                 </n-space>
                                 <n-space>
-                                  <n-text depth="3" style="font-size: 12px;">{{ formatMinutesToTime(value.time) }}</n-text>
+                                  <n-text depth="3" style="font-size: 12px;">{{ formatMinutesToTime(value.startTime) }}</n-text>
                                 </n-space>
                               </n-space>
+                            </n-form-item>
+
+                            <n-form-item label="End Time" style="margin-bottom: 0;">
+                              <n-space vertical style="width: 100%;">
+                                <n-space align="center">
+                                  <n-button-group style="align-self: center;">
+                                    <n-button size="small" @click="value.endTime = Math.max(0, value.endTime - 15)" style="margin-bottom: 16px;">
+                                      -
+                                    </n-button>
+                                    <n-button size="small" @click="value.endTime = Math.min(1440, value.endTime + 15)" style="margin-bottom: 16px;">
+                                      +
+                                    </n-button>
+                                  </n-button-group>
+                                  
+                                  <n-slider v-model:value="value.endTime" :marks="timeMarks" :step="15" :min="0"
+                                    :max="1440" style="width: 400px;" />
+                                </n-space>
+                                <n-space>
+                                  <n-text depth="3" style="font-size: 12px;">{{ formatMinutesToTime(value.endTime) }}</n-text>
+                                </n-space>
+                              </n-space>
+                            </n-form-item>
+
+                            <n-form-item label="Interval (minutes)" style="margin-bottom: 0;">
+                              <n-input-number v-model:value="value.interval" :min="1" :max="1440" style="width: 150px;" />
                             </n-form-item>
 
                             <n-form-item label="Days" style="margin-bottom: 0;">
@@ -187,7 +212,7 @@ import { useMessage } from 'naive-ui';
 import {
   NGrid, NGi, NPageHeader, NButton, NButtonGroup, NTabs, NTabPane,
   NForm, NFormItem, NInput, NSelect, NDatePicker, NCard, NCheckbox,
-  NCheckboxGroup, NDynamicInput, NSlider, NSpace, NText
+  NCheckboxGroup, NDynamicInput, NSlider, NSpace, NText, NInputNumber
 } from 'naive-ui';
 import { useEventsStore } from '../../../stores/kneo/eventsStore';
 import { useRadioStationStore } from '../../../stores/kneo/radioStationStore';
@@ -285,22 +310,6 @@ const formatMinutesToTime = (minutes: number): string => {
   return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
 };
 
-const calculateDurationFromMinutes = (startMinutes: number, endMinutes: number): string => {
-  let duration = endMinutes - startMinutes;
-  if (duration < 0) {
-    duration += 24 * 60;
-  }
-  const hours = Math.floor(duration / 60);
-  const minutes = duration % 60;
-
-  if (hours === 0) {
-    return `${minutes}m`;
-  } else if (minutes === 0) {
-    return `${hours}h`;
-  } else {
-    return `${hours}h ${minutes}m`;
-  }
-};
 
 const timeToMinutes = (timeStr: string): number => {
   const [hours, minutes] = timeStr.split(':').map(Number);
@@ -308,11 +317,12 @@ const timeToMinutes = (timeStr: string): number => {
 };
 
 const createScheduleTask = () => ({
-  triggerType: 'ONCE',
-  type: '',
-  target: '',
-  time: 480,
-  timeRange: [480, 1080],
+  triggerType: 'PERIODIC',
+  type: 'EVENT_TRIGGER',
+  target: 'default',
+  startTime: 540,
+  endTime: 1020,
+  interval: 60,
   timestampValue: null,
   weekdays: []
 });
@@ -327,9 +337,9 @@ const loadFormData = () => {
     scheduleTasksArray.value = localFormData.schedule.tasks.map(task => {
       const mappedTask: any = {
         triggerType: task.triggerType || 'ONCE',
-        type: task.type,
-        target: task.target,
-        timeRange: [540, 600],
+        startTime: 540,
+        endTime: 1020,
+        interval: 60,
         weekdays: []
       };
 
@@ -340,17 +350,10 @@ const loadFormData = () => {
 
       // Map PERIODIC trigger data
       if (task.triggerType === 'PERIODIC' && task.periodicTrigger) {
-        mappedTask.time = task.periodicTrigger.time || 480;
+        mappedTask.startTime = timeToMinutes(task.periodicTrigger.startTime) || 540;
+        mappedTask.endTime = timeToMinutes(task.periodicTrigger.endTime) || 1020;
+        mappedTask.interval = task.periodicTrigger.interval || 60;
         mappedTask.weekdays = task.periodicTrigger.weekdays || [];
-      }
-
-      // Map TIME_WINDOW trigger data (if needed)
-      if (task.triggerType === 'TIME_WINDOW' && task.timeWindowTrigger) {
-        mappedTask.timeRange = [
-          timeToMinutes(task.timeWindowTrigger.startTime),
-          timeToMinutes(task.timeWindowTrigger.endTime)
-        ];
-        mappedTask.weekdays = task.timeWindowTrigger.weekdays || [];
       }
 
       return mappedTask;
@@ -383,16 +386,30 @@ const handleSave = async () => {
     const scheduleData = {
       enabled: localFormData.schedule?.enabled || false,
       timeZone: localFormData.timeZone,
-      tasks: scheduleTasksArray.value.map(task => ({
-        triggerType: task.triggerType,
-        type: task.type,
-        target: task.target,
-        timestampEvent: task.triggerType === 'ONCE' && task.timestampValue ? 
-          new Date(task.timestampValue).toISOString() : undefined,
-        time: task.triggerType === 'PERIODIC' ? task.time : undefined,
-        timeRange: task.timeRange,
-        weekdays: task.weekdays
-      }))
+      tasks: scheduleTasksArray.value.map(task => {
+        if (task.triggerType === 'PERIODIC') {
+          return {
+            triggerType: 'PERIODIC',
+            type: task.type,
+            target: task.target,
+            periodicTrigger: {
+              startTime: formatMinutesToTime(task.startTime),
+              endTime: formatMinutesToTime(task.endTime),
+              interval: task.interval,
+              weekdays: task.weekdays
+            }
+          };
+        } else {
+          return {
+            triggerType: task.triggerType,
+            type: task.type,
+            target: task.target,
+            onceTrigger: {
+              timestamp: task.timestampValue ? new Date(task.timestampValue).toISOString() : null
+            }
+          };
+        }
+      })
     };
 
     const saveData: EventSave = {
@@ -405,6 +422,7 @@ const handleSave = async () => {
     };
 
     await eventsStore.saveEvent(saveData, localFormData.id || null);
+
     message.success(localFormData.id ? 'Event updated successfully' : 'Event created successfully');
     goBack();
   } catch (error) {
@@ -432,16 +450,26 @@ watch(scheduleTasksArray, (newValue) => {
     localFormData.schedule = { enabled: false, tasks: [] };
   }
 
-  localFormData.schedule.tasks = newValue.map(task => ({
-    type: task.type,
-    target: task.target,
-    triggerType: 'TIME_WINDOW',
-    timeWindowTrigger: {
-      startTime: formatMinutesToTime(task.timeRange[0]),
-      endTime: formatMinutesToTime(task.timeRange[1]),
-      weekdays: task.weekdays
+  localFormData.schedule.tasks = newValue.map(task => {
+    if (task.triggerType === 'PERIODIC') {
+      return {
+        triggerType: 'PERIODIC',
+        periodicTrigger: {
+          startTime: formatMinutesToTime(task.startTime),
+          endTime: formatMinutesToTime(task.endTime),
+          interval: task.interval,
+          weekdays: task.weekdays
+        }
+      };
+    } else {
+      return {
+        triggerType: task.triggerType,
+        onceTrigger: {
+          timestamp: task.timestampValue ? new Date(task.timestampValue).toISOString() : null
+        }
+      };
     }
-  }));
+  });
 }, { deep: true });
 
 onMounted(async () => {

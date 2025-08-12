@@ -69,7 +69,39 @@
                 </div>
               </n-space>
             </n-card>
+
+            <n-card title="Scheduler" size="small" style="flex: 1; min-width: 0;" v-if="dashboard?.globalStats?.schedulerStats">
+              <n-space vertical size="small">
+                <div style="font-size: 0.875rem;">
+                  <n-tag :type="dashboard.globalStats.schedulerStats.schedulerRunning ? 'success' : 'error'" size="small">
+                    {{ dashboard.globalStats.schedulerStats.schedulerRunning ? 'Running' : 'Stopped' }}
+                  </n-tag>
+                </div>
+                <div style="font-size: 0.875rem;">
+                  <n-text depth="2">Tasks: {{ dashboard.globalStats.schedulerStats.totalScheduledTasks }}</n-text>
+                </div>
+                <div style="font-size: 0.875rem;">
+                  <n-text depth="2">Active: {{ dashboard.globalStats.schedulerStats.activeJobs }}</n-text>
+                </div>
+                <div style="font-size: 0.875rem;">
+                  <n-text depth="3">Paused: {{ dashboard.globalStats.schedulerStats.pausedJobs }}</n-text>
+                </div>
+                <div style="font-size: 0.875rem;">
+                  <n-text depth="3">Errors: {{ dashboard.globalStats.schedulerStats.errorJobs }}</n-text>
+                </div>
+              </n-space>
+            </n-card>
           </n-space>
+
+          <n-card title="Scheduler Tasks" size="small" v-if="dashboard?.globalStats?.schedulerStats?.tasks && dashboard.globalStats.schedulerStats.tasks.length > 0">
+            <n-data-table
+                :columns="schedulerTaskColumns"
+                :data="dashboard.globalStats.schedulerStats.tasks"
+                :pagination="false"
+                size="small"
+                :max-height="300"
+            />
+          </n-card>
 
           <n-card title="Configuration" size="small" v-if="dashboard.globalStats.configurationStats?.configDetails">
             <n-space size="large">
@@ -119,7 +151,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, inject, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, defineComponent, inject, onMounted, onUnmounted, ref, watch, h } from 'vue';
 import {
   NAlert, NButton, NDataTable, NDescriptions, NDescriptionsItem, NDivider, NGi, NGrid, NSelect, NTag, NText,
   NSpace, NCard, NH2
@@ -127,7 +159,7 @@ import {
 import { useDashboardStore } from "../stores/kneo/dashboardStore";
 import { useRadioStationStore } from "../stores/kneo/radioStationStore";
 import { useStationColumns } from "../components/dashboard/stationColumns";
-import type { StationEntry } from '../types/dashboard';
+import type { SchedulerTask } from '../types/dashboard';
 
 export default defineComponent({
   name: 'DashboardView',
@@ -161,6 +193,84 @@ export default defineComponent({
     };
 
     const stationColumns = useStationColumns(dashboard, isMobile, sendCommand);
+
+    const schedulerTaskColumns = [
+      {
+        title: 'Entity Name',
+        key: 'entityName',
+        width: 120
+      },
+      {
+        title: 'Task Type',
+        key: 'taskType',
+        width: 150
+      },
+      {
+        title: 'Status',
+        key: 'status',
+        width: 120,
+        render: (row: SchedulerTask) => {
+          const type = row.status === 'NOT_SCHEDULED' ? 'warning' : 
+                      row.status === 'SCHEDULED' ? 'info' : 'default';
+          return h(NTag, { type, size: 'small' }, { default: () => row.status });
+        }
+      },
+      {
+        title: 'Trigger Type',
+        key: 'triggerType',
+        width: 120
+      },
+      {
+        title: 'Enabled',
+        key: 'enabled',
+        width: 80,
+        render: (row: SchedulerTask) => {
+          return h(NTag, { 
+            type: row.enabled ? 'success' : 'error', 
+            size: 'small' 
+          }, { 
+            default: () => row.enabled ? 'Yes' : 'No' 
+          });
+        }
+      },
+      {
+        title: 'Time Zone',
+        key: 'timeZone',
+        width: 120
+      },
+      {
+        title: 'Next Execution',
+        key: 'nextExecution',
+        width: 150,
+        render: (row: SchedulerTask) => {
+          return row.nextExecution ? new Date(row.nextExecution).toLocaleString() : 'Not scheduled';
+        }
+      },
+      {
+        title: 'Last Execution',
+        key: 'lastExecution',
+        width: 150,
+        render: (row: SchedulerTask) => {
+          return row.lastExecution ? new Date(row.lastExecution).toLocaleString() : 'Never';
+        }
+      },
+      {
+        title: 'Cron Expression',
+        key: 'cronExpression',
+        width: 120,
+        render: (row: SchedulerTask) => {
+          return row.cronExpression || 'None';
+        }
+      },
+      {
+        title: 'Upcoming',
+        key: 'upcomingExecutions',
+        width: 100,
+        render: (row: SchedulerTask) => {
+          return row.upcomingExecutions?.length || 0;
+        }
+      }
+    ];
 
     const brandOptions = computed(() => brandStore.getEntries.map(brand => ({
       label: brand.slugName,
@@ -216,6 +326,7 @@ export default defineComponent({
       userData,
       dashboard,
       stationColumns,
+      schedulerTaskColumns,
       sendCommand,
       formatTime,
       isMobile,
