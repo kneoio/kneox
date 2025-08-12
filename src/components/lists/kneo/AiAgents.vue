@@ -201,7 +201,7 @@ export default defineComponent({
         {
           title: 'Preferred Voice',
           key: 'preferredVoice',
-          width: 165,
+          width: 200,
           render: (row: AiAgent) => {
             return h('span', {}, row.preferredVoice?.map(voice => voice.name).join(', ') || 'N/A');
           }
