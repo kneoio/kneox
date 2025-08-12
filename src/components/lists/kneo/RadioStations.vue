@@ -290,6 +290,13 @@ export default defineComponent({
         },
         {title: 'Managed By', key: 'managedBy'},
         {
+          title: 'Bit Rate',
+          key: 'bitRate',
+          render: (row: RadioStation) => {
+            return h('div', {}, row.bitRate ? `${(parseInt(row.bitRate) / 1000).toFixed(0)}k` : '-');
+          }
+        },
+        {
           title: 'URL',
           key: 'mixplaUrl',
           render: (row: RadioStation) => {

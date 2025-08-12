@@ -415,7 +415,7 @@ export default defineComponent( {
       },
       country: "",
       description: "",
-      color: "#FF9800",
+      color: "#FFFFFF",
       hlsUrl: "",
       iceCastUrl: "",
       mixplaUrl: "",
@@ -423,7 +423,7 @@ export default defineComponent( {
       profileId: undefined,
       timeZone: "",
       managedBy: undefined,
-      bitRate: undefined,
+      bitRate: "128000",
       schedule: undefined
     } );
 

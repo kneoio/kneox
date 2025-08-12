@@ -349,7 +349,7 @@ export default defineComponent({
             }
         );
         logWithTimestamp(`Starting upload: ${file.name}, Estimated: ${sessionData.estimatedDurationSeconds}`);
-        store.uploadFile(entityId, file.file, uploadId);
+        await store.uploadFile(entityId, file.file, uploadId);
         connectSSE(uploadId);
 
       } catch (error: any) {

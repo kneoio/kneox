@@ -151,7 +151,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
     };
 
     const uploadFile = async (id: string, file: File, uploadId: string) => {
-        const maxSizeBytes = 100 * 1024 * 1024; // 100MB
+        const maxSizeBytes = 120 * 1024 * 1024; // 120MB
 
         if (file.size > maxSizeBytes) {
             throw new Error(`File too large. Maximum size is ${maxSizeBytes / 1024 / 1024}MB`);
