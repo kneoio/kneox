@@ -78,6 +78,9 @@
                   <n-text depth="3" style="font-size: 12px; margin-top: 4px; display: block;">
                     ⚠️ Timezone should usually match the radio station location
                   </n-text>
+                  <n-text v-if="getCurrentTimeInTimezone" depth="2" style="font-size: 12px; margin-top: 4px; display: block; color: #18a058;">
+                    {{ getCurrentTimeInTimezone }}
+                  </n-text>
                 </n-form-item>
               </n-gi>
             </n-grid>
@@ -135,15 +138,15 @@
                               <n-space vertical style="width: 100%;">
                                 <n-space align="center">
                                   <n-button-group style="align-self: center;">
-                                    <n-button size="small" @click="value.startTime = Math.max(0, value.startTime - 15)" style="margin-bottom: 16px;">
+                                    <n-button size="small" @click="value.startTime = Math.max(0, value.startTime - 1)" style="margin-bottom: 16px;">
                                       -
                                     </n-button>
-                                    <n-button size="small" @click="value.startTime = Math.min(1440, value.startTime + 15)" style="margin-bottom: 16px;">
+                                    <n-button size="small" @click="value.startTime = Math.min(1440, value.startTime + 1)" style="margin-bottom: 16px;">
                                       +
                                     </n-button>
                                   </n-button-group>
                                   
-                                  <n-slider v-model:value="value.startTime" :marks="timeMarks" :step="15" :min="0"
+                                  <n-slider v-model:value="value.startTime" :marks="timeMarks" :step="1" :min="0"
                                     :max="1440" style="width: 400px;" />
                                 </n-space>
                                 <n-space>
@@ -156,15 +159,15 @@
                               <n-space vertical style="width: 100%;">
                                 <n-space align="center">
                                   <n-button-group style="align-self: center;">
-                                    <n-button size="small" @click="value.endTime = Math.max(0, value.endTime - 15)" style="margin-bottom: 16px;">
+                                    <n-button size="small" @click="value.endTime = Math.max(0, value.endTime - 1)" style="margin-bottom: 16px;">
                                       -
                                     </n-button>
-                                    <n-button size="small" @click="value.endTime = Math.min(1440, value.endTime + 15)" style="margin-bottom: 16px;">
+                                    <n-button size="small" @click="value.endTime = Math.min(1440, value.endTime + 1)" style="margin-bottom: 16px;">
                                       +
                                     </n-button>
                                   </n-button-group>
                                   
-                                  <n-slider v-model:value="value.endTime" :marks="timeMarks" :step="15" :min="0"
+                                  <n-slider v-model:value="value.endTime" :marks="timeMarks" :step="1" :min="0"
                                     :max="1440" style="width: 400px;" />
                                 </n-space>
                                 <n-space>
@@ -206,7 +209,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, watch } from 'vue';
+import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useMessage } from 'naive-ui';
 import {
@@ -236,6 +239,9 @@ const radioStationStore = useRadioStationStore();
 const referencesStore = useReferencesStore();
 
 const activeTab = ref('properties');
+const currentTime = ref(new Date());
+const clockIntervalId = ref<number | null>(null);
+
 const localFormData = reactive<LocalEventFormData>({
   id: '',
   author: '',
@@ -301,7 +307,37 @@ const formTitle = computed(() => {
 });
 
 const goBack = () => {
-  router.push({ name: 'Events' });
+  router.push('/outline/events');
+};
+
+const getCurrentTimeInTimezone = computed(() => {
+  if (!localFormData.timeZone) return '';
+  try {
+    return `Local Time: ${currentTime.value.toLocaleString('en-GB', {
+      timeZone: localFormData.timeZone,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    })}`;
+  } catch (error) {
+    return 'Invalid timezone';
+  }
+});
+
+const startClockUpdate = () => {
+  if (!clockIntervalId.value) {
+    clockIntervalId.value = window.setInterval(() => {
+      currentTime.value = new Date();
+    }, 1000);
+  }
+};
+
+const stopClockUpdate = () => {
+  if (clockIntervalId.value) {
+    clearInterval(clockIntervalId.value);
+    clockIntervalId.value = null;
+  }
 };
 
 const formatMinutesToTime = (minutes: number): string => {
@@ -309,7 +345,6 @@ const formatMinutesToTime = (minutes: number): string => {
   const mins = minutes % 60;
   return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
 };
-
 
 const timeToMinutes = (timeStr: string): number => {
   const [hours, minutes] = timeStr.split(':').map(Number);
@@ -321,9 +356,8 @@ const createScheduleTask = () => ({
   type: 'EVENT_TRIGGER',
   target: 'default',
   startTime: 540,
-  endTime: 1020,
+  endTime: 600,
   interval: 60,
-  timestampValue: null,
   weekdays: []
 });
 
@@ -340,7 +374,7 @@ const loadFormData = () => {
         type: task.type || '',
         target: task.target || '',
         startTime: 540,
-        endTime: 1020,
+        endTime: 600,
         interval: 60,
         weekdays: []
       };
@@ -353,7 +387,7 @@ const loadFormData = () => {
       // Map PERIODIC trigger data
       if (task.triggerType === 'PERIODIC' && task.periodicTrigger) {
         mappedTask.startTime = timeToMinutes(task.periodicTrigger.startTime) || 540;
-        mappedTask.endTime = timeToMinutes(task.periodicTrigger.endTime) || 1020;
+        mappedTask.endTime = timeToMinutes(task.periodicTrigger.endTime) || 600;
         mappedTask.interval = task.periodicTrigger.interval || 60;
         mappedTask.weekdays = task.periodicTrigger.weekdays || [];
       }
@@ -475,6 +509,7 @@ watch(scheduleTasksArray, (newValue) => {
 }, { deep: true });
 
 onMounted(async () => {
+  startClockUpdate();
   const id = route.params.id as string;
   if (id && id !== 'new') {
     try {

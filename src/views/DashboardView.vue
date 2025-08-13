@@ -181,6 +181,35 @@ export default defineComponent({
 
     const formatTime = (date: Date) => date.toLocaleTimeString();
 
+    const formatDateTimeWithToday = (dateString: string) => {
+      if (!dateString) return 'Not scheduled';
+      const date = new Date(dateString);
+      const today = new Date();
+      const isToday = date.toDateString() === today.toDateString();
+      
+      const timeString = date.toLocaleString('en-GB', {
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+      
+      if (isToday) {
+        return `Today ${timeString}`;
+      } else {
+        return date.toLocaleString('en-GB', {
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          timeZoneName: 'short'
+        });
+      }
+    };
+
     const selectedBrand = ref('');
     const sendCommand = async (brandName: string, command: string) => {
       if (!brandName) return;
@@ -243,18 +272,7 @@ export default defineComponent({
         key: 'nextExecution',
         width: 180,
         render: (row: SchedulerTask) => {
-          if (!row.nextExecution) return 'Not scheduled';
-          const date = new Date(row.nextExecution);
-          return date.toLocaleString('en-GB', {
-            timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            timeZoneName: 'short'
-          });
+          return formatDateTimeWithToday(row.nextExecution);
         }
       },
       {
@@ -263,17 +281,7 @@ export default defineComponent({
         width: 180,
         render: (row: SchedulerTask) => {
           if (!row.lastExecution) return 'Never';
-          const date = new Date(row.lastExecution);
-          return date.toLocaleString('en-GB', {
-            timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            timeZoneName: 'short'
-          });
+          return formatDateTimeWithToday(row.lastExecution);
         }
       },
       {

@@ -225,15 +225,14 @@
                             <n-space vertical style="width: 100%;">
                               <n-space align="center">
                                 <n-button-group style="align-self: center;">
-                                  <n-button size="small" @click="value.startTime = Math.max(0, value.startTime - 15)" style="margin-bottom: 16px;">
+                                  <n-button size="small" @click="value.startTime = Math.max(0, value.startTime - 1)" style="margin-bottom: 16px;">
                                     -
                                   </n-button>
-                                  <n-button size="small" @click="value.startTime = Math.min(1440, value.startTime + 15)" style="margin-bottom: 16px;">
+                                  <n-button size="small" @click="value.startTime = Math.min(1440, value.startTime + 1)" style="margin-bottom: 16px;">
                                     +
                                   </n-button>
                                 </n-button-group>
-                                
-                                <n-slider v-model:value="value.startTime" :marks="timeMarks" :step="15" :min="0"
+                                <n-slider v-model:value="value.startTime" :marks="timeMarks" :step="1" :min="0"
                                   :max="1440" style="width: 400px;" />
                               </n-space>
                               <n-space>
@@ -247,15 +246,14 @@
                             <n-space vertical style="width: 100%;">
                               <n-space align="center">
                                 <n-button-group style="align-self: center;">
-                                  <n-button size="small" @click="value.endTime = Math.max(0, value.endTime - 15)" style="margin-bottom: 16px;">
+                                  <n-button size="small" @click="value.endTime = Math.max(0, value.endTime - 1)" style="margin-bottom: 16px;">
                                     -
                                   </n-button>
-                                  <n-button size="small" @click="value.endTime = Math.min(1440, value.endTime + 15)" style="margin-bottom: 16px;">
+                                  <n-button size="small" @click="value.endTime = Math.min(1440, value.endTime + 1)" style="margin-bottom: 16px;">
                                     +
                                   </n-button>
                                 </n-button-group>
-                                
-                                <n-slider v-model:value="value.endTime" :marks="timeMarks" :step="15" :min="0"
+                                <n-slider v-model:value="value.endTime" :marks="timeMarks" :step="1" :min="0"
                                   :max="1440" style="width: 400px;" />
                               </n-space>
                               <n-space>
@@ -479,7 +477,7 @@ export default defineComponent( {
       if ( !clockIntervalId.value ) {
         clockIntervalId.value = window.setInterval( () => {
           currentTime.value = new Date();
-        }, 60000 ); // Update every minute
+        }, 1000 ); // Update every second for real-time display
       }
     };
 
@@ -492,12 +490,17 @@ export default defineComponent( {
 
     const getCurrentTimeInTimezone = computed( () => {
       if ( !localFormData.timeZone ) return '';
-      return currentTime.value.toLocaleTimeString( 'en-US', {
-        timeZone: localFormData.timeZone,
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
-      } );
+      try {
+        return `Local Time: ${currentTime.value.toLocaleString( 'en-GB', {
+          timeZone: localFormData.timeZone,
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        } )}`;
+      } catch (error) {
+        return 'Invalid timezone';
+      }
     } );
 
     const copyToClipboard = ( text: string | undefined ) => {
@@ -647,6 +650,8 @@ export default defineComponent( {
       weekdays: ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY']
     } );
 
+
+
     const taskTypeOptions = [
       { label: 'DJs shift', value: 'PROCESS_DJ_CONTROL' },
 
@@ -769,7 +774,9 @@ export default defineComponent( {
       timeToMinutes,
       calculateDuration,
       formatWeekday,
-      getCurrentTimeInTimezone
+      getCurrentTimeInTimezone,
+      startClockUpdate,
+      stopClockUpdate
     };
   }
 } );
