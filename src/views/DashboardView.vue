@@ -239,19 +239,41 @@ export default defineComponent({
         width: 120
       },
       {
-        title: 'Next Execution',
+        title: 'Next Execution (Local Time)',
         key: 'nextExecution',
-        width: 150,
+        width: 180,
         render: (row: SchedulerTask) => {
-          return row.nextExecution ? new Date(row.nextExecution).toLocaleString() : 'Not scheduled';
+          if (!row.nextExecution) return 'Not scheduled';
+          const date = new Date(row.nextExecution);
+          return date.toLocaleString('en-GB', {
+            timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            timeZoneName: 'short'
+          });
         }
       },
       {
-        title: 'Last Execution',
+        title: 'Last Execution (Local Time)',
         key: 'lastExecution',
-        width: 150,
+        width: 180,
         render: (row: SchedulerTask) => {
-          return row.lastExecution ? new Date(row.lastExecution).toLocaleString() : 'Never';
+          if (!row.lastExecution) return 'Never';
+          const date = new Date(row.lastExecution);
+          return date.toLocaleString('en-GB', {
+            timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            timeZoneName: 'short'
+          });
         }
       },
       {
@@ -284,14 +306,13 @@ export default defineComponent({
     }, { immediate: true });
 
     onMounted(() => {
-      dashboard.connectGlobal();
-      // Note: setupPeriodicRefresh needs to be added back to the store or implemented here
+      dashboard.startGlobalPolling();
       brandStore.fetchAll();
       window.addEventListener('resize', () => isMobile.value = window.innerWidth < 768);
       parentTitle.value = 'Dashboard';
 
       onUnmounted(() => {
-        dashboard.disconnectGlobal();
+        dashboard.stopGlobalPolling();
         dashboard.globalStationsList.forEach(station => dashboard.disconnectStation(station.brandName));
         window.removeEventListener('resize', () => isMobile.value = window.innerWidth < 768);
       });

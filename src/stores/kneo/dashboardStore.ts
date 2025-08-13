@@ -165,6 +165,62 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
         }
     };
 
+    // Centralized polling management
+    const globalPollingInterval = ref<NodeJS.Timeout | null>(null);
+    const stationPollingIntervals = ref<Record<string, NodeJS.Timeout>>({});
+    const POLLING_INTERVAL = 3000; // 3 seconds
+
+    const startGlobalPolling = () => {
+        if (globalPollingInterval.value) {
+            clearInterval(globalPollingInterval.value);
+        }
+        
+        console.log('Starting global dashboard polling');
+        connectGlobal();
+        
+        globalPollingInterval.value = setInterval(() => {
+            console.log('Polling global dashboard data');
+            fetchGlobalDashboard();
+        }, POLLING_INTERVAL);
+    };
+
+    const stopGlobalPolling = () => {
+        if (globalPollingInterval.value) {
+            clearInterval(globalPollingInterval.value);
+            globalPollingInterval.value = null;
+            console.log('Stopped global dashboard polling');
+        }
+    };
+
+    const startStationPolling = (brandName: string) => {
+        if (stationPollingIntervals.value[brandName]) {
+            clearInterval(stationPollingIntervals.value[brandName]);
+        }
+        
+        console.log('Starting polling for station:', brandName);
+        ensureStationConnected(brandName);
+        
+        stationPollingIntervals.value[brandName] = setInterval(() => {
+            console.log('Polling station data for:', brandName);
+            fetchStation(brandName);
+        }, POLLING_INTERVAL);
+    };
+
+    const stopStationPolling = (brandName: string) => {
+        if (stationPollingIntervals.value[brandName]) {
+            clearInterval(stationPollingIntervals.value[brandName]);
+            delete stationPollingIntervals.value[brandName];
+            console.log('Stopped polling for station:', brandName);
+        }
+    };
+
+    const stopAllPolling = () => {
+        stopGlobalPolling();
+        Object.keys(stationPollingIntervals.value).forEach(brandName => {
+            stopStationPolling(brandName);
+        });
+    };
+
     const createWebSocketHandlers = (options: {
         type: 'dashboard' | 'station',
         brandName?: string,
@@ -248,6 +304,13 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
         fetchStation,
         getStationDetails,
         getStationLastUpdate,
+
+        // Centralized polling
+        startGlobalPolling,
+        stopGlobalPolling,
+        startStationPolling,
+        stopStationPolling,
+        stopAllPolling,
 
         // Shared
         isStartingBroadcast,
