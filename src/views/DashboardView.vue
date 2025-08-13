@@ -268,20 +268,20 @@ export default defineComponent({
         width: 120
       },
       {
-        title: 'Next Execution (Local Time)',
-        key: 'nextExecution',
-        width: 180,
-        render: (row: SchedulerTask) => {
-          return formatDateTimeWithToday(row.nextExecution);
-        }
-      },
-      {
         title: 'Last Execution (Local Time)',
         key: 'lastExecution',
         width: 180,
         render: (row: SchedulerTask) => {
           if (!row.lastExecution) return 'Never';
           return formatDateTimeWithToday(row.lastExecution);
+        }
+      },
+      {
+        title: 'Next Execution (Local Time)',
+        key: 'nextExecution',
+        width: 180,
+        render: (row: SchedulerTask) => {
+          return formatDateTimeWithToday(row.nextExecution || '');
         }
       },
       {

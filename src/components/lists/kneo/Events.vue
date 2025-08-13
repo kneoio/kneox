@@ -56,7 +56,11 @@
           v-model:checked-row-keys="checkedRowKeys"
           @update:page="handlePageChange"
           @update:page-size="handlePageSizeChange"
-      />
+      >
+        <template #loading>
+          <loader-icon/>
+        </template>
+      </n-data-table>
     </n-gi>
   </n-grid>
 </template>
@@ -69,6 +73,7 @@ import {
   NGrid, NGi, NPageHeader, NButton, NButtonGroup, NInput, NIcon,
   NDataTable, NTag, type DataTableColumns
 } from 'naive-ui';
+import LoaderIcon from '../../helpers/LoaderWrapper.vue';
 import { useEventsStore } from '../../../stores/kneo/eventsStore';
 import type { EventEntry } from "../../../types/kneoBroadcasterTypes";
 
