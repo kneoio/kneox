@@ -337,6 +337,8 @@ const loadFormData = () => {
     scheduleTasksArray.value = localFormData.schedule.tasks.map(task => {
       const mappedTask: any = {
         triggerType: task.triggerType || 'ONCE',
+        type: task.type || '',
+        target: task.target || '',
         startTime: 540,
         endTime: 1020,
         interval: 60,
