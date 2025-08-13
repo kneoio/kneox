@@ -25,6 +25,10 @@ export interface FileMaintenanceStats {
     directoriesDeleted: number;
 }
 
+export interface SchedulerExecution {
+    scheduledTime: string;
+}
+
 export interface SchedulerTask {
     entityId: string;
     entityType: string;
@@ -36,7 +40,7 @@ export interface SchedulerTask {
     nextExecution: string | null;
     lastExecution: string | null;
     cronExpression: string | null;
-    upcomingExecutions: string[];
+    upcomingExecutions: SchedulerExecution[];
     enabled: boolean;
 }
 
