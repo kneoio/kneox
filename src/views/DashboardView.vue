@@ -293,11 +293,42 @@ export default defineComponent({
         }
       },
       {
-        title: 'Upcoming',
+        title: 'Upcoming Runs',
         key: 'upcomingExecutions',
-        width: 100,
+        width: 200,
         render: (row: SchedulerTask) => {
-          return row.upcomingExecutions?.length || 0;
+          if (!row.upcomingExecutions || row.upcomingExecutions.length === 0) {
+            return h('span', { style: 'color: #999;' }, 'None');
+          }
+          
+          return h('div', { style: 'font-size: 11px; line-height: 1.3;' }, 
+            row.upcomingExecutions.slice(0, 3).map((execution, index) => {
+              const date = new Date(execution.scheduledTime);
+              const today = new Date();
+              const isToday = date.toDateString() === today.toDateString();
+              
+              const timeString = date.toLocaleString('en-GB', {
+                hour: '2-digit',
+                minute: '2-digit'
+              });
+              
+              const displayTime = isToday ? `Today ${timeString}` : date.toLocaleString('en-GB', {
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+              });
+              
+              return h('div', {
+                key: index,
+                style: {
+                  padding: '1px 0',
+                  color: isToday ? '#18a058' : '#666',
+                  fontWeight: isToday ? 'bold' : 'normal'
+                }
+              }, `${execution.action}: ${displayTime}`);
+            })
+          );
         }
       }
     ];

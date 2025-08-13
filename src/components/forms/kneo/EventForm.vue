@@ -146,8 +146,8 @@
                                     </n-button>
                                   </n-button-group>
                                   
-                                  <n-slider v-model:value="value.startTime" :marks="timeMarks" :step="1" :min="0"
-                                    :max="1440" style="width: 400px;" />
+                                  <n-slider v-model:value="value.startTime" :marks="timeMarks" :step="15" :min="0"
+                                    :max="1440" style="width: 400px;" :tooltip="false" :format-tooltip="(value) => formatMinutesToTime(value)" />
                                 </n-space>
                                 <n-space>
                                   <n-text depth="3" style="font-size: 12px;">{{ formatMinutesToTime(value.startTime) }}</n-text>
@@ -167,8 +167,8 @@
                                     </n-button>
                                   </n-button-group>
                                   
-                                  <n-slider v-model:value="value.endTime" :marks="timeMarks" :step="1" :min="0"
-                                    :max="1440" style="width: 400px;" />
+                                  <n-slider v-model:value="value.endTime" :marks="timeMarks" :step="15" :min="0"
+                                    :max="1440" style="width: 400px;" :tooltip="false" :format-tooltip="(value) => formatMinutesToTime(value)" />
                                 </n-space>
                                 <n-space>
                                   <n-text depth="3" style="font-size: 12px;">{{ formatMinutesToTime(value.endTime) }}</n-text>
