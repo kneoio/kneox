@@ -75,7 +75,7 @@ import {
 } from 'naive-ui';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
 import { useEventsStore } from '../../../stores/kneo/eventsStore';
-import type { EventEntry } from "../../../types/kneoBroadcasterTypes";
+import type { Event } from "../../../types/kneoBroadcasterTypes";
 
 const router = useRouter();
 const message = useMessage();
@@ -88,7 +88,7 @@ const isMobile = ref(window.innerWidth < 768);
 
 const hasSelection = computed(() => checkedRowKeys.value.length > 0);
 
-const getRowProps = (row: EventEntry) => {
+const getRowProps = (row: Event) => {
   return {
     style: 'cursor: pointer;',
     onClick: (e: MouseEvent) => {
@@ -101,7 +101,7 @@ const getRowProps = (row: EventEntry) => {
   };
 };
 
-const columns: DataTableColumns<EventEntry> = [
+const columns: DataTableColumns<Event> = [
   {
     type: 'selection'
   },
@@ -121,7 +121,7 @@ const columns: DataTableColumns<EventEntry> = [
     title: 'Priority',
     key: 'priority',
     width: 120,
-    render: (row: EventEntry) => {
+    render: (row: Event) => {
       return h(NTag, { 
         bordered: true,
         color: { textColor: '#555', borderColor: '#BBB' }
@@ -154,7 +154,7 @@ const paginationReactive = reactive({
   }
 });
 
-const rowKey = (row: EventEntry) => row.id;
+const rowKey = (row: Event) => row.id;
 
 const loadData = async () => {
   loading.value = true;

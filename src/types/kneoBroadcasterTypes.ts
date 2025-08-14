@@ -222,13 +222,13 @@ export interface ListenerSave {
 
 // Types for Events Feature
 
-export interface EventEntry {
+export interface Event {
     id: string;
     author: string;
     regDate: string;
     lastModifier: string;
     lastModifiedDate: string;
-    brand: string;
+    brandId: string;
     timeZone?: string;
     type: string;
     description: string;
@@ -240,11 +240,11 @@ export interface EventViewData {
     pageNum: number;
     maxPage: number;
     pageSize: number;
-    entries: EventEntry[];
+    entries: Event[];
 }
 
 export interface EventSave {
-    brand?: string;
+    brandId?: string;
     timeZone?: string;
     type: string;
     description: string;

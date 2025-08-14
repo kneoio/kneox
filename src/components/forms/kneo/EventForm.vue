@@ -58,7 +58,7 @@
               <n-gi>
                 <n-form-item label="Assign To">
                   <n-select
-                      v-model:value="localFormData.brand"
+                      v-model:value="localFormData.brandId"
                       :options="radioStationOptions"
                       filterable
 
@@ -220,10 +220,10 @@ import {
 import { useEventsStore } from '../../../stores/kneo/eventsStore';
 import { useRadioStationStore } from '../../../stores/kneo/radioStationStore';
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
-import type { EventEntry, EventSave } from "../../../types/kneoBroadcasterTypes";
+import type { Event, EventSave } from "../../../types/kneoBroadcasterTypes";
 import { handleFormSaveError } from '../../../utils/errorHandling';
 
-interface LocalEventFormData extends EventEntry {
+interface LocalEventFormData extends Event {
   triggerType?: string;
   schedule?: {
     enabled?: boolean;
@@ -248,7 +248,7 @@ const localFormData = reactive<LocalEventFormData>({
   regDate: '',
   lastModifier: '',
   lastModifiedDate: '',
-  brand: '',
+  brandId: '',
   timeZone: '',
   type: '',
   description: '',
@@ -408,7 +408,7 @@ const loadFormData = () => {
 
 const handleSave = async () => {
   try {
-    if (!localFormData.brand) {
+    if (!localFormData.brandId) {
       message.error('Brand is required');
       return;
     }
@@ -449,7 +449,7 @@ const handleSave = async () => {
     };
 
     const saveData: EventSave = {
-      brand: localFormData.brand,
+      brandId: localFormData.brandId,
       timeZone: localFormData.timeZone,
       type: localFormData.type,
       description: localFormData.description,

@@ -2,11 +2,11 @@ import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 import apiClient from '../../api/apiClient';
 import type { ApiFormResponse, ApiViewPageResponse } from "../../types";
-import type { EventEntry, EventSave } from "../../types/kneoBroadcasterTypes";
+import type { Event, EventSave } from "../../types/kneoBroadcasterTypes";
 
 export const useEventsStore = defineStore('eventsStore', () => {
-    const apiViewResponse = ref<ApiViewPageResponse<EventEntry> | null>(null);
-    const apiFormResponse = ref<ApiFormResponse<EventEntry> | null>(null);
+    const apiViewResponse = ref<ApiViewPageResponse<Event> | null>(null);
+    const apiFormResponse = ref<ApiFormResponse<Event> | null>(null);
 
     const getEntries = computed(() => apiViewResponse.value?.viewData?.entries || []);
     const getCurrent = computed(() => apiFormResponse.value?.docData || {
@@ -15,12 +15,12 @@ export const useEventsStore = defineStore('eventsStore', () => {
         regDate: '',
         lastModifier: '',
         lastModifiedDate: '',
-        brand: '',
+        brandId: '',
         type: '',
         timestampEvent: '',
         description: '',
         priority: '',
-    } as EventEntry);
+    } as Event);
 
     const getPagination = computed(() => {
         if (!apiViewResponse.value?.viewData) {

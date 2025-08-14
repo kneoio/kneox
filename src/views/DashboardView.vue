@@ -158,6 +158,7 @@ import {
 } from 'naive-ui';
 import { useDashboardStore } from "../stores/kneo/dashboardStore";
 import { useRadioStationStore } from "../stores/kneo/radioStationStore";
+import { useReferencesStore } from "../stores/kneo/referencesStore";
 import { useStationColumns } from "../components/dashboard/stationColumns";
 import type { SchedulerTask } from '../types/dashboard';
 
@@ -185,7 +186,11 @@ export default defineComponent({
       if (!dateString) return 'Not scheduled';
       const date = new Date(dateString);
       const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(today.getDate() + 1);
+      
       const isToday = date.toDateString() === today.toDateString();
+      const isTomorrow = date.toDateString() === tomorrow.toDateString();
       
       const timeString = date.toLocaleString('en-GB', {
         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -196,6 +201,8 @@ export default defineComponent({
       
       if (isToday) {
         return `Today ${timeString}`;
+      } else if (isTomorrow) {
+        return `Tomorrow ${timeString}`;
       } else {
         return date.toLocaleString('en-GB', {
           timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -265,10 +272,15 @@ export default defineComponent({
       {
         title: 'Time Zone',
         key: 'timeZone',
-        width: 120
+        width: 180,
+        render: (row: SchedulerTask) => {
+          const referencesStore = useReferencesStore();
+          const timezone = referencesStore.timezones.find((tz: { label: string; value: string }) => tz.value === row.timeZone);
+          return timezone ? timezone.label : row.timeZone || 'Not set';
+        }
       },
       {
-        title: 'Next Execution (Local Time)',
+        title: 'Next Execution',
         key: 'nextExecution',
         width: 180,
         render: (row: SchedulerTask) => {
