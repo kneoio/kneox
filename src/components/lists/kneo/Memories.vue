@@ -325,10 +325,7 @@ export default defineComponent({
         {
           title: 'Brand',
           key: 'brand',
-          render: (row: Memory) => h(NTag, { 
-            bordered: true,
-            color: row.color ? { color: '#BBB', textColor: '#555', borderColor: row.color } : { color: '#BBB', textColor: '#555', borderColor: '#BBB' }
-          }, { default: () => row.brand })
+          render: (row: Memory) => row.brand
         },
         {
           title: 'Memory Type',

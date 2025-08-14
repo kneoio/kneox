@@ -168,7 +168,7 @@ body {
 }
 
 .theme-provider[style*="background-color: rgb(26, 26, 26)"] {
-  color: #f0f0f0 !important;
+  color: #e0e0e0 !important;
 }
 
 .theme-provider[style*="background-color: rgb(26, 26, 26)"] *:not(.n-button):not(.n-button *):not(.n-upload *):not(.n-upload-file-list *) {
