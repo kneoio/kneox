@@ -4,7 +4,7 @@ const cfg = {
     //url: 'https://auth.kneo.io/auth', // Corrected URL
     url: 'https://auth.kneo.io',
     realm: 'kneo',
-    clientId: 'kneo_primary',
+    clientId: 'mixpla',
     // checkLoginIframe: false, // See note below
     // onLoad: 'login-required' // This is overridden by main.js anyway
 };
