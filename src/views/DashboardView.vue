@@ -352,12 +352,12 @@ export default defineComponent({
       brandStore.fetchAll();
       window.addEventListener('resize', () => isMobile.value = window.innerWidth < 768);
       parentTitle.value = 'Dashboard';
+    });
 
-      onUnmounted(() => {
-        dashboard.stopGlobalPolling();
-        dashboard.globalStationsList.forEach(station => dashboard.disconnectStation(station.brandName));
-        window.removeEventListener('resize', () => isMobile.value = window.innerWidth < 768);
-      });
+    onUnmounted(() => {
+      dashboard.stopGlobalPolling();
+      dashboard.globalStationsList.forEach(station => dashboard.disconnectStation(station.brandName));
+      window.removeEventListener('resize', () => isMobile.value = window.innerWidth < 768);
     });
 
     const detailedStationsList = computed(() => {
