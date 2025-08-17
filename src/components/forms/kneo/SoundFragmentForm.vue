@@ -228,6 +228,10 @@ export default defineComponent({
       eventSource: null as EventSource | null
     };
 
+    const SIMULATION_TARGET_PROGRESS = 70;
+    const SIMULATION_UPDATE_INTERVAL_MS = 200;
+    const SIMULATION_DURATION_MULTIPLIER = 2.0;
+
     const uploadProgress = (
         estimatedDurationSeconds: number,
         onProgressUpdate: (progress: number) => void,
@@ -235,9 +239,10 @@ export default defineComponent({
     ): (() => void) => {
       let simulationActive = true;
       let simulationProgress = 0;
-      const targetProgress = 70;
-      const updateIntervalMs = 200;
-      const totalUpdates = (estimatedDurationSeconds * 1000) / updateIntervalMs;
+      const targetProgress = SIMULATION_TARGET_PROGRESS;
+      const updateIntervalMs = SIMULATION_UPDATE_INTERVAL_MS;
+      const adjustedDuration = estimatedDurationSeconds * SIMULATION_DURATION_MULTIPLIER;
+      const totalUpdates = (adjustedDuration * 1000) / updateIntervalMs;
       const progressIncrement = targetProgress / totalUpdates;
 
       globalProgressState.isSimulationActive = true;
