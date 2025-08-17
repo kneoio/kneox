@@ -14,14 +14,7 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
     const stationLastUpdate = ref<Record<string, Date>>({});
     const isStartingBroadcast = ref(false);
 
-    const buildWebSocketUrl = async (endpoint: string): Promise<string> => {
-        // Ensure token is fresh before creating WebSocket URL
-        try {
-            await keycloak.updateToken(30); // Refresh if expires within 30 seconds
-        } catch (error) {
-            console.warn('Token refresh failed, using existing token:', error);
-        }
-        
+    const buildWebSocketUrl = (endpoint: string): string => {
         const baseUrl = apiClient.defaults.baseURL || '';
         const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const urlObject = new URL(baseUrl);
@@ -36,11 +29,10 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
             (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING);
     };
 
-    const connectGlobal = async () => {
+    const connectGlobal = () => {
         if (isWebSocketActive(globalWebsocket.value)) return;
 
-        const wsUrl = await buildWebSocketUrl('dashboard');
-        globalWebsocket.value = new WebSocket(wsUrl);
+        globalWebsocket.value = new WebSocket(buildWebSocketUrl('dashboard'));
         Object.assign(globalWebsocket.value, createWebSocketHandlers({
             type: 'dashboard',
             onMessage: (data) => {
