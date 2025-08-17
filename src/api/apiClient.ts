@@ -13,7 +13,7 @@ const unsecuredClient = axios.create({
 });
 
 const apiClient = axios.create({
-    baseURL: `${apiServer}/api`,
+    baseURL: `${apiServer}`,
     withCredentials: true,
 });
 
