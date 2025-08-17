@@ -498,7 +498,7 @@ export default defineComponent({
     };
 
     const connectSSE = (uploadId: string) => {
-      const eventSource = new EventSource(`${apiServer}/api/soundfragments/upload-progress/${uploadId}/stream`);
+      const eventSource = new EventSource(`${apiServer}/soundfragments/upload-progress/${uploadId}/stream`);
       globalProgressState.eventSource = eventSource;
 
       eventSource.onmessage = (event) => {
