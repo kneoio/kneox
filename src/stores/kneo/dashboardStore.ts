@@ -168,6 +168,8 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
     // Centralized polling management
     const globalPollingInterval = ref<NodeJS.Timeout | null>(null);
     const stationPollingIntervals = ref<Record<string, NodeJS.Timeout>>({});
+    const isGlobalPollingActive = ref(false);
+    const activeStationPolling = ref<Set<string>>(new Set());
     const POLLING_INTERVAL = 3000; // 3 seconds
 
     const startGlobalPolling = () => {
@@ -175,6 +177,7 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
             clearInterval(globalPollingInterval.value);
         }
         
+        isGlobalPollingActive.value = true;
         console.log('Starting global dashboard polling');
         connectGlobal();
         
@@ -185,11 +188,13 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
     };
 
     const stopGlobalPolling = () => {
+        isGlobalPollingActive.value = false;
         if (globalPollingInterval.value) {
             clearInterval(globalPollingInterval.value);
             globalPollingInterval.value = null;
             console.log('Stopped global dashboard polling');
         }
+        disconnectGlobal();
     };
 
     const startStationPolling = (brandName: string) => {
@@ -197,6 +202,7 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
             clearInterval(stationPollingIntervals.value[brandName]);
         }
         
+        activeStationPolling.value.add(brandName);
         console.log('Starting polling for station:', brandName);
         ensureStationConnected(brandName);
         
@@ -207,18 +213,21 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
     };
 
     const stopStationPolling = (brandName: string) => {
+        activeStationPolling.value.delete(brandName);
         if (stationPollingIntervals.value[brandName]) {
             clearInterval(stationPollingIntervals.value[brandName]);
             delete stationPollingIntervals.value[brandName];
             console.log('Stopped polling for station:', brandName);
         }
+        disconnectStation(brandName);
     };
 
     const stopAllPolling = () => {
         stopGlobalPolling();
-        Object.keys(stationPollingIntervals.value).forEach(brandName => {
+        Array.from(activeStationPolling.value).forEach(brandName => {
             stopStationPolling(brandName);
         });
+        activeStationPolling.value.clear();
     };
 
     const createWebSocketHandlers = (options: {
@@ -263,9 +272,9 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
                 if ([1000, 1001, 1006].includes(event.code)) {
                     console.log(`Reconnecting ${options.type} ${options.brandName || ''} in 3s...`);
                     setTimeout(() => {
-                        if (options.type === 'dashboard') {
+                        if (options.type === 'dashboard' && isGlobalPollingActive.value) {
                             connectGlobal();
-                        } else if (options.brandName) {
+                        } else if (options.brandName && activeStationPolling.value.has(options.brandName)) {
                             connectStation(options.brandName);
                         }
                     }, 3000);

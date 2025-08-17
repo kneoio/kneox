@@ -230,7 +230,7 @@ export default defineComponent({
 
     const SIMULATION_TARGET_PROGRESS = 70;
     const SIMULATION_UPDATE_INTERVAL_MS = 200;
-    const SIMULATION_DURATION_MULTIPLIER = 2.0;
+    const SIMULATION_DURATION_MULTIPLIER = 2.5;
 
     const uploadProgress = (
         estimatedDurationSeconds: number,
@@ -369,7 +369,10 @@ export default defineComponent({
     const handleDownload = async (file: UploadFileInfo) => {
       try {
         loadingBar.start();
-        await store.downloadFile(file.url || "", file.name);
+        // Resolve the original backend URL from the loaded form data to ensure authenticated request
+        const original = (localFormData.uploadedFiles || []).find((f: any) => f.name === file.name);
+        const resolvedUrl = original?.url || file.url || "";
+        await store.downloadFile(resolvedUrl, file.name);
         loadingBar.finish();
         message.success('Download completed');
       } catch (error) {
@@ -377,6 +380,7 @@ export default defineComponent({
         message.error(`Download failed: ${getErrorMessage(error)}`);
         loadingBar.error();
       }
+      // prevent default anchor behavior
       return false;
     };
 
@@ -614,11 +618,11 @@ export default defineComponent({
           Object.assign(localFormData, store.getCurrent);
 
           if (localFormData.uploadedFiles?.length) {
+            // Do not expose direct URLs in the upload list; rely on @preview/@download handlers
             fileList.value = localFormData.uploadedFiles.map(f => ({
               id: f.name,
               name: f.name,
-              status: 'finished' as const,
-              url: f.url
+              status: 'finished' as const
             }));
             uploadedFileNames.value = localFormData.uploadedFiles.map(f => f.name);
           }
