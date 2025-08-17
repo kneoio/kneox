@@ -15,7 +15,7 @@
     <n-gi class="mt-2" span="6">
       <n-button-group>
         <n-button type="primary" @click="handleSave" size="large">Save</n-button>
-        <n-button type="default" disabled @click="handleArchive" size="large">Archive</n-button>
+        <n-button type="default" :disabled="!localFormData.id" @click="handleArchive" size="large">Archive</n-button>
       </n-button-group>
     </n-gi>
     <n-gi span="6">
@@ -451,8 +451,26 @@ export default defineComponent({
       }
     };
 
-    const handleArchive = () => {
-      message.info("Archive functionality not implemented yet");
+    const handleArchive = async () => {
+      if (!localFormData.id) {
+        message.warning("Cannot archive a new sound fragment. Please save it first.");
+        return;
+      }
+
+      try {
+        loadingBar.start();
+        await store.archive(localFormData.id);
+        message.success("Sound fragment archived successfully");
+        if (route.params.brandName) {
+          await router.push({name: 'StationSoundFragments', params: {brandName: route.params.brandName}});
+        } else {
+          await router.push("/outline/soundfragments");
+        }
+      } catch (error: unknown) {
+        message.error(`Archive failed: ${getErrorMessage(error)}`);
+      } finally {
+        loadingBar.finish();
+      }
     };
 
     const goBack = () => {

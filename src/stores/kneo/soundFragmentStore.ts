@@ -254,6 +254,12 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         return response.data;
     };
 
+    const archiveSoundFragment = async (id: string) => {
+        const response = await apiClient.post(`/soundfragments/${id}/archive`);
+        if (!response?.data) throw new Error('Invalid API response');
+        return response.data;
+    };
+
     return {
         apiViewResponse,
         apiFormResponse,
@@ -273,6 +279,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         updateCurrent,
         downloadFile,
         fetchAccessList,
-        bulkBrandUpdate
+        bulkBrandUpdate,
+        archive: archiveSoundFragment
     };
 });
