@@ -519,6 +519,14 @@ onMounted(async () => {
       console.error('Error loading event:', error);
       message.error('Failed to load event');
     }
+  } else {
+    try {
+      await eventsStore.fetchEvent('new');
+      loadFormData();
+    } catch (error) {
+      console.error('Error loading new event template:', error);
+      message.error('Failed to load new event');
+    }
   }
 });
 

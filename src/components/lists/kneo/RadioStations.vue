@@ -262,7 +262,7 @@ export default defineComponent({
           }
         },
         {
-          title: 'Identifier',
+          title: 'Slug name',
           key: 'slugName',
           render: (row: RadioStation) => {
             return h(NTag, { 
