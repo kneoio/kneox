@@ -74,7 +74,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { NIcon, NSkeleton } from 'naive-ui';
 import { ArrowRight, ArrowLeft } from '@vicons/tabler';
 import { useReferencesStore } from '../stores/kneo/referencesStore';
-import { MIXPLA_URL } from '../constants/config';
+import { MIXPLA_PLAYER_URL } from '../constants/config';
 
 interface Station {
   name: string;
@@ -111,7 +111,7 @@ let refreshInterval: NodeJS.Timeout | null = null;
 const referencesStore = useReferencesStore();
 
 const mixplaBaseUrl = computed(() => {
-  return MIXPLA_URL;
+  return MIXPLA_PLAYER_URL;
 });
 
 const fetchStations = async () => {

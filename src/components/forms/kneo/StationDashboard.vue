@@ -216,7 +216,7 @@ import {
   NButtonGroup
 } from 'naive-ui';
 import { ExternalLink, PlayerPlay, PlayerStop, Activity } from '@vicons/tabler';
-import { MIXPLA_URL } from '../../../constants/config';
+import { MIXPLA_PLAYER_URL } from '../../../constants/config';
 
 
 export default defineComponent( {
@@ -381,7 +381,7 @@ export default defineComponent( {
     } );
 
     const mixplaUrl = computed( () => {
-      return `${MIXPLA_URL}?radio=${encodeURIComponent( props.brandName.toLowerCase() )}`;
+      return `${MIXPLA_PLAYER_URL}?radio=${encodeURIComponent( props.brandName.toLowerCase() )}`;
     } );
 
     const sendCommand = async ( brandName: string, command: string ) => {
@@ -419,7 +419,7 @@ export default defineComponent( {
     };
 
     const openMixpla = () => {
-      const mixplaUrl = MIXPLA_URL;
+      const mixplaUrl = MIXPLA_PLAYER_URL;
       const url = `${mixplaUrl}?radio=${encodeURIComponent( props.brandName.toLowerCase() )}`;
       window.open( url, '_blank', 'noopener,noreferrer' );
     };
