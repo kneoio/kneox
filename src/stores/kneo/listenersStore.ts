@@ -47,7 +47,7 @@ export const useListenersStore = defineStore('listenersStore', () => {
 
     const fetchListeners = async (brandName: string, page = 1, pageSize = 10) => {
         try {
-            const response = await apiClient.get(`/listeners/available-listeners?brand=${brandName}&page=${page}&size=${pageSize}`);
+            const response = await apiClient.get(`listeners/available-listeners?brand=${brandName}&page=${page}&size=${pageSize}`);
             if (!response?.data?.payload) throw new Error('Invalid API response for listeners');
             apiViewResponse.value = response.data.payload;
         } catch (error) {
@@ -67,7 +67,7 @@ export const useListenersStore = defineStore('listenersStore', () => {
             if (filters.country) {
                 params.append('country', filters.country);
             }
-            const baseUrl = searchQuery ? '/listeners/search' : '/listeners';
+            const baseUrl = searchQuery ? 'listeners/search' : 'listeners';
             const url = `${baseUrl}?${params.toString()}`;
             const response = await apiClient.get(url);
             if (!response?.data?.payload) throw new Error('Invalid API response for all listeners');
@@ -80,7 +80,7 @@ export const useListenersStore = defineStore('listenersStore', () => {
 
     const fetchAvailableListeners = async (brandName: string, page = 1, pageSize = 10) => {
         try {
-            const response = await apiClient.get(`/listeners/available-listeners?brand=${brandName}&page=${page}&size=${pageSize}`);
+            const response = await apiClient.get(`listeners/available-listeners?brand=${brandName}&page=${page}&size=${pageSize}`);
             if (!response?.data?.payload) throw new Error('Invalid API response for available listeners');
             apiViewResponse.value = response.data.payload;
         } catch (error) {
@@ -91,24 +91,24 @@ export const useListenersStore = defineStore('listenersStore', () => {
     };
 
     const fetchListener = async (id: string) => {
-        const response = await apiClient.get(`/listeners/${id}`);
+        const response = await apiClient.get(`listeners/${id}`);
         if (!response?.data?.payload) throw new Error('Invalid API response for a single listener');
         apiFormResponse.value = response.data.payload;
     };
 
     const saveListener = async (data: ListenerSave, id: string | null) => {
-        const response = await apiClient.post(`/listeners/${id || ''}`, data);
+        const response = await apiClient.post(`listeners/${id || ''}`, data);
         if (!response?.data) throw new Error('Invalid API response');
         apiFormResponse.value = response.data;
         return apiFormResponse.value;
     };
 
     const deleteListener = async (id: string) => {
-        await apiClient.delete(`/listeners/${id}`);
+        await apiClient.delete(`listeners/${id}`);
     };
 
     const fetchAccessList = async (id: string) => {
-        const response = await apiClient.get(`/listeners/${id}/access`);
+        const response = await apiClient.get(`listeners/${id}/access`);
         if (!response?.data) throw new Error('Invalid API response');
         return response.data;
     };
