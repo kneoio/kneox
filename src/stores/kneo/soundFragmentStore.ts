@@ -3,6 +3,27 @@ import { computed, ref } from 'vue';
 import apiClient from '../../api/apiClient';
 import type { ApiFormResponse, ApiViewPageResponse } from "../../types";
 import type { SoundFragment, SoundFragmentSave } from "../../types/kneoBroadcasterTypes";
+// Local DTOs for filter usage
+type SourceType = 'USER' | 'SYSTEM';
+type PlaylistItemType = 'MUSIC' | 'AD' | 'JINGLE';
+
+interface SoundFragmentFilterDTO {
+    genres?: string[];
+    sources?: SourceType[];
+    types?: PlaylistItemType[];
+    activated?: boolean;
+}
+
+function buildSoundFragmentsUrl(basePath: string, { page = 1, size = 10, q, filter }: { page?: number; size?: number; q?: string; filter?: SoundFragmentFilterDTO } = {}) {
+    const params = new URLSearchParams();
+    params.set('page', String(page));
+    params.set('size', String(size));
+    if (q) params.set('q', q);
+    if (filter && Object.keys(filter).length > 0) {
+        params.set('filter', encodeURIComponent(JSON.stringify(filter)));
+    }
+    return `${basePath}?${params.toString()}`;
+}
 
 export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
     const apiViewResponse = ref<ApiViewPageResponse<SoundFragment> | null>(null);
@@ -21,7 +42,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         type: 'SONG',
         source: 'USERS_UPLOAD',
         artist: '',
-        genre: '',
+        genres: [],
         album: '',
         url: '',
         actionUrl: '',
@@ -68,38 +89,26 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         };
     });
 
-    const fetchSoundFragments = async (page = 1, pageSize = 10, searchQuery = '', filters: {genre?: string[], type?: string, source?: string} = {}) => {
-        let url = `/soundfragments?page=${page}&size=${pageSize}`;
-        if (searchQuery) {
-            url = `/soundfragments/search?q=${encodeURIComponent(searchQuery)}&page=${page}&size=${pageSize}`;
-        }
-        
-        const params = new URLSearchParams();
-        params.append('page', page.toString());
-        params.append('size', pageSize.toString());
-        if (searchQuery) {
-            params.append('q', searchQuery);
-        }
-        if (filters.genre && filters.genre.length > 0) {
-            filters.genre.forEach(genre => params.append('genre', genre));
-        }
-        if (filters.type) {
-            params.append('type', filters.type);
-        }
-        if (filters.source) {
-            params.append('source', filters.source);
-        }
-        
+    const fetchSoundFragments = async (page = 1, pageSize = 10, searchQuery = '', filters: SoundFragmentFilterDTO = {}) => {
         const baseUrl = searchQuery ? '/soundfragments/search' : '/soundfragments';
-        url = `${baseUrl}?${params.toString()}`;
-        
+        const url = buildSoundFragmentsUrl(baseUrl, {
+            page,
+            size: pageSize,
+            q: searchQuery || undefined,
+            filter: filters && Object.keys(filters).length ? filters : undefined
+        });
         const response = await apiClient.get(url);
         if (!response?.data?.payload) throw new Error('Invalid API response for sound fragments');
         apiViewResponse.value = response.data.payload;
     };
 
-    const fetchAvailableSoundFragments = async (brand: string, page = 1, pageSize = 10) => {
-        const response = await apiClient.get(`/soundfragments/available-soundfragments?brand=${brand}&page=${page}&size=${pageSize}`);
+    const fetchAvailableSoundFragments = async (page = 1, pageSize = 10, filters: SoundFragmentFilterDTO = {}) => {
+        const url = buildSoundFragmentsUrl('/soundfragments/available-soundfragments', {
+            page,
+            size: pageSize,
+            filter: filters && Object.keys(filters).length ? filters : undefined
+        });
+        const response = await apiClient.get(url);
         if (!response?.data?.payload?.viewData?.entries) throw new Error('Invalid API response structure for available sound fragments');
 
         const rawPayload = response.data.payload;

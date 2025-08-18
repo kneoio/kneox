@@ -71,7 +71,7 @@ export const useReferencesStore = defineStore('references', () => {
     genreOptions.value = response.data.payload.viewData.entries
         .map((entry: any) => ({
             label: entry.identifier,
-            value: entry.identifier
+            value: entry.id
         }))
         .sort((a: {label: string}, b: {label: string}) =>
             a.label.localeCompare(b.label));

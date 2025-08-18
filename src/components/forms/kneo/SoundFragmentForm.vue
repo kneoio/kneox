@@ -41,9 +41,9 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
-                <n-form-item label="Genre">
-                  <n-select v-model:value="localFormData.genre" :options="referencesStore.genreOptions" filterable
-                            style="width: 25%; max-width: 300px;"/>
+                <n-form-item label="Genres">
+                  <n-select v-model:value="localFormData.genres" :options="referencesStore.genreOptions"
+                            multiple filterable style="width: 25%; max-width: 300px;"/>
                 </n-form-item>
               </n-gi>
               <n-gi>
@@ -170,7 +170,7 @@ export default defineComponent({
       type: FragmentType.SONG,
       title: "",
       artist: "",
-      genre: "",
+      genres: [],
       album: "",
       url: "",
       actionUrl: "",
@@ -323,12 +323,26 @@ export default defineComponent({
       if (metadata.album && !localFormData.album) {
         localFormData.album = metadata.album;
       }
-      if (metadata.genre && !localFormData.genre) {
-        const genreExists = referencesStore.genreOptions.some(
-            option => option.value === metadata.genre || option.label === metadata.genre
+      // Handle genre(s) from metadata with backward compatibility
+      const normalizeToArray = (value: any): string[] => {
+        if (!value) return [];
+        if (Array.isArray(value)) return value.filter(Boolean);
+        return [value];
+      };
+      const metaGenres: string[] = normalizeToArray(metadata.genres || metadata.genre);
+      if (metaGenres.length) {
+        const validValues = new Set(
+          referencesStore.genreOptions.map((o: any) => o.value)
         );
-        if (genreExists) {
-          localFormData.genre = metadata.genre;
+        const labelToValue = new Map(
+          referencesStore.genreOptions.map((o: any) => [o.label, o.value])
+        );
+        const resolved = metaGenres
+          .map(g => (validValues.has(g) ? g : (labelToValue.get(g) || null)))
+          .filter((g): g is string => !!g);
+        // Only apply if form doesn't have user-provided genres yet
+        if (!localFormData.genres || localFormData.genres.length === 0) {
+          localFormData.genres = Array.from(new Set(resolved));
         }
       }
     };
@@ -446,7 +460,7 @@ export default defineComponent({
           type: localFormData.type,
           title: localFormData.title,
           artist: localFormData.artist,
-          genre: localFormData.genre,
+          genres: localFormData.genres || [],
           album: localFormData.album,
           representedInBrands: localFormData.representedInBrands,
           newlyUploaded: filesToSend // Use original filenames
@@ -639,11 +653,39 @@ export default defineComponent({
 
     onMounted(async () => {
       const id = route.params.id as string;
+      // Load option sources first so selects can resolve labels for values
+      try {
+        await Promise.all([
+          radioStationStore.fetchAll(1, 100),
+          referencesStore.fetchGenres()
+        ]);
+      } catch (error) {
+        console.error("Failed to preload references:", error);
+      }
+
+      const mapLegacyGenreLabelsToValues = () => {
+        if (!Array.isArray(localFormData.genres)) return;
+        const opts = referencesStore.genreOptions || [];
+        const valuesSet = new Set(opts.map((o: any) => o.value));
+        const labelToValue = new Map(opts.map((o: any) => [o.label, o.value]));
+        localFormData.genres = (localFormData.genres || []).map((g: string) =>
+          valuesSet.has(g) ? g : (labelToValue.get(g) || g)
+        );
+      };
+
       if (id && id !== 'new') {
         try {
           loadingBar.start();
           await store.fetch(id);
           Object.assign(localFormData, store.getCurrent);
+          // Backward compatibility: convert single genre to genres[] if needed
+          const anyCurrent: any = store.getCurrent as any;
+          if (!localFormData.genres || !Array.isArray(localFormData.genres)) {
+            const single = anyCurrent.genre;
+            localFormData.genres = single ? [single] : [];
+          }
+          // Map legacy labels to UUID values now that options are loaded
+          mapLegacyGenreLabelsToValues();
 
           if (localFormData.uploadedFiles?.length) {
             // Do not expose direct URLs in the upload list; rely on @preview/@download handlers
@@ -665,18 +707,19 @@ export default defineComponent({
       } else {
         await store.fetch(id);
         Object.assign(localFormData, store.getCurrent);
+        // Ensure genres array exists for new form as well; handle legacy default
+        const anyCurrent: any = store.getCurrent as any;
+        if (!localFormData.genres || !Array.isArray(localFormData.genres)) {
+          const single = anyCurrent.genre;
+          localFormData.genres = single ? [single] : [];
+        }
+        // Map legacy labels to UUID values for new forms as well
+        mapLegacyGenreLabelsToValues();
         
         // Clear default "Please Input" values for new forms
         if (localFormData.title === 'Please Input') localFormData.title = '';
         if (localFormData.artist === 'Please Input') localFormData.artist = '';
         if (localFormData.album === 'Please Input') localFormData.album = '';
-      }
-
-      try {
-        await radioStationStore.fetchAll(1, 100);
-        await referencesStore.fetchGenres();
-      } catch (error) {
-        console.error("Failed to fetch data:", error);
       }
     });
 

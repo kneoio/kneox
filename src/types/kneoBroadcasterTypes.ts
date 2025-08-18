@@ -89,7 +89,7 @@ export interface SoundFragment {
     type: FragmentType;
     title?: string;
     artist?: string;
-    genre?: string;
+    genres: string[];
     album?: string;
     url: string;
     actionUrl: string;
@@ -102,7 +102,7 @@ export interface SoundFragmentSave {
     type: FragmentType;
     title?: string;
     artist?: string;
-    genre?: string;
+    genres: string[];
     album?: string;
     representedInBrands: string[];
     newlyUploaded: string[];
