@@ -17,7 +17,7 @@
         <n-space justify="space-between" align="center">
           <n-space>
             <n-h2>MixpL^</n-h2>
-            <n-h6 style="color:#6c757d; font-size: small">manager v.1.8.8</n-h6>
+            <n-h6 style="color:#6c757d; font-size: small">manager v.1.8.9</n-h6>
           </n-space>
           <n-switch
               :value="isDarkTheme"

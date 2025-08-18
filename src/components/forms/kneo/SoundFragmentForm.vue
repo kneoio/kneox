@@ -154,6 +154,7 @@ export default defineComponent({
     const activeTab = ref("properties");
     const fileList = ref<UploadFileInfo[]>([]);
     const uploadedFileNames = ref<string[]>([]);
+    const originalUploadedFileNames = ref<string[]>([]); // NEW: Store EXACT uploaded filenames
     const backendProgress = ref(0);
 
     const aclData = ref<any[]>([]);
@@ -271,7 +272,6 @@ export default defineComponent({
         if (simulationProgress < targetProgress) {
           setTimeout(updateProgress, updateIntervalMs);
         } else {
-          //logWithTimestamp('Simulation reached 70%, waiting for SSE...');
           const waitForSSE = () => {
             if (!simulationActive || globalProgressState.hasSSEStarted) {
               simulationActive = false;
@@ -340,7 +340,11 @@ export default defineComponent({
         const entityId = localFormData.id || "temp";
         const uploadId = crypto.randomUUID();
         const startTime = Date.now();
-        logWithTimestamp(`Start upload session, uploadId: ${uploadId}`);
+        
+        // STORE THE EXACT ORIGINAL FILENAME
+        const originalFileName = file.name;
+        logWithTimestamp(`Start upload session, uploadId: ${uploadId}, originalFileName: ${originalFileName}`);
+        
         const sessionData = await store.startUploadSession(entityId, uploadId, startTime);
         globalProgressState.stopSimulation = uploadProgress(
             sessionData.estimatedDurationSeconds,
@@ -353,9 +357,9 @@ export default defineComponent({
              // logWithTimestamp('Simulation phase completed');
             }
         );
-        logWithTimestamp(`Starting upload: ${file.name}, Estimated: ${sessionData.estimatedDurationSeconds}`);
+        logWithTimestamp(`Starting upload: ${originalFileName}, Estimated: ${sessionData.estimatedDurationSeconds}`);
         await store.uploadFile(entityId, file.file, uploadId);
-        connectSSE(uploadId);
+        connectSSE(uploadId, originalFileName); // Pass original filename to SSE
 
       } catch (error: any) {
         resetProgressState();
@@ -391,13 +395,22 @@ export default defineComponent({
       fileList.value = data.fileList;
 
       const currentFileNames = data.fileList.map(f => f.name);
+
+      // Clean both arrays
       uploadedFileNames.value = uploadedFileNames.value.filter(name =>
           currentFileNames.includes(name)
       );
+      originalUploadedFileNames.value = originalUploadedFileNames.value.filter(name =>
+          currentFileNames.includes(name)
+      );
+      
     };
 
     const handleRemove = (file: UploadFileInfo) => {
+      // Remove from both arrays
       uploadedFileNames.value = uploadedFileNames.value.filter(name => name !== file.name);
+      originalUploadedFileNames.value = originalUploadedFileNames.value.filter(name => name !== file.name);
+      
       if (globalProgressState.isSimulationActive || globalProgressState.hasSSEStarted) {
         resetProgressState();
       }
@@ -424,6 +437,11 @@ export default defineComponent({
 
       try {
         loadingBar.start();
+        const filesToSend = originalUploadedFileNames.value.length > 0 
+          ? originalUploadedFileNames.value 
+          : uploadedFileNames.value;
+        
+        
         const saveDTO: SoundFragmentSave = {
           type: localFormData.type,
           title: localFormData.title,
@@ -431,7 +449,7 @@ export default defineComponent({
           genre: localFormData.genre,
           album: localFormData.album,
           representedInBrands: localFormData.representedInBrands,
-          newlyUploaded: uploadedFileNames.value
+          newlyUploaded: filesToSend // Use original filenames
         };
 
         await store.save(saveDTO, localFormData.id);
@@ -506,14 +524,13 @@ export default defineComponent({
       }
     };
 
-    const connectSSE = (uploadId: string) => {
+    const connectSSE = (uploadId: string, originalFileName: string) => {
       const eventSource = new EventSource(`${apiServer}/soundfragments/upload-progress/${uploadId}/stream`);
       globalProgressState.eventSource = eventSource;
 
       eventSource.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          //logWithTimestamp(`SSE Progress: ${JSON.stringify(data)}`);
 
           if (!globalProgressState.hasSSEStarted) {
             globalProgressState.hasSSEStarted = true;
@@ -546,11 +563,23 @@ export default defineComponent({
             fileList.value = [updatedFile];
 
             if (data.status === 'finished') {
-              if (currentFile?.name && !uploadedFileNames.value.includes(currentFile.name)) {
-                uploadedFileNames.value.push(currentFile.name);
+              // Use the filename from metadata if present; fallback to browser-provided
+              const correctFileName = data.metadata?.fileName || originalFileName;
+              
+
+              if (correctFileName && !originalUploadedFileNames.value.includes(correctFileName)) {
+                originalUploadedFileNames.value.push(correctFileName);
+                
               }
+
+              // Also update the legacy array for backward compatibility
+              if (correctFileName && !uploadedFileNames.value.includes(correctFileName)) {
+                uploadedFileNames.value.push(correctFileName);
+              }
+
               fileList.value[0] = {
                 ...fileList.value[0],
+                name: correctFileName, // Ensure the display name matches the stored filename
                 percentage: 100,
                 status: 'finished',
                 id: data.fileId || data.id || currentFile.id
@@ -558,12 +587,11 @@ export default defineComponent({
               globalProgressState.currentProgress = 100;
               eventSource.close();
               resetProgressState();
+
               if (data.metadata) {
-                const metadata = data.metadata;
-               // console.log('Applying metadata:', metadata);
-                applyMetadata(metadata);
+                applyMetadata(data.metadata);
               }
-              message.success(`File "${currentFile.name}" uploaded successfully`);
+              message.success(`File "${correctFileName}" uploaded successfully`);
             } else if (data.status === 'error') {
               fileList.value = [{
                 ...fileList.value[0],
@@ -624,7 +652,9 @@ export default defineComponent({
               name: f.name,
               status: 'finished' as const
             }));
+            // For existing files, populate both arrays with the same values
             uploadedFileNames.value = localFormData.uploadedFiles.map(f => f.name);
+            originalUploadedFileNames.value = localFormData.uploadedFiles.map(f => f.name);
           }
         } catch (error) {
           console.error("Failed to fetch sound fragment:", error);
@@ -671,7 +701,8 @@ export default defineComponent({
       referencesStore,
       aclData,
       aclLoading,
-      backendProgress
+      backendProgress,
+      originalUploadedFileNames // Add this to the return
     };
   },
 });
