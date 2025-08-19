@@ -138,7 +138,7 @@ export default defineComponent({
       try {
         const currentPage = page || getAvailablePagination.value?.page || 1;
         const currentPageSize = pageSize || getAvailablePagination.value?.pageSize || 10;
-        await store.fetchAvailable(props.brandName, currentPage, currentPageSize);
+        await store.fetchAvailableSoundFragments(props.brandName, currentPage, currentPageSize);
       } catch (error) {
         message.error('Failed to fetch available sound fragments.');
       } finally {
