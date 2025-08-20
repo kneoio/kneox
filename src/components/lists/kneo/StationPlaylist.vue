@@ -154,9 +154,6 @@ export default defineComponent({
       fetchAvailableFragments(1, newPageSize);
     };
 
-    onMounted(() => {
-    });
-
     watch(() => props.brandName, (newBrandName) => {
       if (newBrandName) {
         fetchAvailableFragments(1);

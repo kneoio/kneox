@@ -199,7 +199,7 @@ export default defineComponent({
           h('div', {
             style: `width: 8px; height: 8px; border-radius: 50%; background-color: ${getStatusColor(station.status)};`
           }),
-          h('span', {}, station.slugName),
+          h('span', {}, station.localizedName.en),
           h('span', {
             style: 'font-size: 0.75rem; color: #666; margin-left: auto;'
           }, station.country || '')
