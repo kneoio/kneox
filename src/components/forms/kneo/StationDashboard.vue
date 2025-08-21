@@ -426,7 +426,7 @@ export default defineComponent( {
 
     const cleanTitle = ( title: string | undefined | null ): string => {
       if ( !title ) return 'N/A';
-      return title.replace( /^(#+|--+)\s*/, '' ).replace( /[#-]/g, '-' ).trim();
+      return title.replace( /^(#+|--+)\s*/, '' ).replace( /[#-]/g, '|' ).trim();
     };
 
     const hasHlsSongStats = (): boolean => {
