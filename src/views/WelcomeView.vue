@@ -24,63 +24,64 @@
         </p>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr; gap: 48px;">
-        
-        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; text-align: center;">
-          <div style="width: 192px; height: 192px;">
-            <img src="/pwa-512x512.png" alt="Mixpla Logo" style="width: 100%; height: 100%; object-fit: contain;">
-          </div>
-          <router-link to="/outline/radiostations" style="display: inline-block; max-width: 360px; width: 100%;">
-            <n-button type="primary" size="large" style="width: 100%;">
-              Launch Your Radio
-              <template #icon>
-                <n-icon><ArrowRight /></n-icon>
-              </template>
-            </n-button>
-          </router-link>
-          <a href="https://discord.gg/EqQry4Vg" target="_blank" rel="noopener noreferrer" :style="{ fontSize: '0.875rem', display: 'block', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">
-            Join our Discord community
-          </a>
-          <router-link to="/about" :style="{ marginTop: '8px', display: 'inline-block', fontSize: '0.875rem', fontWeight: 600, textDecoration: 'underline', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">
-            About the project
-          </router-link>
-        </div>
-        <div style="display: flex; flex-direction: column; gap: 32px;">
-
-          <div>
-            <h2 :style="{ fontSize: '1.5rem', fontWeight: '700', borderBottom: '1px solid', borderBottomColor: isDarkTheme ? '#333' : '#e5e7eb', paddingBottom: '8px', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">Featured Stations(Demo)</h2>
-            <div v-if="isLoading">
-              <n-skeleton text style="width: 60%" />
-              <n-skeleton text :repeat="2" />
-              <n-skeleton text style="width: 80%" />
+      <n-grid cols="24" x-gap="24" y-gap="48">
+        <n-grid-item :span="8">
+          <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; text-align: center;">
+            <div style="width: 192px; height: 192px;">
+              <img src="/pwa-512x512.png" alt="Mixpla Logo" style="width: 100%; height: 100%; object-fit: contain;">
             </div>
-            <div v-else-if="error" :style="{ color: isDarkTheme ? '#ff7371' : '#ef4444' }">
-              Error loading stations. Please try again later.
-            </div>
-            <a v-else v-for="station in stationsData" 
-               :key="station.name" 
-               :href="`${mixplaBaseUrl}?radio=${encodeURIComponent(station.name.toLowerCase())}`" 
-               target="_blank" 
-               rel="noopener noreferrer" 
-               :style="{ display: 'block', paddingTop: '8px', position: 'relative', paddingLeft: '20px', textDecoration: 'none', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">
-               <div 
-                style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; border-radius: 9999px;"
-                :style="{ backgroundColor: station.color }"
-               ></div>
-              <h3 :style="{ fontSize: '1.25rem', fontWeight: 700, display: 'flex', alignItems: 'center', columnGap: '8px', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">
-                <n-space align="center" size="small">
-                  <span>{{ station.name }}</span>
-                  <n-button size="tiny" type="warning">
-                    {{ station.currentStatus ?? 'UNKNOWN' }}
-                  </n-button>
-                </n-space>
-              </h3>
-              <p :style="{ color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">{{ station.description }}</p>
+            <router-link to="/outline/radiostations" style="display: inline-block; max-width: 360px; width: 100%;">
+              <n-button type="primary" size="large" style="width: 100%;">
+                Launch Your Radio
+                <template #icon>
+                  <n-icon><ArrowRight /></n-icon>
+                </template>
+              </n-button>
+            </router-link>
+            <a href="https://discord.gg/EqQry4Vg" target="_blank" rel="noopener noreferrer" :style="{ fontSize: '0.875rem', display: 'block', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">
+              Join our Discord community
             </a>
+            <router-link to="/about" :style="{ marginTop: '8px', display: 'inline-block', fontSize: '0.875rem', fontWeight: 600, textDecoration: 'underline', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">
+              About the project
+            </router-link>
           </div>
-        </div>
-
-      </div>
+        </n-grid-item>
+        <n-grid-item :span="16">
+          <div style="display: flex; flex-direction: column; gap: 32px;">
+            <div>
+              <h2 :style="{ fontSize: '1.5rem', fontWeight: '700', borderBottom: '1px solid', borderBottomColor: isDarkTheme ? '#333' : '#e5e7eb', paddingBottom: '8px', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">Featured Stations(Demo)</h2>
+              <div v-if="isLoading">
+                <n-skeleton text style="width: 60%" />
+                <n-skeleton text :repeat="2" />
+                <n-skeleton text style="width: 80%" />
+              </div>
+              <div v-else-if="error" :style="{ color: isDarkTheme ? '#ff7371' : '#ef4444' }">
+                Error loading stations. Please try again later.
+              </div>
+              <a v-else v-for="station in stationsData" 
+                 :key="station.name" 
+                 :href="`${mixplaBaseUrl}?radio=${encodeURIComponent(station.name.toLowerCase())}`" 
+                 target="_blank" 
+                 rel="noopener noreferrer" 
+                 :style="{ display: 'block', paddingTop: '8px', position: 'relative', paddingLeft: '20px', textDecoration: 'none', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">
+                 <div 
+                  style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; border-radius: 9999px;"
+                  :style="{ backgroundColor: station.color }"
+                 ></div>
+                <h3 :style="{ fontSize: '1.25rem', fontWeight: 700, display: 'flex', alignItems: 'center', columnGap: '8px', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">
+                  <n-space align="center" size="small">
+                    <span>{{ station.name }}</span>
+                    <n-button size="tiny">
+                      {{ station.currentStatus ?? 'UNKNOWN' }}
+                    </n-button>
+                  </n-space>
+                </h3>
+                <p :style="{ color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">{{ station.description }}</p>
+              </a>
+            </div>
+          </div>
+        </n-grid-item>
+      </n-grid>
     </div>
     </n-config-provider>
   </div>
@@ -88,7 +89,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, inject, type Ref } from 'vue';
-import { NIcon, NSkeleton, NButton, NSpace, NSwitch, NConfigProvider, darkTheme } from 'naive-ui';
+import { NIcon, NSkeleton, NButton, NSpace, NSwitch, NConfigProvider, NGrid, NGridItem, darkTheme } from 'naive-ui';
 import { ArrowRight, Sun, Moon } from '@vicons/tabler';
 import { useReferencesStore } from '../stores/kneo/referencesStore';
 import { MIXPLA_PLAYER_URL } from '../constants/config';
