@@ -182,19 +182,6 @@ const routes: Array<RouteRecordRaw> = [
         ]
     },
     {
-        path: '/player',
-        name: 'Player',
-        component: { template: '<div></div>' },
-        meta: { requiresAuth: false },
-        beforeEnter: (to) => {
-          // Redirect to player subdomain to avoid auth conflicts
-          const radio = Array.isArray(to.query.radio) ? to.query.radio[0] : to.query.radio || '';
-          const playerUrl = `https://mixpla.kneo.io/index.html${radio ? '?radio=' + encodeURIComponent(radio) : ''}`;
-          window.location.href = playerUrl;
-          return false;
-        }
-    },
-    {
         path: '/api/soundfragments/files/:uuid/:name',
         component: { render: () => null },
         beforeEnter: async (to) => {
@@ -238,7 +225,7 @@ export function setupRouterGuard(keycloak: Keycloak) {
         throw new Error('Keycloak instance was not provided to setupRouterGuard');
     }
 
-    router.beforeEach(async (to, from) => {
+    router.beforeEach(async (to) => {
         if (to.name === 'WelcomeView') {
             return true;
         }
