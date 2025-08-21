@@ -1,46 +1,60 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center relative">
-    <div class="max-w-7xl mx-auto px-8 py-12 w-full">
+  <div :class="{ 'welcome-dark': isDarkTheme }" :style="{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', backgroundColor: isDarkTheme ? '#1a1a1a' : '#f8f8f8', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">
+    <n-config-provider :theme="isDarkTheme ? darkTheme : null">
+    <div class="welcome-root" :style="{ maxWidth: '1200px', width: '100%', padding: '48px 32px', margin: '0 auto', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">
+      <div style="display: flex; justify-content: flex-end; margin-bottom: 12px;">
+        <n-switch :value="isDarkTheme" size="small" :round="false" @update:value="toggleTheme">
+          <template #checked-icon>
+            <n-icon>
+              <Moon />
+            </n-icon>
+          </template>
+          <template #unchecked-icon>
+            <n-icon>
+              <Sun />
+            </n-icon>
+          </template>
+        </n-switch>
+      </div>
       <!-- Centered intro section -->
-      <div class="max-w-3xl mx-auto text-center mb-10">
-        <h1 class="text-4xl font-extrabold text-gray-800 mb-3">Every Story Needs to Stream</h1>
-        <p class="text-lg text-gray-600">
+      <div style="max-width: 768px; margin: 0 auto 40px; text-align: center;">
+        <h1 :style="{ fontSize: '2rem', fontWeight: 800, marginBottom: '12px', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">Every Story Needs to Stream</h1>
+        <p :style="{ fontSize: '1.125rem', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">
           Build your radio station. Your AI DJ handles the beats while you craft the vibe. Because the best stories are told through music.
         </p>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+      <div style="display: grid; grid-template-columns: 1fr; gap: 48px;">
         
-        <div class="md:col-span-1 flex flex-col items-center justify-center space-y-6 text-center">
-          <div class="w-48 h-48">
-            <img src="/pwa-512x512.png" alt="Mixpla Logo" class="w-full h-full object-contain">
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; text-align: center;">
+          <div style="width: 192px; height: 192px;">
+            <img src="/pwa-512x512.png" alt="Mixpla Logo" style="width: 100%; height: 100%; object-fit: contain;">
           </div>
-          <router-link
-             to="/outline/radiostations"
-             class="group relative inline-flex items-center justify-center w-full max-w-[360px] px-12 py-5 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold text-xl border-2 border-transparent transition-all duration-500 ease-out transform hover:scale-105"
-          >
-            <span class="relative z-10" style="color: white !important;">Launch Your Radio</span>
-            <n-icon class="ml-3 group-hover:translate-x-2 transition-transform duration-300" size="24" style="color: white !important;">
-              <ArrowRight />
-            </n-icon>
+          <router-link to="/outline/radiostations" style="display: inline-block; max-width: 360px; width: 100%;">
+            <n-button type="primary" size="large" style="width: 100%;">
+              Launch Your Radio
+              <template #icon>
+                <n-icon><ArrowRight /></n-icon>
+              </template>
+            </n-button>
           </router-link>
-          <a href="https://discord.gg/EqQry4Vg" target="_blank" rel="noopener noreferrer" class="text-sm text-gray-600 block">
+          <a href="https://discord.gg/EqQry4Vg" target="_blank" rel="noopener noreferrer" :style="{ fontSize: '0.875rem', display: 'block', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">
             Join our Discord community
           </a>
-          <router-link to="/about" class="mt-2 inline-block text-sm font-semibold text-blue-600 hover:underline">
+          <router-link to="/about" :style="{ marginTop: '8px', display: 'inline-block', fontSize: '0.875rem', fontWeight: 600, textDecoration: 'underline', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">
             About the project
           </router-link>
         </div>
-        <div class="md:col-span-2 space-y-8">
+        <div style="display: flex; flex-direction: column; gap: 32px;">
 
-          <div class="space-y-4">
-            <h2 class="text-2xl font-bold text-gray-800 border-b pb-2">Featured Stations(Demo)</h2>
-            <div v-if="isLoading" class="space-y-4">
+          <div>
+            <h2 :style="{ fontSize: '1.5rem', fontWeight: '700', borderBottom: '1px solid', borderBottomColor: isDarkTheme ? '#333' : '#e5e7eb', paddingBottom: '8px', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">Featured Stations(Demo)</h2>
+            <div v-if="isLoading">
               <n-skeleton text style="width: 60%" />
               <n-skeleton text :repeat="2" />
               <n-skeleton text style="width: 80%" />
             </div>
-            <div v-else-if="error" class="text-red-500">
+            <div v-else-if="error" :style="{ color: isDarkTheme ? '#ff7371' : '#ef4444' }">
               Error loading stations. Please try again later.
             </div>
             <a v-else v-for="station in stationsData" 
@@ -48,31 +62,34 @@
                :href="`${mixplaBaseUrl}?radio=${encodeURIComponent(station.name.toLowerCase())}`" 
                target="_blank" 
                rel="noopener noreferrer" 
-               class="block pt-2 group relative pl-5">
-              <div 
-                class="absolute left-0 top-0 bottom-0 w-1 rounded-full" 
+               :style="{ display: 'block', paddingTop: '8px', position: 'relative', paddingLeft: '20px', textDecoration: 'none', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">
+               <div 
+                style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; border-radius: 9999px;"
                 :style="{ backgroundColor: station.color }"
-              ></div>
-              <h3 class="text-xl font-bold text-gray-700 group-hover:text-blue-600 transition-colors flex items-center gap-2">
-                <span>{{ station.name }}</span>
-                <n-button size="tiny" type="warning">
-                  {{ station.currentStatus ?? 'UNKNOWN' }}
-                </n-button>
+               ></div>
+              <h3 :style="{ fontSize: '1.25rem', fontWeight: 700, display: 'flex', alignItems: 'center', columnGap: '8px', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">
+                <n-space align="center" size="small">
+                  <span>{{ station.name }}</span>
+                  <n-button size="tiny" type="warning">
+                    {{ station.currentStatus ?? 'UNKNOWN' }}
+                  </n-button>
+                </n-space>
               </h3>
-              <p class="text-gray-600 group-hover:text-gray-700 transition-colors">{{ station.description }}</p>
+              <p :style="{ color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">{{ station.description }}</p>
             </a>
           </div>
         </div>
 
       </div>
     </div>
+    </n-config-provider>
   </div>
   </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { NIcon, NSkeleton } from 'naive-ui';
-import { ArrowRight } from '@vicons/tabler';
+import { ref, computed, onMounted, onUnmounted, inject, type Ref } from 'vue';
+import { NIcon, NSkeleton, NButton, NSpace, NSwitch, NConfigProvider, darkTheme } from 'naive-ui';
+import { ArrowRight, Sun, Moon } from '@vicons/tabler';
 import { useReferencesStore } from '../stores/kneo/referencesStore';
 import { MIXPLA_PLAYER_URL } from '../constants/config';
 
@@ -86,7 +103,6 @@ interface Station {
 
 onMounted(() => {
   document.body.style.fontFamily = `'Inter', sans-serif`;
-  document.body.style.backgroundColor = '#f9fafb';
   fetchStations();
   
   refreshInterval = setInterval(() => {
@@ -96,7 +112,6 @@ onMounted(() => {
 
 onUnmounted(() => {
   document.body.style.fontFamily = '';
-  document.body.style.backgroundColor = '';
   
   if (refreshInterval) {
     clearInterval(refreshInterval);
@@ -127,7 +142,41 @@ const fetchStations = async () => {
     isLoading.value = false;
   }
 };
+
+// Theme injection from App.vue
+const isDarkTheme = inject<Ref<boolean>>('isDarkTheme', ref(false));
+const toggleTheme = inject<(value: boolean) => void>('toggleTheme', () => {});
+</script>
+
+<script lang="ts">
+export default {
+  components: { NConfigProvider }
+}
 </script>
 
 <style scoped>
+/* Make all text in Welcome follow the local theme, even under App.vue's global provider */
+.welcome-dark :deep(.welcome-root),
+.welcome-dark :deep(.welcome-root *:not(.n-button):not(.n-button *):not(.n-upload *):not(.n-upload-file-list *)) {
+  color: #e0e0e0 !important;
+}
+
+/* Ensure light mode inherits normally */
+:deep(.welcome-root),
+:deep(.welcome-root *:not(.n-button):not(.n-button *):not(.n-upload *):not(.n-upload-file-list *)) {
+  color: inherit !important;
+}
+
+/* Extra safety for common elements and visited links */
+.welcome-dark :deep(a),
+.welcome-dark :deep(a:visited),
+.welcome-dark :deep(h1),
+.welcome-dark :deep(h2),
+.welcome-dark :deep(h3),
+.welcome-dark :deep(p),
+.welcome-dark :deep(span),
+.welcome-dark :deep(li),
+.welcome-dark :deep(label) {
+  color: #e0e0e0 !important;
+}
 </style>
