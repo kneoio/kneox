@@ -1,6 +1,14 @@
 <template>
   <div class="min-h-screen flex items-center justify-center relative">
     <div class="max-w-7xl mx-auto px-8 py-12 w-full">
+      <!-- Centered intro section -->
+      <div class="max-w-3xl mx-auto text-center mb-10">
+        <h1 class="text-4xl font-extrabold text-gray-800 mb-3">Every Story Needs to Stream</h1>
+        <p class="text-lg text-gray-600">
+          Build your radio station. Your AI DJ handles the beats while you craft the vibe. Because the best stories are told through music.
+        </p>
+      </div>
+
       <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
         
         <div class="md:col-span-1 flex flex-col items-center justify-center space-y-6 text-center">
@@ -9,7 +17,7 @@
           </div>
           <router-link
              to="/outline/radiostations"
-             class="group relative inline-flex items-center px-12 py-5 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold text-xl border-2 border-transparent transition-all duration-500 ease-out transform hover:scale-105"
+             class="group relative inline-flex items-center justify-center w-full max-w-[360px] px-12 py-5 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold text-xl border-2 border-transparent transition-all duration-500 ease-out transform hover:scale-105"
           >
             <span class="relative z-10" style="color: white !important;">Launch Your Radio</span>
             <n-icon class="ml-3 group-hover:translate-x-2 transition-transform duration-300" size="24" style="color: white !important;">
@@ -19,17 +27,11 @@
           <a href="https://discord.gg/EqQry4Vg" target="_blank" rel="noopener noreferrer" class="text-sm text-gray-600 block">
             Join our Discord community
           </a>
-          <a href="https://t.me/project_mixpla" target="_blank" rel="noopener noreferrer" class="text-sm text-gray-600 block mt-2">
-            Join our Telegram community
-          </a>
+          <router-link to="/about" class="mt-2 inline-block text-sm font-semibold text-blue-600 hover:underline">
+            About the project
+          </router-link>
         </div>
         <div class="md:col-span-2 space-y-8">
-          <div>
-            <h1 class="text-4xl font-extrabold text-gray-800 mb-4">Every Story Needs to Stream</h1>
-            <p class="text-lg text-gray-600">
-              Build your radio station. Your AI DJ handles the beats while you craft the vibe. Because the best stories are told through music.
-            </p>
-          </div>
 
           <div class="space-y-4">
             <h2 class="text-2xl font-bold text-gray-800 border-b pb-2">Featured Stations(Demo)</h2>
@@ -51,7 +53,12 @@
                 class="absolute left-0 top-0 bottom-0 w-1 rounded-full" 
                 :style="{ backgroundColor: station.color }"
               ></div>
-              <h3 class="text-xl font-bold text-gray-700 group-hover:text-blue-600 transition-colors">{{ station.name }}</h3>
+              <h3 class="text-xl font-bold text-gray-700 group-hover:text-blue-600 transition-colors flex items-center gap-2">
+                <span>{{ station.name }}</span>
+                <n-button size="tiny" type="warning">
+                  {{ station.currentStatus ?? 'UNKNOWN' }}
+                </n-button>
+              </h3>
               <p class="text-gray-600 group-hover:text-gray-700 transition-colors">{{ station.description }}</p>
             </a>
           </div>
@@ -74,6 +81,7 @@ interface Station {
   countryCode: string;
   color: string;
   description: string;
+  currentStatus?: 'ON_LINE' | 'OFF_LINE';
 }
 
 onMounted(() => {

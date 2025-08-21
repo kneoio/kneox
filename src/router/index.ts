@@ -20,6 +20,7 @@ import ProfileForm from '../components/forms/kneo/EnvironmentProfileForm.vue';
 import Events from '../components/lists/kneo/Events.vue';
 import EventForm from '../components/forms/kneo/EventForm.vue';
 import WelcomeView from '../views/WelcomeView.vue';
+import AboutMe from '../views/AboutMe.vue';
 // Player is served directly from public/player
 import Keycloak from "keycloak-js";
 import apiClient from "../api/apiClient";
@@ -50,6 +51,12 @@ const routes: Array<RouteRecordRaw> = [
         name: 'Mixpla',
         component: WelcomeView,
         meta: {requiresAuth: false}
+    },
+    {
+        path: '/about',
+        name: 'PublicAbout',
+        component: AboutMe,
+        meta: { requiresAuth: false }
     },
     {
         path: '/outline',
