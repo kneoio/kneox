@@ -1,94 +1,125 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-    <div class="max-w-6xl mx-auto px-8 py-16">
-      
-      <div class="text-center mb-16">
-        <div class="w-32 h-32 mx-auto mb-8">
-          <img src="/logo.png" alt="Kneo.io Logo" class="w-full h-full object-contain">
+  <div class="min-h-screen flex items-center justify-center relative">
+    <div class="max-w-7xl mx-auto px-8 py-12 w-full">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+        
+        <div class="md:col-span-1 flex flex-col items-center justify-center space-y-6 text-center">
+          <div class="w-48 h-48">
+            <img src="/pwa-512x512.png" alt="Mixpla Logo" class="w-full h-full object-contain">
+          </div>
+          <router-link
+             to="/outline/radiostations"
+             class="group relative inline-flex items-center px-12 py-5 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold text-xl border-2 border-transparent transition-all duration-500 ease-out transform hover:scale-105"
+          >
+            <span class="relative z-10" style="color: white !important;">Launch Your Radio</span>
+            <n-icon class="ml-3 group-hover:translate-x-2 transition-transform duration-300" size="24" style="color: white !important;">
+              <ArrowRight />
+            </n-icon>
+          </router-link>
+          <a href="https://discord.gg/EqQry4Vg" target="_blank" rel="noopener noreferrer" class="text-sm text-gray-600 block">
+            Join our Discord community
+          </a>
+          <a href="https://t.me/project_mixpla" target="_blank" rel="noopener noreferrer" class="text-sm text-gray-600 block mt-2">
+            Join our Telegram community
+          </a>
         </div>
-
-        <p class="text-xl text-gray-600 max-w-2xl mx-auto">
-          Pioneering the future of digital experiences through innovative technology solutions
-        </p>
-      </div>
-
-      <div class="bg-white rounded-2xl shadow-lg p-8 mb-12">
-        <h2 class="text-3xl font-bold text-gray-900 mb-6 text-center">Who We Are</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="md:col-span-2 space-y-8">
           <div>
-            <p class="text-gray-700 leading-relaxed mb-4">
-              At kneo.io, we transform ideas into cutting-edge digital solutions. Our team of experts specializes in creating innovative platforms that bridge the gap between technology and human experience.
-            </p>
-            <p class="text-gray-700 leading-relaxed">
-              We believe in the power of seamless integration, intelligent automation, and user-centric design to drive meaningful change across industries.
+            <h1 class="text-4xl font-extrabold text-gray-800 mb-4">Every Story Needs to Stream</h1>
+            <p class="text-lg text-gray-600">
+              Build your radio station. Your AI DJ handles the beats while you craft the vibe. Because the best stories are told through music.
             </p>
           </div>
+
           <div class="space-y-4">
-            <div class="flex items-center space-x-3">
-              <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
-              <span class="text-gray-700">Innovation-driven development</span>
+            <h2 class="text-2xl font-bold text-gray-800 border-b pb-2">Featured Stations(Demo)</h2>
+            <div v-if="isLoading" class="space-y-4">
+              <n-skeleton text style="width: 60%" />
+              <n-skeleton text :repeat="2" />
+              <n-skeleton text style="width: 80%" />
             </div>
-            <div class="flex items-center space-x-3">
-              <div class="w-3 h-3 bg-purple-500 rounded-full"></div>
-              <span class="text-gray-700">Scalable enterprise solutions</span>
+            <div v-else-if="error" class="text-red-500">
+              Error loading stations. Please try again later.
             </div>
-            <div class="flex items-center space-x-3">
-              <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span class="text-gray-700">AI-powered experiences</span>
-            </div>
+            <a v-else v-for="station in stationsData" 
+               :key="station.name" 
+               :href="`${mixplaBaseUrl}?radio=${encodeURIComponent(station.name.toLowerCase())}`" 
+               target="_blank" 
+               rel="noopener noreferrer" 
+               class="block pt-2 group relative pl-5">
+              <div 
+                class="absolute left-0 top-0 bottom-0 w-1 rounded-full" 
+                :style="{ backgroundColor: station.color }"
+              ></div>
+              <h3 class="text-xl font-bold text-gray-700 group-hover:text-blue-600 transition-colors">{{ station.name }}</h3>
+              <p class="text-gray-600 group-hover:text-gray-700 transition-colors">{{ station.description }}</p>
+            </a>
           </div>
         </div>
-      </div>
 
-      <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-xl p-8 text-white">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-          <div>
-            <h2 class="text-3xl font-bold mb-4" style="color: white !important;">Introducing Mixpla</h2>
-            <p class="mb-6 leading-relaxed" style="color: white !important;">
-              Our flagship project revolutionizing the audio streaming landscape. Experience personalized radio stations powered by AI, where every beat tells your story.
-            </p>
-            <router-link
-              to="/mixpla"
-              class="inline-flex items-center px-8 py-4 bg-white text-blue-600 font-bold text-lg rounded-lg hover:bg-blue-50 transition-all duration-300 transform hover:scale-105 shadow-lg"
-            >
-              <span>Explore Mixpla</span>
-              <n-icon class="ml-3" size="20" style="color: white !important;">
-                <ArrowRight />
-              </n-icon>
-            </router-link>
-          </div>
-          <div class="text-center">
-            <div class="w-48 h-48 mx-auto bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm">
-              <div class="w-32 h-32 bg-white/20 rounded-full flex items-center justify-center">
-                <n-icon size="48" class="text-white">
-                  <ArrowRight />
-                </n-icon>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
-
     </div>
   </div>
-</template>
+  </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue';
-import { NIcon } from 'naive-ui';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { NIcon, NSkeleton } from 'naive-ui';
 import { ArrowRight } from '@vicons/tabler';
+import { useReferencesStore } from '../stores/kneo/referencesStore';
+import { MIXPLA_PLAYER_URL } from '../constants/config';
+
+interface Station {
+  name: string;
+  countryCode: string;
+  color: string;
+  description: string;
+}
 
 onMounted(() => {
   document.body.style.fontFamily = `'Inter', sans-serif`;
-  document.body.style.backgroundColor = '#f8fafc';
+  document.body.style.backgroundColor = '#f9fafb';
+  fetchStations();
+  
+  refreshInterval = setInterval(() => {
+    fetchStations();
+  }, 60000);
 });
 
 onUnmounted(() => {
   document.body.style.fontFamily = '';
   document.body.style.backgroundColor = '';
+  
+  if (refreshInterval) {
+    clearInterval(refreshInterval);
+    refreshInterval = null;
+  }
 });
+
+const stationsData = ref<Array<Station>>([]);
+const isLoading = ref(true);
+const error = ref<Error | null>(null);
+let refreshInterval: NodeJS.Timeout | null = null;
+
+const referencesStore = useReferencesStore();
+
+const mixplaBaseUrl = computed(() => {
+  return MIXPLA_PLAYER_URL;
+});
+
+const fetchStations = async () => {
+  try {
+    isLoading.value = true;
+    const data = await referencesStore.fetchRadioStations();
+    stationsData.value = data;
+  } catch (err) {
+    console.error('Failed to fetch stations:', err);
+    error.value = err instanceof Error ? err : new Error('Failed to load stations');
+  } finally {
+    isLoading.value = false;
+  }
+};
 </script>
 
 <style scoped>
-/* Corporate landing page styles */
 </style>
