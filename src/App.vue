@@ -109,38 +109,54 @@ function setCookie(name, value, days = 365) {
 }
 
 function saveThemePreference() {
-  setCookie('theme-preference', isDarkTheme.value ? 'dark' : 'light')
+  setCookie('theme', isDarkTheme.value ? 'dark' : 'light')
 }
 
-// Check if current route is in protected area
-const isProtectedArea = computed(() => {
-  return route.path.startsWith('/outline')
-})
+// Check route scopes
+const isProtectedArea = computed(() => route.path.startsWith('/outline'))
+const allowPublicDark = computed(() => route.path === '/about')
 
-// Only apply dark theme in protected area
+// Apply dark theme in protected area and About page
 const currentTheme = computed(() => {
-  return isProtectedArea.value && isDarkTheme.value ? darkTheme : null
+  return (isProtectedArea.value || allowPublicDark.value) && isDarkTheme.value ? darkTheme : null
 })
 
 const currentThemeOverrides = computed(() => {
-  if (isProtectedArea.value && isDarkTheme.value) {
+  if ((isProtectedArea.value || allowPublicDark.value) && isDarkTheme.value) {
     return darkThemeOverrides
   }
   return lightThemeOverrides
 })
 
 const currentBackgroundColor = computed(() => {
-  if (isProtectedArea.value && isDarkTheme.value) {
+  if ((isProtectedArea.value || allowPublicDark.value) && isDarkTheme.value) {
     return '#1a1a1a'
   }
   return '#f8f8f8'
 })
 
-onMounted(() => {
-  const savedTheme = getCookie('theme-preference')
+// Initialize from cookie or OS preference
+const initTheme = () => {
+  const savedTheme = getCookie('theme')
   if (savedTheme) {
     isDarkTheme.value = savedTheme === 'dark'
+  } else if (window.matchMedia) {
+    isDarkTheme.value = window.matchMedia('(prefers-color-scheme: dark)').matches
   }
+}
+
+initTheme()
+
+// React to OS changes when no cookie is set
+const mediaQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null
+mediaQuery?.addEventListener?.('change', (e) => {
+  if (!getCookie('theme')) {
+    isDarkTheme.value = e.matches
+  }
+})
+
+onMounted(() => {
+  initTheme()
 })
 </script>
 
