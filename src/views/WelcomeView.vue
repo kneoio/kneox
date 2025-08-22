@@ -72,7 +72,7 @@
                   <n-space align="center" size="small">
                     <span>{{ station.name }}</span>
                     <n-button size="tiny">
-                      {{ station.currentStatus ?? 'UNKNOWN' }}
+                      {{ getStatusText(station.currentStatus) }}
                     </n-button>
                   </n-space>
                 </h3>
@@ -141,6 +141,17 @@ const fetchStations = async () => {
     error.value = err instanceof Error ? err : new Error('Failed to load stations');
   } finally {
     isLoading.value = false;
+  }
+};
+
+const getStatusText = (status?: 'ON_LINE' | 'OFF_LINE'): string => {
+  switch (status) {
+    case 'ON_LINE':
+      return 'Online';
+    case 'OFF_LINE':
+      return 'Offline';
+    default:
+      return 'Unknown';
   }
 };
 
