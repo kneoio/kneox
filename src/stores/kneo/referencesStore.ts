@@ -168,7 +168,7 @@ export const useReferencesStore = defineStore('references', () => {
 
   const llmTypeOptions = [
     { label: 'Claude', value: 'CLAUDE' },
-    { label: 'OpenAI', value: 'OPENAI' },
+    /*{ label: 'OpenAI', value: 'OPENAI' },*/
     { label: 'Groq', value: 'GROQ' }
   ];
 
