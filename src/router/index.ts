@@ -20,7 +20,7 @@ import ProfileForm from '../components/forms/kneo/EnvironmentProfileForm.vue';
 import Events from '../components/lists/kneo/Events.vue';
 import EventForm from '../components/forms/kneo/EventForm.vue';
 import WelcomeView from '../views/WelcomeView.vue';
-import AboutMe from '../views/AboutMe.vue';
+import About from '../views/About.vue';
 // Player is served directly from public/player
 import Keycloak from "keycloak-js";
 import apiClient from "../api/apiClient";
@@ -55,7 +55,7 @@ const routes: Array<RouteRecordRaw> = [
     {
         path: '/about',
         name: 'PublicAbout',
-        component: AboutMe,
+        component: About,
         meta: { requiresAuth: false }
     },
     {

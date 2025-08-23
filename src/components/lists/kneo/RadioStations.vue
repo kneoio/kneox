@@ -47,7 +47,7 @@
 </template>
 
 <script lang="ts">
-import {computed, defineComponent, h, inject, onMounted, onUnmounted, ref, Ref} from 'vue';
+import {computed, defineComponent, h, inject, onMounted, onUnmounted, onActivated, onDeactivated, ref, Ref} from 'vue';
 import {
   DataTableColumns,
   NButton,
@@ -60,7 +60,7 @@ import {
   NTag,
   useMessage
 } from 'naive-ui';
-import {useRouter} from 'vue-router';
+import {useRouter, onBeforeRouteLeave} from 'vue-router';
 import {PlayerPlay, PlayerStop} from '@vicons/tabler';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
 import {RadioStation} from "../../../types/kneoBroadcasterTypes";
@@ -150,15 +150,33 @@ export default defineComponent({
     startPeriodicRefresh();
     startClockUpdate();
 
+    const handleResize = () => {
+      isMobile.value = window.innerWidth < 768;
+    };
+
     onMounted(() => {
-      window.addEventListener('resize', () => {
-        isMobile.value = window.innerWidth < 768;
-      });
+      window.addEventListener('resize', handleResize);
     });
 
     onUnmounted(() => {
       stopPeriodicRefresh();
       stopClockUpdate();
+      window.removeEventListener('resize', handleResize);
+    });
+
+    onBeforeRouteLeave(() => {
+      stopPeriodicRefresh();
+      stopClockUpdate();
+    });
+
+    onDeactivated(() => {
+      stopPeriodicRefresh();
+      stopClockUpdate();
+    });
+
+    onActivated(() => {
+      startPeriodicRefresh();
+      startClockUpdate();
     });
 
     const handleCopyUrl = (url: string) => {
