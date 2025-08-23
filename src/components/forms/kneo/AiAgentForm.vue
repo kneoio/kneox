@@ -78,12 +78,13 @@
                 <n-collapse-transition :show="showVariables">
                   <n-card size="small" style="margin-bottom: 16px; width: 90%;">
                     <n-space vertical size="small">
+                      <div><strong>Variables:</strong></div>
                       <div><n-tag type="info" size="small"><strong>ai_dj_name</strong></n-tag> - The current DJ's name
                       </div>
                       <div><n-tag type="info" size="small"><strong>brand</strong></n-tag> - Radio station
                         name/identity
                         for consistent branding</div>
-                      <div><n-tag type="info" size="small"><strong>song_title</strong></n-tag> - Name of the song
+                      <div><n-tag type="info" size="small"><strong>title</strong></n-tag> - Name of the song
                         being
                         introduced to listeners</div>
                       <div><n-tag type="info" size="small"><strong>artist</strong></n-tag> - Performer/band name for
@@ -100,6 +101,9 @@
                         message content that takes precedence in introduction</div>
                       <div><n-tag type="info" size="small"><strong>events</strong></n-tag> - Various events that may
                         affect the introduction (DJ shifts, station events, etc.)</div>
+
+                      <div style="margin-top: 16px;"><strong>Voice Emotions & Effects:</strong></div>
+                      <div>You can suggest to use: <code>[sad]</code>,<code>[angry]</code>,<code>[curious]</code>,<code>[happily]</code>,<code>[whispers]</code>,<code>[shouts]</code>,<code>[laughs]</code>,<code>[clears throat]</code></div>
                     </n-space>
                   </n-card>
                 </n-collapse-transition>
