@@ -112,8 +112,6 @@ export const useReferencesStore = defineStore('references', () => {
   const eventTypeOptions = [
     { label: 'Advertisement', value: 'AD' },
     { label: 'Weather', value: 'WEATHER' },
-    { label: 'Shift Started', value: 'SHIFT_STARTED' },
-    { label: 'Shift Ending', value: 'SHIFT_ENDING' },
     { label: 'Remainder', value: 'REMAINDER' }
   ];
 
