@@ -425,7 +425,7 @@ export default defineComponent( {
       profileId: undefined,
       timeZone: "",
       managedBy: undefined,
-      bitRate: 128000,
+      bitRate: "128000",
       schedule: undefined
     } );
 

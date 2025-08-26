@@ -280,7 +280,6 @@ export default defineComponent( {
         },
         { title: 'Title', key: 'title' },
         { title: 'Artist', key: 'artist' },
-        { title: 'Genre', key: 'genre' },
         { title: 'Source', key: 'source' }
       ];
 

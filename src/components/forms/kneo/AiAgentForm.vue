@@ -100,6 +100,7 @@
                         message content that takes precedence in introduction</div>
                       <div><n-tag type="info" size="small"><strong>events</strong></n-tag> - Various events that may
                         affect the introduction (DJ shifts, station events, etc.)</div>
+                      <div><n-tag type="info" size="small"><strong>genres</strong></n-tag> - Musical genres of the current song for contextual introductions</div>
                     </n-space>
                   </n-card>
                 </n-collapse-transition>
@@ -113,7 +114,7 @@
                         <strong>{{ index + 1 }}</strong>
                         <CodeMirror
                           :model-value="value"
-                          @update:model-value="(val) => localFormData.prompts[index] = val"
+                          @update:model-value="(val) => localFormData.prompts[index] = val || ''"
                           basic
                           :style="{
                             width: '800px',
@@ -214,7 +215,7 @@ import CodeMirror from 'vue-codemirror6';
 import { useAiAgentStore } from '../../../stores/kneo/aiAgentStore';
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 import AclTable from '../../common/AclTable.vue';
-import { AiAgent, AiAgentSave } from '../../../types/kneoBroadcasterTypes';
+import { AiAgentSave, AiAgentForm, LanguageCode } from '../../../types/kneoBroadcasterTypes';
 
 export default defineComponent({
   name: "AiAgentForm",

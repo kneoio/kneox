@@ -333,13 +333,6 @@ const startClockUpdate = () => {
   }
 };
 
-const stopClockUpdate = () => {
-  if (clockIntervalId.value) {
-    clearInterval(clockIntervalId.value);
-    clockIntervalId.value = null;
-  }
-};
-
 const formatMinutesToTime = (minutes: number): string => {
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
