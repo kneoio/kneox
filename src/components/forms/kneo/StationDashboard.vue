@@ -71,7 +71,7 @@
                         }">
                         <n-text :depth="isCurrentSong( fragment ) ? 1 : 3"
                           :style="{ color: isCurrentSong( fragment ) ? 'white !important' : undefined }">
-                          {{ index + 1 }}. {{ cleanTitle( fragment ) }}
+                          {{ index + 1 }}. {{ cleanTitle( fragment.title ) }}
                         </n-text>
                       </div>
                     </n-space>
@@ -80,8 +80,7 @@
                 </div>
 
                 <div>
-                  <n-text depth="2" style="font-weight: 600; margin-bottom: 8px; display: block;">Ready to be queued:
-                  </n-text>
+                  <n-text depth="2" style="font-weight: 600; margin-bottom: 8px; display: block;">Ready to be queued:</n-text>
                   <div
                     v-if=" stationDetails?.playlistManagerStats?.readyToBeConsumed && stationDetails.playlistManagerStats.readyToBeConsumed.length > 0 ">
                     <n-space vertical size="small">
@@ -97,7 +96,7 @@
                         }">
                         <n-text :depth="isCurrentSong( fragment ) ? 1 : 3"
                           :style="{ color: isCurrentSong( fragment ) ? 'white !important' : undefined }">
-                          {{ index + 1 }}. {{ cleanTitle( fragment ) }}
+                          {{ index + 1 }}. {{ getMergingTypeSymbol( fragment ) }}{{ cleanTitle( fragment.title ) }}
                         </n-text>
                       </div>
                     </n-space>
@@ -420,13 +419,19 @@ export default defineComponent( {
 
     const openMixpla = () => {
       const mixplaUrl = MIXPLA_PLAYER_URL;
-      const url = `${mixplaUrl}?radio=${encodeURIComponent( props.brandName.toLowerCase() )}`;
       window.open( url, '_blank', 'noopener,noreferrer' );
     };
 
     const cleanTitle = ( title: string | undefined | null ): string => {
-      if ( !title ) return 'N/A';
+      if ( !title || typeof title !== 'string' ) return 'N/A';
       return title.replace( /^(#+|--+)\s*/, '' ).replace( /[#-]/g, '|' ).trim();
+    };
+
+    const getMergingTypeSymbol = ( fragment: any ): string => {
+      if ( fragment?.mergingType === 'INTRO_PLUS_SONG' ) {
+        return '■ ';
+      }
+      return '';
     };
 
     const hasHlsSongStats = (): boolean => {
@@ -596,6 +601,7 @@ export default defineComponent( {
       isStartingStation,
       isStoppingStation,
       cleanTitle,
+      getMergingTypeSymbol,
       hasHlsSongStats,
       getHlsCurrentTrack,
       getHlsTimestamp,
