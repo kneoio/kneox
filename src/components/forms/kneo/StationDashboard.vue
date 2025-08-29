@@ -428,8 +428,14 @@ export default defineComponent( {
     };
 
     const getMergingTypeSymbol = ( fragment: any ): string => {
-      if ( fragment?.mergingType === 'INTRO_PLUS_SONG' ) {
+      if ( fragment?.mergingType === 'FILLER_SONG' ) {
         return '■ ';
+      }
+      if ( fragment?.mergingType === 'INTRO_SONG' ) {
+        return '■■ ';
+      }
+      if ( fragment?.mergingType === 'SONG_INTRO_SONG' ) {
+        return '■■■ ';
       }
       return '';
     };
