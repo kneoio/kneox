@@ -23,10 +23,11 @@ export const useReferencesStore = defineStore('references', () => {
     { label: "Sverige", value: "SE" },
     { label: "Polska", value: "PL" },
     { label: "Italia", value: "IT" },
-    { label: "Türkiye", value: "TR" }
- ];
- 
- const languageOptions = [
+    { label: "Türkiye", value: "TR" },
+    { label: "საქართველო", value: "GE" }
+  ];
+
+  const languageOptions = [
     { label: "English", value: "en" },
     { label: "Português", value: "pt" },
     { label: "Қазақша", value: "kk" },
@@ -45,8 +46,9 @@ export const useReferencesStore = defineStore('references', () => {
     { label: "Svenska", value: "sv" },
     { label: "Polski", value: "pl" },
     { label: "Italiano", value: "it" },
-    { label: "Türkçe", value: "tr" }
- ];
+    { label: "Türkçe", value: "tr" },
+    { label: "ქართული", value: "ka" }
+  ];
 
   const genreOptions = ref<Array<{label: string, value: string}>>([]);
   const voiceOptions = ref<Array<{label: string, value: string}>>([]);

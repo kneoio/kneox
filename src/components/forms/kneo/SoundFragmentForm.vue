@@ -354,8 +354,6 @@ export default defineComponent({
         const entityId = localFormData.id || "temp";
         const uploadId = crypto.randomUUID();
         const startTime = Date.now();
-        
-        // STORE THE EXACT ORIGINAL FILENAME
         const originalFileName = file.name;
         logWithTimestamp(`Start upload session, uploadId: ${uploadId}, originalFileName: ${originalFileName}`);
         
@@ -372,6 +370,9 @@ export default defineComponent({
             }
         );
         logWithTimestamp(`Starting upload: ${originalFileName}, Estimated: ${sessionData.estimatedDurationSeconds}`);
+        if (!file.file) {
+          throw new Error('No file content to upload');
+        }
         await store.uploadFile(entityId, file.file, uploadId);
         connectSSE(uploadId, originalFileName); // Pass original filename to SSE
 
@@ -387,7 +388,6 @@ export default defineComponent({
     const handleDownload = async (file: UploadFileInfo) => {
       try {
         loadingBar.start();
-        // Resolve the original backend URL from the loaded form data to ensure authenticated request
         const original = (localFormData.uploadedFiles || []).find((f: any) => f.name === file.name);
         const resolvedUrl = original?.url || file.url || "";
         await store.downloadFile(resolvedUrl, file.name);
@@ -410,7 +410,6 @@ export default defineComponent({
 
       const currentFileNames = data.fileList.map(f => f.name);
 
-      // Clean both arrays
       uploadedFileNames.value = uploadedFileNames.value.filter(name =>
           currentFileNames.includes(name)
       );
@@ -421,7 +420,6 @@ export default defineComponent({
     };
 
     const handleRemove = (file: UploadFileInfo) => {
-      // Remove from both arrays
       uploadedFileNames.value = uploadedFileNames.value.filter(name => name !== file.name);
       originalUploadedFileNames.value = originalUploadedFileNames.value.filter(name => name !== file.name);
       
