@@ -155,7 +155,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
     };
 
     const uploadFile = async (id: string, file: File, uploadId: string) => {
-        const maxSizeBytes = 120 * 1024 * 1024; // 120MB
+        const maxSizeBytes = 200 * 1024 * 1024; // 200MB
 
         if (file.size > maxSizeBytes) {
             throw new Error(`File too large. Maximum size is ${maxSizeBytes / 1024 / 1024}MB`);
@@ -167,8 +167,8 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         try {
             const response = await apiClient.post(`/soundfragments/files/${id}?uploadId=${uploadId}`, formData, {
                 timeout: 600000, // 10 minutes
-                maxContentLength: 120 * 1024 * 1024,
-                maxBodyLength: 120 * 1024 * 1024,
+                maxContentLength: 200 * 1024 * 1024,
+                maxBodyLength: 200 * 1024 * 1024,
             });
 
             return response.data;
