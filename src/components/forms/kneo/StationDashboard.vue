@@ -39,6 +39,12 @@
               </n-icon>
             </a>
           </n-space>
+          <n-space align="center" size="small" style="margin-left: 30px;">
+            <n-button size="small" :type="isPlayerActive ? 'warning' : 'default'" @click="onTogglePlayer">{{ isPlayerActive ? 'Stop Listening' : 'Listen' }}</n-button>
+            <n-text depth="3">Bitrate: {{ hlsBitrate ? hlsBitrate + ' kbps' : '—' }}</n-text>
+            <n-text depth="3">Buffer: {{ bufferAhead }}s</n-text>
+            <audio ref="playerAudio" style="display:none"></audio>
+          </n-space>
         </n-space>
 
         <n-space vertical size="large">
@@ -216,6 +222,7 @@ import {
 } from 'naive-ui';
 import { ExternalLink, PlayerPlay, PlayerStop, Activity } from '@vicons/tabler';
 import { MIXPLA_PLAYER_URL } from '../../../constants/config';
+import Hls from 'hls.js';
 
 
 export default defineComponent( {
@@ -383,6 +390,28 @@ export default defineComponent( {
       return `${MIXPLA_PLAYER_URL}?radio=${encodeURIComponent( props.brandName.toLowerCase() )}`;
     } );
 
+    // --- Minimal HLS test player state ---
+    const playerAudio = ref<HTMLAudioElement | null>( null );
+    const hlsInstance = ref<Hls | null>( null );
+    const hlsBitrate = ref<number | null>( null ); // kbps
+    const bufferAhead = ref<string>( '0.0' ); // seconds (string for fixed formatting)
+    const bufferTimer = ref<number | null>( null );
+    const isPlayerActive = ref<boolean>( false );
+
+    const hlsStreamUrl = computed( () => {
+      let origin = '';
+      try {
+        origin = new URL( MIXPLA_PLAYER_URL ).origin;
+      } catch {
+        origin = window.location.origin;
+      }
+      // Dev override: if app runs on localhost, prefer local Mixpla player origin to avoid CORS
+      if ( window.location.hostname === 'localhost' ) {
+        origin = 'http://localhost:38707';
+      }
+      return `${origin}/${encodeURIComponent( props.brandName.toLowerCase() )}/radio/stream.m3u8`;
+    } );
+
     const sendCommand = async ( brandName: string, command: string ) => {
       try {
         const success = await dashboardStore.triggerBroadcastAction( brandName, command );
@@ -397,10 +426,27 @@ export default defineComponent( {
       }
     };
 
+    const resetPlayer = () => {
+      const el = playerAudio.value;
+      try { hlsInstance.value?.destroy(); } catch {}
+      hlsInstance.value = null;
+      if ( el ) {
+        try { el.pause(); } catch {}
+        el.muted = true;
+        el.removeAttribute('src');
+        try { el.load(); } catch {}
+      }
+      if ( bufferTimer.value != null ) { clearInterval( bufferTimer.value ); bufferTimer.value = null; }
+      hlsBitrate.value = null;
+      bufferAhead.value = '0.0';
+      isPlayerActive.value = false;
+    };
+
     const handleStart = async () => {
       if ( isStartingStation.value ) return;
       isStartingStation.value = true;
       try {
+        resetPlayer();
         await sendCommand( props.brandName, 'start' );
       } finally {
         isStartingStation.value = false;
@@ -418,8 +464,70 @@ export default defineComponent( {
     };
 
     const openMixpla = () => {
-      const mixplaUrl = MIXPLA_PLAYER_URL;
-      window.open( url, '_blank', 'noopener,noreferrer' );
+      window.open( mixplaUrl.value, '_blank', 'noopener,noreferrer' );
+    };
+
+    const updateBufferAhead = () => {
+      const el = playerAudio.value;
+      if ( !el ) return;
+      try {
+        const buf = el.buffered;
+        if ( buf && buf.length ) {
+          const end = buf.end( buf.length - 1 );
+          const val = Math.max( 0, end - el.currentTime );
+          bufferAhead.value = val.toFixed( 1 );
+        } else {
+          bufferAhead.value = '0.0';
+        }
+      } catch {
+        bufferAhead.value = '0.0';
+      }
+    };
+
+    const onTogglePlayer = () => {
+      const el = playerAudio.value;
+      if ( !el ) return;
+
+      if ( isPlayerActive.value ) {
+        el.muted = true;
+        try { el.pause(); } catch {}
+        if ( bufferTimer.value != null ) { clearInterval( bufferTimer.value ); bufferTimer.value = null; }
+        isPlayerActive.value = false;
+        return;
+      }
+
+      if ( Hls.isSupported() ) {
+        if ( !hlsInstance.value ) {
+          const hls = new Hls( { lowLatencyMode: false, maxBufferLength: 30 } );
+          hls.attachMedia( el );
+          hls.on( Hls.Events.MEDIA_ATTACHED, () => {
+            hls.loadSource( hlsStreamUrl.value );
+            hls.startLoad();
+          } );
+          hls.on( Hls.Events.MANIFEST_PARSED, ( _e, data: any ) => {
+            if ( data?.levels?.length ) {
+              const lvl = data.levels[hls.currentLevel] || data.levels[0];
+              if ( lvl?.bitrate ) hlsBitrate.value = Math.round( lvl.bitrate / 1000 );
+            }
+          } );
+          hls.on( Hls.Events.LEVEL_SWITCHED, ( _e, data: any ) => {
+            const lvl = hls.levels?.[data.level];
+            if ( lvl?.bitrate ) hlsBitrate.value = Math.round( lvl.bitrate / 1000 );
+          } );
+          hlsInstance.value = hls;
+        }
+      } else if ( el.canPlayType( 'application/vnd.apple.mpegurl' ) ) {
+        if ( el.src !== hlsStreamUrl.value ) el.src = hlsStreamUrl.value;
+      }
+
+      el.muted = false;
+      el.volume = el.volume || 1;
+      el.play().catch( () => {} );
+      updateBufferAhead();
+      if ( bufferTimer.value == null ) {
+        bufferTimer.value = window.setInterval( updateBufferAhead, 1000 );
+      }
+      isPlayerActive.value = true;
     };
 
     const cleanTitle = ( title: string | undefined | null ): string => {
@@ -584,6 +692,11 @@ export default defineComponent( {
       isDestroyed.value = true;
       dashboardStore.stopStationPolling(props.brandName);
       dashboardStore.disconnectStation(props.brandName);
+      try { hlsInstance.value?.destroy(); } catch {}
+      if ( bufferTimer.value != null ) {
+        clearInterval( bufferTimer.value );
+        bufferTimer.value = null;
+      }
     });
 
     watch( () => stationDetails.value?.timeline, () => {
@@ -601,6 +714,12 @@ export default defineComponent( {
       managedByInfo,
       stationInitials,
       mixplaUrl,
+      // test player
+      playerAudio,
+      onTogglePlayer,
+      isPlayerActive,
+      hlsBitrate,
+      bufferAhead,
       handleStart,
       handleStop,
       openMixpla,
