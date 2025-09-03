@@ -8,12 +8,14 @@
           class="theme-provider"
       >
         <router-view/>
+        <GdprBanner />
       </n-config-provider>
     </n-message-provider>
   </n-loading-bar-provider>
 </template>
 
 <script setup>
+import GdprBanner from './components/common/GdprBanner.vue'
 import {NConfigProvider, NLoadingBarProvider, NMessageProvider, darkTheme} from 'naive-ui'
 import {ref, computed, onMounted, provide} from 'vue'
 import {useRoute} from 'vue-router'
@@ -179,7 +181,7 @@ body {
   color: #333 !important;
 }
 
-.theme-provider[style*="background-color: rgb(248, 248, 248)"] *:not(.n-button):not(.n-button *):not(.n-upload *):not(.n-upload-file-list *) {
+.theme-provider[style*="background-color: rgb(248, 248, 248)"] *:not(.n-button):not(.n-button *):not(.n-upload *):not(.n-upload-file-list *):not(.gdpr-banner):not(.gdpr-banner *) {
   color: inherit !important;
 }
 
@@ -187,7 +189,7 @@ body {
   color: #e0e0e0 !important;
 }
 
-.theme-provider[style*="background-color: rgb(26, 26, 26)"] *:not(.n-button):not(.n-button *):not(.n-upload *):not(.n-upload-file-list *) {
+.theme-provider[style*="background-color: rgb(26, 26, 26)"] *:not(.n-button):not(.n-button *):not(.n-upload *):not(.n-upload-file-list *):not(.gdpr-banner):not(.gdpr-banner *) {
   color: inherit !important;
 }
 </style>

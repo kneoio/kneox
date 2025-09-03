@@ -16,6 +16,11 @@
           </template>
         </n-switch>
       </div>
+      <n-alert type="warning" title="Beta test mode" :closable="true" style="margin-bottom: 16px;">
+        This project is in beta test mode, so some features may not work properly. Any feedback is appreciated at
+        <a href="mailto:stinazimas@gmail.com">stinazimas@gmail.com</a> or on
+        <a href="https://discord.com/channels/1395012925512613998/1395012926154346538" target="_blank" rel="noopener noreferrer">Discord</a>.
+      </n-alert>
       <!-- Centered intro section -->
       <div style="max-width: 768px; margin: 0 auto 40px; text-align: center;">
         <h1 :style="{ fontSize: '2rem', fontWeight: 800, marginBottom: '12px', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">Every Story Needs to Stream</h1>
@@ -38,7 +43,7 @@
                 </template>
               </n-button>
             </router-link>
-            <a href="https://discord.gg/EqQry4Vg" target="_blank" rel="noopener noreferrer" :style="{ fontSize: '0.875rem', display: 'block', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">
+            <a href="https://discord.com/channels/1395012925512613998/1395012926154346538" target="_blank" rel="noopener noreferrer" :style="{ fontSize: '0.875rem', display: 'block', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">
               Join our Discord community
             </a>
             <router-link to="/about" :style="{ marginTop: '8px', display: 'inline-block', fontSize: '0.875rem', fontWeight: 600, textDecoration: 'underline', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">
@@ -71,7 +76,7 @@
                 <h3 :style="{ fontSize: '1.25rem', fontWeight: 700, display: 'flex', alignItems: 'center', columnGap: '8px', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">
                   <n-space align="center" size="small">
                     <span>{{ station.name }}</span>
-                    <n-button size="tiny">
+                    <n-button size="tiny" :type="station.currentStatus === 'ON_LINE' ? 'success' : 'default'">
                       {{ getStatusText(station.currentStatus) }}
                     </n-button>
                   </n-space>
@@ -89,7 +94,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, inject, type Ref } from 'vue';
-import { NIcon, NSkeleton, NButton, NSpace, NSwitch, NConfigProvider, NGrid, NGridItem, darkTheme } from 'naive-ui';
+import { NIcon, NSkeleton, NButton, NSpace, NSwitch, NConfigProvider, NGrid, NGridItem, NAlert, darkTheme } from 'naive-ui';
 import { ArrowRight, Sun, Moon } from '@vicons/tabler';
 import { useReferencesStore } from '../stores/kneo/referencesStore';
 import { MIXPLA_PLAYER_URL } from '../constants/config';

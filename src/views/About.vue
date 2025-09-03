@@ -10,6 +10,22 @@
           </div>
         </div>
 
+        <n-card title="Privacy & Cookies" :segmented="{ content: true }">
+          <n-text>
+            <strong>What we use</strong><br>
+            - Only strictly necessary cookies/storage (authentication, basic session, theme preference).<br>
+            - No analytics, ad trackers, or marketing pixels are loaded.<br><br>
+            <strong>Uploads & processing</strong><br>
+            - When you upload audio, we process it to extract technical/metadata needed to operate your station (e.g., title/artist if available).<br>
+            - Processing status may be tracked to show progress in the UI.<br><br>
+            <strong>Consent banner</strong><br>
+            - A minimal banner is shown to inform you about necessary cookies. Your choice is stored in a cookie ("cookie_consent").<br>
+            - You can clear your browser cookies to see the banner again or change your choice later when a full consent manager is added.<br><br>
+            <strong>Contact</strong><br>
+            For privacy questions or requests, email: <a href="mailto:justaidajam@gmail.com" style="color: #2196F3; text-decoration: underline;">justaidajam@gmail.com</a>
+          </n-text>
+        </n-card>
+
         <n-card title="About the Project and For Potential Investors" :segmented="{ content: true }">
           <n-text>
             Mixpla lets anyone create their own radio station with AI DJs. Upload your music, choose a personality, and get a radio station that adapts to different situations and talks between songs.<br><br>
@@ -19,6 +35,8 @@
             Simple platform where AI DJs create real radio experiences with weather updates, stories, and personality. We also provide a distribution channel for AI-generated audio content.<br><br>
             <strong>Why This Works</strong><br>
             Users pay monthly for premium features, our costs are low, and the economics are profitable. Each new station makes the platform more valuable.<br><br>
+            <strong>Why Now</strong><br>
+            The project is currently self-funded, but the market is becoming more competitive. We need investment to grow and capture market share before larger competitors enter.<br><br>
             <strong>Why Now</strong><br>
             The project is currently self-funded, but the market is becoming more competitive. We need investment to grow and capture market share before larger competitors enter.<br><br>
             Mixpla offers an opportunity to invest in a simple, profitable platform for audio creators.<br><br>
@@ -52,6 +70,8 @@
             <strong>Contact:</strong> <a href="mailto:justaidajam@gmail.com" style="color: #2196F3; text-decoration: underline;">justaidajam@gmail.com</a>
           </n-text>
         </n-card>
+
+        
       </n-space>
     </div>
   </div>
