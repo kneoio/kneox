@@ -228,6 +228,12 @@ export default defineComponent({
         icon: () => h(List)
       };
 
+      const homeOption: MenuOption = {
+        label: 'Home',
+        key: 'home',
+        icon: () => h(List)
+      };
+
       const logoutOption: MenuOption = {
         label: () => h('div', {style: 'display: flex; flex-direction: column;'}, [
           h('div', 'Logout'),
@@ -255,6 +261,7 @@ export default defineComponent({
             }
           },
           allStationsOption,
+          homeOption,
           {
             type: 'divider',
             key: 'd1'
@@ -317,6 +324,7 @@ export default defineComponent({
           type: 'divider',
           key: 'd1'
         },
+        homeOption,
         {
           label: () => h('div', {style: 'display: flex; flex-direction: column;'}, [
             h('div', 'Logout'),
@@ -391,6 +399,8 @@ export default defineComponent({
         await router.push({name: 'RadioStations'});
       } else if (key === 'listeners') {
         await router.push({name: 'Listeners'});
+      } else if (key === 'home') {
+        await router.push({name: 'Welcome'});
       } else if (key === 'logout') {
         keycloakInst.logout({redirectUri: window.location.origin});
       } else if (key === 'djs') {
