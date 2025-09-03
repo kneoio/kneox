@@ -358,7 +358,7 @@ export default defineComponent( {
         case 'WARMING_UP':
           return { text: 'Warming Up', type: 'warning' as const };
         case 'WAITING_FOR_CURATOR':
-          return { text: 'Waiting for Curator', type: 'warning' as const };
+          return { text: 'Waiting for listener', type: 'warning' as const };
         case 'IDLE':
           return { text: 'Idle', type: 'warning' as const };
         case 'SYSTEM_ERROR':
