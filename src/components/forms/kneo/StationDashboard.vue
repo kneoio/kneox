@@ -46,7 +46,7 @@
           <n-card title="Status History" size="small">
             <n-timeline horizontal v-if=" statusHistoryTimeline.length > 0 ">
               <n-timeline-item v-for=" ( event, index ) in statusHistoryTimeline " :key="index"
-                :type="getStatusTimelineType( event.newStatus )" :title="event.newStatus.replace( /_/g, ' ' )"
+                :type="getStatusTimelineType( event.newStatus )" :title="formatStatus( event.newStatus )"
                 :content="formatTimestamp( event.timestamp ) + ( event.timeDiff ? ' (' + event.timeDiff + ')' : '' )" />
             </n-timeline>
             <n-text depth="3" v-else>No status history available</n-text>
@@ -533,7 +533,7 @@ export default defineComponent( {
         'IDLE': 'Idle',
         'WARMING_UP': 'Warming Up',
         'QUEUE_SATURATED': 'Queue Saturated',
-        'WAITING_FOR_CURATOR': 'Waiting for Curator',
+        'WAITING_FOR_CURATOR': 'Waiting for listener',
         'SYSTEM_ERROR': 'System Error',
         'STARTING': 'Starting',
         'STOPPING': 'Stopping',
