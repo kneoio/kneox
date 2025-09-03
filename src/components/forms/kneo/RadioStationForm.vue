@@ -425,8 +425,8 @@ export default defineComponent( {
       profileId: undefined,
       timeZone: "",
       managedBy: undefined,
-      bitRate: "128000",
-      schedule: undefined
+      bitRate: 128000,
+      schedule: { enabled: false, tasks: [] }
     } );
 
     const localizedNameArray = ref<{ language: string; name: string }[]>( [] );
@@ -627,7 +627,7 @@ export default defineComponent( {
 
     watch( scheduleTasksArray, ( newValue ) => {
       if ( !localFormData.schedule ) {
-        localFormData.schedule = { tasks: [] };
+        localFormData.schedule = { enabled: false, tasks: [] };
       }
 
       localFormData.schedule.tasks = newValue.map( task => ( {
@@ -703,6 +703,7 @@ export default defineComponent( {
         const currentData = store.getCurrent;
         Object.assign( localFormData, currentData );
 
+
         if ( localFormData.localizedName ) {
           localizedNameArray.value = Object.entries( localFormData.localizedName ).map( ( [language, name] ) => ( {
             language,
@@ -724,8 +725,13 @@ export default defineComponent( {
 
         if ( !localFormData.schedule ) {
           localFormData.schedule = {
+            enabled: false,
             tasks: []
           };
+        }
+        // If schedule exists but lacks enabled flag, default it
+        if ( localFormData.schedule && typeof localFormData.schedule.enabled === 'undefined' ) {
+          localFormData.schedule.enabled = false;
         }
       } catch ( error ) {
         console.error( "Failed to fetch data:", error );
