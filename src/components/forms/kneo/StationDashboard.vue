@@ -77,7 +77,9 @@
                         }">
                         <n-text :depth="isCurrentSong( fragment ) ? 1 : 3"
                           :style="{ color: isCurrentSong( fragment ) ? 'white !important' : undefined }">
-                          {{ index + 1 }}. {{ cleanTitle( fragment.title ) }}
+                          {{ index + 1 }}.
+                          <span v-for="(c, i) in getMergingTypeColors(fragment)" :key="i" class="merge-box" :style="{ backgroundColor: c }"></span>
+                          {{ formatArtistTitle(fragment) }}
                         </n-text>
                       </div>
                     </n-space>
@@ -102,7 +104,9 @@
                         }">
                         <n-text :depth="isCurrentSong( fragment ) ? 1 : 3"
                           :style="{ color: isCurrentSong( fragment ) ? 'white !important' : undefined }">
-                          {{ index + 1 }}. {{ getMergingTypeSymbol( fragment ) }}{{ cleanTitle( fragment.title ) }}
+                          {{ index + 1 }}.
+                          <span v-for="(c, i) in getMergingTypeColors(fragment)" :key="i" class="merge-box" :style="{ backgroundColor: c }"></span>
+                          {{ formatArtistTitle(fragment) }}
                         </n-text>
                       </div>
                     </n-space>
@@ -125,8 +129,8 @@
                     <n-space vertical size="small" class="current-track-info">
                       <n-space justify="space-between">
                         <n-text strong>Current Track:</n-text>
-                        <span class="song-title" :title="cleanTitle( getHlsCurrentTrack() )">{{
-                          getHlsCurrentTrack()
+                        <span class="song-title" :title="getHlsCurrentTrackDisplay()">{{
+                          getHlsCurrentTrackDisplay()
                         }}</span>
                       </n-space>
                       <n-space justify="space-between">
@@ -548,6 +552,19 @@ export default defineComponent( {
       return '';
     };
 
+    const getMergingTypeColors = (fragment: any): string[] => {
+      switch (fragment?.mergingType) {
+        case 'FILLER_SONG':
+          return ['#18a058']; // green
+        case 'INTRO_SONG':
+          return ['#f0a020', '#f0a020']; // orange x2
+        case 'SONG_INTRO_SONG':
+          return ['#722ed1', '#722ed1', '#722ed1']; // purple x3
+        default:
+          return [];
+      }
+    };
+
     const hasHlsSongStats = (): boolean => {
       return !!( stationDetails.value?.songStatistics && Object.keys( stationDetails.value.songStatistics ).length > 0 );
     };
@@ -555,7 +572,25 @@ export default defineComponent( {
     const getHlsCurrentTrack = (): string => {
       const songStats = stationDetails.value?.songStatistics;
       if ( !songStats ) return 'N/A';
-      return cleanTitle( songStats.title );
+      const title = (songStats as any)?.songMetadata?.title ?? (songStats as any)?.title;
+      if (!title) return 'N/A';
+      return cleanTitle( title );
+    };
+
+    const formatArtistTitle = (fragment: any): string => {
+      const title = fragment?.title ? cleanTitle(fragment.title) : 'N/A';
+      const artist = fragment?.artist ? String(fragment.artist).trim() : '';
+      return artist ? `${artist} — ${title}` : title;
+    };
+
+    const getHlsCurrentTrackDisplay = (): string => {
+      const songStats = stationDetails.value?.songStatistics as any;
+      if (!songStats) return 'N/A';
+      const title = songStats?.songMetadata?.title ?? songStats?.title;
+      const artist = songStats?.songMetadata?.artist ?? songStats?.artist;
+      if (!title) return 'N/A';
+      const clean = cleanTitle(title);
+      return artist ? `${String(artist).trim()} — ${clean}` : clean;
     };
 
     const getHlsTimestamp = (): string => {
@@ -623,10 +658,12 @@ export default defineComponent( {
       return currentListeners.value;
     };
 
-    const isCurrentSong = ( fragment: string ): boolean => {
+    const isCurrentSong = ( fragment: any ): boolean => {
       const currentTrack = getHlsCurrentTrack();
       if ( !currentTrack || currentTrack === 'N/A' ) return false;
-      const cleanFragment = cleanTitle( fragment );
+      const fragmentTitle = typeof fragment === 'string' ? fragment : fragment?.title;
+      if ( !fragmentTitle ) return false;
+      const cleanFragment = cleanTitle( fragmentTitle );
       return cleanFragment === currentTrack;
     };
 
@@ -727,11 +764,14 @@ export default defineComponent( {
       isStoppingStation,
       cleanTitle,
       getMergingTypeSymbol,
+      getMergingTypeColors,
       hasHlsSongStats,
       getHlsCurrentTrack,
       getHlsTimestamp,
+      getHlsCurrentTrackDisplay,
       getHlsRequestCount,
       getHlsListenersCount,
+      formatArtistTitle,
       isCurrentSong,
       statusHistoryTimeline,
       getStatusTimelineType,
@@ -761,5 +801,14 @@ export default defineComponent( {
     transform: scale(1);
     opacity: 1;
   }
+}
+
+.merge-box {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin: 0 4px 0 2px;
+  border-radius: 2px;
+  vertical-align: middle;
 }
 </style>
