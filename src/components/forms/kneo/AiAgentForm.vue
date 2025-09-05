@@ -79,29 +79,11 @@
                   <n-card size="small" style="margin-bottom: 16px; width: 90%;">
                     <n-space vertical size="small">
                       <div><strong>Variables:</strong></div>
-                      <div><n-tag type="info" size="small"><strong>ai_dj_name</strong></n-tag> - The current DJ's name
-                      </div>
-                      <div><n-tag type="info" size="small"><strong>brand</strong></n-tag> - Radio station
-                        name/identity
-                        for consistent branding</div>
-                      <div><n-tag type="info" size="small"><strong>title</strong></n-tag> - Name of the song
-                        being
-                        introduced to listeners</div>
-                      <div><n-tag type="info" size="small"><strong>artist</strong></n-tag> - Performer/band name for
-                        proper attribution</div>
-                      <div><n-tag type="info" size="small"><strong>listeners</strong></n-tag> - Target audience
-                        description to tailor messaging appropriately</div>
-                      <div><n-tag type="info" size="small"><strong>context</strong></n-tag> - Current situational
-                        context
-                        like time of day, events, or show theme</div>
-                      <div><n-tag type="info" size="small"><strong>history</strong></n-tag> - Previous show
-                        interactions
-                        to maintain conversational flow</div>
-                      <div><n-tag type="info" size="small"><strong>instant_message</strong></n-tag> - Priority user
-                        message content that takes precedence in introduction</div>
-                      <div><n-tag type="info" size="small"><strong>events</strong></n-tag> - Various events that may
-                        affect the introduction (DJ shifts, station events, etc.)</div>
-                      <div><n-tag type="info" size="small"><strong>genres</strong></n-tag> - Musical genres of the current song for contextual introductions</div>
+                      <n-space size="small" wrap>
+                        <n-tag v-for="opt in referencesStore.variableOptions" :key="opt.value" type="info" size="small">
+                          <strong>{{ opt.label }}</strong>
+                        </n-tag>
+                      </n-space>
 
                       <div style="margin-top: 16px;"><strong>Voice Emotions & Effects:</strong></div>
                       <div>You can suggest to use: <code>[sad]</code>,<code>[angry]</code>,<code>[curious]</code>,<code>[happily]</code>,<code>[whispers]</code>,<code>[shouts]</code>,<code>[laughs]</code>,<code>[clears throat]</code></div>
@@ -133,6 +115,69 @@
                       </n-space>
                     </template>
                   </n-dynamic-input>
+                </n-form-item>
+              </n-gi>
+            </n-grid>
+          </n-form>
+        </n-tab-pane>
+        <n-tab-pane name="playground" tab="Playground">
+          <n-form label-placement="left" label-width="auto">
+            <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
+              <n-gi>
+                <n-form-item label="Variables">
+                  <n-space vertical size="small" style="width: 800px;">
+                    <div style="width: 800px; display: flex; align-items: center; gap: 12px;">
+                      <n-dynamic-input
+                        v-model:value="playgroundVars"
+                        :on-create="createVariableItem"
+                        style="flex: 1 1 auto;"
+                        class="playground-vars-di"
+                      >
+                        <template #default="{ value, index }">
+                          <n-grid cols="24" x-gap="12" style="width: 100%;">
+                            <n-gi :span="9">
+                              <n-select v-model:value="value.name" :options="referencesStore.variableOptions" />
+                            </n-gi>
+                            <n-gi :span="9">
+                              <n-input v-model:value="value.value" placeholder=""/>
+                            </n-gi>
+                            <n-gi :span="6" v-if="index === 0" style="display: flex; align-items: center;">
+                              <n-button size="small" @click="randomFillVariables">Random Fill</n-button>
+                            </n-gi>
+                          </n-grid>
+                        </template>
+                      </n-dynamic-input>
+                    </div>
+                  </n-space>
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="Prompt">
+                  <CodeMirror
+                    :model-value="playgroundPrompt"
+                    @update:model-value="(val) => (playgroundPrompt = typeof val === 'string' ? val : (val?.data ?? ''))"
+                    basic
+                    :style="{
+                      width: '800px',
+                      height: '300px',
+                      border: '1px solid #d9d9d9',
+                      borderRadius: '3px',
+                      overflow: 'auto'
+                    }"
+                    :extensions="editorExtensions"
+                  />
+                </n-form-item>
+                <n-form-item  label="Actions">     
+                  <n-space>             
+                    <n-button type="primary" :loading="playgroundLoading" @click="sendPlaygroundRequest">Send Request</n-button>
+                  </n-space>
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="Result">
+                  <n-text v-if="playgroundResult" style="display: inline-block; width: 800px; white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere;">
+                    {{ playgroundResult }}
+                  </n-text>
                 </n-form-item>
               </n-gi>
             </n-grid>
@@ -209,6 +254,7 @@ import {
   NTabPane,
   NTabs,
   NTag,
+  NText,
   useLoadingBar,
   useMessage
 } from 'naive-ui';
@@ -241,6 +287,7 @@ export default defineComponent({
     NSpace,
     NCard,
     NTag,
+    NText,
     NCollapseTransition,
     CodeMirror,
     AclTable
@@ -294,6 +341,12 @@ export default defineComponent({
       }
     });
 
+    // Playground state
+    const playgroundVars = ref<Array<{ name: string; value: string }>>([]);
+    const playgroundPrompt = ref<string>('');
+    const playgroundLoading = ref<boolean>(false);
+    const playgroundResult = ref<string>('');
+
     const createFillerItem = () => "";
 
     const createVoiceItem = () => ({
@@ -308,6 +361,22 @@ export default defineComponent({
     });
 
     const createPromptItem = () => "";
+
+    // Playground helpers (minimal implementations)
+    const createVariableItem = () => ({ name: '', value: '' });
+    const randomFillVariables = () => {
+      // no-op placeholder to satisfy UI; adjust if needed later
+      if (playgroundVars.value.length === 0) playgroundVars.value.push({ name: '', value: '' });
+    };
+    const sendPlaygroundRequest = async () => {
+      try {
+        playgroundLoading.value = true;
+        // placeholder implementation
+        playgroundResult.value = '';
+      } finally {
+        playgroundLoading.value = false;
+      }
+    };
 
     const handleSave = async () => {
       try {
@@ -428,6 +497,14 @@ export default defineComponent({
       createVoiceItem,
       createToolItem,
       createPromptItem,
+      // playground
+      playgroundVars,
+      playgroundPrompt,
+      playgroundLoading,
+      playgroundResult,
+      createVariableItem,
+      randomFillVariables,
+      sendPlaygroundRequest,
       handleSave,
       goBack,
       editorExtensions,
@@ -437,5 +514,5 @@ export default defineComponent({
       aclLoading
     };
   }
-} );
+});
 </script>

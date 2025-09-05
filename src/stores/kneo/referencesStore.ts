@@ -176,6 +176,19 @@ export const useReferencesStore = defineStore('references', () => {
     { label: 'Intro Song', value: 'INTRO_SONG' }
   ];
 
+  const variableOptions = ref<Array<{label: string, value: string}>>([
+    { label: 'ai_dj_name', value: 'ai_dj_name' },
+    { label: 'brand', value: 'brand' },
+    { label: 'title', value: 'title' },
+    { label: 'artist', value: 'artist' },
+    { label: 'listeners', value: 'listeners' },
+    { label: 'context', value: 'context' },
+    { label: 'history', value: 'history' },
+    { label: 'instant_message', value: 'instant_message' },
+    { label: 'events', value: 'events' },
+    { label: 'genres', value: 'genres' }
+  ]);
+
   const bitRateOptions = [
     { value: 128000, label: "128 kbps" },
     { value: 192000, label: "192 kbps" },
@@ -191,6 +204,7 @@ export const useReferencesStore = defineStore('references', () => {
     eventTypeOptions,
     llmTypeOptions,
     mergerMethodOptions,
+    variableOptions,
     bitRateOptions,
     audioAcceptTypes,
     fetchGenres,
