@@ -136,13 +136,17 @@
                         <template #default="{ value, index }">
                           <n-grid cols="24" x-gap="12" style="width: 100%;">
                             <n-gi :span="9">
-                              <n-select v-model:value="value.name" :options="referencesStore.variableOptions" />
+                              <n-select
+                                v-model:value="value.name"
+                                :options="referencesStore.variableOptions"
+                                @update:value="() => refillVariable(index)"
+                              />
                             </n-gi>
                             <n-gi :span="9">
                               <n-input v-model:value="value.value" placeholder=""/>
                             </n-gi>
-                            <n-gi :span="6" v-if="index === 0" style="display: flex; align-items: center;">
-                              <n-button size="small" @click="randomFillVariables">Random Fill</n-button>
+                            <n-gi :span="6" style="display: flex; align-items: center;">
+                              <n-button size="small" @click="refillVariable(index)">Refill</n-button>
                             </n-gi>
                           </n-grid>
                         </template>
@@ -168,15 +172,52 @@
                   />
                 </n-form-item>
                 <n-form-item  label="Actions">     
-                  <n-space>             
+                  <n-space>
+                    <template v-for="(p, idx) in (localFormData.prompts || []).slice(0, 3)" :key="idx">
+                      <n-button size="small" @click="usePrompt(idx)">Get Prompt{{ idx + 1 }}</n-button>
+                    </template>
+                    <n-button @click="refillAllVariables">Refill all</n-button>
                     <n-button type="primary" :loading="playgroundLoading" @click="sendPlaygroundRequest">Send Request</n-button>
                   </n-space>
                 </n-form-item>
               </n-gi>
               <n-gi>
                 <n-form-item label="Result">
-                  <n-text v-if="playgroundResult" style="display: inline-block; width: 800px; white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere;">
-                    {{ playgroundResult }}
+                  <template #label>
+                    <span>Result</span>
+                  </template>
+                  <div v-if="playgroundResult" style="display: flex; align-items: flex-start; gap: 12px;">
+                    <n-text strong style="display: inline-block; width: 800px; white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere;">
+                      {{ playgroundResult }}
+                    </n-text>
+                    <n-button size="small" @click="showResultModal = true">Open</n-button>
+                  </div>
+                </n-form-item>
+                <n-modal v-model:show="showResultModal" preset="card" title="Result" :bordered="false" style="max-width: 900px; width: 90vw;">
+                  <n-scrollbar style="max-height: 70vh;">
+                    <div style="white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere;">
+                      {{ playgroundResult }}
+                    </div>
+                  </n-scrollbar>
+                </n-modal>
+                <n-form-item v-if="playgroundReasoning" label="Reasoning">
+                  <n-text style="display: inline-block; width: 800px; white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere;">
+                    {{ playgroundReasoning }}
+                  </n-text>
+                </n-form-item>
+                <n-form-item v-if="playgroundThinking" label="Thinking">
+                  <n-text style="display: inline-block; width: 800px; white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere;">
+                    {{ playgroundThinking }}
+                  </n-text>
+                </n-form-item>
+                <n-form-item v-if="playgroundSearchQuality" label="Search Quality">
+                  <n-text>
+                    {{ playgroundSearchQuality }}
+                  </n-text>
+                </n-form-item>
+                <n-form-item v-if="playgroundLlmType" label="LLM Type">
+                  <n-text>
+                    {{ playgroundLlmType }}
                   </n-text>
                 </n-form-item>
               </n-gi>
@@ -255,6 +296,8 @@ import {
   NTabs,
   NTag,
   NText,
+  NModal,
+  NScrollbar,
   useLoadingBar,
   useMessage
 } from 'naive-ui';
@@ -289,6 +332,8 @@ export default defineComponent({
     NTag,
     NText,
     NCollapseTransition,
+    NModal,
+    NScrollbar,
     CodeMirror,
     AclTable
   },
@@ -308,6 +353,7 @@ export default defineComponent({
     const showVariables = ref(false);
     const aclData = ref([]);
     const aclLoading = ref(false);
+    const showResultModal = ref(false);
 
     const formTitle = computed(() => localFormData.id ? 'Edit AI Agent' : 'Create New AI Agent');
 
@@ -346,6 +392,10 @@ export default defineComponent({
     const playgroundPrompt = ref<string>('');
     const playgroundLoading = ref<boolean>(false);
     const playgroundResult = ref<string>('');
+    const playgroundReasoning = ref<string>('');
+    const playgroundThinking = ref<string>('');
+    const playgroundSearchQuality = ref<string>('');
+    const playgroundLlmType = ref<string>('');
 
     const createFillerItem = () => "";
 
@@ -362,17 +412,108 @@ export default defineComponent({
 
     const createPromptItem = () => "";
 
-    // Playground helpers (minimal implementations)
+    // Playground helpers
     const createVariableItem = () => ({ name: '', value: '' });
-    const randomFillVariables = () => {
-      // no-op placeholder to satisfy UI; adjust if needed later
-      if (playgroundVars.value.length === 0) playgroundVars.value.push({ name: '', value: '' });
+    const refillVariable = (index: number) => {
+      const item = playgroundVars.value[index];
+      if (!item || !item.name) return;
+      // @ts-ignore store internal field
+      const samples: Record<string, string[]> = (referencesStore as any).variableSampleData || {};
+      const arr = samples[item.name];
+      if (!Array.isArray(arr) || arr.length === 0) return;
+      item.value = arr[Math.floor(Math.random() * arr.length)];
+    };
+    const usePrompt = (index: number) => {
+      if (!Array.isArray(localFormData.prompts)) return;
+      const p = localFormData.prompts[index];
+      if (typeof p === 'string') {
+        playgroundPrompt.value = p;
+      }
+    };
+    const refillAllVariables = () => {
+      const options = referencesStore.variableOptions || [];
+      // @ts-ignore store internal field
+      const samples: Record<string, string[]> = (referencesStore as any).variableSampleData || {};
+      const byName = new Map<string, { name: string; value: string }>();
+      playgroundVars.value.forEach((v) => {
+        if (v?.name) byName.set(v.name, v);
+      });
+      options.forEach((opt: { value: string }) => {
+        const key = opt.value;
+        // Keep these empty on bulk refill
+        if (key === 'history' || key === 'events' || key === 'instant_message') {
+          const existing = byName.get(key);
+          if (existing) existing.value = '';
+          return;
+        }
+        const arr = samples[key];
+        if (!Array.isArray(arr) || arr.length === 0) return;
+        const val = arr[Math.floor(Math.random() * arr.length)];
+        const existing = byName.get(key);
+        if (existing) {
+          existing.value = val;
+        } else {
+          playgroundVars.value.push({ name: key, value: val });
+        }
+      });
     };
     const sendPlaygroundRequest = async () => {
       try {
         playgroundLoading.value = true;
-        // placeholder implementation
         playgroundResult.value = '';
+        const variables: Record<string, string> = {};
+        for (const item of playgroundVars.value) {
+          if (item?.name) variables[item.name] = item.value || '';
+        }
+        const resp = await store.testPrompt({
+          prompt: playgroundPrompt.value || '',
+          llmType: localFormData.llmType || undefined,
+          variables
+        });
+        // Prefer the new response schema: { actual_result, reasoning, ... }
+        if (resp?.actual_result) {
+          playgroundResult.value = String(resp.actual_result);
+        } else if (typeof resp === 'string') {
+          playgroundResult.value = resp;
+        } else if (resp?.result) {
+          playgroundResult.value = String(resp.result);
+        } else if (resp?.data?.result) {
+          playgroundResult.value = String(resp.data.result);
+        } else if (resp?.payload?.result) {
+          playgroundResult.value = String(resp.payload.result);
+        } else {
+          playgroundResult.value = typeof resp === 'object' ? JSON.stringify(resp, null, 2) : String(resp ?? '');
+        }
+        playgroundReasoning.value = resp?.reasoning ? String(resp.reasoning) : '';
+        playgroundThinking.value = resp?.thinking ? String(resp.thinking) : '';
+        playgroundSearchQuality.value =
+          typeof resp?.search_quality !== 'undefined' && resp?.search_quality !== null
+            ? String(resp.search_quality)
+            : '';
+        playgroundLlmType.value = resp?.llm_type ? String(resp.llm_type) : '';
+      } catch (e: any) {
+        console.error('Playground request failed', e);
+        const status = e?.response?.status;
+        const data = e?.response?.data;
+        if (status === 400 && data) {
+          if (Array.isArray(data.errors) && data.errors.length > 0) {
+            const msg = data.errors
+              .map((err: { field?: string; message?: string }) => `${err.field || 'field'}: ${err.message || 'invalid'}`)
+              .join('; ');
+            message.error(msg);
+          } else if (typeof data.message === 'string') {
+            message.error(data.message);
+          } else {
+            message.error('Validation failed');
+          }
+        } else {
+          message.error('Request failed');
+        }
+        playgroundResult.value = '';
+        playgroundReasoning.value = '';
+        playgroundThinking.value = '';
+        playgroundSearchQuality.value = '';
+        playgroundLlmType.value = '';
       } finally {
         playgroundLoading.value = false;
       }
@@ -502,8 +643,14 @@ export default defineComponent({
       playgroundPrompt,
       playgroundLoading,
       playgroundResult,
+      playgroundReasoning,
+      playgroundThinking,
+      playgroundSearchQuality,
+      playgroundLlmType,
       createVariableItem,
-      randomFillVariables,
+      refillVariable,
+      refillAllVariables,
+      usePrompt,
       sendPlaygroundRequest,
       handleSave,
       goBack,
@@ -512,6 +659,7 @@ export default defineComponent({
       showVariables,
       aclData,
       aclLoading
+      , showResultModal
     };
   }
 });

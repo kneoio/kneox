@@ -80,7 +80,7 @@ export const useReferencesStore = defineStore('references', () => {
   };
 
   const fetchVoices = async () => {
-    const response = await unsecuredClient.get('/api/dictionary/voices?page=1&size=100');
+    const response = await unsecuredClient.get('/dictionary/voices?page=1&size=100');
     if (!response?.data?.payload) throw new Error('Invalid API response');
 
     voiceOptions.value = response.data.payload.viewData.entries
@@ -93,7 +93,7 @@ export const useReferencesStore = defineStore('references', () => {
   };
 
   const fetchDictionary = async (type: 'agents' | 'profiles' | 'voices', page = 1, pageSize = 100) => {
-    const response = await unsecuredClient.get(`/api/dictionary/${type}?page=${page}&size=${pageSize}`);
+    const response = await unsecuredClient.get(`/dictionary/${type}?page=${page}&size=${pageSize}`);
     if (response?.data?.payload) {
       return response.data.payload;
     } else {
@@ -189,6 +189,44 @@ export const useReferencesStore = defineStore('references', () => {
     { label: 'genres', value: 'genres' }
   ]);
 
+  const variableSampleData: Record<string, string[]> = {
+    ai_dj_name: ['DJ Nova', 'DJ Echo', 'DJ Pulse', 'DJ Orion', 'DJ Lyra'],
+    brand: ['KNEO Radio', 'SonicWave FM', 'Urban Beats', 'Galaxy Tunes', 'City Vibes'],
+    title: ['Midnight City', 'Blinding Lights', 'Levitating', 'Starboy', 'Get Lucky'],
+    artist: ['M83', 'Daft Punk', 'The Weeknd', 'Dua Lipa', 'Coldplay'],
+    // Structured list of listeners for prompt testing
+    listeners: [
+      '[{"name":"NunoZimas","nickname":"","location":"Latvia"},{"name":"Nelson","nickname":"","location":"Portugal"}]',
+      '[{"name":"Anna","nickname":"Ann","location":"Germany"},{"name":"Kenji","nickname":"","location":"Japan"}]'
+    ],
+    // Structured context object
+    context: [
+      '{"show":"Morning Drive","mood":"upbeat","notes":"News every 30 minutes"}',
+      '{"show":"Late Night Chill","mood":"calm","notes":"Lo-fi/ambient"}'
+    ],
+    // Structured play history
+    history: [
+      '[{"title":"Get Lucky","artist":"Daft Punk"},{"title":"Blinding Lights","artist":"The Weeknd"},{"title":"Levitating","artist":"Dua Lipa"}]',
+      '[{"title":"Yellow","artist":"Coldplay"},{"title":"Starboy","artist":"The Weeknd"}]'
+    ],
+    instant_message: [
+      'Shoutout to Anna from Berlin! Can you play something from Dua Lipa?',
+      'Loving the vibe! Greetings from Lisbon!',
+      'Request: Any classic Daft Punk track please.'
+    ],
+    // Structured events list
+    events: [
+      '[{"type":"weather","text":"Clear skies, 22°C"},{"type":"traffic","text":"Slow on A2 near exit 5"}]',
+      '[{"type":"promo","text":"Giveaway at :00"},{"type":"local","text":"Food festival 17:00 Central Park"}]'
+    ],
+    // Prefer array-style string for genres to drop-in to JSON prompts
+    genres: [
+      '["pop","electronic"]',
+      '["indie","electronic"]',
+      '["rock"]'
+    ]
+  };
+
   const bitRateOptions = [
     { value: 128000, label: "128 kbps" },
     { value: 192000, label: "192 kbps" },
@@ -205,6 +243,7 @@ export const useReferencesStore = defineStore('references', () => {
     llmTypeOptions,
     mergerMethodOptions,
     variableOptions,
+    variableSampleData,
     bitRateOptions,
     audioAcceptTypes,
     fetchGenres,

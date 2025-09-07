@@ -8,7 +8,7 @@ if (!apiServer) {
 }
 
 const unsecuredClient = axios.create({
-    baseURL: "https://mixpla.online",
+    baseURL: `${apiServer}`,
     withCredentials: false,
 });
 
