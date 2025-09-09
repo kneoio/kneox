@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import apiClient from '../../api/apiClient';
-import { unsecuredClient } from '../../api/apiClient';
+import { unsecuredClient, apiServer } from '../../api/apiClient';
 
 export const useReferencesStore = defineStore('references', () => {
   const countryOptions = [
@@ -103,7 +103,9 @@ export const useReferencesStore = defineStore('references', () => {
 
   const fetchRadioStations = async () => {
     try {
-      const response = await unsecuredClient.get('/radio/all-stations');
+      // Build absolute URL without trailing /api to avoid /api prefix for this endpoint
+      const baseWithoutApi = apiServer.replace(/\/api\/?$/, '');
+      const response = await unsecuredClient.get(`${baseWithoutApi}/radio/all-stations`);
       return response.data;
     } catch (error) {
       console.error('Error fetching radio stations:', error);

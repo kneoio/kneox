@@ -173,6 +173,14 @@
                 </n-form-item>
                 <n-form-item  label="Actions">     
                   <n-space>
+                    <n-select
+                      v-model:value="localFormData.llmType"
+                      :options="llmTypeOptions"
+                      placeholder="LLM Type"
+                      clearable
+                      size="small"
+                      style="width: 180px;"
+                    />
                     <template v-for="(p, idx) in (localFormData.prompts || []).slice(0, 3)" :key="idx">
                       <n-button size="small" @click="usePrompt(idx)">Get Prompt{{ idx + 1 }}</n-button>
                     </template>
