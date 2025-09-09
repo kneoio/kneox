@@ -76,7 +76,7 @@
                 <h3 :style="{ fontSize: '1.25rem', fontWeight: 700, display: 'flex', alignItems: 'center', columnGap: '8px', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">
                   <n-space align="center" size="small">
                     <span>{{ station.name }}</span>
-                    <n-button size="tiny" :type="station.currentStatus === 'ON_LINE' ? 'success' : 'default'">
+                    <n-button size="tiny" :type="(['ON_LINE','WARMING_UP'].includes(station.currentStatus as string)) ? 'success' : 'default'">
                       {{ getStatusText(station.currentStatus) }}
                     </n-button>
                   </n-space>
@@ -104,7 +104,7 @@ interface Station {
   countryCode: string;
   color: string;
   description: string;
-  currentStatus?: 'ON_LINE' | 'OFF_LINE';
+  currentStatus?: 'ON_LINE' | 'OFF_LINE' | 'WARMING_UP';
 }
 
 onMounted(() => {
@@ -149,12 +149,14 @@ const fetchStations = async () => {
   }
 };
 
-const getStatusText = (status?: 'ON_LINE' | 'OFF_LINE'): string => {
+const getStatusText = (status?: 'ON_LINE' | 'OFF_LINE' | 'WARMING_UP'): string => {
   switch (status) {
     case 'ON_LINE':
       return 'Online';
     case 'OFF_LINE':
       return 'Offline';
+    case 'WARMING_UP':
+      return 'Online';
     default:
       return 'Unknown';
   }
