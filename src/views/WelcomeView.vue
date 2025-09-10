@@ -36,12 +36,10 @@
               <img src="/pwa-512x512.png" alt="Mixpla Logo" style="width: 100%; height: 100%; object-fit: contain;">
             </div>
             <router-link to="/outline/radiostations" style="display: inline-block; max-width: 360px; width: 100%;">
-              <n-button type="primary" size="large" style="width: 100%;">
+              <n-tag type="info" size="large" style="width: 100%; display: inline-flex; align-items: center; justify-content: center; column-gap: 8px;">
                 Launch Your Radio
-                <template #icon>
-                  <n-icon><ArrowRight /></n-icon>
-                </template>
-              </n-button>
+                <n-icon><ArrowRight /></n-icon>
+              </n-tag>
             </router-link>
             <a href="https://discord.com/channels/1395012925512613998/1395012926154346538" target="_blank" rel="noopener noreferrer" :style="{ fontSize: '0.875rem', display: 'block', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">
               Join our Discord community
@@ -76,9 +74,9 @@
                 <h3 :style="{ fontSize: '1.25rem', fontWeight: 700, display: 'flex', alignItems: 'center', columnGap: '8px', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">
                   <n-space align="center" size="small">
                     <span>{{ station.name }}</span>
-                    <n-button size="tiny" :type="(['ON_LINE','WARMING_UP'].includes(station.currentStatus as string)) ? 'success' : 'default'">
+                    <n-tag size="small" :type="(['ON_LINE','WARMING_UP'].includes(station.currentStatus as string)) ? 'success' : 'default'">
                       {{ getStatusText(station.currentStatus) }}
-                    </n-button>
+                    </n-tag>
                   </n-space>
                 </h3>
                 <p :style="{ color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">{{ station.description }}</p>
@@ -94,7 +92,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, inject, type Ref } from 'vue';
-import { NIcon, NSkeleton, NButton, NSpace, NSwitch, NConfigProvider, NGrid, NGridItem, NAlert, darkTheme } from 'naive-ui';
+import { NIcon, NSkeleton, NTag, NSpace, NSwitch, NConfigProvider, NGrid, NGridItem, NAlert, darkTheme } from 'naive-ui';
 import { ArrowRight, Sun, Moon } from '@vicons/tabler';
 import { useReferencesStore } from '../stores/kneo/referencesStore';
 import { MIXPLA_PLAYER_URL } from '../constants/config';
@@ -176,13 +174,13 @@ export default {
 <style scoped>
 /* Make all text in Welcome follow the local theme, even under App.vue's global provider */
 .welcome-dark :deep(.welcome-root),
-.welcome-dark :deep(.welcome-root *:not(.n-button):not(.n-button *):not(.n-upload *):not(.n-upload-file-list *)) {
+.welcome-dark :deep(.welcome-root *:not(.n-tag):not(.n-tag *):not(.n-upload *):not(.n-upload-file-list *)) {
   color: #e0e0e0 !important;
 }
 
 /* Ensure light mode inherits normally */
 :deep(.welcome-root),
-:deep(.welcome-root *:not(.n-button):not(.n-button *):not(.n-upload *):not(.n-upload-file-list *)) {
+:deep(.welcome-root *:not(.n-tag):not(.n-tag *):not(.n-upload *):not(.n-upload-file-list *)) {
   color: inherit !important;
 }
 
