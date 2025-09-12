@@ -255,3 +255,15 @@ export interface EventSave {
         tasks?: any[];
     };
 }
+
+// Public submission types
+export interface SubmissionPayload {
+    brand: string;
+    artist: string;
+    title: string;
+    genres: string[];
+    email: string;
+    description: string;
+    uploadId?: string;
+    confirmationCode?: string;
+}

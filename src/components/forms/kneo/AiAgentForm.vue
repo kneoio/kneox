@@ -317,6 +317,7 @@ import { useAiAgentStore } from '../../../stores/kneo/aiAgentStore';
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 import AclTable from '../../common/AclTable.vue';
 import { AiAgentSave, AiAgentForm, LanguageCode } from '../../../types/kneoBroadcasterTypes';
+import { getErrorMessage, handleFormSaveError } from '../../../utils/errorHandling';
 
 export default defineComponent({
   name: "AiAgentForm",
@@ -501,21 +502,16 @@ export default defineComponent({
         playgroundLlmType.value = resp?.llm_type ? String(resp.llm_type) : '';
       } catch (e: any) {
         console.error('Playground request failed', e);
-        const status = e?.response?.status;
         const data = e?.response?.data;
-        if (status === 400 && data) {
-          if (Array.isArray(data.errors) && data.errors.length > 0) {
-            const msg = data.errors
-              .map((err: { field?: string; message?: string }) => `${err.field || 'field'}: ${err.message || 'invalid'}`)
-              .join('; ');
-            message.error(msg);
-          } else if (typeof data.message === 'string') {
-            message.error(data.message);
-          } else {
-            message.error('Validation failed');
-          }
+        if (data && Array.isArray(data.errors) && data.errors.length > 0) {
+          const msg = data.errors
+            .map((err: { field?: string; message?: string }) => `${err.field || 'field'}: ${err.message || ''}`)
+            .join('; ');
+          message.error(msg);
+        } else if (data?.message) {
+          message.error(String(data.message));
         } else {
-          message.error('Request failed');
+          message.error(getErrorMessage(e));
         }
         playgroundResult.value = '';
         playgroundReasoning.value = '';
@@ -564,9 +560,9 @@ export default defineComponent({
 
         message.success("AI Agent saved successfully");
         await router.push("/outline/ai_agents");
-      } catch (error) {
+      } catch (error: any) {
         console.error('Failed to save AI Agent:', error);
-        message.error('Failed to save AI Agent');
+        handleFormSaveError(error, message);
       } finally {
         loadingBar.finish();
       }
@@ -624,9 +620,14 @@ export default defineComponent({
 
           Object.assign(localFormData, agentData);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Failed to fetch data:", error);
-        message.error('Failed to fetch data');
+        const data = error?.response?.data;
+        if (data?.message) {
+          message.error(String(data.message));
+        } else {
+          message.error(getErrorMessage(error));
+        }
         if (route.params.id) {
           router.push("/outline/ai_agents");
         }

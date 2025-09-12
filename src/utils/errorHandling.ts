@@ -32,17 +32,33 @@ export const getErrorMessage = (error: unknown): string => {
  * @param messageInstance - The message instance from useMessage()
  * @param fallbackMessage - Default message if no specific error is available
  */
-export const handleFormSaveError = (error: unknown, messageInstance: any, fallbackMessage: string = 'Save failed') => {
-    if (isErrorWithResponse(error) && error.response?.status === 400) {
-        const errorData = error.response.data as ErrorResponse;
-        if (errorData.errors?.length) {
-            errorData.errors.forEach(err => {
-                messageInstance.error(`${capitalizeFirstLetter(err.field)}: ${err.message}`);
-            });
-        } else {
-            messageInstance.error(errorData.message || "Validation failed");
+export const handleFormSaveError = (error: unknown, messageInstance: any): void => {
+    // Prefer structured server validation
+    if (isErrorWithResponse(error)) {
+        const data: any = error.response?.data;
+        if (error.response?.status === 400 && data) {
+            if (Array.isArray((data as ErrorResponse)?.errors) && (data as ErrorResponse).errors!.length) {
+                (data as ErrorResponse).errors!.forEach(err => {
+                    messageInstance.error(`${capitalizeFirstLetter(err.field)}: ${err.message}`);
+                });
+                return;
+            }
+            if (typeof data.message === 'string' && data.message) {
+                messageInstance.error(data.message);
+                return;
+            }
         }
-    } else {
-        messageInstance.error(`${fallbackMessage}: ${getErrorMessage(error)}`);
+        // Show raw server payload if available
+        if (typeof data !== 'undefined') {
+            try {
+                messageInstance.error(JSON.stringify(data));
+            } catch {
+                messageInstance.error(String(data));
+            }
+            return;
+        }
     }
+
+    // Last resort: normalized error string (no fallback prefix)
+    messageInstance.error(getErrorMessage(error));
 };

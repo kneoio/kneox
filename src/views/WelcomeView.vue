@@ -80,6 +80,11 @@
                   </n-space>
                 </h3>
                 <p :style="{ color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">{{ station.description }}</p>
+                <div v-if="station.submissionPolicy !== 'NOT_ALLOWED'" style="margin-top: 8px;">
+                  <router-link :to="{ name: 'SubmitSong', query: { brand: station.slugName, policy: station.submissionPolicy } }">
+                    <n-button size="small" secondary>Submit your song</n-button>
+                  </router-link>
+                </div>
               </a>
             </div>
           </div>
@@ -92,17 +97,19 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, inject, type Ref } from 'vue';
-import { NIcon, NSkeleton, NTag, NSpace, NSwitch, NConfigProvider, NGrid, NGridItem, NAlert, darkTheme } from 'naive-ui';
+import { NIcon, NSkeleton, NTag, NButton, NSpace, NSwitch, NConfigProvider, NGrid, NGridItem, NAlert, darkTheme } from 'naive-ui';
 import { ArrowRight, Sun, Moon } from '@vicons/tabler';
 import { useReferencesStore } from '../stores/kneo/referencesStore';
 import { MIXPLA_PLAYER_URL } from '../constants/config';
 
 interface Station {
   name: string;
+  slugName: string;
   countryCode: string;
   color: string;
   description: string;
   currentStatus?: 'ON_LINE' | 'OFF_LINE' | 'WARMING_UP';
+  submissionPolicy?: 'NO_RESTRICTIONS' | 'REVIEW_REQUIRED' | 'NOT_ALLOWED';
 }
 
 onMounted(() => {
@@ -174,13 +181,13 @@ export default {
 <style scoped>
 /* Make all text in Welcome follow the local theme, even under App.vue's global provider */
 .welcome-dark :deep(.welcome-root),
-.welcome-dark :deep(.welcome-root *:not(.n-tag):not(.n-tag *):not(.n-upload *):not(.n-upload-file-list *)) {
+.welcome-dark :deep(.welcome-root *:not(.n-tag):not(.n-tag *):not(.n-button):not(.n-button *):not(.n-upload *):not(.n-upload-file-list *)) {
   color: #e0e0e0 !important;
 }
 
 /* Ensure light mode inherits normally */
 :deep(.welcome-root),
-:deep(.welcome-root *:not(.n-tag):not(.n-tag *):not(.n-upload *):not(.n-upload-file-list *)) {
+:deep(.welcome-root *:not(.n-tag):not(.n-tag *):not(.n-button):not(.n-button *):not(.n-upload *):not(.n-upload-file-list *)) {
   color: inherit !important;
 }
 

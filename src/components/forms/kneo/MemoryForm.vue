@@ -82,6 +82,7 @@ import CodeMirror from 'vue-codemirror6';
 import AclTable from '../../common/AclTable.vue';
 import {Memory, MemorySave} from "../../../types/kneoBroadcasterTypes"; 
 import {useMemoryStore} from "../../../stores/kneo/memoryStore"; 
+import { getErrorMessage, handleFormSaveError } from '../../../utils/errorHandling';
 
 export default defineComponent({
   name: "MemoryForm",
@@ -137,7 +138,7 @@ export default defineComponent({
         try {
           contentObject = JSON.parse(localContentString.value);
         } catch (e) {
-          message.error("The content is not valid JSON. Please correct it.");
+          message.error(getErrorMessage(e));
           loadingBar.error();
           return;
         }
@@ -152,7 +153,7 @@ export default defineComponent({
         message.success("Memory saved successfully");
         await router.push("/outline/memories");
       } catch (error) {
-        message.error("Failed to save memory");
+        handleFormSaveError(error, message);
         loadingBar.error();
       } finally {
         setTimeout(() => loadingBar.finish(), 200);
@@ -182,7 +183,7 @@ export default defineComponent({
         aclData.value = response.accessList || [];
       } catch (error) {
         console.error('Failed to fetch ACL data:', error);
-        message.error('Failed to fetch access control list');
+        message.error(getErrorMessage(error));
         aclData.value = [];
       } finally {
         aclLoading.value = false;
@@ -204,7 +205,7 @@ export default defineComponent({
           Object.assign(localFormData, store.getCurrent);
           localContentString.value = JSON.stringify(store.getCurrent.content, null, 2);
         } catch (error) {
-          message.error('Failed to fetch memory data');
+          message.error(getErrorMessage(error));
         } finally {
           loadingBar.finish();
         }

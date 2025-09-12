@@ -121,7 +121,7 @@ import { useListenersStore } from "../../../stores/kneo/listenersStore";
 import { useRadioStationStore } from "../../../stores/kneo/radioStationStore";
 import { useReferencesStore } from "../../../stores/kneo/referencesStore";
 import { ListenerSave, LocalizedName } from "../../../types/kneoBroadcasterTypes";
-import { handleFormSaveError } from '../../../utils/errorHandling';
+import { handleFormSaveError, getErrorMessage } from '../../../utils/errorHandling';
 
 interface LocalListenerFormData {
   id: string | null;
@@ -266,8 +266,8 @@ export default defineComponent({
         } else {
           router.push("/outline/listeners");
         }
-      } catch (error: unknown) {
-        handleFormSaveError(error, message, 'Save failed');
+      } catch (error: any) {
+        handleFormSaveError(error, message);
       } finally {
         isSaving.value = false;
         loadingBar.finish();
@@ -295,7 +295,7 @@ export default defineComponent({
         aclData.value = response.accessList || [];
       } catch (error) {
         console.error('Failed to fetch ACL data:', error);
-        message.error('Failed to fetch access control list');
+        message.error(getErrorMessage(error));
         aclData.value = [];
       } finally {
         aclLoading.value = false;
@@ -331,7 +331,7 @@ export default defineComponent({
         }
       } catch (error) {
         console.error('Failed to fetch listener:', error);
-        message.error('Failed to fetch listener');
+        message.error(getErrorMessage(error));
       } finally {
         loadingBar.finish();
       }
@@ -340,6 +340,7 @@ export default defineComponent({
         await radioStationStore.fetchAll();
       } catch (error) {
         console.error('Failed to fetch data:', error);
+        message.error(getErrorMessage(error));
       }
     });
 

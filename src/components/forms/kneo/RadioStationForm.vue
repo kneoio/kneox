@@ -337,7 +337,7 @@ import { useRadioStationStore } from "../../../stores/kneo/radioStationStore";
 import { useAiAgentStore } from "../../../stores/kneo/aiAgentStore";
 import { useProfileStore } from "../../../stores/kneo/profileStore";
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
-import { handleFormSaveError } from '../../../utils/errorHandling';
+import { handleFormSaveError, getErrorMessage } from '../../../utils/errorHandling';
 import AclTable from '../../common/AclTable.vue';
 
 export default defineComponent( {
@@ -543,7 +543,7 @@ export default defineComponent( {
         message.success( "Radio Station saved successfully" );
         await router.push( "/outline/radiostations" );
       } catch ( error ) {
-        handleFormSaveError( error, message, 'Failed to save Radio Station' );
+        handleFormSaveError(error, message);
       } finally {
         loadingBar.finish();
       }
@@ -678,7 +678,7 @@ export default defineComponent( {
         aclData.value = response.accessList || [];
       } catch ( error ) {
         console.error( 'Failed to fetch ACL data:', error );
-        message.error( 'Failed to fetch access control list' );
+        message.error( getErrorMessage(error) );
         aclData.value = [];
       } finally {
         aclLoading.value = false;
@@ -735,7 +735,7 @@ export default defineComponent( {
         }
       } catch ( error ) {
         console.error( "Failed to fetch data:", error );
-        message.error( 'Failed to fetch data' );
+        message.error( getErrorMessage(error) );
       } finally {
         loadingBar.finish();
       }

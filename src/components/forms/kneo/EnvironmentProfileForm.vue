@@ -71,6 +71,7 @@ import {
   useLoadingBar,
   useMessage
 } from "naive-ui";
+import { getErrorMessage, handleFormSaveError } from '../../../utils/errorHandling';
 import AclTable from '../../common/AclTable.vue';
 import { Profile, ProfileSave } from "../../../types/kneoBroadcasterTypes";
 import { useProfileStore } from "../../../stores/kneo/profileStore";
@@ -126,7 +127,7 @@ export default defineComponent({
         message.success("Profile saved successfully");
         await router.push("/outline/profiles");
       } catch (error) {
-        message.error("Failed to save Profile");
+        handleFormSaveError(error, message);
       } finally {
         loadingBar.finish();
       }
@@ -153,7 +154,7 @@ export default defineComponent({
         aclData.value = response.accessList || [];
       } catch (error) {
         console.error('Failed to fetch ACL data:', error);
-        message.error('Failed to fetch access control list');
+        message.error(getErrorMessage(error));
         aclData.value = [];
       } finally {
         aclLoading.value = false;
@@ -175,7 +176,7 @@ export default defineComponent({
           Object.assign(localFormData, store.getCurrent);
         } catch (error) {
           console.error("Failed to fetch profile:", error);
-          message.error('Failed to fetch profile');
+          message.error(getErrorMessage(error));
         } finally {
           loadingBar.finish();
         }
