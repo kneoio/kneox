@@ -53,22 +53,20 @@ export const useReferencesStore = defineStore('references', () => {
   const genreOptions = ref<Array<{label: string, value: string}>>([]);
   const voiceOptions = ref<Array<{label: string, value: string}>>([]);
 
-  // Music Upload Agreement (can be moved to server later)
-  const musicUploadAgreement = ref<{ title: string; clauses: string[]; version: string }>({
+  const musicUploadAgreement = ref<{ title: string; clause: string; version: string }>({
     title: 'Music Upload Agreement',
     version: '1.0',
-    clauses: [
-      'By uploading music to this service, you confirm that:',
-      'Ownership or License: You own the copyright to this music OR have proper licensing/permission to distribute it.',
-      'Free to Use: The music is either your original work, public domain, or licensed under terms that permit sharing on this platform.',
-      'No Infringement: Your upload does not violate any third-party copyrights, trademarks, or other intellectual property rights.',
-      'Legal Responsibility: You accept full legal responsibility for any copyright claims or disputes arising from your upload.',
-      'Removal Rights: We reserve the right to remove any content that violates copyright or receives valid takedown requests.',
-      'Content Standards: The music does not contain content that promotes violence, war, hate speech, discrimination, or offensive religious content.',
-      'Content Guidelines: The content complies with general broadcasting standards and applicable content regulations.',
-      'Indemnification: You agree to defend and hold harmless the service from any legal claims related to your uploaded content.',
-      'By checking this box and proceeding with the upload, you legally bind yourself to these terms.'
-    ]
+    clause: 'By uploading music to this service, you confirm that: ' +
+        'Ownership or License: You own the copyright to this music OR have proper licensing/permission to distribute it. ' +
+        'Free to Use: The music is either your original work, public domain, or licensed under terms that permit sharing on this platform.' +
+        'No Infringement: Your upload does not violate any third-party copyrights, trademarks, or other intellectual property rights. ' +
+        'Legal Responsibility: You accept full legal responsibility for any copyright claims or disputes arising from your upload. ' +
+        'Removal Rights: We reserve the right to remove any content that violates copyright or receives valid takedown requests. ' +
+        'Content Standards: The music does not contain content that promotes violence, war, hate speech, discrimination, or offensive religious content. ' +
+        'Content Guidelines: The content complies with general broadcasting standards and applicable content regulations. ' +
+        'Indemnification: You agree to defend and hold harmless the service from any legal claims related to your uploaded content. ' +
+        'By checking this box and proceeding with the upload, you legally bind yourself to these terms.'
+
   });
 
   const audioAcceptTypes = [

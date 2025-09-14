@@ -1,16 +1,17 @@
 <template>
-  <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f8f8f8; padding: 15px; flex-direction: column;">
-      <div style="width: 100%; max-width: 720px; margin: 0 auto 16px;">
-        <router-link to="/" class="inline-block">
-          <n-button quaternary size="small">← Back</n-button>
-        </router-link>
-      </div>
-      <n-card style="max-width: 720px; width: 100%;" title="">
-      <n-form :model="form" ref="formRef" label-placement="top" :disabled="submitting">
+  <div
+      style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f8f8f8; padding: 15px; flex-direction: column;">
+    <div style="width: 100%; max-width: 720px; margin: 0 auto 16px;">
+      <router-link to="/" class="inline-block">
+        <n-button quaternary size="small">← Back</n-button>
+      </router-link>
+    </div>
+    <n-card style="max-width: 720px; width: 100%;" title="">
+      <n-form :model="form" ref="formRef" label-placement="top">
         <n-grid cols="24" x-gap="16" y-gap="8">
           <n-grid-item :span="24">
             <n-form-item label="Radio Station">
-              <n-input v-model:value="form.brand" placeholder="" disabled />
+              <n-input v-model:value="form.brand" placeholder="" disabled/>
             </n-form-item>
             <n-alert v-if="policyText" type="info" :bordered="false" style="margin-top: -4px; margin-bottom: 8px;">
               {{ policyText }}
@@ -18,29 +19,31 @@
           </n-grid-item>
           <n-grid-item :span="12">
             <n-form-item label="Artist">
-              <n-input v-model:value="form.artist" placeholder="" />
+              <n-input v-model:value="form.artist" placeholder=""/>
             </n-form-item>
           </n-grid-item>
           <n-grid-item :span="12">
             <n-form-item label="Title">
-              <n-input v-model:value="form.title" placeholder="" />
+              <n-input v-model:value="form.title" placeholder=""/>
             </n-form-item>
           </n-grid-item>
           <n-grid-item :span="12">
             <n-form-item label="Album (optional)">
-              <n-input v-model:value="form.album" placeholder="" />
+              <n-input v-model:value="form.album" placeholder=""/>
             </n-form-item>
           </n-grid-item>
           <n-grid-item :span="12">
             <n-form-item label="Genres">
-              <n-select v-model:value="form.genres" :options="referencesStore.genreOptions" multiple filterable placeholder="" />
+              <n-select v-model:value="form.genres" :options="referencesStore.genreOptions" multiple filterable
+                        placeholder=""/>
             </n-form-item>
           </n-grid-item>
           <n-grid-item :span="12">
             <n-form-item label="Email">
               <div style="display:flex; gap:8px; align-items:center;">
-                <n-input v-model:value="form.email" placeholder="" />
-                <n-button size="small" @click="sendCode" :loading="sendingCode" :disabled="sendingCode || !isValidEmail(form.email)">
+                <n-input v-model:value="form.email" placeholder=""/>
+                <n-button size="small" @click="sendCode" :loading="sendingCode"
+                          :disabled="sendingCode || !isValidEmail(form.email)">
                   {{ codeSent ? 'Resend code' : 'Send code' }}
                 </n-button>
               </div>
@@ -48,26 +51,27 @@
           </n-grid-item>
           <n-grid-item :span="12">
             <n-form-item label="Confirmation Code" placeholder="">
-              <n-input v-model:value="form.confirmationCode" placeholder="" />
+              <n-input v-model:value="form.confirmationCode" placeholder=""/>
             </n-form-item>
           </n-grid-item>
           <n-grid-item :span="24">
             <n-form-item label="Description (optional)">
-              <n-input v-model:value="form.description" type="textarea" :autosize="{ minRows: 3, maxRows: 6 }" placeholder="" />
+              <n-input v-model:value="form.description" type="textarea" :autosize="{ minRows: 3, maxRows: 6 }"
+                       placeholder=""/>
             </n-form-item>
           </n-grid-item>
           <n-grid-item :span="24">
             <n-form-item label="Audio File (mp3, wav)">
               <n-upload
-                v-model:file-list="fileList"
-                :multiple="false"
-                :max="1"
-                :show-download-button="false"
-                :disabled="submitting"
-                @change="onFileChange"
-                @remove="handleRemove"
-                :custom-request="handleUploadPublic"
-                :show-remove-button="true"
+                  v-model:file-list="fileList"
+                  :multiple="false"
+                  :max="1"
+                  :show-download-button="false"
+                  :disabled="submitting"
+                  @change="onFileChange"
+                  @remove="handleRemove"
+                  :custom-request="handleUploadPublic"
+                  :show-remove-button="true"
               >
                 <n-button>Choose File</n-button>
               </n-upload>
@@ -77,7 +81,7 @@
               <n-collapse-item :title="referencesStore.musicUploadAgreement.title" name="agreement">
                 <div style="font-size: 13px; line-height: 1.6;">
                   <ul style="padding-left: 18px; margin: 0 0 8px 0;">
-                    <li v-for="(clause, idx) in referencesStore.musicUploadAgreement.clauses" :key="idx">
+                    <li v-for="(clause, idx) in referencesStore.musicUploadAgreement.clause" :key="idx">
                       {{ clause }}
                     </li>
                   </ul>
@@ -97,12 +101,14 @@
                 </n-checkbox>
               </div>
             </n-form-item>
-            <n-form-item label="Message to audience (Hint: Introduce yourslef and write a short message to your audience)" v-if="form.sendMessage">
+            <n-form-item
+                label="Message to audience (Hint: Introduce yourslef and write a short message to your audience)"
+                v-if="form.sendMessage">
               <n-input
-                v-model:value="form.attachedMessage"
-                type="textarea"
-                :autosize="{ minRows: 2, maxRows: 3 }"
-                placeholder=""
+                  v-model:value="form.attachedMessage"
+                  type="textarea"
+                  :autosize="{ minRows: 2, maxRows: 3 }"
+                  placeholder=""
               />
             </n-form-item>
           </n-grid-item>
@@ -112,24 +118,39 @@
         </n-alert>
         <div style="display:flex; gap: 12px; justify-content: flex-end; margin-top: 8px;">
           <n-button tertiary @click="reset" :disabled="submitting">Reset</n-button>
-          <n-button type="primary" @click="submit" :loading="submitting" :disabled="submitting || isUploading || !form.agree">Submit your song</n-button>
+          <n-button type="primary" @click="() => handleSubmit()">Submit your song</n-button>
         </div>
         <n-alert v-if="message" :type="messageType" style="margin-top: 12px;">{{ message }}</n-alert>
-        </n-form>
-      </n-card>
-    </div>
+      </n-form>
+    </n-card>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { useRoute } from 'vue-router'
-import { NCard, NForm, NFormItem, NInput, NSelect, NUpload, NButton, NAlert, NGrid, NGridItem, NCollapse, NCollapseItem, NCheckbox, useMessage } from 'naive-ui'
-import type { FormInst } from 'naive-ui'
-import type { UploadFileInfo, UploadCustomRequestOptions } from 'naive-ui'
-import { useSubmissionStore } from '../stores/public/submissionStore'
-import { useReferencesStore } from '../stores/kneo/referencesStore'
-import { apiServer } from '../api/apiClient'
-import { uploadProgress, connectSSEProgress } from '../utils/fileUpload'
+import {ref, onMounted, computed} from 'vue'
+import {useRoute} from 'vue-router'
+import {
+  NCard,
+  NForm,
+  NFormItem,
+  NInput,
+  NSelect,
+  NUpload,
+  NButton,
+  NAlert,
+  NGrid,
+  NGridItem,
+  NCollapse,
+  NCollapseItem,
+  NCheckbox,
+  useMessage
+} from 'naive-ui'
+import type {FormInst} from 'naive-ui'
+import type {UploadFileInfo, UploadCustomRequestOptions} from 'naive-ui'
+import {useSubmissionStore} from '../stores/public/submissionStore'
+import {useReferencesStore} from '../stores/kneo/referencesStore'
+import {apiServer} from '../api/apiClient'
+import {uploadProgress, connectSSEProgress} from '../utils/fileUpload'
 
 const formRef = ref<FormInst | null>(null)
 const submissionStore = useSubmissionStore()
@@ -156,7 +177,7 @@ const fileList = ref<UploadFileInfo[]>([])
 // Track finalized filenames like in SoundFragmentForm
 const uploadedFileNames = ref<string[]>([])
 const originalUploadedFileNames = ref<string[]>([])
-const fileName = computed(() => file.value?.name ?? '')
+//const fileName = computed(() => file.value?.name ?? '')
 
 // No path-based rules; we validate manually in submit()
 
@@ -214,7 +235,7 @@ function onFileChange(data: { file: UploadFileInfo; fileList: UploadFileInfo[] }
 
 function handleRemove(uf: UploadFileInfo) {
   const name = uf?.name
-  console.debug('[SubmitSongView] handleRemove', { name, status: uf?.status })
+  console.debug('[SubmitSongView] handleRemove', {name, status: uf?.status})
   if (name) {
     uploadedFileNames.value = uploadedFileNames.value.filter(n => n !== name)
     originalUploadedFileNames.value = originalUploadedFileNames.value.filter(n => n !== name)
@@ -255,53 +276,59 @@ function resetProgressState() {
 function connectPublicSSE(brand: string, uploadId: string, originalFileName: string) {
   const root = apiServer.replace(/\/api\/?$/, '')
   const url = `${root}/radio/${encodeURIComponent(brand)}/submissions/files/${uploadId}/stream`
-  console.debug('[SubmitSongView] connectPublicSSE', { url, brand, uploadId, originalFileName })
+  console.debug('[SubmitSongView] connectPublicSSE', {url, brand, uploadId, originalFileName})
   const es = connectSSEProgress(
-    globalProgressState.value,
-    url,
-    {
-      onDisplayProgress: (progress) => {
-        console.debug('[SubmitSongView] SSE progress', { progress })
-        if (fileList.value[0]) {
-          fileList.value = [{ ...fileList.value[0], percentage: progress, status: 'uploading' }]
-        }
-      },
-      onFinished: ({ fileName, fileId }) => {
-        console.debug('[SubmitSongView] SSE finished', { fileName, fileId })
-        const correctFileName = fileName || originalFileName
-        // Store server-finalized filename(s) like in SoundFragmentForm
-        if (correctFileName && !originalUploadedFileNames.value.includes(correctFileName)) {
-          originalUploadedFileNames.value.push(correctFileName)
-        }
-        if (correctFileName && !uploadedFileNames.value.includes(correctFileName)) {
-          uploadedFileNames.value.push(correctFileName)
-        }
-        if (fileList.value[0]) {
-          fileList.value[0] = { ...fileList.value[0], name: correctFileName, percentage: 100, status: 'finished', id: fileId || fileList.value[0].id }
-        }
-        globalProgressState.value.currentProgress = 100
-        resetProgressState()
-      },
-      onError: () => {
-        console.warn('[SubmitSongView] SSE error, using fallback finish if sim active')
-        const current = fileList.value[0]
-        if (globalProgressState.value.isSimulationActive && current) {
-          setTimeout(() => {
-            if (fileList.value[0] && ((fileList.value[0].percentage ?? 0) < 100)) {
-              fileList.value[0] = { ...fileList.value[0], percentage: 100, status: 'finished' }
-              globalProgressState.value.currentProgress = 100
-              resetProgressState()
+      globalProgressState.value,
+      url,
+      {
+        onDisplayProgress: (progress) => {
+          console.debug('[SubmitSongView] SSE progress', {progress})
+          if (fileList.value[0]) {
+            fileList.value = [{...fileList.value[0], percentage: progress, status: 'uploading'}]
+          }
+        },
+        onFinished: ({fileName, fileId}) => {
+          console.debug('[SubmitSongView] SSE finished', {fileName, fileId})
+          const correctFileName = fileName || originalFileName
+          // Store server-finalized filename(s) like in SoundFragmentForm
+          if (correctFileName && !originalUploadedFileNames.value.includes(correctFileName)) {
+            originalUploadedFileNames.value.push(correctFileName)
+          }
+          if (correctFileName && !uploadedFileNames.value.includes(correctFileName)) {
+            uploadedFileNames.value.push(correctFileName)
+          }
+          if (fileList.value[0]) {
+            fileList.value[0] = {
+              ...fileList.value[0],
+              name: correctFileName,
+              percentage: 100,
+              status: 'finished',
+              id: fileId || fileList.value[0].id
             }
-          }, 2000)
+          }
+          globalProgressState.value.currentProgress = 100
+          resetProgressState()
+        },
+        onError: () => {
+          console.warn('[SubmitSongView] SSE error, using fallback finish if sim active')
+          const current = fileList.value[0]
+          if (globalProgressState.value.isSimulationActive && current) {
+            setTimeout(() => {
+              if (fileList.value[0] && ((fileList.value[0].percentage ?? 0) < 100)) {
+                fileList.value[0] = {...fileList.value[0], percentage: 100, status: 'finished'}
+                globalProgressState.value.currentProgress = 100
+                resetProgressState()
+              }
+            }, 2000)
+          }
         }
       }
-    }
   )
   globalProgressState.value.eventSource = es
   return es
 }
 
-async function handleUploadPublic({ file, onError }: UploadCustomRequestOptions) {
+async function handleUploadPublic({file, onError}: UploadCustomRequestOptions) {
   try {
     resetProgressState()
     const brand = form.value.brand
@@ -310,18 +337,19 @@ async function handleUploadPublic({ file, onError }: UploadCustomRequestOptions)
     currentUploadId.value = uploadId
     const startTime = Date.now()
     const originalFileName = file.name
-    console.debug('[SubmitSongView] startUploadSession', { brand, uploadId, startTime, originalFileName })
+    console.debug('[SubmitSongView] startUploadSession', {brand, uploadId, startTime, originalFileName})
     const session = await submissionStore.startUploadSession(brand, uploadId, startTime)
     globalProgressState.value.stopSimulation = uploadProgress(
         globalProgressState.value,
         session.estimatedDurationSeconds,
         (progress) => {
-          console.debug('[SubmitSongView] sim progress', { progress })
+          console.debug('[SubmitSongView] sim progress', {progress})
         },
-        () => {}
+        () => {
+        }
     )
     if (!file.file) throw new Error('No file content to upload')
-    console.debug('[SubmitSongView] uploadFile POST', { urlBrand: brand, entityId, uploadId })
+    console.debug('[SubmitSongView] uploadFile POST', {urlBrand: brand, entityId, uploadId})
     await submissionStore.uploadFile(file.file, brand, entityId, uploadId)
     console.debug('[SubmitSongView] uploadFile POST done')
     connectPublicSSE(brand, uploadId, originalFileName)
@@ -334,7 +362,21 @@ async function handleUploadPublic({ file, onError }: UploadCustomRequestOptions)
 }
 
 function reset() {
-  form.value = { brand: form.value.brand, artist: '', title: '', genres: [], email: '', description: '', album: '', agree: false, confirmationCode: '', file: null, isShareable: false, sendMessage: false, attachedMessage: '' }
+  form.value = {
+    brand: form.value.brand,
+    artist: '',
+    title: '',
+    genres: [],
+    email: '',
+    description: '',
+    album: '',
+    agree: false,
+    confirmationCode: '',
+    file: null,
+    isShareable: false,
+    sendMessage: false,
+    attachedMessage: ''
+  }
   file.value = null
   currentUploadId.value = null
   message.value = ''
@@ -343,16 +385,38 @@ function reset() {
   originalUploadedFileNames.value = []
 }
 
-async function submit() {
+const handleSubmit = async () => {
   console.debug('[SubmitSongView] submit() clicked')
+
   const emailRe = /.+@.+\..+/
-  if (!form.value.artist?.trim()) { nMessage.error('Artist is required'); return }
-  if (!form.value.title?.trim()) { nMessage.error('Title is required'); return }
-  if (!form.value.email?.trim()) { nMessage.error('Email is required'); return }
-  if (!emailRe.test(form.value.email)) { nMessage.error('Enter a valid email'); return }
-  if (!Array.isArray(form.value.genres) || form.value.genres.length === 0) { nMessage.error('Select at least one genre'); return }
-  if (!form.value.file) { nMessage.error('Audio file is required'); return }
-  if (codeSent.value && !(form.value.confirmationCode?.trim())) { nMessage.error('Confirmation code is required'); return }
+  if (!form.value.artist?.trim()) {
+    nMessage.error('Artist is required');
+    return
+  }
+  if (!form.value.title?.trim()) {
+    nMessage.error('Title is required');
+    return
+  }
+  if (!form.value.email?.trim()) {
+    nMessage.error('Email is required');
+    return
+  }
+  if (!emailRe.test(form.value.email)) {
+    nMessage.error('Enter a valid email');
+    return
+  }
+  if (!Array.isArray(form.value.genres) || form.value.genres.length === 0) {
+    nMessage.error('Select at least one genre');
+    return
+  }
+  if (!form.value.file) {
+    nMessage.error('Audio file is required');
+    return
+  }
+  if (codeSent.value && !(form.value.confirmationCode?.trim())) {
+    nMessage.error('Confirmation code is required');
+    return
+  }
 
   if (isUploading.value) {
     console.warn('[SubmitSongView] blocked: upload still in progress', {
@@ -368,23 +432,30 @@ async function submit() {
 
   submitting.value = true
   message.value = ''
+
   try {
-    const filesToSend = originalUploadedFileNames.value.length > 0 ? originalUploadedFileNames.value : uploadedFileNames.value
+    const filesToSend = originalUploadedFileNames.value.length > 0
+        ? originalUploadedFileNames.value
+        : uploadedFileNames.value
+
     const termsText = (() => {
-      const a = referencesStore.musicUploadAgreement?.value
+      const a = referencesStore.musicUploadAgreement
       try {
         const title = a?.title || 'Music Upload Agreement'
         const clauses = Array.isArray(a?.clauses) ? a.clauses.join('\n') : ''
         return `${title}\n\n${clauses}`.trim()
-      } catch { return undefined }
+      } catch {
+        return undefined
+      }
     })()
 
-    const payload: any = {
+    const payload = {
       brand: form.value.brand,
       artist: form.value.artist,
       title: form.value.title,
       genres: form.value.genres,
       email: form.value.email,
+      confirmationCode: "",
       description: form.value.description,
       album: form.value.album || undefined,
       uploadId: currentUploadId.value || undefined,
@@ -394,8 +465,10 @@ async function submit() {
       termsText,
       isShareable: form.value.isShareable,
       shareable: form.value.isShareable,
-      agreementVersion: referencesStore.musicUploadAgreement.value.version
+      agreementVersion: referencesStore.musicUploadAgreement.version,
+      attachedMessage: ""
     }
+
     console.debug('[SubmitSongView] submit payload preview', {
       brand: payload.brand,
       artist: payload.artist,
@@ -408,22 +481,31 @@ async function submit() {
       hasTermsText: !!payload.termsText,
       hasAttachedMessage: !!payload.attachedMessage
     })
+
     if (form.value.sendMessage && form.value.attachedMessage?.trim()) {
       payload.attachedMessage = form.value.attachedMessage.trim()
     }
+
     if (codeSent.value && form.value.confirmationCode) {
       payload.confirmationCode = form.value.confirmationCode
     }
+
     await submissionStore.submit(payload)
     messageType.value = 'success'
     message.value = 'Thanks! Your song was submitted.'
     reset()
-  } catch (e: any) {
+
+  } catch (e) {
     messageType.value = 'error'
     const errData = e?.response?.data
     const raw = errData !== undefined ? JSON.stringify(errData) : ''
     message.value = raw
-    try { if (raw) nMessage.error(raw) } catch (_) { /* noop */ }
+
+    try {
+      if (raw) nMessage.error(raw)
+    } catch (_) {
+      // noop
+    }
   } finally {
     submitting.value = false
   }
@@ -431,9 +513,11 @@ async function submit() {
 
 const sendingCode = ref(false)
 const codeSent = ref(false)
+
 function isValidEmail(v: string) {
   return /.+@.+\..+/.test(v || '')
 }
+
 async function sendCode() {
   if (!isValidEmail(form.value.email)) return
   try {
@@ -442,13 +526,19 @@ async function sendCode() {
     codeSent.value = true
     messageType.value = 'success'
     message.value = 'Confirmation code sent to your email.'
-    try { nMessage.success('Confirmation code sent') } catch (_) { /* noop */ }
+    try {
+      nMessage.success('Confirmation code sent')
+    } catch (_) { /* noop */
+    }
   } catch (e: any) {
     messageType.value = 'error'
     const errData = e?.response?.data
     const raw = errData !== undefined ? JSON.stringify(errData) : ''
     message.value = raw
-    try { if (raw) nMessage.error(raw) } catch (_) { /* noop */ }
+    try {
+      if (raw) nMessage.error(raw)
+    } catch (_) { /* noop */
+    }
   } finally {
     sendingCode.value = false
   }
