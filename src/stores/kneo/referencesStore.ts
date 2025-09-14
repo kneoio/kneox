@@ -54,8 +54,9 @@ export const useReferencesStore = defineStore('references', () => {
   const voiceOptions = ref<Array<{label: string, value: string}>>([]);
 
   // Music Upload Agreement (can be moved to server later)
-  const musicUploadAgreement = ref<{ title: string; clauses: string[] }>({
+  const musicUploadAgreement = ref<{ title: string; clauses: string[]; version: string }>({
     title: 'Music Upload Agreement',
+    version: '1.0',
     clauses: [
       'By uploading music to this service, you confirm that:',
       'Ownership or License: You own the copyright to this music OR have proper licensing/permission to distribute it.',

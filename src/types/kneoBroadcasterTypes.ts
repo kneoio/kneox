@@ -256,7 +256,6 @@ export interface EventSave {
     };
 }
 
-// Public submission types
 export interface SubmissionPayload {
     brand: string;
     artist: string;
@@ -265,5 +264,15 @@ export interface SubmissionPayload {
     email: string;
     description: string;
     uploadId?: string;
+    newlyUploaded?: string[];
     confirmationCode?: string;
+    album?: string;
+    representedInBrands?: string[];
+    contributorEmail?: string;
+    isShareable?: boolean;
+    attachedMessage?: string;
+    country?: string; 
+    agreedAt?: string;
+    termsText?: string;
+    agreementVersion?: string;
 }

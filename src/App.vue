@@ -143,19 +143,14 @@ const initTheme = () => {
   if (savedTheme) {
     isDarkTheme.value = savedTheme === 'dark'
   } else if (window.matchMedia) {
-    isDarkTheme.value = window.matchMedia('(prefers-color-scheme: dark)').matches
+    // Default to light theme when no preference is saved
+    isDarkTheme.value = false
   }
 }
 
 initTheme()
 
-// React to OS changes when no cookie is set
-const mediaQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null
-mediaQuery?.addEventListener?.('change', (e) => {
-  if (!getCookie('theme')) {
-    isDarkTheme.value = e.matches
-  }
-})
+// Removed auto-switching with OS preference to keep light as default when no cookie
 
 onMounted(() => {
   initTheme()

@@ -22,7 +22,12 @@ export const useSubmissionStore = defineStore('submissionStore', () => {
       artist: data.artist,
       title: data.title,
       email: data.email,
-      genresCount: Array.isArray(data.genres) ? data.genres.length : 0
+      genresCount: Array.isArray(data.genres) ? data.genres.length : 0,
+      agreementVersion: (data as any).agreementVersion,
+      isShareable: (data as any).isShareable,
+      shareable: (data as any).shareable,
+      hasAttachedMessage: !!(data as any).attachedMessage,
+      newlyUploadedCount: Array.isArray((data as any).newlyUploaded) ? (data as any).newlyUploaded.length : 0
     })
     try {
       const res = await unsecuredClient.post(url, data)
