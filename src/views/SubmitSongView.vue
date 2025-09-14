@@ -88,18 +88,18 @@
             <n-form-item label-width="0" style="margin-top: 8px;">
               <div style="display: flex; flex-direction: column; gap: 4px;">
                 <n-checkbox v-model:checked="form.agree">
-                  I agree to these terms and confirm my right to upload this music
+                  I agree to these terms (expand above to read the full agreement) and confirm my right to upload this music
                 </n-checkbox>
                 <n-checkbox v-model:checked="form.isShareable">
                   I agree that Mixpla can share this song with other radio stations
                 </n-checkbox>
                 <n-checkbox v-model:checked="form.sendMessage">
-                  Send message to your audience (the AI DJ will consider to express or translate while speaking)
+                  Send a message to your audience (AI DJ may use it as an intro and may mention or translate it on air)
                 </n-checkbox>
               </div>
             </n-form-item>
             <n-form-item
-                label="Message to audience (Hint: Introduce yourslef and write a short message to your audience)"
+                label="Message to audience (used as DJ intro; may be mentioned or translated on air)"
                 v-if="form.sendMessage">
               <n-input
                   v-model:value="form.attachedMessage"
@@ -321,6 +321,10 @@ async function handleUploadPublic({file, onError}: UploadCustomRequestOptions) {
         session.estimatedDurationSeconds,
         (progress) => {
           console.debug('[SubmitSongView] sim progress', {progress})
+          if (fileList.value[0]) {
+            const current = fileList.value[0]
+            fileList.value = [{ ...current, percentage: progress, status: 'uploading' }]
+          }
         },
         () => {
         }
@@ -509,6 +513,11 @@ const handleSubmit = async () => {
     await submissionStore.submit(payload)
     messageType.value = 'success'
     message.value = 'Thanks! Your song was submitted.'
+    if (payload.attachedMessage) {
+      try {
+        nMessage.success(payload.attachedMessage as string)
+      } catch (_) { /* noop */ }
+    }
     reset()
 
   } catch (e) {
