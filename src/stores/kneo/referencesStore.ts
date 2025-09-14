@@ -57,7 +57,7 @@ export const useReferencesStore = defineStore('references', () => {
     title: 'Music Upload Agreement',
     version: '1.0',
     clause: 'By uploading music to this service, you confirm that: ' +
-        'Ownership or License: You own the copyright to this music OR have proper licensing/permission to distribute it. ' +
+        'Ownership or License: You own the copyright to this music OR have proper licensing/permission to distribute it.' +
         'Free to Use: The music is either your original work, public domain, or licensed under terms that permit sharing on this platform.' +
         'No Infringement: Your upload does not violate any third-party copyrights, trademarks, or other intellectual property rights. ' +
         'Legal Responsibility: You accept full legal responsibility for any copyright claims or disputes arising from your upload. ' +

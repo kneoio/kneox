@@ -116,7 +116,7 @@ function saveThemePreference() {
 
 // Check route scopes
 const isProtectedArea = computed(() => route.path.startsWith('/outline'))
-const allowPublicDark = computed(() => route.path === '/about')
+const allowPublicDark = computed(() => ['/about', '/submit-song'].includes(route.path))
 
 // Apply dark theme in protected area and About page
 const currentTheme = computed(() => {

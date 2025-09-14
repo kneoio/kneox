@@ -124,6 +124,7 @@ import {
 } from '../../helpers/errorHandling';
 import {apiServer} from "../../../api/apiClient";
 import { uploadProgress, connectSSEProgress } from "../../../utils/fileUpload";
+import { handleFormSaveError } from "../../../utils/errorHandling";
 
 export default defineComponent({
   name: "SoundFragmentForm",
@@ -361,15 +362,15 @@ export default defineComponent({
       
     };
 
-    const handleRemove = (file: UploadFileInfo) => {
+    const handleRemove = ({ file, fileList, index }: { file: Required<UploadFileInfo>; fileList: Required<UploadFileInfo>[]; index: number }) => {
       uploadedFileNames.value = uploadedFileNames.value.filter(name => name !== file.name);
       originalUploadedFileNames.value = originalUploadedFileNames.value.filter(name => name !== file.name);
-      
+
       if (globalProgressState.isSimulationActive || globalProgressState.hasSSEStarted) {
         resetProgressState();
       }
 
-      logWithTimestamp(`Removed file: ${file.name}`);
+      logWithTimestamp(`Removed file: ${file.name} (index: ${index}, list size: ${fileList?.length ?? 0})`);
       return true;
     };
 

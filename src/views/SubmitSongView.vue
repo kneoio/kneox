@@ -1,19 +1,20 @@
 <template>
   <div
-      style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f8f8f8; padding: 15px; flex-direction: column;">
+      style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 15px; flex-direction: column;">
     <div style="width: 100%; max-width: 720px; margin: 0 auto 16px;">
       <router-link to="/" class="inline-block">
         <n-button quaternary size="small">← Back</n-button>
       </router-link>
     </div>
-    <n-card style="max-width: 720px; width: 100%;" title="">
+    <n-config-provider :theme-overrides="localThemeOverrides">
+      <n-card style="max-width: 720px; width: 100%;" title="">
       <n-form :model="form" ref="formRef" label-placement="top">
         <n-grid cols="24" x-gap="16" y-gap="8">
           <n-grid-item :span="24">
             <n-form-item label="Radio Station">
               <n-input v-model:value="form.brand" placeholder="" disabled/>
             </n-form-item>
-            <n-alert v-if="policyText" type="info" :bordered="false" style="margin-top: -4px; margin-bottom: 8px;">
+            <n-alert v-show="policyText" type="info" :bordered="false" style="margin-top: -4px; margin-bottom: 8px;">
               {{ policyText }}
             </n-alert>
           </n-grid-item>
@@ -79,12 +80,8 @@
             <!-- Progress bar removed by request -->
             <n-collapse style="margin-top: 8px;">
               <n-collapse-item :title="referencesStore.musicUploadAgreement.title" name="agreement">
-                <div style="font-size: 13px; line-height: 1.6;">
-                  <ul style="padding-left: 18px; margin: 0 0 8px 0;">
-                    <li v-for="(clause, idx) in referencesStore.musicUploadAgreement.clause" :key="idx">
-                      {{ clause }}
-                    </li>
-                  </ul>
+                <div style="font-size: 13px; line-height: 1.6; white-space: pre-wrap;">
+                  {{ referencesStore.musicUploadAgreement.clause }}
                 </div>
               </n-collapse-item>
             </n-collapse>
@@ -113,21 +110,27 @@
             </n-form-item>
           </n-grid-item>
         </n-grid>
-        <n-alert v-if="isUploading" type="warning" :bordered="false" style="margin-top: 8px;">
-          File is still uploading. Please wait until it finishes.
-        </n-alert>
         <div style="display:flex; gap: 12px; justify-content: flex-end; margin-top: 8px;">
           <n-button tertiary @click="reset" :disabled="submitting">Reset</n-button>
           <n-button type="primary" @click="() => handleSubmit()">Submit your song</n-button>
         </div>
-        <n-alert v-if="message" :type="messageType" style="margin-top: 12px;">{{ message }}</n-alert>
+        <n-alert
+            v-if="message && messageType === 'error'"
+            type="error"
+            closable
+            @close="message = ''"
+            style="margin-top: 12px;"
+        >
+          {{ message }}
+        </n-alert>
       </n-form>
-    </n-card>
+      </n-card>
+    </n-config-provider>
   </div>
 </template>
 
 <script setup lang="ts">
-import {ref, onMounted, computed} from 'vue'
+import {ref, onMounted, computed, inject} from 'vue'
 import {useRoute} from 'vue-router'
 import {
   NCard,
@@ -145,12 +148,12 @@ import {
   NCheckbox,
   useMessage
 } from 'naive-ui'
+import { NConfigProvider } from 'naive-ui'
 import type {FormInst} from 'naive-ui'
 import type {UploadFileInfo, UploadCustomRequestOptions} from 'naive-ui'
 import {useSubmissionStore} from '../stores/public/submissionStore'
 import {useReferencesStore} from '../stores/kneo/referencesStore'
-import {apiServer} from '../api/apiClient'
-import {uploadProgress, connectSSEProgress} from '../utils/fileUpload'
+import {uploadProgress} from '../utils/fileUpload'
 
 const formRef = ref<FormInst | null>(null)
 const submissionStore = useSubmissionStore()
@@ -174,13 +177,8 @@ const form = ref({
 
 const file = ref<File | null>(null)
 const fileList = ref<UploadFileInfo[]>([])
-// Track finalized filenames like in SoundFragmentForm
 const uploadedFileNames = ref<string[]>([])
 const originalUploadedFileNames = ref<string[]>([])
-//const fileName = computed(() => file.value?.name ?? '')
-
-// No path-based rules; we validate manually in submit()
-
 const submitting = ref(false)
 const message = ref('')
 const messageType = ref<'success' | 'error' | 'warning' | 'info'>('success')
@@ -189,6 +187,40 @@ const referencesStore = useReferencesStore()
 const route = useRoute()
 const policy = ref<string>('')
 const currentUploadId = ref<string | null>(null)
+// Inherit theme state from App.vue
+const providedIsDark = inject('isDarkTheme', ref(false)) as unknown as { value: boolean }
+const localThemeOverrides = computed(() => {
+  return providedIsDark && providedIsDark.value
+      ? {
+          common: {
+            // Make card slightly darker than input so inputs are visible at rest
+            cardColor: '#242424',
+            modalColor: '#242424',
+            popoverColor: '#242424',
+            inputColor: '#2a2a2a',
+            inputColorDisabled: '#2a2a2a',
+            // Slightly lighter border for contrast on dark backgrounds
+            borderColor: '#4a4a4a'
+          },
+          Input: {
+            color: '#2a2a2a',
+            colorFocus: '#2a2a2a',
+            borderColor: '#4a4a4a',
+            borderHoverColor: '#4d4d4d',
+            borderFocusColor: '#5aa2f7',
+            borderColorDisabled: '#4a4a4a',
+            colorDisabled: '#2a2a2a',
+            textColorDisabled: '#a0a0a0',
+            placeholderColorDisabled: '#777'
+          },
+          Select: {
+            borderColor: '#4a4a4a',
+            borderHoverColor: '#4d4d4d',
+            borderFocusColor: '#5aa2f7'
+          }
+        }
+      : {}
+})
 const policyText = computed(() => {
   if (policy.value === 'REVIEW_REQUIRED') {
     return 'Your song will be reviewed by the station owner and published if it meets the station policy.'
@@ -200,14 +232,14 @@ const policyText = computed(() => {
 })
 
 onMounted(async () => {
+  // Prefill from query params immediately to avoid UI blink
+  form.value.brand = (route.query.brand as string) || ''
+  policy.value = (route.query.policy as string) || ''
   try {
     await referencesStore.fetchGenres()
   } catch (e) {
     // ignore
   }
-  // Prefill from query params
-  form.value.brand = (route.query.brand as string) || ''
-  policy.value = (route.query.policy as string) || ''
 })
 
 function onFileChange(data: { file: UploadFileInfo; fileList: UploadFileInfo[] }) {
@@ -233,9 +265,9 @@ function onFileChange(data: { file: UploadFileInfo; fileList: UploadFileInfo[] }
   }
 }
 
-function handleRemove(uf: UploadFileInfo) {
-  const name = uf?.name
-  console.debug('[SubmitSongView] handleRemove', {name, status: uf?.status})
+function handleRemove({ file, fileList, index }: { file: Required<UploadFileInfo>; fileList: Required<UploadFileInfo>[]; index: number }) {
+  const name = file?.name
+  console.debug('[SubmitSongView] handleRemove', { name, status: file?.status, index, listSize: fileList?.length })
   if (name) {
     uploadedFileNames.value = uploadedFileNames.value.filter(n => n !== name)
     originalUploadedFileNames.value = originalUploadedFileNames.value.filter(n => n !== name)
@@ -273,61 +305,6 @@ function resetProgressState() {
   }
 }
 
-function connectPublicSSE(brand: string, uploadId: string, originalFileName: string) {
-  const root = apiServer.replace(/\/api\/?$/, '')
-  const url = `${root}/radio/${encodeURIComponent(brand)}/submissions/files/${uploadId}/stream`
-  console.debug('[SubmitSongView] connectPublicSSE', {url, brand, uploadId, originalFileName})
-  const es = connectSSEProgress(
-      globalProgressState.value,
-      url,
-      {
-        onDisplayProgress: (progress) => {
-          console.debug('[SubmitSongView] SSE progress', {progress})
-          if (fileList.value[0]) {
-            fileList.value = [{...fileList.value[0], percentage: progress, status: 'uploading'}]
-          }
-        },
-        onFinished: ({fileName, fileId}) => {
-          console.debug('[SubmitSongView] SSE finished', {fileName, fileId})
-          const correctFileName = fileName || originalFileName
-          // Store server-finalized filename(s) like in SoundFragmentForm
-          if (correctFileName && !originalUploadedFileNames.value.includes(correctFileName)) {
-            originalUploadedFileNames.value.push(correctFileName)
-          }
-          if (correctFileName && !uploadedFileNames.value.includes(correctFileName)) {
-            uploadedFileNames.value.push(correctFileName)
-          }
-          if (fileList.value[0]) {
-            fileList.value[0] = {
-              ...fileList.value[0],
-              name: correctFileName,
-              percentage: 100,
-              status: 'finished',
-              id: fileId || fileList.value[0].id
-            }
-          }
-          globalProgressState.value.currentProgress = 100
-          resetProgressState()
-        },
-        onError: () => {
-          console.warn('[SubmitSongView] SSE error, using fallback finish if sim active')
-          const current = fileList.value[0]
-          if (globalProgressState.value.isSimulationActive && current) {
-            setTimeout(() => {
-              if (fileList.value[0] && ((fileList.value[0].percentage ?? 0) < 100)) {
-                fileList.value[0] = {...fileList.value[0], percentage: 100, status: 'finished'}
-                globalProgressState.value.currentProgress = 100
-                resetProgressState()
-              }
-            }, 2000)
-          }
-        }
-      }
-  )
-  globalProgressState.value.eventSource = es
-  return es
-}
-
 async function handleUploadPublic({file, onError}: UploadCustomRequestOptions) {
   try {
     resetProgressState()
@@ -352,7 +329,55 @@ async function handleUploadPublic({file, onError}: UploadCustomRequestOptions) {
     console.debug('[SubmitSongView] uploadFile POST', {urlBrand: brand, entityId, uploadId})
     await submissionStore.uploadFile(file.file, brand, entityId, uploadId)
     console.debug('[SubmitSongView] uploadFile POST done')
-    connectPublicSSE(brand, uploadId, originalFileName)
+    const es = submissionStore.connectPublicSSE(
+        globalProgressState.value,
+        brand,
+        uploadId,
+        originalFileName,
+        {
+          onDisplayProgress: (progress) => {
+            console.debug('[SubmitSongView] SSE progress', {progress})
+            if (fileList.value[0]) {
+              fileList.value = [{...fileList.value[0], percentage: progress, status: 'uploading'}]
+            }
+          },
+          onFinished: ({fileName, fileId}) => {
+            console.debug('[SubmitSongView] SSE finished', {fileName, fileId})
+            const correctFileName = fileName || originalFileName
+            if (correctFileName && !originalUploadedFileNames.value.includes(correctFileName)) {
+              originalUploadedFileNames.value.push(correctFileName)
+            }
+            if (correctFileName && !uploadedFileNames.value.includes(correctFileName)) {
+              uploadedFileNames.value.push(correctFileName)
+            }
+            if (fileList.value[0]) {
+              fileList.value[0] = {
+                ...fileList.value[0],
+                name: correctFileName,
+                percentage: 100,
+                status: 'finished',
+                id: fileId || fileList.value[0].id
+              }
+            }
+            globalProgressState.value.currentProgress = 100
+            resetProgressState()
+          },
+          onError: () => {
+            console.warn('[SubmitSongView] SSE error, using fallback finish if sim active')
+            const current = fileList.value[0]
+            if (globalProgressState.value.isSimulationActive && current) {
+              setTimeout(() => {
+                if (fileList.value[0] && ((fileList.value[0].percentage ?? 0) < 100)) {
+                  fileList.value[0] = {...fileList.value[0], percentage: 100, status: 'finished'}
+                  globalProgressState.value.currentProgress = 100
+                  resetProgressState()
+                }
+              }, 2000)
+            }
+          }
+        }
+    )
+    globalProgressState.value.eventSource = es
   } catch (e: any) {
     resetProgressState()
     if (onError) onError()
@@ -438,16 +463,7 @@ const handleSubmit = async () => {
         ? originalUploadedFileNames.value
         : uploadedFileNames.value
 
-    const termsText = (() => {
-      const a = referencesStore.musicUploadAgreement
-      try {
-        const title = a?.title || 'Music Upload Agreement'
-        const clauses = Array.isArray(a?.clauses) ? a.clauses.join('\n') : ''
-        return `${title}\n\n${clauses}`.trim()
-      } catch {
-        return undefined
-      }
-    })()
+    const termsText = `${referencesStore.musicUploadAgreement.title}\n\n${referencesStore.musicUploadAgreement.clause}`
 
     const payload = {
       brand: form.value.brand,
