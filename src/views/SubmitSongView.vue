@@ -316,22 +316,23 @@ async function handleUploadPublic({file, onError}: UploadCustomRequestOptions) {
     const originalFileName = file.name
     console.debug('[SubmitSongView] startUploadSession', {brand, uploadId, startTime, originalFileName})
     const session = await submissionStore.startUploadSession(brand, uploadId, startTime)
-    globalProgressState.value.stopSimulation = uploadProgress(
-        globalProgressState.value,
-        session.estimatedDurationSeconds,
-        (progress) => {
-          console.debug('[SubmitSongView] sim progress', {progress})
-          if (fileList.value[0]) {
-            const current = fileList.value[0]
-            fileList.value = [{ ...current, percentage: progress, status: 'uploading' }]
-          }
-        },
-        () => {
-        }
-    )
+    // Disable simulation: rely on real upload transfer progress + backend SSE only
     if (!file.file) throw new Error('No file content to upload')
     console.debug('[SubmitSongView] uploadFile POST', {urlBrand: brand, entityId, uploadId})
-    await submissionStore.uploadFile(file.file, brand, entityId, uploadId)
+    await submissionStore.uploadFile(
+        file.file,
+        brand,
+        entityId,
+        uploadId,
+        (pct, loaded, total) => {
+          // Real file transfer progress (Phase 1)
+          const mb = (n: number) => (n / (1024 * 1024)).toFixed(1)
+          console.debug('[SubmitSongView] UPLOAD PROGRESS', `${pct}% (${mb(loaded)}MB / ${mb(total || 0)}MB)`)
+          if (fileList.value[0]) {
+            fileList.value = [{ ...fileList.value[0], percentage: pct, status: 'uploading' }]
+          }
+        }
+    )
     console.debug('[SubmitSongView] uploadFile POST done')
     const es = submissionStore.connectPublicSSE(
         globalProgressState.value,

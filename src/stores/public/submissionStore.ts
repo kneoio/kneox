@@ -71,7 +71,7 @@ export const useSubmissionStore = defineStore( 'submissionStore', () => {
     }
   }
 
-  async function uploadFile( file: File, brand: string, entityId: string, uploadId: string ): Promise<any> {
+  async function uploadFile( file: File, brand: string, entityId: string, uploadId: string, onUploadProgress?: (pct: number, loaded: number, total?: number) => void ): Promise<any> {
     const formData = new FormData()
     formData.append( 'file', file )
     const url = `${publicApiRoot}/radio/${encodeURIComponent( brand )}/submissions/files/${encodeURIComponent( entityId )}?uploadId=${uploadId}`
@@ -85,6 +85,14 @@ export const useSubmissionStore = defineStore( 'submissionStore', () => {
         timeout: 600000,
         maxContentLength: 200 * 1024 * 1024,
         maxBodyLength: 200 * 1024 * 1024,
+        onUploadProgress: (evt: ProgressEvent) => {
+          try {
+            const total = evt.total ?? file.size ?? 0
+            const loaded = evt.loaded ?? 0
+            const pct = total > 0 ? Math.min(99, Math.round((loaded / total) * 100)) : 0
+            if (onUploadProgress) onUploadProgress(pct, loaded, total)
+          } catch (_) { /* noop */ }
+        }
       } )
       console.debug( '[submissionStore.uploadFile] OK', res.status )
       return res.data
