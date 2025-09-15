@@ -78,7 +78,7 @@
 </template>
 
 <script setup lang="ts">
-import { NPageHeader, NCard, NButton, NSpace, NText } from 'naive-ui';
+import { NCard, NButton, NSpace, NText } from 'naive-ui';
 </script>
 
 <style scoped>

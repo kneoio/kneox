@@ -1,8 +1,7 @@
 import { defineStore } from 'pinia'
 import { unsecuredClient, publicApiRoot } from '../../api/apiClient'
 import { SubmissionPayload } from '../../types/kneoBroadcasterTypes'
-import { SSEProgress } from '../../utils/fileUpload'
-import type { ProgressState } from '../../utils/fileUpload'
+import {AxiosProgressEvent} from "axios";
 
 export const useSubmissionStore = defineStore( 'submissionStore', () => {
   async function sendCode( email: string ): Promise<void> {
@@ -15,24 +14,6 @@ export const useSubmissionStore = defineStore( 'submissionStore', () => {
       console.error( '[submissionStore.sendCode] FAIL', url, err?.response?.status, err?.response?.data || err?.message )
       throw err
     }
-  }
-
-  function connectPublicSSE(
-    state: ProgressState,
-    brand: string,
-    uploadId: string,
-    originalFileName: string,
-    callbacks: {
-      onDisplayProgress: ( progress: number ) => void,
-      onFinished: ( final: { fileName?: string; fileId?: string; metadata?: any } ) => void,
-      onError?: ( error?: any ) => void,
-      onRawData?: ( data: any ) => void,
-    }
-  ): EventSource {
-    const url = `${publicApiRoot}/radio/${encodeURIComponent( brand )}/submissions/files/${uploadId}/stream`
-    console.debug( '[submissionStore.connectPublicSSE]', { url, brand, uploadId, originalFileName } )
-    const es = SSEProgress( state, url, callbacks )
-    return es
   }
 
   async function submit( data: SubmissionPayload ): Promise<void> {
@@ -77,33 +58,42 @@ export const useSubmissionStore = defineStore( 'submissionStore', () => {
     }
   }
 
-  async function uploadFile( file: File, brand: string, entityId: string, uploadId: string, onUploadProgress?: (pct: number, loaded: number, total?: number) => void ): Promise<any> {
+  async function uploadFile(
+      file: File,
+      brand: string,
+      entityId: string,
+      uploadId: string,
+      onProgress: (progress: { percent: number }) => void
+  ): Promise<any> {
     const formData = new FormData()
-    formData.append( 'file', file )
-    const url = `${publicApiRoot}/radio/${encodeURIComponent( brand )}/submissions/files/${encodeURIComponent( entityId )}?uploadId=${uploadId}`
-    console.debug( '[submissionStore.uploadFile] POST', url, {
+    formData.append('file', file)
+    const url = `${publicApiRoot}/radio/${encodeURIComponent(brand)}/submissions/files/${encodeURIComponent(entityId)}?uploadId=${uploadId}`
+
+    console.debug('[submissionStore.uploadFile] POST', url, {
       name: file?.name,
       size: file?.size,
       type: file?.type
-    } )
+    })
+
     try {
-      const res = await unsecuredClient.post( url, formData, {
+      const res = await unsecuredClient.post(url, formData, {
         timeout: 600000,
         maxContentLength: 200 * 1024 * 1024,
         maxBodyLength: 200 * 1024 * 1024,
-        onUploadProgress: (evt: ProgressEvent) => {
+        onUploadProgress: (progressEvent: AxiosProgressEvent) => {
           try {
-            const total = evt.total ?? file.size ?? 0
-            const loaded = evt.loaded ?? 0
-            const pct = total > 0 ? Math.min(99, Math.round((loaded / total) * 100)) : 0
-            if (onUploadProgress) onUploadProgress(pct, loaded, total)
+            const total = progressEvent.total ?? file.size ?? 0
+            const loaded = progressEvent.loaded ?? 0
+            const percent = total > 0 ? Math.min(99, Math.round((loaded / total) * 100)) : 0
+            onProgress({ percent })
           } catch (_) { /* noop */ }
         }
-      } )
-      console.debug( '[submissionStore.uploadFile] OK', res.status )
+      })
+
+      console.debug('[submissionStore.uploadFile] OK', res.status)
       return res.data
-    } catch ( err: any ) {
-      console.error( '[submissionStore.uploadFile] FAIL', url, err?.response?.status, err?.response?.data || err?.message )
+    } catch (err: any) {
+      console.error('[submissionStore.uploadFile] FAIL', url, err?.response?.status, err?.response?.data || err?.message)
       throw err
     }
   }
@@ -113,6 +103,5 @@ export const useSubmissionStore = defineStore( 'submissionStore', () => {
     submit,
     startUploadSession,
     uploadFile,
-    connectPublicSSE,
   }
 } );

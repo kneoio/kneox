@@ -12,10 +12,6 @@ const SIMULATION_TARGET_PROGRESS = 70;
 const SIMULATION_UPDATE_INTERVAL_MS = 200;
 const SIMULATION_DURATION_MULTIPLIER = 2.5;
 
-/**
- * Start a frontend upload progress simulation up to 70%.
- * Returns a function to stop the simulation.
- */
 export function uploadProgress(
   state: ProgressState,
   estimatedDurationSeconds: number,
