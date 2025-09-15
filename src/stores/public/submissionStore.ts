@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { unsecuredClient, publicApiRoot } from '../../api/apiClient'
 import { SubmissionPayload } from '../../types/kneoBroadcasterTypes'
-import { connectSSEProgress } from '../../utils/fileUpload'
+import { SSEProgress } from '../../utils/fileUpload'
 import type { ProgressState } from '../../utils/fileUpload'
 
 export const useSubmissionStore = defineStore( 'submissionStore', () => {
@@ -31,7 +31,7 @@ export const useSubmissionStore = defineStore( 'submissionStore', () => {
   ): EventSource {
     const url = `${publicApiRoot}/radio/${encodeURIComponent( brand )}/submissions/files/${uploadId}/stream`
     console.debug( '[submissionStore.connectPublicSSE]', { url, brand, uploadId, originalFileName } )
-    const es = connectSSEProgress( state, url, callbacks )
+    const es = SSEProgress( state, url, callbacks )
     return es
   }
 
@@ -60,9 +60,15 @@ export const useSubmissionStore = defineStore( 'submissionStore', () => {
 
   async function startUploadSession( brand: string, uploadId: string, startTime: number ): Promise<{ estimatedDurationSeconds: number }> {
     const url = `${publicApiRoot}/radio/${encodeURIComponent( brand )}/submissions/files/start?uploadId=${uploadId}&startTime=${startTime}`
-    console.debug( '[submissionStore.startUploadSession] POST', url )
+    console.debug( '[submissionStore.startUploadSession] GET', url )
     try {
-      const res = await unsecuredClient.post( url )
+      const res = await unsecuredClient.get( url, {
+        headers: {
+          'Cache-Control': 'no-store',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      } )
       console.debug( '[submissionStore.startUploadSession] OK', res.status, res.data )
       return res.data
     } catch ( err: any ) {

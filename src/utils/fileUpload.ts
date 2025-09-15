@@ -122,3 +122,62 @@ export function connectSSEProgress(
 
   return es;
 }
+
+
+export function SSEProgress(
+  state: ProgressState,
+  sseUrl: string,
+  callbacks: {
+    onDisplayProgress: (progress: number) => void,
+    onFinished: (final: { fileName?: string; fileId?: string; metadata?: any }) => void,
+    onError?: (error?: any) => void,
+    onRawData?: (data: any) => void,
+  }
+): EventSource {
+  const es = new EventSource(sseUrl);
+
+  es.onmessage = (evt) => {
+    try {
+      const data = JSON.parse(evt.data);
+      callbacks.onRawData?.(data);
+
+      if (!state.hasSSEStarted) {
+        state.hasSSEStarted = true;
+        if ((state.currentProgress || 0) < 70) {
+          state.currentProgress = 70;
+          callbacks.onDisplayProgress(70);
+        }
+      }
+
+      if (data.status === 'error') {
+        es.close();
+        callbacks.onError?.(data.errorMessage || data);
+        return;
+      }
+
+      const serverProgress = data.percentage || 0;
+      const displayProgress = 70 + serverProgress * 0.3;
+      state.currentProgress = displayProgress;
+      callbacks.onDisplayProgress(displayProgress);
+
+      if (data.status === 'finished') {
+        state.currentProgress = 100;
+        callbacks.onDisplayProgress(100);
+        es.close();
+        callbacks.onFinished({
+          fileName: data.metadata?.fileName,
+          fileId: data.fileId || data.id,
+          metadata: data.metadata,
+        });
+      }
+    } catch {
+    }
+  };
+
+  es.onerror = (error) => {
+    es.close();
+    callbacks.onError?.(error);
+  };
+
+  return es;
+}
