@@ -71,16 +71,21 @@
               </n-form-item>
               <!-- Progress bar removed by request -->
               <n-collapse style="margin-top: 8px;">
-                <n-collapse-item :title="referencesStore.musicUploadAgreement.title" name="agreement">
-                  <div style="font-size: 13px; line-height: 1.6; white-space: pre-wrap;">
-                    {{ referencesStore.musicUploadAgreement.clause }}
+                <n-collapse-item name="agreement">
+                  <template #header>
+                    <strong>{{ referencesStore.musicUploadAgreement.title }}</strong>
+                  </template>
+                  <div
+                    style="border: 1px solid #d9d9d9; border-radius: 6px; padding: 12px;"
+                  >
+                    <div v-html="agreementHtml" style="font-size: 13px; line-height: 1.6;" />
                   </div>
                 </n-collapse-item>
               </n-collapse>
               <n-form-item label-width="0" style="margin-top: 8px;">
                 <div style="display: flex; flex-direction: column; gap: 4px;">
-                  <n-checkbox v-model:checked="form.agree">
-                    I agree to these terms (expand above to read the full agreement) and confirm my right to upload this
+                  <n-checkbox v-model:checked="form.agree" :style="agreeHighlightStyle">
+                    I agree with the Music Upload Agreement (expand above to read the full agreement) and confirm my right to upload this
                     music
                   </n-checkbox>
                   <n-checkbox v-model:checked="form.isShareable">
@@ -138,6 +143,7 @@ import type { UploadFileInfo, UploadCustomRequestOptions } from 'naive-ui'
 import { useSubmissionStore } from '../stores/public/submissionStore'
 import { useReferencesStore } from '../stores/kneo/referencesStore'
 import { uploadProgress } from '../utils/fileUpload'
+import MarkdownIt from 'markdown-it'
 
 const formRef = ref<FormInst | null>( null )
 const submissionStore = useSubmissionStore()
@@ -168,6 +174,8 @@ const message = ref( '' )
 const messageType = ref<'success' | 'error' | 'warning' | 'info'>( 'success' )
 
 const referencesStore = useReferencesStore()
+const md = new MarkdownIt({ breaks: true })
+const agreementHtml = computed(() => md.render(referencesStore.musicUploadAgreement.clause || ''))
 const route = useRoute()
 const policy = ref<string>( '' )
 const currentUploadId = ref<string | null>( null )
@@ -205,6 +213,16 @@ const localThemeOverrides = computed( () => {
     }
     : {}
 } )
+const agreeHighlightStyle = computed(() => {
+  if (form.value.agree) return {} as Record<string, string>
+  const isDark = providedIsDark && providedIsDark.value
+  return {
+    border: '1px solid #f5222d',
+    padding: '6px 8px',
+    borderRadius: '6px',
+    backgroundColor: isDark ? '#2b1a1a' : '#fff1f0'
+  } as Record<string, string>
+})
 const policyText = computed( () => {
   if ( policy.value === 'REVIEW_REQUIRED' ) {
     return 'Your song will be reviewed by the station owner and published if it meets the station policy.'
