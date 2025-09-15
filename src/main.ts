@@ -5,6 +5,7 @@ import router, { setupRouterGuard } from "./router";
 import IconWrapper from "./components/helpers/IconWrapper.vue";
 import { createPinia } from 'pinia';
 import { setupApiClient } from "./api/apiClient";
+import './assets/fonts/fonts.css'
 
 interface UserProfile {
     id?: string;

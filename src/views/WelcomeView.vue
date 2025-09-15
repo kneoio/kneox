@@ -81,7 +81,7 @@
                 </h3>
                 <p :style="{ color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">{{ station.description }}</p>
                 <div v-if="station.submissionPolicy !== 'NOT_ALLOWED'" style="margin-top: 8px;">
-                  <router-link :to="{ name: 'SubmitSong', query: { brand: station.slugName, policy: station.submissionPolicy } }">
+                  <router-link :to="{ name: 'SubmitSong', query: { brand: station.slugName } }">
                     <n-button size="small" secondary>Submit your song</n-button>
                   </router-link>
                 </div>

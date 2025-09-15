@@ -11,16 +11,26 @@
         <n-form :model="form" ref="formRef" label-placement="top">
           <n-grid cols="24" x-gap="16" y-gap="8">
             <n-grid-item :span="24">
-              <n-form-item label="Radio Station">
-                <n-input v-model:value="form.brand" placeholder="" disabled />
+              <n-form-item label-width="0" :style="{ borderLeft: stationColor ? ('4px solid ' + stationColor) : '', paddingLeft: stationColor ? '8px' : '', borderRadius: '4px', marginBottom: '8px' }">
+                <div style="display: flex; align-items: center; gap: 12px; width: 100%; min-width: 0;">
+                  <n-ellipsis style="max-width: 32%; min-width: 120px;">
+                    <n-h2 style="margin: 0; font-size: 1.25rem; font-weight: 700; line-height: 1.2;">{{ form.brand }}</n-h2>
+                  </n-ellipsis>
+                  <n-divider vertical />
+                  <div v-if="stationAvailableSongs !== null" style="display:flex; flex-direction: column; line-height: 1.1; align-items: center;">
+                    <n-text depth="3">songs</n-text>
+                    <n-text depth="3" :style="`margin-top: 10px; text-align: center; font-family: Goldman, sans-serif; color: ${stationColorCss || 'inherit'} !important;`">{{ stationAvailableSongs }}</n-text>
+                  </div>
+                  <n-divider v-if="stationDescription" vertical />
+                  <n-ellipsis v-if="stationDescription" :line-clamp="2" style="max-width: 58%;">
+                    <n-text depth="3" style="font-size: 12px;">{{ stationDescription }}</n-text>
+                  </n-ellipsis>
+                </div>
               </n-form-item>
-              <n-alert v-show="policyText" type="info" :bordered="false" style="margin-top: -4px; margin-bottom: 8px;">
-                {{ policyText }}
-              </n-alert>
             </n-grid-item>
             <n-grid-item :span="12">
               <n-form-item label="Artist">
-                <n-input v-model:value="form.artist" placeholder="" />
+                <n-input ref="artistInputRef" v-model:value="form.artist" placeholder="" />
               </n-form-item>
             </n-grid-item>
             <n-grid-item :span="12">
@@ -69,7 +79,17 @@
                   <n-button>Choose File</n-button>
                 </n-upload>
               </n-form-item>
-              <!-- Progress bar removed by request -->
+              <n-collapse v-if="policyText" style="margin-top: 8px;">
+                <n-collapse-item name="submission-policy">
+                  <template #header>
+                    <strong>Submission Policy</strong>
+                  </template>
+                  <div style="border: 1px solid #d9d9d9; border-radius: 6px; padding: 12px; font-size: 13px; line-height: 1.6;">
+                    {{ policyText }}
+                  </div>
+                </n-collapse-item>
+              </n-collapse>
+
               <n-collapse style="margin-top: 8px;">
                 <n-collapse-item name="agreement">
                   <template #header>
@@ -119,7 +139,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, inject } from 'vue'
+import { ref, onMounted, computed, inject, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import {
   NCard,
@@ -135,6 +155,10 @@ import {
   NCollapse,
   NCollapseItem,
   NCheckbox,
+  NH2,
+  NDivider,
+  NEllipsis,
+  NText,
   useMessage
 } from 'naive-ui'
 import { NConfigProvider } from 'naive-ui'
@@ -142,7 +166,6 @@ import type { FormInst } from 'naive-ui'
 import type { UploadFileInfo, UploadCustomRequestOptions } from 'naive-ui'
 import { useSubmissionStore } from '../stores/public/submissionStore'
 import { useReferencesStore } from '../stores/kneo/referencesStore'
-import { uploadProgress } from '../utils/fileUpload'
 import MarkdownIt from 'markdown-it'
 
 const formRef = ref<FormInst | null>( null )
@@ -175,23 +198,38 @@ const messageType = ref<'success' | 'error' | 'warning' | 'info'>( 'success' )
 
 const referencesStore = useReferencesStore()
 const md = new MarkdownIt({ breaks: true })
+//TODO do we need markdown ?
 const agreementHtml = computed(() => md.render(referencesStore.musicUploadAgreement.clause || ''))
 const route = useRoute()
 const policy = ref<string>( '' )
 const currentUploadId = ref<string | null>( null )
-// Inherit theme state from App.vue
+const stationColor = ref<string>('')
+const artistInputRef = ref<any|null>(null)
+const stationAvailableSongs = ref<number|null>(null)
+const stationDescription = ref<string>('')
+const stationColorCss = computed(() => {
+  const c = stationColor.value || ''
+  const m = /^#([0-9a-fA-F]{8})$/.exec(c)
+  if (m) {
+    const hex = m[1]
+    const r = parseInt(hex.slice(0,2), 16)
+    const g = parseInt(hex.slice(2,4), 16)
+    const b = parseInt(hex.slice(4,6), 16)
+    const a = parseInt(hex.slice(6,8), 16) / 255
+    return `rgba(${r}, ${g}, ${b}, ${a})`
+  }
+  return c
+})
 const providedIsDark = inject( 'isDarkTheme', ref( false ) ) as unknown as { value: boolean }
 const localThemeOverrides = computed( () => {
   return providedIsDark && providedIsDark.value
     ? {
       common: {
-        // Make card slightly darker than input so inputs are visible at rest
         cardColor: '#242424',
         modalColor: '#242424',
         popoverColor: '#242424',
         inputColor: '#2a2a2a',
         inputColorDisabled: '#2a2a2a',
-        // Slightly lighter border for contrast on dark backgrounds
         borderColor: '#4a4a4a'
       },
       Input: {
@@ -217,7 +255,7 @@ const agreeHighlightStyle = computed(() => {
   if (form.value.agree) return {} as Record<string, string>
   const isDark = providedIsDark && providedIsDark.value
   return {
-    border: '1px solid #f5222d',
+    border: '1px solidrgb(230, 59, 67)',
     padding: '6px 8px',
     borderRadius: '6px',
     backgroundColor: isDark ? '#2b1a1a' : '#fff1f0'
@@ -234,9 +272,28 @@ const policyText = computed( () => {
 } )
 
 onMounted( async () => {
-  // Prefill from query params immediately to avoid UI blink
-  form.value.brand = ( route.query.brand as string ) || ''
-  policy.value = ( route.query.policy as string ) || ''
+  try {
+    const routeBrand = (route.query.brand as string) || ''
+    if (routeBrand) {
+      const station = await submissionStore.getStation(routeBrand)
+      form.value.brand = station?.name || routeBrand
+      policy.value = station?.submissionPolicy || ''
+      stationColor.value = station?.color || ''
+      stationAvailableSongs.value = (station as any)?.availableSongs ?? null
+      stationDescription.value = (station as any)?.description || ''
+      try { await nextTick(); artistInputRef.value?.focus?.() } catch (_) { /* noop */ }
+    } else {
+      try { await nextTick(); artistInputRef.value?.focus?.() } catch (_) { /* noop */ }
+    }
+  } catch (_) {
+    // ignore station fetch errors, keep fallbacks
+    form.value.brand = ( route.query.brand as string ) || ''
+    policy.value = ''
+    stationColor.value = ''
+    stationAvailableSongs.value = null
+    stationDescription.value = ''
+    try { await nextTick(); artistInputRef.value?.focus?.() } catch (_) { /* noop */ }
+  }
   try {
     await referencesStore.fetchGenres()
   } catch ( e ) {
@@ -245,7 +302,6 @@ onMounted( async () => {
 } )
 
 function onFileChange( data: { file: UploadFileInfo; fileList: UploadFileInfo[] } ) {
-  // Keep local fileList in sync
   fileList.value = data.fileList
   const f = data?.file?.file ?? null
   file.value = f
@@ -256,11 +312,9 @@ function onFileChange( data: { file: UploadFileInfo; fileList: UploadFileInfo[] 
     fileStatus: data?.file?.status,
     listSize: data?.fileList?.length
   } )
-  // Reconcile tracked arrays to current file list
   const currentFileNames = ( data.fileList || [] ).map( f => f.name )
   uploadedFileNames.value = uploadedFileNames.value.filter( name => currentFileNames.includes( name ) )
   originalUploadedFileNames.value = originalUploadedFileNames.value.filter( name => currentFileNames.includes( name ) )
-  // If no file left, clear
   if ( !f && currentFileNames.length === 0 ) {
     uploadedFileNames.value = []
     originalUploadedFileNames.value = []
@@ -288,7 +342,6 @@ const globalProgressState = ref( {
   eventSource: null as EventSource | null
 } )
 
-// Uploading state for UI (alert + button disable)
 const isUploading = computed( () => {
   const f = fileList.value[0]
   return !!f && ( f.status === 'uploading' || globalProgressState.value.isSimulationActive || globalProgressState.value.hasSSEStarted )
@@ -317,8 +370,7 @@ async function handleUploadPublic( { file, onError }: UploadCustomRequestOptions
     const startTime = Date.now()
     const originalFileName = file.name
     console.debug( '[SubmitSongView] startUploadSession', { brand, uploadId, startTime, originalFileName } )
-    const session = await submissionStore.startUploadSession( brand, uploadId, startTime )
-    // Disable simulation: rely on real upload transfer progress + backend SSE only
+    //const session = await submissionStore.startUploadSession( brand, uploadId, startTime )
     if ( !file.file ) throw new Error( 'No file content to upload' )
     console.debug( '[SubmitSongView] uploadFile POST', { urlBrand: brand, entityId, uploadId } )
     await submissionStore.uploadFile(
@@ -327,7 +379,6 @@ async function handleUploadPublic( { file, onError }: UploadCustomRequestOptions
       entityId,
       uploadId,
       ( pct, loaded, total ) => {
-        // Real file transfer progress (Phase 1)
         const mb = ( n: number ) => ( n / ( 1024 * 1024 ) ).toFixed( 1 )
         console.debug( '[SubmitSongView] UPLOAD PROGRESS', `${pct}% (${mb( loaded )}MB / ${mb( total || 0 )}MB)` )
         if ( fileList.value[0] ) {

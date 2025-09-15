@@ -5,6 +5,26 @@ import { SSEProgress } from '../../utils/fileUpload'
 import type { ProgressState } from '../../utils/fileUpload'
 
 export const useSubmissionStore = defineStore( 'submissionStore', () => {
+  type Station = {
+    name: string
+    slugName: string
+    managedBy?: string
+    djName?: string
+    djPreferredLang?: string
+    djStatus?: string
+    currentStatus?: string
+    countryCode?: string
+    color?: string
+    description?: string
+    availableSongs?: number
+    submissionPolicy?: string
+    animation?: {
+      enabled: boolean
+      type: string
+      speed: number
+    }
+  }
+
   async function sendCode( email: string ): Promise<void> {
     const url = `/messaging/send-code/${encodeURIComponent( email )}`
     console.debug( '[submissionStore.sendCode] POST', url )
@@ -13,6 +33,19 @@ export const useSubmissionStore = defineStore( 'submissionStore', () => {
       console.debug( '[submissionStore.sendCode] OK', res.status )
     } catch ( err: any ) {
       console.error( '[submissionStore.sendCode] FAIL', url, err?.response?.status, err?.response?.data || err?.message )
+      throw err
+    }
+  }
+
+  async function getStation( brand: string ): Promise<Station> {
+    const url = `${publicApiRoot}/radio/all-stations/${encodeURIComponent(brand)}`
+    console.debug( '[submissionStore.getStation] GET', url )
+    try {
+      const res = await unsecuredClient.get( url )
+      console.debug( '[submissionStore.getStation] OK', res.status )
+      return res.data as Station
+    } catch ( err: any ) {
+      console.error( '[submissionStore.getStation] FAIL', url, err?.response?.status, err?.response?.data || err?.message )
       throw err
     }
   }
@@ -114,5 +147,6 @@ export const useSubmissionStore = defineStore( 'submissionStore', () => {
     startUploadSession,
     uploadFile,
     connectPublicSSE,
+    getStation,
   }
 } );
