@@ -4,6 +4,27 @@ import { SubmissionPayload } from '../../types/kneoBroadcasterTypes'
 import {AxiosProgressEvent} from "axios";
 
 export const useSubmissionStore = defineStore( 'submissionStore', () => {
+
+  type Station = {
+    name: string
+    slugName: string
+    managedBy?: string
+    djName?: string
+    djPreferredLang?: string
+    djStatus?: string
+    currentStatus?: string
+    countryCode?: string
+    color?: string
+    description?: string
+    availableSongs?: number
+    submissionPolicy?: string
+    animation?: {
+      enabled: boolean
+      type: string
+      speed: number
+    }
+  }
+
   async function sendCode( email: string ): Promise<void> {
     const url = `/messaging/send-code/${encodeURIComponent( email )}`
     console.debug( '[submissionStore.sendCode] POST', url )
@@ -16,8 +37,21 @@ export const useSubmissionStore = defineStore( 'submissionStore', () => {
     }
   }
 
-  async function submit( data: SubmissionPayload ): Promise<void> {
-    const url = `${publicApiRoot}/radio/${encodeURIComponent( data.brand )}/submissions`
+  async function getStation( brand: string ): Promise<Station> {
+    const url = `${publicApiRoot}/radio/all-stations/${encodeURIComponent(brand)}`
+    console.debug( '[submissionStore.getStation] GET', url )
+    try {
+      const res = await unsecuredClient.get( url )
+      console.debug( '[submissionStore.getStation] OK', res.status )
+      return res.data as Station
+    } catch ( err: any ) {
+      console.error( '[submissionStore.getStation] FAIL', url, err?.response?.status, err?.response?.data || err?.message )
+      throw err
+    }
+  }
+
+  async function submit(slug: string, data: SubmissionPayload ): Promise<void> {
+    const url = `${publicApiRoot}/radio/${encodeURIComponent(slug)}/submissions`
     console.debug( '[submissionStore.submit] POST', url, {
       brand: data.brand,
       artist: data.artist,
@@ -103,5 +137,6 @@ export const useSubmissionStore = defineStore( 'submissionStore', () => {
     submit,
     startUploadSession,
     uploadFile,
+    getStation
   }
 } );
