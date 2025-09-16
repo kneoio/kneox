@@ -3,6 +3,7 @@ import { unsecuredClient, publicApiRoot } from '../../api/apiClient'
 import { SubmissionPayload } from '../../types/kneoBroadcasterTypes'
 import { SSEProgress } from '../../utils/fileUpload'
 import type { ProgressState } from '../../utils/fileUpload'
+import type { AxiosProgressEvent } from 'axios'
 
 export const useSubmissionStore = defineStore( 'submissionStore', () => {
   type Station = {
@@ -124,7 +125,7 @@ export const useSubmissionStore = defineStore( 'submissionStore', () => {
         timeout: 600000,
         maxContentLength: 200 * 1024 * 1024,
         maxBodyLength: 200 * 1024 * 1024,
-        onUploadProgress: (evt: ProgressEvent) => {
+        onUploadProgress: (evt: AxiosProgressEvent) => {
           try {
             const total = evt.total ?? file.size ?? 0
             const loaded = evt.loaded ?? 0

@@ -367,9 +367,7 @@ async function handleUploadPublic( { file, onError }: UploadCustomRequestOptions
     const entityId = 'temp'
     const uploadId = crypto.randomUUID()
     currentUploadId.value = uploadId
-    const startTime = Date.now()
     const originalFileName = file.name
-    console.debug( '[SubmitSongView] startUploadSession', { brand, uploadId, startTime, originalFileName } )
     //const session = await submissionStore.startUploadSession( brand, uploadId, startTime )
     if ( !file.file ) throw new Error( 'No file content to upload' )
     console.debug( '[SubmitSongView] uploadFile POST', { urlBrand: brand, entityId, uploadId } )

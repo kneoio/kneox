@@ -33,8 +33,8 @@ keycloak.init({
             const profile = await keycloak.loadUserProfile();
             const roles = keycloak.tokenParsed?.realm_access?.roles || [];
             userData.profile = { ...profile, roles };
-            console.log('User profile loaded', profile);
-            console.log('User roles:', roles);
+            //console.log('User profile loaded', profile);
+            //console.log('User roles:', roles);
             setupApiClient(keycloak.idToken);
 
             setInterval(async () => {
