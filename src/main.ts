@@ -5,6 +5,7 @@ import router, { setupRouterGuard } from "./router";
 import IconWrapper from "./components/helpers/IconWrapper.vue";
 import { createPinia } from 'pinia';
 import { setupApiClient } from "./api/apiClient";
+import './assets/fonts/fonts.css'
 
 interface UserProfile {
     id?: string;
@@ -32,8 +33,8 @@ keycloak.init({
             const profile = await keycloak.loadUserProfile();
             const roles = keycloak.tokenParsed?.realm_access?.roles || [];
             userData.profile = { ...profile, roles };
-            console.log('User profile loaded', profile);
-            console.log('User roles:', roles);
+            //console.log('User profile loaded', profile);
+            //console.log('User roles:', roles);
             setupApiClient(keycloak.idToken);
 
             setInterval(async () => {
