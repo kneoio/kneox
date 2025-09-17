@@ -24,7 +24,7 @@
             @click="showTriggerEventModal = true"
             size="large"
         >
-          Trigger Event
+          Create Memory
         </n-button>
       </n-button-group>
     </n-gi>
@@ -50,7 +50,7 @@
     </n-gi>
   </n-grid>
 
-  <n-modal v-model:show="showTriggerEventModal" preset="dialog" title="Trigger Event">
+  <n-modal v-model:show="showTriggerEventModal" preset="dialog" title="Create Memory">
     <n-form ref="formRef" :model="eventForm" :rules="eventRules">
       <n-form-item path="brand" label="Brand">
         <n-select 
@@ -87,7 +87,7 @@
     <template #action>
       <n-button @click="showTriggerEventModal = false">Cancel</n-button>
       <n-button type="primary" @click="handleTriggerEvent" :loading="triggerEventLoading">
-        Trigger Event
+        Create Memory
       </n-button>
     </template>
   </n-modal>
@@ -143,11 +143,11 @@ export default defineComponent({
     
     const memoryTypeOptions = [
       { label: 'EVENT', value: 'EVENT' },
-      { label: 'INSTANT_MESSAGE', value: 'INSTANT_MESSAGE' }
+      { label: 'MESSAGE', value: 'MESSAGE' }
     ];
     
     const showTriggerEventModal = ref(false);
-    const triggerEventLoading = ref(false);
+    const creatingMemoryLoading = ref(false);
     const formRef = ref();
     const eventForm = ref({
       brand: '',
@@ -161,7 +161,7 @@ export default defineComponent({
     ]);
     
     const updateContentForMemoryType = (memoryType: string) => {
-      if (memoryType === 'INSTANT_MESSAGE') {
+      if (memoryType === 'MESSAGE') {
         eventForm.value.content = '{\n  "from": "ana",\n  "content": "hello everyone"\n}';
       } else if (memoryType === 'EVENT') {
         eventForm.value.content = '{\n  "type": "weather"\n}';
@@ -277,7 +277,7 @@ export default defineComponent({
       }
       
       try {
-        triggerEventLoading.value = true;
+        creatingMemoryLoading.value = true;
         let content;
         try {
           content = JSON.parse(eventForm.value.content);
@@ -285,7 +285,7 @@ export default defineComponent({
           content = eventForm.value.content;
         }
         
-        await store.triggerEvent(eventForm.value.brand, content, eventForm.value.memoryType);
+        await store.createMemory(eventForm.value.brand, content, eventForm.value.memoryType);
         message.success('Event triggered successfully');
         showTriggerEventModal.value = false;
         eventForm.value.brand = '';
@@ -293,9 +293,9 @@ export default defineComponent({
         updateContentForMemoryType('EVENT');
         await store.fetchAll(store.getPagination.page, store.getPagination.pageSize);
       } catch (error) {
-        message.error('Failed to trigger event');
+        message.error('Failed to create memory');
       } finally {
-        triggerEventLoading.value = false;
+        creatingMemoryLoading.value = false;
       }
     };
 
@@ -334,7 +334,7 @@ export default defineComponent({
             let tagType: 'success' | 'warning' | 'info' | 'default' = 'default';
             if (row.memoryType === 'LISTENERS') tagType = 'success';
             if (row.memoryType === 'AUDIENCE_CONTEXT') tagType = 'warning';
-            if (row.memoryType === 'INSTANT_MESSAGE') tagType = 'warning';
+            if (row.memoryType === 'MESSAGE') tagType = 'warning';
             if (row.memoryType === 'EVENT') tagType = 'success';
             return h(NTag, { type: tagType, bordered: false }, { default: () => row.memoryType });
           }
@@ -393,7 +393,7 @@ export default defineComponent({
       checkedRowKeys,
       hasSelection,
       showTriggerEventModal,
-      triggerEventLoading,
+      triggerEventLoading: creatingMemoryLoading,
       eventForm,
       eventRules,
       brandOptions,

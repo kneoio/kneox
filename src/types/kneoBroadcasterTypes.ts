@@ -92,6 +92,7 @@ export interface SoundFragment {
     genres: string[];
     album?: string;
     url: string;
+    description: string;
     actionUrl: string;
     defaultBrandId: string;
     representedInBrands: string[];
@@ -104,6 +105,7 @@ export interface SoundFragmentSave {
     artist?: string;
     genres: string[];
     album?: string;
+    description: string;
     representedInBrands: string[];
     newlyUploaded: string[];
     tempFileIds?: string[];

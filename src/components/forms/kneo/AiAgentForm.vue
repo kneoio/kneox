@@ -450,7 +450,7 @@ export default defineComponent({
       options.forEach((opt: { value: string }) => {
         const key = opt.value;
         // Keep these empty on bulk refill
-        if (key === 'history' || key === 'events' || key === 'instant_message') {
+        if (key === 'history' || key === 'events' || key === 'messages') {
           const existing = byName.get(key);
           if (existing) existing.value = '';
           return;

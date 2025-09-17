@@ -201,7 +201,7 @@ export const useReferencesStore = defineStore('references', () => {
     { label: 'listeners', value: 'listeners' },
     { label: 'context', value: 'context' },
     { label: 'history', value: 'history' },
-    { label: 'instant_message', value: 'instant_message' },
+    { label: 'messages', value: 'messages' },
     { label: 'events', value: 'events' },
     { label: 'genres', value: 'genres' }
   ]);
@@ -213,7 +213,7 @@ export const useReferencesStore = defineStore('references', () => {
     artist: ['M83', 'Daft Punk', 'The Weeknd', 'Dua Lipa', 'Coldplay'],
     // Structured list of listeners for prompt testing
     listeners: [
-      '[{"name":"NunoZimas","nickname":"","location":"Latvia"},{"name":"Nelson","nickname":"","location":"Portugal"}]',
+      '[{"name":"Marko","nickname":"","location":"Latvia"},{"name":"Nelson","nickname":"","location":"Portugal"}]',
       '[{"name":"Anna","nickname":"Ann","location":"Germany"},{"name":"Kenji","nickname":"","location":"Japan"}]'
     ],
     // Structured context object
@@ -226,7 +226,7 @@ export const useReferencesStore = defineStore('references', () => {
       '[{"title":"Get Lucky","artist":"Daft Punk"},{"title":"Blinding Lights","artist":"The Weeknd"},{"title":"Levitating","artist":"Dua Lipa"}]',
       '[{"title":"Yellow","artist":"Coldplay"},{"title":"Starboy","artist":"The Weeknd"}]'
     ],
-    instant_message: [
+    messages: [
       'Shoutout to Anna from Berlin! Can you play something from Dua Lipa?',
       'Loving the vibe! Greetings from Lisbon!',
       'Request: Any classic Daft Punk track please.'

@@ -98,7 +98,7 @@ export const useMemoryStore = defineStore('memoryStore', () => {
     }
 
     async function triggerEvent(brand: string, content: any, memoryType: string) {
-        const response = await apiClient.post('/memories/events', {
+        const response = await apiClient.post('/memories', {
             brand,
             content,
             memoryType
@@ -127,7 +127,7 @@ export const useMemoryStore = defineStore('memoryStore', () => {
         deleteMemory,
         fetchAccessList,
         initListenersMemory,
-        triggerEvent,
+        createMemory: triggerEvent,
         save: saveMemory
     };
 });
