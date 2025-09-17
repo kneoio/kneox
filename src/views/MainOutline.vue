@@ -382,9 +382,7 @@ export default defineComponent({
     });
 
     const handleMenuSelect = async (key: string) => {
-      if (isMobile.value) {
-        isDrawerOpen.value = false;
-      }
+      const shouldCloseDrawer = isMobile.value;
 
       if (key.startsWith('station-') && key.endsWith('-dashboard')) {
         const brandName = key.replace('station-', '').replace('-dashboard', '');
@@ -422,6 +420,9 @@ export default defineComponent({
       }
 
       await nextTick();
+      if (shouldCloseDrawer) {
+        isDrawerOpen.value = false;
+      }
       viewTitle.value = route.name?.toString() || '';
     };
 

@@ -98,7 +98,7 @@ export const useMemoryStore = defineStore('memoryStore', () => {
     }
 
     async function triggerEvent(brand: string, content: any, memoryType: string) {
-        const response = await apiClient.post('/memories', {
+        const response = await apiClient.post('/memories/', {
             brand,
             content,
             memoryType
@@ -107,7 +107,7 @@ export const useMemoryStore = defineStore('memoryStore', () => {
     };
 
     async function saveMemory(data: any, id?: string) {
-        const response = await apiClient.post(`/memories/${id || ''}`, data);
+        const response = await apiClient.post(`/memories/${id || ''}/`, data);
         if (response?.data?.payload) {
             apiFormResponse.value = response.data.payload;
         }

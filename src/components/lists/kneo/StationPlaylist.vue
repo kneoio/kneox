@@ -30,27 +30,17 @@
           :data="getAvailableSoundFragments"
           :loading="loading"
           :remote="true"
-          :pagination="false"
+          :pagination="getAvailablePagination"
           :row-props="getRowProps"
-          :checked-row-keys="checkedRowKeys"
-          @update:checked-row-keys="handleCheckedRowKeysChange"
+          :bordered="false"
+          v-model:checked-row-keys="checkedRowKeys"
+          @update:page="handlePageChange"
+          @update:page-size="handlePageSizeChange"
       >
         <template #loading>
           <loader-icon />
         </template>
       </n-data-table>
-
-      <n-pagination
-          v-if="getAvailablePagination && getAvailablePagination.itemCount > 0"
-          class="mt-4 justify-end"
-          :page="getAvailablePagination.page"
-          :page-size="getAvailablePagination.pageSize"
-          :item-count="getAvailablePagination.itemCount"
-          :page-sizes="getAvailablePagination.pageSizes"
-          show-size-picker
-          @update:page="handlePageChange"
-          @update:page-size="handlePageSizeChange"
-      />
     </n-gi>
   </n-grid>
 </template>

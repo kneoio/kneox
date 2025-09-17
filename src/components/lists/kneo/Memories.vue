@@ -151,7 +151,7 @@ export default defineComponent({
     const formRef = ref();
     const eventForm = ref({
       brand: '',
-      content: '{\n  "type": "weather"\n}',
+      content: '[\n  {\n    "type": "birthday",\n    "timestamp": "2024-09-17T10:00:00Z",\n    "description": "Congratulate Mark with her birthday",\n    "priority": "high"\n  }\n] ',
       memoryType: 'EVENT'
     });
     
@@ -162,9 +162,9 @@ export default defineComponent({
     
     const updateContentForMemoryType = (memoryType: string) => {
       if (memoryType === 'MESSAGE') {
-        eventForm.value.content = '{\n  "from": "ana",\n  "content": "hello everyone"\n}';
+        eventForm.value.content = '[\n  {\n    "from": "John",\n    "content": "Congratulate Mark with her birthday"\n  }\n]';
       } else if (memoryType === 'EVENT') {
-        eventForm.value.content = '{\n  "type": "weather"\n}';
+        eventForm.value.content = '[\n  {\n    "type": "birthday",\n    "timestamp": "2024-09-17T10:00:00Z",\n    "description": "Congratulate Mark with her birthday",\n    "priority": "high"\n  }\n]';
       }
     };
     
@@ -278,13 +278,25 @@ export default defineComponent({
       
       try {
         creatingMemoryLoading.value = true;
-        let content;
+        let content: any = null;
         try {
           content = JSON.parse(eventForm.value.content);
         } catch {
-          content = eventForm.value.content;
+          // If user typed plain text, wrap into a minimal object
+          const text = String(eventForm.value.content || '').trim();
+          content = text ? [{ content: text }] : [];
         }
-        
+        // Ensure array payload as required by API
+        if (!Array.isArray(content)) {
+          if (typeof content === 'string') {
+            content = [{ content }];
+          } else if (content && typeof content === 'object') {
+            content = [content];
+          } else {
+            content = [];
+          }
+        }
+
         await store.createMemory(eventForm.value.brand, content, eventForm.value.memoryType);
         message.success('Event triggered successfully');
         showTriggerEventModal.value = false;
@@ -343,7 +355,16 @@ export default defineComponent({
           title: 'Content',
           key: 'content',
           render: (row: Memory) => {
-            return h(NCode, { code: JSON.stringify(row.content).substring(0, 100) + '...', language: 'json' });
+            let str = '';
+            try {
+              if (row && typeof row.content !== 'undefined' && row.content !== null) {
+                str = typeof row.content === 'string' ? row.content : JSON.stringify(row.content);
+              }
+            } catch (e) {
+              str = '';
+            }
+            const shown = str.length > 100 ? str.substring(0, 100) + '...' : str;
+            return h(NCode, { code: shown });
           }
         },
         {

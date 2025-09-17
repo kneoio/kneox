@@ -4,6 +4,7 @@
       <n-config-provider
           :theme="currentTheme"
           :theme-overrides="currentThemeOverrides"
+          :hljs="hljs"
           :style="{ backgroundColor: currentBackgroundColor, minHeight: '100vh' }"
           class="theme-provider"
       >
@@ -19,6 +20,7 @@ import GdprBanner from './components/common/GdprBanner.vue'
 import {NConfigProvider, NLoadingBarProvider, NMessageProvider, darkTheme} from 'naive-ui'
 import {ref, computed, onMounted, provide} from 'vue'
 import {useRoute} from 'vue-router'
+import hljs from 'highlight.js/lib/core'
 
 const route = useRoute()
 const isDarkTheme = ref(false)
