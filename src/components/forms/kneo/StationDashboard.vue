@@ -31,6 +31,9 @@
               Stop Station
             </n-button>
           </n-button-group>
+          <n-button type="primary" tertiary style="margin-left: 8px;" @click="showBroadcastModal = true">
+            Broadcast message
+          </n-button>
           <n-space size="large" style="margin-left: 30px;">
             <a :href="mixplaUrl" target="_blank" rel="noopener noreferrer" class="mixpla-link">
               {{ mixplaUrl }}
@@ -199,11 +202,30 @@
       </n-space>
     </n-card>
   </n-space>
+
+  <n-modal v-model:show="showBroadcastModal" preset="dialog" title="Broadcast message">
+    <n-form :model="broadcastForm" ref="broadcastFormRef">
+      <n-form-item label="From" path="from">
+        <n-input v-model:value="broadcastForm.from" placeholder="e.g. John" />
+      </n-form-item>
+      <n-form-item label="Message" path="content">
+        <n-input v-model:value="broadcastForm.content" type="textarea" :autosize="{ minRows: 2, maxRows: 4 }" placeholder="Your message to listeners" />
+      </n-form-item>
+      <n-text depth="3" style="display:block; margin-top: 4px;">
+        Note: Your message will be processed by the DJ if the radio station supports it.
+      </n-text>
+    </n-form>
+    <template #action>
+      <n-button @click="showBroadcastModal = false">Cancel</n-button>
+      <n-button type="primary" :loading="creatingBroadcast" @click="handleBroadcast">Send</n-button>
+    </template>
+  </n-modal>
 </template>
 
 <script lang="ts">
 import { computed, defineComponent, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useDashboardStore } from '../../../stores/kneo/dashboardStore';
+import { useMemoryStore } from '../../../stores/kneo/memoryStore';
 import {
   NButton,
   NCard,
@@ -217,7 +239,11 @@ import {
   NTimeline,
   NTimelineItem,
   useMessage,
-  NButtonGroup
+  NButtonGroup,
+  NModal,
+  NForm,
+  NFormItem,
+  NInput
 } from 'naive-ui';
 import { ExternalLink, PlayerPlay, PlayerStop, Activity } from '@vicons/tabler';
 import { MIXPLA_PLAYER_URL } from '../../../constants/config';
@@ -228,7 +254,7 @@ export default defineComponent( {
   name: 'StationDashboard',
   components: {
     NButton, NCard, NIcon, NTag, NStatistic, NProgress, NSpace, NH2, NText,
-    NTimeline, NTimelineItem, NButtonGroup,
+    NTimeline, NTimelineItem, NButtonGroup, NModal, NForm, NFormItem, NInput,
     PlayerPlay, PlayerStop, ExternalLink, Activity
   },
   props: {
@@ -239,6 +265,7 @@ export default defineComponent( {
   },
   setup( props: { brandName: string } ) {
     const dashboardStore = useDashboardStore();
+    const memoryStore = useMemoryStore();
     const message = useMessage();
     const isStartingStation = ref( false );
     const isStoppingStation = ref( false );
@@ -607,6 +634,31 @@ export default defineComponent( {
 
     const isDestroyed = ref( false );
 
+    const showBroadcastModal = ref(false);
+    const creatingBroadcast = ref(false);
+    const broadcastFormRef = ref();
+    const broadcastForm = ref({ from: '', content: '' });
+
+    const handleBroadcast = async () => {
+      const from = (broadcastForm.value.from || '').trim();
+      const content = (broadcastForm.value.content || '').trim();
+      if (!from || !content) {
+        message.error('Enter both From and Message');
+        return;
+      }
+      try {
+        creatingBroadcast.value = true;
+        await memoryStore.createMemory(props.brandName, [{ from, content }], 'MESSAGE');
+        message.success('Broadcast sent');
+        showBroadcastModal.value = false;
+        broadcastForm.value = { from: '', content: '' };
+      } catch (e) {
+        message.error('Failed to send broadcast');
+      } finally {
+        creatingBroadcast.value = false;
+      }
+    };
+
     onMounted(() => {
       console.log('StationDetail mounted for brand:', props.brandName);
       dashboardStore.startStationPolling(props.brandName);
@@ -670,6 +722,11 @@ export default defineComponent( {
       formatStatus,
       formatTaskType,
       getTaskDuration,
+      showBroadcastModal,
+      broadcastForm,
+      broadcastFormRef,
+      creatingBroadcast,
+      handleBroadcast,
     };
   },
 } );

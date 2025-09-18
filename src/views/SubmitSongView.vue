@@ -86,6 +86,12 @@
                   <n-button>Choose File</n-button>
                 </n-upload>
               </n-form-item>
+              <n-alert v-if="uploadStatus && uploadStatus.type === 'success'" type="success" closable @close="uploadStatus = null">
+                {{ uploadStatus.message }}
+              </n-alert>
+              <n-alert v-if="uploadStatus && uploadStatus.type === 'error'" type="error" closable @close="uploadStatus = null">
+                {{ uploadStatus.message }}
+              </n-alert>
 
               <n-collapse v-if="policyText" style="margin-top: 8px;">
                 <n-collapse-item name="submission-policy">
@@ -111,26 +117,30 @@
                 </n-collapse-item>
               </n-collapse>
 
-              <n-form-item label-width="0" style="margin-top: 8px;">
-                <div style="display: flex; flex-direction: column; gap: 4px;">
+              <n-form-item label-width="0" style="margin-top: 4px; margin-bottom: 0;" >
+                <div style="display: flex; flex-direction: column; gap: 2px;">
                   <n-checkbox v-model:checked="form.agree" :style="agreeHighlightStyle">
                     I agree with the Music Upload Agreement (expand above to read the full agreement) and confirm my right to upload this
                     music
                   </n-checkbox>
-                  <n-checkbox v-model:checked="form.isShareable">
+                  <n-checkbox v-model:checked="form.isShareable" style="padding: 6px 8px;">
                     I agree that Mixpla can share this song with other radio stations
                   </n-checkbox>
-                  <n-checkbox v-model:checked="form.sendMessage">
+                  <!--<n-checkbox v-model:checked="form.sendMessage">
                     Send a message to your audience (AI DJ may use it as an intro and may mention or translate it on
                     air)
-                  </n-checkbox>
+                  </n-checkbox>-->
                 </div>
               </n-form-item>
-
-              <n-form-item label="Message to audience (used as DJ intro; may be mentioned or translated on air)"
-                           v-if="form.sendMessage">
-                <n-input v-model:value="form.attachedMessage" type="textarea" :autosize="{ minRows: 2, maxRows: 3 }"
-                         placeholder="" />
+              <n-form-item label-width="0" v-if="form.sendMessage" style="margin-top: 0;"  :show-feedback="false">
+                <div style="width: 100%;">
+                  <n-form-item label="From">
+                    <n-input v-model:value="form.messageFrom" placeholder="" :show-feedback="false" />
+                  </n-form-item>
+                  <n-form-item label="Message">
+                    <n-input v-model:value="form.attachedMessage" type="textarea" :autosize="{ minRows: 2, maxRows: 3 }" placeholder="" />
+                  </n-form-item>
+                </div>
               </n-form-item>
             </n-grid-item>
           </n-grid>
@@ -199,6 +209,7 @@ const form = ref({
   confirmationCode: '',
   isShareable: false,
   sendMessage: false,
+  messageFrom: '',
   attachedMessage: ''
 })
 
@@ -266,13 +277,13 @@ const localThemeOverrides = computed(() => {
 })
 
 const agreeHighlightStyle = computed(() => {
-  if (form.value.agree) return {} as Record<string, string>
-  const isDark = providedIsDark && providedIsDark.value
+  const isDark = providedIsDark && (providedIsDark as any).value
+  const isOk = !!form.value.agree
   return {
-    border: '1px solidrgb(230, 59, 67)',
+    border: isOk ? '1px solid transparent' : '1px solid rgb(230, 59, 67)',
     padding: '6px 8px',
     borderRadius: '6px',
-    backgroundColor: isDark ? '#2b1a1a' : '#fff1f0'
+    backgroundColor: isOk ? 'transparent' : (isDark ? '#2b1a1a' : '#fff1f0')
   } as Record<string, string>
 })
 
@@ -381,7 +392,7 @@ async function handleUploadPublic({
 
     console.debug('[Upload] Starting', { brand, uploadId, originalFileName });
 
-    await submissionStore.uploadFile(
+    const res = await submissionStore.uploadFile(
         file.file as File,
         brand,
         'temp',
@@ -394,7 +405,7 @@ async function handleUploadPublic({
     console.debug('[Upload] File upload complete');
     uploadedFileName.value = originalFileName;
     onFinish();
-    uploadStatus.value = { type: 'success', message: 'File uploaded' };
+    uploadStatus.value = { type: 'success', message: String(res?.message) };
 
   } catch (e: any) {
     console.error('[Upload] Error', e);
@@ -454,6 +465,9 @@ async function handleSubmit() {
       isShareable: form.value.isShareable,
       shareable: form.value.isShareable,
       agreementVersion: referencesStore.musicUploadAgreement.version,
+      messageFrom: form.value.sendMessage && form.value.messageFrom?.trim()
+          ? form.value.messageFrom.trim()
+          : "",
       attachedMessage: form.value.sendMessage && form.value.attachedMessage?.trim()
           ? form.value.attachedMessage.trim()
           : ""
@@ -490,6 +504,7 @@ function reset() {
     confirmationCode: '',
     isShareable: false,
     sendMessage: false,
+    messageFrom: '',
     attachedMessage: ''
   }
   fileList.value = []
