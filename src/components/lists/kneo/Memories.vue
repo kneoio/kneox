@@ -12,19 +12,19 @@
     <n-gi :span="isMobile ? 1 : 6" class="flex items-center">
       <n-button-group class="mr-4">
         <n-button
+            type="primary"
+            @click="showTriggerEventModal = true"
+            size="large"
+        >
+          Create Memory
+        </n-button>
+        <n-button
             type="error"
             :disabled="!hasSelection"
             @click="handleDelete"
             size="large"
         >
           Delete ({{ checkedRowKeys.length }})
-        </n-button>
-        <n-button
-            type="primary"
-            @click="showTriggerEventModal = true"
-            size="large"
-        >
-          Create Memory
         </n-button>
       </n-button-group>
     </n-gi>
