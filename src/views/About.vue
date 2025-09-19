@@ -5,7 +5,7 @@
         <div>
           <div style="margin-bottom: 32px;">
             <router-link to="/" class="inline-block">
-              <n-button quaternary size="small">← Back</n-button>
+              <n-button >← Back</n-button>
             </router-link>
           </div>
         </div>

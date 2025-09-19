@@ -7,7 +7,7 @@
         </span>
         <div class="gdpr-actions">
           <a class="learn-more" href="/about" :style="{ color: isDark ? '#e0e0e0 !important' : '#333 !important' }">Learn more</a>
-          <n-button type="primary" size="small" @click="accept">Accept</n-button>
+          <n-button type="primary" @click="accept">Accept</n-button>
         </div>
       </div>
     </div>

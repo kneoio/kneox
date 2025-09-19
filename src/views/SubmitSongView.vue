@@ -3,7 +3,7 @@
       style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 15px; flex-direction: column;">
     <div style="width: 100%; max-width: 720px; margin: 0 auto 16px;">
       <router-link to="/" class="inline-block">
-        <n-button quaternary size="small">← Back</n-button>
+        <n-button >← Back</n-button>
       </router-link>
     </div>
     <n-config-provider :theme-overrides="localThemeOverrides">

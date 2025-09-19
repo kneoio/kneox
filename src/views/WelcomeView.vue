@@ -35,11 +35,11 @@
             <div style="width: 192px; height: 192px;">
               <img src="/pwa-512x512.png" alt="Mixpla Logo" style="width: 100%; height: 100%; object-fit: contain;">
             </div>
-            <router-link to="/outline/radiostations" style="display: inline-block; max-width: 360px; width: 100%;">
-              <n-tag type="info" size="large" style="width: 100%; display: inline-flex; align-items: center; justify-content: center; column-gap: 8px;">
-                Launch Your Radio
+            <router-link to="/outline/radiostations" style="display: inline-block; max-width: 360px; width: 100%; text-decoration: none;">
+              <n-button size="large" style="width: 100%; display: inline-flex; align-items: center; justify-content: center; column-gap: 8px;">
+                <span>Manage Radiostations</span>
                 <n-icon><ArrowRight /></n-icon>
-              </n-tag>
+              </n-button>
             </router-link>
             <a href="https://discord.com/channels/1395012925512613998/1395012926154346538" target="_blank" rel="noopener noreferrer" :style="{ fontSize: '0.875rem', display: 'block', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">
               Join our Discord community
@@ -61,31 +61,44 @@
               <div v-else-if="error" :style="{ color: isDarkTheme ? '#ff7371' : '#ef4444' }">
                 Error loading stations. Please try again later.
               </div>
-              <a v-else v-for="station in stationsData" 
+              <div v-else v-for="station in stationsData" 
                  :key="station.name" 
-                 :href="`${mixplaBaseUrl}?radio=${encodeURIComponent(station.name.toLowerCase())}`" 
-                 target="_blank" 
-                 rel="noopener noreferrer" 
                  :style="{ display: 'block', paddingTop: '8px', position: 'relative', paddingLeft: '20px', textDecoration: 'none', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">
                  <div 
                   style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; border-radius: 9999px;"
                   :style="{ backgroundColor: station.color }"
                  ></div>
-                <h3 :style="{ fontSize: '1.25rem', fontWeight: 700, display: 'flex', alignItems: 'center', columnGap: '8px', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">
-                  <n-space align="center" size="small">
-                    <span>{{ station.name }}</span>
-                    <n-tag size="small" :type="(['ON_LINE','WARMING_UP'].includes(station.currentStatus as string)) ? 'success' : 'default'">
+                <h3 :style="{ fontSize: '1.25rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">
+                  <span style="display:flex; align-items:center; gap:8px;">
+                    <a
+                      :href="`${mixplaBaseUrl}?radio=${encodeURIComponent(station.name.toLowerCase())}`"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style="text-decoration: none; color: inherit;"
+                    >
+                      <span>{{ station.name }}</span>
+                    </a>
+                    <span
+                      class="status-text"
+                      :class="{ 'status-online': ['ON_LINE','WARMING_UP'].includes(station.currentStatus as any) }"
+                      :style="(['ON_LINE','WARMING_UP'].includes(station.currentStatus as any))
+                        ? 'color: #84cc16 !important; text-shadow: 0 0 10px rgba(132, 204, 22, 1), 0 0 18px rgba(132, 204, 22, 0.6); font-weight: 400 !important;'
+                        : 'font-weight: 400;'"
+                    >
                       {{ getStatusText(station.currentStatus) }}
-                    </n-tag>
-                  </n-space>
+                    </span>
+                  </span>
+                  <router-link
+                    v-if="station.submissionPolicy !== 'NOT_ALLOWED'"
+                    :to="{ name: 'SubmitSong', query: { brand: station.slugName } }"
+                    style="display: inline-flex; text-decoration: none;"
+                  >
+                    <n-button >Submit your song</n-button>
+                  </router-link>
                 </h3>
                 <p :style="{ color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">{{ station.description }}</p>
-                <div v-if="station.submissionPolicy !== 'NOT_ALLOWED'" style="margin-top: 8px;">
-                  <router-link :to="{ name: 'SubmitSong', query: { brand: station.slugName } }">
-                    <n-button size="small" secondary>Submit your song</n-button>
-                  </router-link>
-                </div>
-              </a>
+                
+              </div>
             </div>
           </div>
         </n-grid-item>
@@ -97,7 +110,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, inject, type Ref } from 'vue';
-import { NIcon, NSkeleton, NTag, NButton, NSpace, NSwitch, NConfigProvider, NGrid, NGridItem, NAlert, darkTheme } from 'naive-ui';
+import { NIcon, NSkeleton, NButton, NSwitch, NConfigProvider, NGrid, NGridItem, NAlert, darkTheme } from 'naive-ui';
 import { ArrowRight, Sun, Moon } from '@vicons/tabler';
 import { useReferencesStore } from '../stores/kneo/referencesStore';
 import { MIXPLA_PLAYER_URL } from '../constants/config';
@@ -179,6 +192,38 @@ export default {
 </script>
 
 <style scoped>
+ .fancy-btn {
+  background: linear-gradient(135deg, #1f2937 0%, #334155 55%, #475569 110%) !important; /* muted slate gradient */
+  color: #f5f5f5 !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+  font-weight: 400 !important;
+  letter-spacing: 0.2px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+ }
+
+ .fancy-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.02);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.22);
+ }
+
+ .fancy-btn:active {
+  transform: translateY(0);
+  filter: brightness(0.98);
+ }
+
+ .status-text {
+  font-size: 12px;
+  opacity: 0.85;
+ }
+
+ .status-online {
+  color: #16a34a !important; /* green-600 */
+  text-shadow: 0 0 8px rgba(34, 197, 94, 0.8);
+ }
+
 /* Make all text in Welcome follow the local theme, even under App.vue's global provider */
 .welcome-dark :deep(.welcome-root),
 .welcome-dark :deep(.welcome-root *:not(.n-tag):not(.n-tag *):not(.n-button):not(.n-button *):not(.n-upload *):not(.n-upload-file-list *)) {
