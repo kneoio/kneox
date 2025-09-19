@@ -19,7 +19,13 @@
                   <n-divider vertical />
                   <div v-if="stationAvailableSongs !== null" style="display:flex; flex-direction: column; line-height: 1.1; align-items: center;">
                     <n-text depth="3">songs</n-text>
-                    <n-text depth="3" :style="`margin-top: 10px; text-align: center; font-family: Goldman, sans-serif; color: ${stationColorCss || 'inherit'} !important;`">{{ stationAvailableSongs }}</n-text>
+                    <n-text
+                      depth="3"
+                      :class="flashSongs ? 'flash-pulse' : ''"
+                      :style="`margin-top: 10px; text-align: center; font-family: Goldman, sans-serif; color: ${stationColorCss || 'inherit'} !important;`"
+                    >
+                      {{ stationAvailableSongs }}
+                    </n-text>
                   </div>
                   <n-divider v-if="stationDescription" vertical />
                   <n-ellipsis v-if="stationDescription" :line-clamp="2" style="max-width: 58%;">
@@ -163,7 +169,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, inject, nextTick, onMounted, ref} from 'vue'
+import {computed, inject, nextTick, onMounted, ref, watch} from 'vue'
 import {useRoute} from 'vue-router'
 import type {FormInst, UploadCustomRequestOptions, UploadFileInfo} from 'naive-ui'
 import {
@@ -287,6 +293,8 @@ const agreeHighlightStyle = computed(() => {
   } as Record<string, string>
 })
 
+const flashSongs = ref(false)
+
 const policyText = computed( () => {
   if ( policy.value === 'REVIEW_REQUIRED' ) {
     return 'Your song will be reviewed by the station owner and published if it meets the station policy.'
@@ -353,6 +361,26 @@ onMounted(async () => {
     console.error('Failed to fetch genres', e)
   }
 } )
+
+watch(() => stationAvailableSongs.value, async (newVal, oldVal) => {
+  if (newVal != null && oldVal != null && newVal !== oldVal) {
+    flashSongs.value = false
+    await nextTick()
+    flashSongs.value = true
+    setTimeout(() => { flashSongs.value = false }, 600)
+  }
+})
+
+async function refreshStationAvailableSongs() {
+  try {
+    if (stationSlug) {
+      const station = await submissionStore.getStation(stationSlug)
+      stationAvailableSongs.value = (station as any)?.availableSongs ?? stationAvailableSongs.value
+    }
+  } catch (_) {
+    // ignore
+  }
+}
 
 function onFileChange(data: { file: UploadFileInfo; fileList: UploadFileInfo[] }) {
   console.debug('[onFileChange]', {
@@ -479,6 +507,7 @@ async function handleSubmit() {
 
     nMessage.success('Thanks! Your song was submitted.')
     reset()
+    await refreshStationAvailableSongs()
 
   } catch (e: any) {
     console.error('[Submit] Error', e)
@@ -535,3 +564,27 @@ async function sendCode() {
   }
 }
 </script>
+
+<style scoped>
+.flash-pulse {
+  animation: pulseFlash 0.6s ease;
+}
+
+@keyframes pulseFlash {
+  0% {
+    transform: scale(1);
+    text-shadow: 0 0 0px currentColor;
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.06);
+    text-shadow: 0 0 12px currentColor;
+    filter: brightness(1.15);
+  }
+  100% {
+    transform: scale(1);
+    text-shadow: 0 0 0px currentColor;
+    filter: brightness(1);
+  }
+}
+</style>
