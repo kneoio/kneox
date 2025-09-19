@@ -167,6 +167,9 @@ const isLoading = ref(true);
 const error = ref<Error | null>(null);
 let refreshInterval: NodeJS.Timeout | null = null;
 
+// Track initial load to avoid flicker on interval refreshes
+const hasLoaded = ref(false);
+
 const referencesStore = useReferencesStore();
 
 const mixplaBaseUrl = computed(() => {
@@ -180,14 +183,20 @@ const openPlayer = (station: Station) => {
 
 const fetchStations = async () => {
   try {
-    isLoading.value = true;
+    if (!hasLoaded.value) {
+      isLoading.value = true;
+    }
     const data = await referencesStore.fetchRadioStations();
     stationsData.value = data;
+    error.value = null;
   } catch (err) {
     console.error('Failed to fetch stations:', err);
     error.value = err instanceof Error ? err : new Error('Failed to load stations');
   } finally {
-    isLoading.value = false;
+    if (!hasLoaded.value) {
+      isLoading.value = false;
+      hasLoaded.value = true;
+    }
   }
 };
 
