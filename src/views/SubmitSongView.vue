@@ -24,7 +24,7 @@
                       :class="flashSongs ? 'flash-pulse' : ''"
                       :style="`margin-top: 10px; text-align: center; font-family: Goldman, sans-serif; color: ${stationColorCss || 'inherit'} !important;`"
                     >
-                      <n-number-animation :from="0" :to="stationAvailableSongs" />
+                      <n-number-animation :from="0" :to="stationAvailableSongs" @finish="onSongsAnimationFinish" />
                     </n-text>
                   </div>
                   <n-divider v-if="stationDescription" vertical />
@@ -153,8 +153,8 @@
 
           <div style="display:flex; gap: 12px; justify-content: flex-end; margin-top: 8px;">
             <n-button tertiary @click="reset" :disabled="submitting">Reset</n-button>
-            <n-button type="primary" @click="handleSubmit" :disabled="submitting || isUploading">
-              Submit your song
+            <n-button type="primary" @click="handleSubmit" :disabled="submitting || isUploading" :loading="submitting">
+              Submit
             </n-button>
           </div>
 
@@ -368,9 +368,12 @@ watch(() => stationAvailableSongs.value, async (newVal, oldVal) => {
     flashSongs.value = false
     await nextTick()
     flashSongs.value = true
-    setTimeout(() => { flashSongs.value = false }, 600)
   }
 })
+
+function onSongsAnimationFinish() {
+  flashSongs.value = false
+}
 
 async function refreshStationAvailableSongs() {
   try {
@@ -434,6 +437,7 @@ async function handleUploadPublic({
     console.debug('[Upload] File upload complete');
     uploadedFileName.value = originalFileName;
     onFinish();
+    applyMetadataFromUpload(res)
     uploadStatus.value = { type: 'success', message: String(res?.message) };
 
   } catch (e: any) {
@@ -443,6 +447,38 @@ async function handleUploadPublic({
     onError();
     nMessage.error(errorMessage);
   }
+}
+
+function applyMetadataFromUpload(res: any) {
+  try {
+    const md = res?.metadata || null
+    if (!md) return
+
+    if (!form.value.title && md.title) {
+      form.value.title = String(md.title)
+    }
+    if (!form.value.artist && md.artist) {
+      form.value.artist = String(md.artist)
+    }
+    if (!form.value.album && md.album) {
+      form.value.album = String(md.album)
+    }
+
+    const incomingGenre = md.genre
+    if (Array.isArray(form.value.genres) && (!form.value.genres.length) && incomingGenre) {
+      const opts = referencesStore.genreOptions || []
+      const match = opts.find((o: any) => {
+        const val = (o?.value ?? '').toString()
+        const label = (o?.label ?? '').toString()
+        const g = incomingGenre.toString()
+        return val.localeCompare(g, undefined, { sensitivity: 'accent' }) === 0 ||
+               label.localeCompare(g, undefined, { sensitivity: 'accent' }) === 0
+      })
+      if (match && match.value) {
+        form.value.genres = [match.value]
+      }
+    }
+  } catch (_) { /* noop */ }
 }
 
 function validateForm(): string | null {
@@ -568,7 +604,7 @@ async function sendCode() {
 
 <style scoped>
 .flash-pulse {
-  animation: pulseFlash 0.6s ease;
+  animation: pulseFlash 1.2s ease infinite;
 }
 
 @keyframes pulseFlash {

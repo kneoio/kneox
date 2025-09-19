@@ -88,13 +88,24 @@
                       {{ getStatusText(station.currentStatus) }}
                     </span>
                   </span>
-                  <router-link
+                  <span
                     v-if="station.submissionPolicy !== 'NOT_ALLOWED'"
-                    :to="{ name: 'SubmitSong', query: { brand: station.slugName } }"
-                    style="display: inline-flex; text-decoration: none;"
+                    style="display: inline-flex; align-items: center; gap: 6px;"
                   >
-                    <n-button >Submit your song</n-button>
-                  </router-link>
+                    <span
+                      class="accepting-gradient"
+                      :style="{ '--station-color': station.color }"
+                      style="font-size: 14px; white-space: nowrap; font-family: 'Goldman', sans-serif;"
+                    >
+                      Submissions open!
+                    </span>
+                    <router-link
+                      :to="{ name: 'SubmitSong', query: { brand: station.slugName } }"
+                      style="display: inline-flex; text-decoration: none;"
+                    >
+                      <n-button>Submit your song</n-button>
+                    </router-link>
+                  </span>
                 </h3>
                 <p :style="{ color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">{{ station.description }}</p>
                 
@@ -248,4 +259,24 @@ export default {
 .welcome-dark :deep(label) {
   color: #e0e0e0 !important;
 }
+
+ /* Animated gradient text for the acceptance note */
+ .accepting-gradient {
+  background: linear-gradient(45deg, var(--station-color), #ff6ec7, #39ff14, #00ffff, var(--station-color));
+  background-size: 300% 300%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: acceptGradientShift 6s ease-in-out infinite;
+ }
+
+ @keyframes acceptGradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+ }
+
+ @media (prefers-reduced-motion: reduce) {
+  .accepting-gradient { animation: none !important; }
+ }
 </style>
