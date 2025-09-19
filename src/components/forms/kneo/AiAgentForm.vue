@@ -104,7 +104,7 @@
                           basic
                           :style="{
                             width: '800px',
-                            height: '300px',
+                            height: '500px',
                             border: '1px solid #d9d9d9',
                             borderRadius: '3px',
                             overflow: 'auto'
