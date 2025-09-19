@@ -84,6 +84,8 @@
                       :style="(['ON_LINE','WARMING_UP'].includes(station.currentStatus as any))
                         ? 'color: #84cc16 !important; text-shadow: 0 0 10px rgba(132, 204, 22, 1), 0 0 18px rgba(132, 204, 22, 0.6); font-weight: 400 !important;'
                         : 'font-weight: 400;'"
+                      @click="openPlayer(station)"
+                      style="cursor: pointer;"
                     >
                       {{ getStatusText(station.currentStatus) }}
                     </span>
@@ -107,7 +109,13 @@
                     </router-link>
                   </span>
                 </h3>
-                <p :style="{ color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">{{ station.description }}</p>
+                <p
+                  :style="{ color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }"
+                  @click="openPlayer(station)"
+                  style="cursor: pointer;"
+                >
+                  {{ station.description }}
+                </p>
                 
               </div>
             </div>
@@ -164,6 +172,11 @@ const referencesStore = useReferencesStore();
 const mixplaBaseUrl = computed(() => {
   return MIXPLA_PLAYER_URL;
 });
+
+const openPlayer = (station: Station) => {
+  const url = `${mixplaBaseUrl.value}?radio=${encodeURIComponent(station.name.toLowerCase())}`;
+  window.open(url, '_blank', 'noopener,noreferrer');
+};
 
 const fetchStations = async () => {
   try {
