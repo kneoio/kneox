@@ -24,7 +24,7 @@
                       :class="flashSongs ? 'flash-pulse' : ''"
                       :style="`margin-top: 10px; text-align: center; font-family: Goldman, sans-serif; color: ${stationColorCss || 'inherit'} !important;`"
                     >
-                      {{ stationAvailableSongs }}
+                      <n-number-animation :from="0" :to="stationAvailableSongs" />
                     </n-text>
                   </div>
                   <n-divider v-if="stationDescription" vertical />
@@ -191,7 +191,8 @@ import {
   NDivider,
   NEllipsis,
   NText,
-  useMessage
+  useMessage,
+  NNumberAnimation
 } from 'naive-ui'
 import {useSubmissionStore} from '../stores/public/submissionStore'
 import {useReferencesStore} from '../stores/kneo/referencesStore'
