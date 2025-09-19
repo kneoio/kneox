@@ -23,7 +23,7 @@
       </n-alert>
       <!-- Centered intro section -->
       <div style="max-width: 768px; margin: 0 auto 40px; text-align: center;">
-        <h1 :style="{ fontSize: '2rem', fontWeight: 800, marginBottom: '12px', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">Every Story Needs to Stream</h1>
+        <h1 :style="{ fontFamily: 'Goldman, sans-serif', fontSize: '2rem', fontWeight: 800, marginBottom: '12px', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">Every Story Needs to Stream</h1>
         <p :style="{ fontSize: '1.125rem', color: isDarkTheme ? '#e0e0e0 !important' : '#333 !important' }">
           Build your radio station. Your AI DJ handles the beats while you craft the vibe. Because the best stories are told through music.
         </p>
