@@ -438,7 +438,15 @@ async function handleUploadPublic({
     uploadedFileName.value = originalFileName;
     onFinish();
     applyMetadataFromUpload(res)
-    uploadStatus.value = { type: 'success', message: String(res?.message) };
+    const md = (res as any)?.metadata || {}
+    const title = md?.title || ''
+    const artist = md?.artist || ''
+    const niceName = title || originalFileName
+    const composed = artist ? `${niceName} — ${artist}` : `${niceName}`
+    uploadStatus.value = {
+      type: 'success',
+      message: `Uploaded: ${composed}`
+    };
 
   } catch (e: any) {
     console.error('[Upload] Error', e);
