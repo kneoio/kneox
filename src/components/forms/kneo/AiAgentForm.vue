@@ -72,36 +72,32 @@
           <n-form label-placement="left" label-width="auto">
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
               <n-gi>
-                <n-button @click="showVariables = !showVariables" type="default" size="small" class="mb-3">
-                  {{ showVariables ? 'Hide' : 'Show' }} Available Variables
-                </n-button>
-                <n-collapse-transition :show="showVariables">
-                  <n-card size="small" style="margin-bottom: 16px; width: 90%;">
-                    <n-space vertical size="small">
-                      <div><strong>Variables:</strong></div>
-                      <n-space size="small" wrap>
-                        <n-tag v-for="opt in referencesStore.variableOptions" :key="opt.value" type="info" size="small">
-                          <strong>{{ opt.label }}</strong>
-                        </n-tag>
-                      </n-space>
-
-                      <div style="margin-top: 16px;"><strong>Voice Emotions & Effects:</strong></div>
-                      <div>You can suggest to use: <code>[sad]</code>,<code>[angry]</code>,<code>[curious]</code>,<code>[happily]</code>,<code>[whispers]</code>,<code>[shouts]</code>,<code>[laughs]</code>,<code>[clears throat]</code></div>
-                    </n-space>
-                  </n-card>
-                </n-collapse-transition>
+                <n-text depth="3" style="display: block; margin-bottom: 8px; width: 90%;">
+                  You can suggest to use: <code>[sad]</code>,<code>[angry]</code>,<code>[curious]</code>,<code>[happily]</code>,<code>[whispers]</code>,<code>[shouts]</code>,<code>[laughs]</code>,<code>[clears throat]</code>
+                </n-text>
               </n-gi>
+
               <n-gi>
                 <n-form-item label="Prompts">
-                  <n-dynamic-input v-model:value="localFormData.prompts" :on-create="createPromptItem"
+                  <n-dynamic-input v-model:value="promptItems" :on-create="createPromptItem"
                     style="width: 90%;">
                     <template #default="{ value, index }">
-                      <n-space vertical size="small">
+                      <n-space vertical size="small" :key="value.id">
                         <strong>{{ index + 1 }}</strong>
+                        <n-space size="small" wrap>
+                          <n-button
+                            v-for="opt in referencesStore.variableOptions"
+                            :key="opt.value"
+                            size="tiny"
+                            @click="insertVariable(index, opt.value)"
+                          >{{ opt.label }}</n-button>
+                        </n-space>
                         <CodeMirror
-                          :model-value="value"
-                          @update:model-value="(val) => localFormData.prompts[index] = val || ''"
+                          :key="value.id"
+                          :model-value="value.text"
+                          @update:model-value="(val) => updatePrompt(index, (typeof val === 'string' ? val : (val?.data ?? '')) )"
                           basic
+                          @ready="(payload: any) => onEditorReady(index, payload?.view)"
                           :style="{
                             width: '800px',
                             height: '500px',
@@ -181,7 +177,7 @@
                       size="small"
                       style="width: 180px;"
                     />
-                    <template v-for="(p, idx) in (localFormData.prompts || []).slice(0, 3)" :key="idx">
+                    <template v-for="(p, idx) in (promptItems || []).slice(0, 3)" :key="p.id">
                       <n-button size="small" @click="usePrompt(idx)">Get Prompt{{ idx + 1 }}</n-button>
                     </template>
                     <n-button @click="refillAllVariables">Refill all</n-button>
@@ -373,8 +369,6 @@ export default defineComponent({
       }))
     );
 
-
-
     const localFormData = reactive<AiAgentForm>({
       id: "",
       author: "",
@@ -395,6 +389,9 @@ export default defineComponent({
         gainIntro: 0
       }
     });
+
+    // Stable prompt items with IDs to prevent index-based reuse issues
+    const promptItems = ref<Array<{ id: string; text: string }>>([]);
 
     // Playground state
     const playgroundVars = ref<Array<{ name: string; value: string }>>([]);
@@ -419,29 +416,52 @@ export default defineComponent({
       description: ""
     });
 
-    const createPromptItem = () => "";
+    const createPromptItem = () => ({ id: crypto.randomUUID(), text: "" });
 
-    // Playground helpers
+    const updatePrompt = (index: number, text: string) => {
+      const item = promptItems.value[index];
+      if (item) item.text = text || '';
+    };
+
     const createVariableItem = () => ({ name: '', value: '' });
     const refillVariable = (index: number) => {
       const item = playgroundVars.value[index];
       if (!item || !item.name) return;
-      // @ts-ignore store internal field
       const samples: Record<string, string[]> = (referencesStore as any).variableSampleData || {};
       const arr = samples[item.name];
       if (!Array.isArray(arr) || arr.length === 0) return;
       item.value = arr[Math.floor(Math.random() * arr.length)];
     };
-    const usePrompt = (index: number) => {
-      if (!Array.isArray(localFormData.prompts)) return;
-      const p = localFormData.prompts[index];
-      if (typeof p === 'string') {
-        playgroundPrompt.value = p;
-      }
+
+    const editorViews = ref<Record<number, EditorView | null>>({});
+    const onEditorReady = (index: number, view?: EditorView) => {
+      if (view) editorViews.value[index] = view;
     };
+    const insertVariable = (index: number, variableName: string) => {
+      const view = editorViews.value[index];
+      if (!view) return;
+      const insertText = `{${variableName}}`;
+      const sel = view.state.selection.main;
+      const from = sel.from;
+      const to = sel.to;
+      view.dispatch({
+        changes: { from, to, insert: insertText },
+        selection: { anchor: from + insertText.length }
+      });
+      const newText = view.state.doc.toString();
+      if (Array.isArray(promptItems.value) && promptItems.value[index]) {
+        promptItems.value[index].text = newText;
+      }
+      view.focus();
+    };
+
+    const usePrompt = (index: number) => {
+      const item = promptItems.value[index];
+      if (item) playgroundPrompt.value = item.text || '';
+    };
+
     const refillAllVariables = () => {
       const options = referencesStore.variableOptions || [];
-      // @ts-ignore store internal field
       const samples: Record<string, string[]> = (referencesStore as any).variableSampleData || {};
       const byName = new Map<string, { name: string; value: string }>();
       playgroundVars.value.forEach((v) => {
@@ -449,7 +469,6 @@ export default defineComponent({
       });
       options.forEach((opt: { value: string }) => {
         const key = opt.value;
-        // Keep these empty on bulk refill
         if (key === 'history' || key === 'events' || key === 'messages') {
           const existing = byName.get(key);
           if (existing) existing.value = '';
@@ -466,6 +485,7 @@ export default defineComponent({
         }
       });
     };
+
     const sendPlaygroundRequest = async () => {
       try {
         playgroundLoading.value = true;
@@ -479,7 +499,6 @@ export default defineComponent({
           llmType: localFormData.llmType || undefined,
           variables
         });
-        // Prefer the new response schema: { actual_result, reasoning, ... }
         if (resp?.actual_result) {
           playgroundResult.value = String(resp.actual_result);
         } else if (typeof resp === 'string') {
@@ -531,7 +550,7 @@ export default defineComponent({
           name: localFormData.name || '',
           preferredLang: localFormData.preferredLang as LanguageCode,
           llmType: localFormData.llmType || '',
-          prompts: localFormData.prompts || [],
+          prompts: promptItems.value.map(p => p.text || ''),
           fillerPrompt: localFormData.fillerPrompt || [],
           enabledTools: localFormData.enabledTools || [],
           talkativity: localFormData.talkativity || 0.3,
@@ -619,6 +638,11 @@ export default defineComponent({
           }
 
           Object.assign(localFormData, agentData);
+          promptItems.value = (agentData.prompts || []).map((t: string) => ({ id: crypto.randomUUID(), text: t || '' }));
+        }
+        if (!id) {
+          // Ensure promptItems mirrors any initial localFormData.prompts (likely empty on new)
+          promptItems.value = (localFormData.prompts || []).map((t: string) => ({ id: crypto.randomUUID(), text: t || '' }));
         }
       } catch (error: any) {
         console.error("Failed to fetch data:", error);
@@ -647,7 +671,6 @@ export default defineComponent({
       createVoiceItem,
       createToolItem,
       createPromptItem,
-      // playground
       playgroundVars,
       playgroundPrompt,
       playgroundLoading,
@@ -667,8 +690,13 @@ export default defineComponent({
       activeTab,
       showVariables,
       aclData,
-      aclLoading
-      , showResultModal
+      aclLoading,
+      showResultModal,
+      onEditorReady,
+      insertVariable,
+      // prompts
+      promptItems,
+      updatePrompt
     };
   }
 });
