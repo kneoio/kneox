@@ -176,7 +176,7 @@ export default defineComponent( {
     ];
 
     const sourceOptions = [
-      { label: 'Users Upload', value: 'USERS_UPLOAD' },
+      { label: 'Users Upload', value: 'USER_UPLOAD' },
       { label: 'Recovered', value: 'RECOVERED_FROM_SPACES' },
       { label: 'Recovered', value: 'ORPHAN_RECOVERY' },
       { label: 'Generative prompt', value: 'SUNO_PROMPT' },
@@ -278,14 +278,21 @@ export default defineComponent( {
           fixed: 'left',
           width: 50
         },
-        { title: 'Title', key: 'title' },
-        { title: 'Artist', key: 'artist' },
-        { title: 'Source', key: 'source' }
+        { title: 'Title', key: 'title', width: 250 },
+        { title: 'Artist', key: 'artist', width: 250 },
+        { title: 'Source', key: 'source', width: 140 }
       ];
 
       if ( !isMobile.value ) {
-        baseColumns.push( { title: 'Type', key: 'type' } );
+        baseColumns.push( { title: 'Type', key: 'type', width: 120 } );
       }
+      // Always append Description as the last column
+      baseColumns.push({
+        title: 'Description',
+        key: 'description',
+        ellipsis: { tooltip: true },
+        minWidth: 200
+      });
       return baseColumns;
     } );
 

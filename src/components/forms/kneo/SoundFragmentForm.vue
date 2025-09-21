@@ -213,7 +213,7 @@ export default defineComponent({
 
     const sourceDisplayValue = computed(() => {
       const sourceMap: Record<string, string> = {
-        'USERS_UPLOAD': 'Users Upload',
+        'USER_UPLOAD': 'User Upload',
         'RECOVERED_FROM_SPACES': 'Recovered from Spaces',
         'ORPHAN_RECOVERY': 'Orphan Recovery',
         'SUNO_PROMPT': 'Suno Prompt',

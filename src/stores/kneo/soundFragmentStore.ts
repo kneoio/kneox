@@ -40,7 +40,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         lastModifiedDate: '',
         title: '',
         type: 'SONG',
-        source: 'USERS_UPLOAD',
+        source: 'USER_UPLOAD',
         artist: '',
         genres: [],
         album: '',

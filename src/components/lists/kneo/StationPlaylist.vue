@@ -58,21 +58,35 @@ const columns: DataTableColumns<SoundFragment> = [
   { type: 'selection' },
   {
     title: 'Title',
-    key: 'soundfragment.title'
+    key: 'soundfragment.title',
+    width: 300
   },
   {
     title: 'Artist',
-    key: 'soundfragment.artist'
+    key: 'soundfragment.artist',
+    width: 300
   },
   {
     title: 'Album',
-    key: 'soundfragment.album'
+    key: 'soundfragment.album',
+    width: 300
+  },
+  {
+    title: 'Source',
+    key: 'soundfragment.source',
+    width: 140
   },
   {
     title: 'Played Count',
     key: 'playedByBrandCount',
     width: 120,
     render: (row: any) => row.playedByBrandCount ?? 0
+  },
+  {
+    title: 'Description',
+    key: 'soundfragment.description',
+    ellipsis: { tooltip: true },
+    minWidth: 200
   }
 ];
 
