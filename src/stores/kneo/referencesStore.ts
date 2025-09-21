@@ -203,7 +203,8 @@ export const useReferencesStore = defineStore('references', () => {
     { label: 'history', value: 'history' },
     { label: 'messages', value: 'messages' },
     { label: 'events', value: 'events' },
-    { label: 'genres', value: 'genres' }
+    { label: 'genres', value: 'genres' },
+    { label: 'song_description', value: 'song_description' }
   ]);
 
   const variableSampleData: Record<string, string[]> = {
@@ -241,6 +242,12 @@ export const useReferencesStore = defineStore('references', () => {
       '["pop","electronic"]',
       '["indie","electronic"]',
       '["rock"]'
+    ],
+    song_description: [
+      'An energetic synth-pop track with bright hooks and a driving beat, perfect for late-night vibes.',
+      'A mellow indie ballad with warm vocals and lo-fi textures, ideal for a calm evening set.',
+      'A high-tempo electronic banger with punchy bass and crisp percussion, club-ready.',
+      'A soulful pop tune featuring smooth vocals and a catchy, radio-friendly chorus.'
     ]
   };
 

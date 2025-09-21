@@ -275,7 +275,7 @@ export default defineComponent( {
     } );
 
     const isOnline = computed( () => {
-      return stationDetails.value?.status === 'ON_LINE' || stationDetails.value?.status === 'WARMING_UP' || stationDetails.value?.status === 'QUEUE_SATURATED';
+      return stationDetails.value?.status === 'ON_LINE' || stationDetails.value?.status === 'WARMING_UP' || stationDetails.value?.status === 'QUEUE_SATURATED' || stationDetails.value?.status === 'WAITING_FOR_CURATOR';
     } );
 
     const currentListeners = computed( () => {

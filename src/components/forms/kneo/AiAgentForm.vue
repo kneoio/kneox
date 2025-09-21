@@ -88,7 +88,8 @@
                           <n-button
                             v-for="opt in referencesStore.variableOptions"
                             :key="opt.value"
-                            size="tiny"
+                            size="small"
+                            type="primary"
                             @click="insertVariable(index, opt.value)"
                           >{{ opt.label }}</n-button>
                         </n-space>
