@@ -22,6 +22,7 @@ import EventForm from '../components/forms/kneo/EventForm.vue';
 import WelcomeView from '../views/WelcomeView.vue';
 import About from '../views/About.vue';
 import SubmitSongView from '../views/SubmitSongView.vue';
+import PostMessageView from '../views/PostMessageView.vue';
 // Player is served directly from public/player
 import Keycloak from "keycloak-js";
 import apiClient from "../api/apiClient";
@@ -63,6 +64,12 @@ const routes: Array<RouteRecordRaw> = [
         path: '/submit-song',
         name: 'SubmitSong',
         component: SubmitSongView,
+        meta: { requiresAuth: false }
+    },
+    {
+        path: '/post-message',
+        name: 'PostMessage',
+        component: PostMessageView,
         meta: { requiresAuth: false }
     },
     {

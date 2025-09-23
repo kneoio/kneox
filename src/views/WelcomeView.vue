@@ -91,22 +91,39 @@
                     </span>
                   </span>
                   <span
-                    v-if="station.submissionPolicy !== 'NOT_ALLOWED'"
+                    v-if="station.submissionPolicy !== 'NOT_ALLOWED' || station.messagingPolicy !== 'NOT_ALLOWED'"
                     style="display: inline-flex; align-items: center; gap: 6px;"
                   >
                     <span
+                      v-if="station.submissionPolicy !== 'NOT_ALLOWED'"
                       class="accepting-gradient"
                       :style="{ '--station-color': station.color }"
                       style="font-size: 14px; white-space: nowrap; font-family: 'Goldman', sans-serif;"
                     >
-                      Submissions open!
+                      Submissions is open!
                     </span>
-                    <router-link
-                      :to="{ name: 'SubmitSong', query: { brand: station.slugName } }"
-                      style="display: inline-flex; text-decoration: none;"
-                    >
-                      <n-button>Submit your song</n-button>
-                    </router-link>
+                    <n-button-group>
+                      <router-link
+                        v-if="station.submissionPolicy !== 'NOT_ALLOWED'"
+                        :to="{ name: 'SubmitSong', query: { brand: station.slugName } }"
+                        style="display: inline-flex; text-decoration: none;"
+                      >
+                        <n-button
+                          class="subtle-shake-x"
+                          :style="{ animationDelay: shakeDelayX(station.slugName), animationDuration: shakeDurationX(station.slugName), animationTimingFunction: shakeTimingX(station.slugName) }"
+                        >Submit your song</n-button>
+                      </router-link>
+                      <router-link
+                        v-if="station.messagingPolicy !== 'NOT_ALLOWED'"
+                        :to="{ name: 'PostMessage', query: { brand: station.slugName } }"
+                        style="display: inline-flex; text-decoration: none;"
+                      >
+                        <n-button
+                          class="subtle-shake-y"
+                          :style="{ animationDelay: shakeDelayY(station.slugName), animationDuration: shakeDurationY(station.slugName), animationTimingFunction: shakeTimingY(station.slugName), animationDirection: 'alternate' }"
+                        >Post a message</n-button>
+                      </router-link>
+                    </n-button-group>
                   </span>
                 </h3>
                 <p
@@ -129,7 +146,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, inject, type Ref } from 'vue';
-import { NIcon, NSkeleton, NButton, NSwitch, NConfigProvider, NGrid, NGridItem, NAlert, darkTheme } from 'naive-ui';
+import { NIcon, NSkeleton, NButton, NButtonGroup, NSwitch, NConfigProvider, NGrid, NGridItem, NAlert, darkTheme } from 'naive-ui';
 import { ArrowRight, Sun, Moon } from '@vicons/tabler';
 import { useReferencesStore } from '../stores/kneo/referencesStore';
 import { MIXPLA_PLAYER_URL } from '../constants/config';
@@ -142,6 +159,7 @@ interface Station {
   description: string;
   currentStatus?: 'ON_LINE' | 'OFF_LINE' | 'WARMING_UP';
   submissionPolicy?: 'NO_RESTRICTIONS' | 'REVIEW_REQUIRED' | 'NOT_ALLOWED';
+  messagingPolicy?: 'NO_RESTRICTIONS' | 'REVIEW_REQUIRED' | 'NOT_ALLOWED';
 }
 
 onMounted(() => {
@@ -216,6 +234,41 @@ const getStatusText = (status?: 'ON_LINE' | 'OFF_LINE' | 'WARMING_UP'): string =
 // Theme injection from App.vue
 const isDarkTheme = inject<Ref<boolean>>('isDarkTheme', ref(false));
 const toggleTheme = inject<(value: boolean) => void>('toggleTheme', () => {});
+
+function hashInt(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) h = (h ^ s.charCodeAt(i)) >>> 0, h = Math.imul(h, 16777619) >>> 0;
+  return h >>> 0;
+}
+function rand01(seed: number): number {
+  seed ^= seed << 13; seed ^= seed >>> 17; seed ^= seed << 5; return ((seed >>> 0) % 1000) / 1000;
+}
+function shakeDelayX(slug: string): string {
+  const r = rand01(hashInt(slug + 'x'));
+  const val = (r * 8) - 4; // -4s .. +4s
+  return `${val.toFixed(2)}s`;
+}
+function shakeDelayY(slug: string): string {
+  const r = rand01(hashInt(slug + 'y'));
+  const val = (r * 8) - 4; // -4s .. +4s
+  return `${val.toFixed(2)}s`;
+}
+function shakeDurationX(slug: string): string {
+  const r = rand01(hashInt(slug + 'dx'));
+  return `${(5 + r * 4).toFixed(2)}s`; // 5s .. 9s
+}
+function shakeDurationY(slug: string): string {
+  const r = rand01(hashInt(slug + 'dy'));
+  return `${(5 + r * 4).toFixed(2)}s`; // 5s .. 9s
+}
+function shakeTimingX(slug: string): string {
+  const r = Math.floor(rand01(hashInt(slug + 'tx')) * 4);
+  return ['ease-in-out', 'ease', 'linear', 'cubic-bezier(0.4, 0.0, 0.2, 1)'][r] as string;
+}
+function shakeTimingY(slug: string): string {
+  const r = Math.floor(rand01(hashInt(slug + 'ty')) * 4);
+  return ['ease-in-out', 'ease', 'linear', 'cubic-bezier(0.2, 0.8, 0.2, 1)'][r] as string;
+}
 </script>
 
 <script lang="ts">
@@ -256,6 +309,28 @@ export default {
   color: #16a34a !important; /* green-600 */
   text-shadow: 0 0 8px rgba(34, 197, 94, 0.8);
  }
+
+/* Subtle shake for CTA buttons */
+.subtle-shake-x { animation: subtleShakeX 6s ease-in-out infinite; }
+.subtle-shake-y { animation: subtleShakeY 6s ease-in-out infinite; }
+
+@keyframes subtleShakeX {
+  0%, 96%, 100% { transform: translateX(0); }
+  97% { transform: translateX(0.6px); }
+  98% { transform: translateX(-0.6px); }
+  99% { transform: translateX(0.3px); }
+}
+
+@keyframes subtleShakeY {
+  0%, 96%, 100% { transform: translateY(0); }
+  97% { transform: translateY(0.6px); }
+  98% { transform: translateY(-0.6px); }
+  99% { transform: translateY(0.3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .subtle-shake-x, .subtle-shake-y { animation: none !important; }
+}
 
 /* Make all text in Welcome follow the local theme, even under App.vue's global provider */
 .welcome-dark :deep(.welcome-root),

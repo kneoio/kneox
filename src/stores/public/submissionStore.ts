@@ -25,6 +25,28 @@ export const useSubmissionStore = defineStore( 'submissionStore', () => {
     }
   }
 
+  async function postMessage(slug: string, data: {
+    confirmationCode: string
+    from: string
+    content: string
+    email: string
+    agreedAt: string
+    userAgent: string
+  }): Promise<void> {
+    const url = `${publicApiRoot}/radio/${encodeURIComponent(slug)}/messages`
+    console.debug('[submissionStore.postMessage] POST', url, {
+      email: data?.email,
+      from: data?.from
+    })
+    try {
+      const res = await unsecuredClient.post(url, data)
+      console.debug('[submissionStore.postMessage] OK', res.status)
+    } catch (err: any) {
+      console.error('[submissionStore.postMessage] FAIL', url, err?.response?.status, err?.response?.data || err?.message)
+      throw err
+    }
+  }
+
   async function sendCode( email: string ): Promise<void> {
     const url = `/messaging/send-code/${encodeURIComponent( email )}`
     console.debug( '[submissionStore.sendCode] POST', url )
@@ -137,6 +159,7 @@ export const useSubmissionStore = defineStore( 'submissionStore', () => {
     submit,
     startUploadSession,
     uploadFile,
-    getStation
+    getStation,
+    postMessage
   }
 } );
