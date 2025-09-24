@@ -104,7 +104,8 @@ import {
   Headphones,
   Sun,
   Moon,
-  Calendar
+  Calendar,
+  User
 } from '@vicons/tabler';
 import {useRadioStationStore} from "../stores/kneo/radioStationStore";
 import {RadioStation, BrandStatus} from "../types/kneoBroadcasterTypes";
@@ -234,14 +235,20 @@ export default defineComponent({
         icon: () => h(List)
       };
 
-      const logoutOption: MenuOption = {
+      const profileOption: MenuOption = {
         label: () => h('div', {style: 'display: flex; flex-direction: column;'}, [
-          h('div', 'Logout'),
+          h('div', 'Profile'),
           h('div', {
             style: 'font-size: 0.75rem; color: #666; margin-top: 2px;',
             title: keycloakInst.tokenParsed?.email || keycloakInst.tokenParsed?.preferred_username || ''
           }, keycloakInst.tokenParsed?.preferred_username || '')
         ]),
+        key: 'profile',
+        icon: () => h(User)
+      };
+
+      const logoutOption: MenuOption = {
+        label: 'Logout',
         key: 'logout',
         icon: () => h(Logout)
       };
@@ -266,6 +273,7 @@ export default defineComponent({
             type: 'divider',
             key: 'd1'
           },
+          profileOption,
           logoutOption
         ];
       }
@@ -325,17 +333,8 @@ export default defineComponent({
           key: 'd1'
         },
         homeOption,
-        {
-          label: () => h('div', {style: 'display: flex; flex-direction: column;'}, [
-            h('div', 'Logout'),
-            h('div', {
-              style: 'font-size: 0.75rem; color: #666; margin-top: 2px;',
-              title: keycloakInst.tokenParsed?.email || keycloakInst.tokenParsed?.preferred_username || ''
-            }, keycloakInst.tokenParsed?.preferred_username || '')
-          ]),
-          key: 'logout',
-          icon: () => h(Logout)
-        }
+        profileOption,
+        logoutOption
       ];
 
       return [
@@ -367,6 +366,7 @@ export default defineComponent({
       if (route.name === 'AiAgents') return 'ai_agents';
       if (route.name === 'EnvironmentProfiles') return 'environment_profiles';
       if (route.name === 'Listeners') return 'listeners';
+      if (route.name === 'Profile') return 'profile';
 
       // Fix: Change 'StationDetail' to 'StationDashboard'
       if (route.name === 'StationDashboard' && route.params.brandName) {
@@ -399,6 +399,8 @@ export default defineComponent({
         await router.push({name: 'Listeners'});
       } else if (key === 'home') {
         await router.push({name: 'Welcome'});
+      } else if (key === 'profile') {
+        await router.push({name: 'Profile'});
       } else if (key === 'logout') {
         keycloakInst.logout({redirectUri: window.location.origin});
       } else if (key === 'djs') {

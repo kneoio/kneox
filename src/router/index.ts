@@ -19,6 +19,7 @@ import EnvironmentProfiles from '../components/lists/kneo/EnvironmentProfiles.vu
 import ProfileForm from '../components/forms/kneo/EnvironmentProfileForm.vue';
 import Events from '../components/lists/kneo/Events.vue';
 import EventForm from '../components/forms/kneo/EventForm.vue';
+import Profile from '../components/lists/kneo/Profile.vue';
 import WelcomeView from '../views/WelcomeView.vue';
 import About from '../views/About.vue';
 import SubmitSongView from '../views/SubmitSongView.vue';
@@ -199,6 +200,11 @@ const routes: Array<RouteRecordRaw> = [
                 name: 'EventForm',
                 component: EventForm,
                 props: true
+            },
+            {
+                path: 'profile',
+                name: 'Profile',
+                component: Profile
             },
         ]
     },
