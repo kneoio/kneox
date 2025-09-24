@@ -102,28 +102,38 @@
                     >
                       Submissions is open!
                     </span>
-                    <n-button-group>
+                    
                       <router-link
                         v-if="station.submissionPolicy !== 'NOT_ALLOWED'"
                         :to="{ name: 'SubmitSong', query: { brand: station.slugName } }"
                         style="display: inline-flex; text-decoration: none;"
                       >
                         <n-button
+                          small
                           class="subtle-shake-x"
                           :style="{ animationDelay: shakeDelayX(station.slugName), animationDuration: shakeDurationX(station.slugName), animationTimingFunction: shakeTimingX(station.slugName) }"
-                        >Submit your song</n-button>
+                        >Submit song</n-button>
                       </router-link>
+                      <span
+                      v-if="station.submissionPolicy !== 'NOT_ALLOWED'"
+                      class="accepting-gradient"
+                      :style="{ '--station-color': station.color }"
+                      style="font-size: 14px; white-space: nowrap; font-family: 'Goldman', sans-serif;"
+                    >
+                      or
+                    </span>
                       <router-link
                         v-if="station.messagingPolicy !== 'NOT_ALLOWED'"
                         :to="{ name: 'PostMessage', query: { brand: station.slugName } }"
                         style="display: inline-flex; text-decoration: none;"
                       >
                         <n-button
+                          small
                           class="subtle-shake-y"
                           :style="{ animationDelay: shakeDelayY(station.slugName), animationDuration: shakeDurationY(station.slugName), animationTimingFunction: shakeTimingY(station.slugName), animationDirection: 'alternate' }"
                         >Post a message</n-button>
                       </router-link>
-                    </n-button-group>
+                    
                   </span>
                 </h3>
                 <p
