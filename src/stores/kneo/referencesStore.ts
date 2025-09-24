@@ -68,6 +68,21 @@ export const useReferencesStore = defineStore('references', () => {
       '- **Indemnification**: You agree to defend and hold harmless the service from any legal claims related to your uploaded content.\n\n'
   });
 
+  const messagePostingAgreement = ref<{ title: string; clause: string; version: string }>({
+    title: 'Message Posting Agreement',
+    version: '1.0',
+    clause:
+      'By posting a message to this service, you agree that:\n\n' +
+      '- **Appropriate Content**: Your message does not contain violence, racism, hate speech, discrimination, or harassment of any kind.\n' +
+      '- **Respectful Communication**: You will communicate respectfully and avoid offensive, threatening, or abusive language.\n' +
+      '- **No Harmful Content**: Your message does not promote illegal activities, self-harm, or dangerous behavior.\n' +
+      '- **Personal Responsibility**: You are fully responsible for the content of your message and its consequences.\n' +
+      '- **Moderation Rights**: We reserve the right to review, edit, or remove messages that violate these guidelines.\n' +
+      '- **Broadcasting Standards**: Your content complies with general broadcasting standards and community guidelines.\n' +
+      '- **Legal Compliance**: Your message does not violate any applicable laws or regulations.\n' +
+      '- **Consequences**: Violation of these terms may result in message removal and potential restrictions on future submissions.\n\n'
+  });
+
   const audioAcceptTypes = [
     '.mp3',
     '.wav',
@@ -257,6 +272,37 @@ export const useReferencesStore = defineStore('references', () => {
     { value: 320000, label: "320 kbps" }
   ];
 
+  const getLocalThemeOverrides = (isDark: boolean) => {
+    return isDark
+      ? {
+        common: {
+          cardColor: '#242424',
+          modalColor: '#242424',
+          popoverColor: '#242424',
+          inputColor: '#2a2a2a',
+          inputColorDisabled: '#2a2a2a',
+          borderColor: '#4a4a4a'
+        },
+        Input: {
+          color: '#2a2a2a',
+          colorFocus: '#2a2a2a',
+          borderColor: '#4a4a4a',
+          borderHoverColor: '#4d4d4d',
+          borderFocusColor: '#5aa2f7',
+          borderColorDisabled: '#4a4a4a',
+          colorDisabled: '#2a2a2a',
+          textColorDisabled: '#a0a0a0',
+          placeholderColorDisabled: '#777'
+        },
+        Select: {
+          borderColor: '#4a4a4a',
+          borderHoverColor: '#4d4d4d',
+          borderFocusColor: '#5aa2f7'
+        }
+      }
+      : {}
+  };
+
   return {
     countryOptions,
     languageOptions,
@@ -271,6 +317,8 @@ export const useReferencesStore = defineStore('references', () => {
     bitRateOptions,
     audioAcceptTypes,
     musicUploadAgreement,
+    messagePostingAgreement,
+    getLocalThemeOverrides,
     fetchGenres,
     fetchVoices,
     fetchDictionary,

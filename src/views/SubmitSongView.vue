@@ -253,34 +253,7 @@ const stationColorCss = computed(() => {
 const uploadStatus = ref<{ type: 'info' | 'success' | 'error', message: string } | null>(null)
 const providedIsDark = inject('isDarkTheme', ref(false)) as unknown as { value: boolean }
 const localThemeOverrides = computed(() => {
-  return providedIsDark && providedIsDark.value
-      ? {
-        common: {
-          cardColor: '#242424',
-          modalColor: '#242424',
-          popoverColor: '#242424',
-          inputColor: '#2a2a2a',
-          inputColorDisabled: '#2a2a2a',
-          borderColor: '#4a4a4a'
-        },
-        Input: {
-          color: '#2a2a2a',
-          colorFocus: '#2a2a2a',
-          borderColor: '#4a4a4a',
-          borderHoverColor: '#4d4d4d',
-          borderFocusColor: '#5aa2f7',
-          borderColorDisabled: '#4a4a4a',
-          colorDisabled: '#2a2a2a',
-          textColorDisabled: '#a0a0a0',
-          placeholderColorDisabled: '#777'
-        },
-        Select: {
-          borderColor: '#4a4a4a',
-          borderHoverColor: '#4d4d4d',
-          borderFocusColor: '#5aa2f7'
-        }
-      }
-      : {}
+  return referencesStore.getLocalThemeOverrides(providedIsDark && providedIsDark.value)
 })
 
 const agreeHighlightStyle = computed(() => {
