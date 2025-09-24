@@ -272,6 +272,18 @@ export const useReferencesStore = defineStore('references', () => {
     { value: 320000, label: "320 kbps" }
   ];
 
+  const submissionPolicyOptions = [
+    { label: 'Not Allowed', value: 'NOT_ALLOWED' },
+    { label: 'Review Required', value: 'REVIEW_REQUIRED' },
+    { label: 'No Restrictions', value: 'NO_RESTRICTIONS' }
+  ];
+
+  const messagingPolicyOptions = [
+    { label: 'Not Allowed', value: 'NOT_ALLOWED' },
+    { label: 'Review Required', value: 'REVIEW_REQUIRED' },
+    { label: 'No Restrictions', value: 'NO_RESTRICTIONS' }
+  ];
+
   const getLocalThemeOverrides = (isDark: boolean) => {
     return isDark
       ? {
@@ -315,6 +327,8 @@ export const useReferencesStore = defineStore('references', () => {
     variableOptions,
     variableSampleData,
     bitRateOptions,
+    submissionPolicyOptions,
+    messagingPolicyOptions,
     audioAcceptTypes,
     musicUploadAgreement,
     messagePostingAgreement,

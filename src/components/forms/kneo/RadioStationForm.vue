@@ -285,6 +285,24 @@
             </n-grid>
           </n-form>
         </n-tab-pane>
+        <n-tab-pane name="contribution" tab="Contribution">
+          <n-form label-placement="left" label-width="auto">
+            <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
+              <n-gi>
+                <n-form-item label="Messaging Allowed">
+                  <n-select v-model:value="localFormData.messagingPolicy" :options="referencesStore.messagingPolicyOptions"
+                    style="width: 25%; max-width: 300px;" />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="Song Submission Allowed">
+                  <n-select v-model:value="localFormData.submissionPolicy" :options="referencesStore.submissionPolicyOptions"
+                    style="width: 25%; max-width: 300px;" />
+                </n-form-item>
+              </n-gi>
+            </n-grid>
+          </n-form>
+        </n-tab-pane>
         <n-tab-pane name="acl" tab="ACL">
           <AclTable :acl-data="aclData" :loading="aclLoading" />
         </n-tab-pane>
@@ -331,7 +349,8 @@ import {
   RadioStation,
   BrandStatus,
   RadioStationSave,
-  ManagedBy
+  ManagedBy,
+  SubmissionPolicy
 } from "../../../types/kneoBroadcasterTypes";
 import { useRadioStationStore } from "../../../stores/kneo/radioStationStore";
 import { useAiAgentStore } from "../../../stores/kneo/aiAgentStore";
@@ -426,6 +445,8 @@ export default defineComponent( {
       timeZone: "",
       managedBy: undefined,
       bitRate: 128000,
+      submissionPolicy: undefined,
+      messagingPolicy: undefined,
       schedule: { enabled: false, tasks: [] }
     } );
 
@@ -534,6 +555,8 @@ export default defineComponent( {
           timeZone: localFormData.timeZone,
           managedBy: localFormData.managedBy,
           bitRate: localFormData.bitRate,
+          submissionPolicy: localFormData.submissionPolicy,
+          messagingPolicy: localFormData.messagingPolicy,
           schedule: localFormData.schedule ? JSON.parse( JSON.stringify( localFormData.schedule ) ) : undefined
         };
 
@@ -771,6 +794,7 @@ export default defineComponent( {
       timezones: referencesStore.timezones,
       managedByOptions,
       targetOptions,
+      referencesStore,
       scheduleTasksArray,
       createScheduleTask,
       taskTypeOptions,

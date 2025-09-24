@@ -20,6 +20,12 @@ export enum ManagedBy {
     MIX = "MIX"
 }
 
+export enum SubmissionPolicy {
+    NOT_ALLOWED = "NOT_ALLOWED",
+    REVIEW_REQUIRED = "REVIEW_REQUIRED",
+    NO_RESTRICTIONS = "NO_RESTRICTIONS"
+}
+
 export interface Profile {
     id: string;
     author?: string;
@@ -61,6 +67,8 @@ export interface RadioStation {
     timeZone?: string;
     managedBy?: ManagedBy;
     aiControlAllowed?: boolean;
+    submissionPolicy?: SubmissionPolicy;
+    messagingPolicy?: SubmissionPolicy;
     schedule?: {
         enabled: boolean;
     };
@@ -76,6 +84,8 @@ export interface RadioStationSave {
     profileId?: string;
     timeZone?: string;
     managedBy?: ManagedBy;
+    submissionPolicy?: SubmissionPolicy;
+    messagingPolicy?: SubmissionPolicy;
     schedule?: any;
 }
 
