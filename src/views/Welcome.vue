@@ -15,10 +15,10 @@
             <n-space vertical size="small" align="center" justify="center">
               <n-thing>
                 <template #header>
-                  <strong style="font-size:24px; font-weight:800;">Stream Your Story</strong>
+                  <strong style="font-size:24px; font-weight:800; font-family: 'ConthraxSB', sans-serif;">Stream Your Story</strong>
                 </template>
                 <template #description>
-                  <span style="font-size:19px; opacity:.9;">Build your radio station. Let AI DJ handle the flow.</span>
+                  <span style="font-size:19px; opacity:.9; font-family: 'ConthraxSB', sans-serif;">Build your radio station. Let AI DJ handle the flow.</span>
                 </template>
               </n-thing>
             </n-space>
@@ -27,7 +27,6 @@
               <template #header>
                 <n-space align="center" justify="space-between" :wrap="false" style="width:100%">
                   <strong>Featured Stations</strong>
-                  <n-button text size="small" @click="fetchStations" :loading="loading">Refresh</n-button>
                 </n-space>
               </template>
 
@@ -144,6 +143,15 @@ onMounted(() => {
 })
 </script>
 
+<style scoped>
+@font-face {
+  font-family: 'ConthraxSB';
+  src: url('/src/assets/fonts/conthrax-sb.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+</style>
 <style scoped>
 .online {
   color: #16a34a !important;
