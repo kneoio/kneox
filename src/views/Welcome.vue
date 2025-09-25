@@ -1,19 +1,11 @@
 <template>
-  <n-config-provider :theme="isDarkTheme ? darkTheme : null" :theme-overrides="localThemeOverrides" :class="{ 'welcome-dark': isDarkTheme }">
+  <n-config-provider>
     <n-layout :native-scrollbar="true"
-              :style="{ minHeight: '100vh', backgroundColor: isDarkTheme ? '#1a1a1a' : '#f8f8f8' }"
+              :style="{ minHeight: '100vh', backgroundColor: '#f8f8f8' }"
               class="welcome-layout">
       <n-layout-header bordered :style="{ background: 'transparent' }">
         <n-space align="center" justify="space-between" :wrap="false" :style="{ maxWidth: '720px', margin: '0 auto', padding: '12px 16px' }">
           <img src="/pwa-192x192.png" alt="Mixpla" style="width:32px;height:32px;" />
-          <n-switch :value="isDarkTheme" size="small" :round="false" @update:value="toggleTheme">
-            <template #checked-icon>
-              <n-icon><Moon /></n-icon>
-            </template>
-            <template #unchecked-icon>
-              <n-icon><Sun /></n-icon>
-            </template>
-          </n-switch>
         </n-space>
       </n-layout-header>
 
@@ -61,14 +53,14 @@
                       </n-space>
                     </template>
                     <template #description>
-                      <n-ellipsis :line-clamp="2" style="font-size:14px; opacity:.85;">{{ s.description }}</n-ellipsis>
+                      <div style="font-size:14px; opacity:.85;">{{ s.description }}</div>
                     </template>
                     <template #footer>
                       <n-space size="small" wrap>
-                        <router-link v-if="s.submissionPolicy !== 'NOT_ALLOWED'" :to="{ name: 'SubmitSongV2', query: { brand: s.slugName } }" style="text-decoration:none;">
+                        <router-link v-if="s.submissionPolicy !== 'NOT_ALLOWED'" :to="{ name: 'SubmitSongV2', query: { brand: s.slugName } }" style="text-decoration:none;" @click.stop>
                           <n-button size="small" secondary>Submit song</n-button>
                         </router-link>
-                        <router-link v-if="s.messagingPolicy !== 'NOT_ALLOWED'" :to="{ name: 'PostMessageV2', query: { brand: s.slugName } }" style="text-decoration:none;">
+                        <router-link v-if="s.messagingPolicy !== 'NOT_ALLOWED'" :to="{ name: 'PostMessageV2', query: { brand: s.slugName } }" style="text-decoration:none;" @click.stop>
                           <n-button size="small" tertiary>Post message</n-button>
                         </router-link>
                       </n-space>
@@ -80,7 +72,7 @@
 
             <n-space vertical size="small" align="center">
               <a href="https://discord.com/channels/1395012925512613998/1395012926154346538" target="_blank" rel="noopener noreferrer" style="font-size:13px; text-decoration: underline;">Discord</a>
-              <router-link to="/about" style="font-size:13px; text-decoration: underline;">About</router-link>
+              <router-link to="/m/about" style="font-size:13px; text-decoration: underline;">About</router-link>
             </n-space>
 
             <n-space align="center" justify="center">
@@ -99,9 +91,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, onMounted, ref, type Ref } from 'vue'
-import { NConfigProvider, NLayout, NLayoutHeader, NLayoutContent, NSpace, NCard, NThing, NEllipsis, NButton, NIcon, NText, NTag, NSkeleton, NSwitch, darkTheme } from 'naive-ui'
-import { ArrowRight, Sun, Moon } from '@vicons/tabler'
+import { computed, onMounted, ref } from 'vue'
+import { NConfigProvider, NLayout, NLayoutHeader, NLayoutContent, NSpace, NCard, NThing, NEllipsis, NButton, NIcon, NText, NTag, NSkeleton } from 'naive-ui'
+import { ArrowRight } from '@vicons/tabler'
 import { useReferencesStore } from '../stores/kneo/referencesStore'
 import { MIXPLA_PLAYER_URL } from '../constants/config'
 
@@ -119,12 +111,6 @@ const referencesStore = useReferencesStore()
 const stations = ref<Station[]>([])
 const loading = ref(true)
 const error = ref<unknown | null>(null)
-
-const isDarkTheme = inject<Ref<boolean>>('isDarkTheme', ref(false))
-const localThemeOverrides = computed(() => {
-  return referencesStore.getLocalThemeOverrides(!!(isDarkTheme && isDarkTheme.value))
-})
-const toggleTheme = inject<(v: boolean) => void>('toggleTheme', () => {})
 
 const playerBase = computed(() => MIXPLA_PLAYER_URL)
 

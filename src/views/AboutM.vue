@@ -1,24 +1,22 @@
 <template>
-  <n-config-provider :theme="isDarkTheme ? darkTheme : null">
-    <n-layout :style="{ minHeight: '100vh', backgroundColor: isDarkTheme ? '#1a1a1a' : '#f8f8f8' }">
+  <n-config-provider>
+    <n-layout :style="{ minHeight: '100vh', backgroundColor: '#f8f8f8' }">
       <n-layout-header bordered :style="{ background: 'transparent' }">
         <n-space align="center" justify="space-between" :wrap="false" :style="{ maxWidth: '720px', margin: '0 auto', padding: '12px 16px' }">
-          <router-link to="/m" class="inline-block">
+          <router-link to="/m" class="inline-block" style="text-decoration: none;">
             <n-button quaternary>← Back</n-button>
           </router-link>
         </n-space>
       </n-layout-header>
       <n-layout-content :style="{ padding: '0 16px 24px' }">
-        <div :style="{ maxWidth: '720px', margin: '0 auto' }">
-          <n-space vertical size="large">
-            <n-card title="Privacy & Cookies" :segmented="{ content: true }">
-              <n-text>
+        <n-space vertical size="large" :style="{ maxWidth: '720px', margin: '0 auto' }">
+          <n-card title="Privacy & Cookies" :segmented="{ content: true }">
+            <n-text>
                 <strong>What we use</strong><br>
                 - Only strictly necessary cookies/storage (authentication, basic session, theme preference).<br>
                 - No analytics, ad trackers, or marketing pixels are loaded.<br><br>
                 <strong>Uploads & processing</strong><br>
                 - When you upload audio, we process it to extract technical/metadata needed to operate your station (e.g., title/artist if available).<br>
-                - Processing status may be tracked to show progress in the UI.<br><br>
                 <strong>Consent banner</strong><br>
                 - A minimal banner is shown to inform you about necessary cookies. Your choice is stored in a cookie ("cookie_consent").<br>
                 - You can clear your browser cookies to see the banner again or change your choice later when a full consent manager is added.<br><br>
@@ -69,17 +67,23 @@
                 <strong>Contact:</strong> <a href="mailto:justaidajam@gmail.com" style="color: #2196F3; text-decoration: underline;">justaidajam@gmail.com</a>
               </n-text>
             </n-card>
-          </n-space>
-        </div>
+        </n-space>
       </n-layout-content>
     </n-layout>
   </n-config-provider>
 </template>
 
 <script setup lang="ts">
-import { inject, ref, type Ref } from 'vue'
+import { computed, inject, ref, type Ref } from 'vue'
 import { NConfigProvider, NLayout, NLayoutHeader, NLayoutContent, NSpace, NCard, NText, NButton, darkTheme } from 'naive-ui'
+import { useReferencesStore } from '../stores/kneo/referencesStore'
+
 const isDarkTheme = inject<Ref<boolean>>('isDarkTheme', ref(false))
+const providedIsDark = inject('isDarkTheme', ref(false)) as unknown as { value: boolean }
+const referencesStore = useReferencesStore()
+const localThemeOverrides = computed(() => {
+  return referencesStore.getLocalThemeOverrides(!!(providedIsDark && providedIsDark.value))
+})
 </script>
 
 <style scoped>

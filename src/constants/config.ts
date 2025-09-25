@@ -1,1 +1,1 @@
-export const MIXPLA_PLAYER_URL = 'https://mixpla.kneo.io/';
+export const MIXPLA_PLAYER_URL = 'https://player.mixpla.io/';

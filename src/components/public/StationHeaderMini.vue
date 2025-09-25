@@ -1,29 +1,39 @@
 <template>
-  <n-space align="center" :wrap="false" :style="{ gap: '12px', marginBottom: '8px' }">
-    <n-ellipsis style="max-width: 32%; min-width: 120px;">
-      <n-h2 style="margin: 0; font-size: 1.25rem; font-weight: 700; line-height: 1.2;">{{ brand }}</n-h2>
-    </n-ellipsis>
-    <n-divider vertical />
-    <div v-if="availableSongs !== null" style="display:flex; flex-direction: column; line-height: 1.1; align-items: center;">
-      <n-text depth="3">songs</n-text>
-      <n-text
-        depth="3"
-        :class="flashSongs ? 'flash-pulse' : ''"
-        :style="`margin-top: 10px; text-align: center; font-family: Goldman, sans-serif; color: ${colorCss || 'inherit'} !important;`"
-      >
-        <n-number-animation :from="0" :to="availableSongs || 0" @finish="onSongsAnimationFinish" />
-      </n-text>
-    </div>
-    <n-divider v-if="description" vertical />
-    <n-ellipsis v-if="description" :line-clamp="2" style="max-width: 58%;">
-      <n-text depth="3" style="font-size: 12px;">{{ description }}</n-text>
-    </n-ellipsis>
+  <n-space vertical :wrap="false" :style="{ gap: '6px', marginBottom: '8px' }">
+    <n-space align="center" :wrap="false" :style="{ gap: '12px' }">
+      <n-button quaternary size="small" @click="goBack" :focusable="false">
+        <n-icon size="16"><ArrowLeft /></n-icon>
+        Back
+      </n-button>
+    </n-space>
+    <n-space align="center" :wrap="false" :style="{ gap: '12px' }">
+      <n-ellipsis style="max-width: 32%; min-width: 120px;">
+        <n-h2 style="margin: 0; font-size: 1.25rem; font-weight: 700; line-height: 1.2;">{{ brand }}</n-h2>
+      </n-ellipsis>
+      <n-divider vertical />
+      <div v-if="availableSongs !== null" style="display:flex; flex-direction: column; line-height: 1.1; align-items: center;">
+        <n-text depth="3">songs</n-text>
+        <n-text
+          depth="3"
+          :class="flashSongs ? 'flash-pulse' : ''"
+          :style="`margin-top: 10px; text-align: center; font-family: Goldman, sans-serif; color: ${colorCss || 'inherit'} !important;`"
+        >
+          <n-number-animation :from="0" :to="availableSongs || 0" @finish="onSongsAnimationFinish" />
+        </n-text>
+      </div>
+      <n-divider v-if="description" vertical />
+      <n-ellipsis v-if="description" :line-clamp="2" style="max-width: 58%;">
+        <n-text depth="3" style="font-size: 12px;">{{ description }}</n-text>
+      </n-ellipsis>
+    </n-space>
   </n-space>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { NDivider, NEllipsis, NH2, NText, NNumberAnimation, NSpace } from 'naive-ui'
+import { useRouter } from 'vue-router'
+import { NDivider, NEllipsis, NH2, NText, NNumberAnimation, NSpace, NButton, NIcon } from 'naive-ui'
+import { ArrowLeft } from '@vicons/tabler'
 
 const props = defineProps<{
   brand: string
@@ -33,6 +43,12 @@ const props = defineProps<{
 }>()
 
 const flashSongs = ref(false)
+
+const router = useRouter()
+function goBack() {
+  if (window.history.length > 1) router.back()
+  else router.push('/')
+}
 
 function onSongsAnimationFinish() {
   flashSongs.value = false

@@ -105,7 +105,7 @@
                     
                       <router-link
                         v-if="station.submissionPolicy !== 'NOT_ALLOWED'"
-                        :to="{ name: 'SubmitSong', query: { brand: station.slugName } }"
+                        :to="{ name: 'SubmitSongV2', query: { brand: station.slugName } }"
                         style="display: inline-flex; text-decoration: none;"
                       >
                         <n-button
@@ -124,7 +124,7 @@
                     </span>
                       <router-link
                         v-if="station.messagingPolicy !== 'NOT_ALLOWED'"
-                        :to="{ name: 'PostMessage', query: { brand: station.slugName } }"
+                        :to="{ name: 'PostMessageV2', query: { brand: station.slugName } }"
                         style="display: inline-flex; text-decoration: none;"
                       >
                         <n-button
@@ -156,6 +156,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, inject, type Ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { NIcon, NSkeleton, NButton, NButtonGroup, NSwitch, NConfigProvider, NGrid, NGridItem, NAlert, darkTheme } from 'naive-ui';
 import { ArrowRight, Sun, Moon } from '@vicons/tabler';
 import { useReferencesStore } from '../stores/kneo/referencesStore';
@@ -172,7 +173,13 @@ interface Station {
   messagingPolicy?: 'NO_RESTRICTIONS' | 'REVIEW_REQUIRED' | 'NOT_ALLOWED';
 }
 
+const router = useRouter();
+
 onMounted(() => {
+  if (typeof window !== 'undefined' && (window.innerWidth <= 820 || window.matchMedia?.('(max-width: 820px)').matches)) {
+    router.replace('/m');
+    return;
+  }
   document.body.style.fontFamily = `'Inter', sans-serif`;
   fetchStations();
   
