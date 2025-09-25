@@ -302,8 +302,7 @@ async function handleSubmit() {
     }
 
     await submissionStore.postMessage(stationSlug, payload as any)
-    message.value = 'Thanks! Your message was sent.'
-    messageType.value = 'success'
+    nMessage.success('Thanks! Your message was sent.')
     reset()
   } catch (e: any) {
     const errorMessage = e?.response?.data?.message || e?.response?.data || e?.message || 'Submission failed'

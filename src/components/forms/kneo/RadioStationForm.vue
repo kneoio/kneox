@@ -513,7 +513,7 @@ export default defineComponent( {
       profileId: undefined,
       timeZone: "",
       managedBy: undefined,
-      bitRate: 128000,
+      bitRate: "128000",
       submissionPolicy: undefined,
       messagingPolicy: undefined,
       aiOverriding: { name: "", prompt: "", talkativity: 0, preferredVoice: "" },
