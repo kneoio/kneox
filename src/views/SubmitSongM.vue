@@ -1,5 +1,5 @@
 <template>
-  <n-config-provider :theme="providedIsDark && providedIsDark.value ? darkTheme : null" :style="{ backgroundColor: (providedIsDark && providedIsDark.value) ? '#1a1a1a' : '#f8f8f8', minHeight: '100vh' }">
+  <n-config-provider :theme="providedIsDark && providedIsDark.value ? darkTheme : null" :theme-overrides="localThemeOverrides" :style="{ backgroundColor: (providedIsDark && providedIsDark.value) ? '#1a1a1a' : '#f8f8f8', minHeight: '100vh' }">
   <n-space vertical :style="{ maxWidth: '720px', margin: '0 auto', padding: '16px' }">
     <StationHeaderMini
       :brand="form.brand"
@@ -174,6 +174,9 @@ const nMessage = useMessage()
 const route = useRoute()
 
 const providedIsDark = inject('isDarkTheme', ref(false)) as unknown as { value: boolean }
+const localThemeOverrides = computed(() => {
+  return referencesStore.getLocalThemeOverrides(providedIsDark && providedIsDark.value)
+})
 
 const form = ref({
   brand: '',

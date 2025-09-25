@@ -1,5 +1,5 @@
 <template>
-  <n-config-provider :theme="isDarkTheme ? darkTheme : null">
+  <n-config-provider :theme="isDarkTheme ? darkTheme : null" :theme-overrides="localThemeOverrides" :class="{ 'welcome-dark': isDarkTheme }">
     <n-layout :native-scrollbar="true"
               :style="{ minHeight: '100vh', backgroundColor: isDarkTheme ? '#1a1a1a' : '#f8f8f8' }"
               class="welcome-layout">
@@ -121,6 +121,9 @@ const loading = ref(true)
 const error = ref<unknown | null>(null)
 
 const isDarkTheme = inject<Ref<boolean>>('isDarkTheme', ref(false))
+const localThemeOverrides = computed(() => {
+  return referencesStore.getLocalThemeOverrides(!!(isDarkTheme && isDarkTheme.value))
+})
 const toggleTheme = inject<(v: boolean) => void>('toggleTheme', () => {})
 
 const playerBase = computed(() => MIXPLA_PLAYER_URL)
