@@ -543,7 +543,7 @@ export default defineComponent( {
     } );
 
     watch( selectedAgent, ( newAgent ) => {
-      if ( newAgent ) {
+      if ( newAgent && localFormData.aiOverriding ) {
         localFormData.aiOverriding.name = newAgent.name || "";
         localFormData.aiOverriding.talkativity = newAgent.talkativity || 0;
         localFormData.aiOverriding.preferredVoice = newAgent.preferredVoice[0]?.id || "";
