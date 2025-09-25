@@ -466,7 +466,7 @@ export default defineComponent({
         if (!isLoadingStations.value) {
           fetchRadioStations();
         }
-      }, 30000); // Refresh every 30 seconds
+      }, 60000); // Refresh every 60 seconds
 
       onUnmounted(() => {
         clearInterval(intervalId);

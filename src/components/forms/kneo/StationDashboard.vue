@@ -2,7 +2,18 @@
   <n-space vertical size="large" style="padding: 24px;">
     <n-card>
       <n-space vertical size="medium">
-        <n-h2 style="margin: 0;">{{ brandName }} Dashboard</n-h2>
+        <n-space align="center" size="medium">
+          <n-h2 style="margin: 0;">{{ brandName }} Dashboard</n-h2>
+          <span
+            class="live-status"
+            :class="{ 'live-on-air': isHeartbeatActive }"
+            :style="isHeartbeatActive
+              ? 'color: #ef4444 !important; text-shadow: 0 0 10px rgba(239, 68, 68, 1), 0 0 18px rgba(239, 68, 68, 0.6); font-weight: 600 !important; font-size: 18px; animation: subtle-pulse 2s ease-in-out infinite;'
+              : 'font-weight: 400; font-size: 18px; color: inherit;'"
+          >
+            On Air
+          </span>
+        </n-space>
         <n-space align="center" size="small">
           <n-tag :type="getStatusInfo.type" size="large" :bordered="false">
             {{ getStatusInfo.text }}
@@ -156,16 +167,6 @@
                     </n-space>
                   </div>
                 </n-space>
-              </n-card>
-            </div>
-
-            <div style="flex-shrink: 0; width: auto;">
-              <n-card size="small" title="Timeline">
-                <n-timeline v-if=" timelineItems.length > 0 ">
-                  <n-timeline-item v-for=" ( item, index ) in timelineItems " :key="index" :type="item.type"
-                    :title="item.title" :content="item.content" />
-                </n-timeline>
-                <n-text depth="3" v-else>Station offline - no timeline data</n-text>
               </n-card>
             </div>
 
@@ -414,6 +415,10 @@ export default defineComponent( {
 
     const mixplaUrl = computed( () => {
       return `${MIXPLA_PLAYER_URL}?radio=${encodeURIComponent( props.brandName.toLowerCase() )}`;
+    } );
+
+    const isHeartbeatActive = computed( () => {
+      return stationDetails.value?.heartbeat === true;
     } );
 
     
@@ -697,6 +702,7 @@ export default defineComponent( {
       managedByInfo,
       stationInitials,
       mixplaUrl,
+      isHeartbeatActive,
       // test player
       
       handleStart,
@@ -757,5 +763,16 @@ export default defineComponent( {
   margin: 0 4px 0 2px;
   border-radius: 2px;
   vertical-align: middle;
+}
+
+@keyframes subtle-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
 }
 </style>

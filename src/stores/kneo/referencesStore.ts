@@ -210,60 +210,12 @@ export const useReferencesStore = defineStore('references', () => {
 
   const variableOptions = ref<Array<{label: string, value: string}>>([
     { label: 'ai_dj_name', value: 'ai_dj_name' },
-    { label: 'brand', value: 'brand' },
-    { label: 'title', value: 'title' },
-    { label: 'artist', value: 'artist' },
-    { label: 'listeners', value: 'listeners' },
-    { label: 'context', value: 'context' },
-    { label: 'history', value: 'history' },
-    { label: 'messages', value: 'messages' },
-    { label: 'events', value: 'events' },
-    { label: 'genres', value: 'genres' },
-    { label: 'song_description', value: 'song_description' }
+    { label: 'brand', value: 'brand' }
   ]);
 
   const variableSampleData: Record<string, string[]> = {
     ai_dj_name: ['DJ Nova', 'DJ Echo', 'DJ Pulse', 'DJ Orion', 'DJ Lyra'],
-    brand: ['KNEO Radio', 'SonicWave FM', 'Urban Beats', 'Galaxy Tunes', 'City Vibes'],
-    title: ['Midnight City', 'Blinding Lights', 'Levitating', 'Starboy', 'Get Lucky'],
-    artist: ['M83', 'Daft Punk', 'The Weeknd', 'Dua Lipa', 'Coldplay'],
-    // Structured list of listeners for prompt testing
-    listeners: [
-      '[{"name":"Marko","nickname":"","location":"Latvia"},{"name":"Nelson","nickname":"","location":"Portugal"}]',
-      '[{"name":"Anna","nickname":"Ann","location":"Germany"},{"name":"Kenji","nickname":"","location":"Japan"}]'
-    ],
-    // Structured context object
-    context: [
-      '{"show":"Morning Drive","mood":"upbeat","notes":"News every 30 minutes"}',
-      '{"show":"Late Night Chill","mood":"calm","notes":"Lo-fi/ambient"}'
-    ],
-    // Structured play history
-    history: [
-      '[{"title":"Get Lucky","artist":"Daft Punk"},{"title":"Blinding Lights","artist":"The Weeknd"},{"title":"Levitating","artist":"Dua Lipa"}]',
-      '[{"title":"Yellow","artist":"Coldplay"},{"title":"Starboy","artist":"The Weeknd"}]'
-    ],
-    messages: [
-      'Shoutout to Anna from Berlin! Can you play something from Dua Lipa?',
-      'Loving the vibe! Greetings from Lisbon!',
-      'Request: Any classic Daft Punk track please.'
-    ],
-    // Structured events list
-    events: [
-      '[{"type":"weather","text":"Clear skies, 22°C"},{"type":"traffic","text":"Slow on A2 near exit 5"}]',
-      '[{"type":"promo","text":"Giveaway at :00"},{"type":"local","text":"Food festival 17:00 Central Park"}]'
-    ],
-    // Prefer array-style string for genres to drop-in to JSON prompts
-    genres: [
-      '["pop","electronic"]',
-      '["indie","electronic"]',
-      '["rock"]'
-    ],
-    song_description: [
-      'An energetic synth-pop track with bright hooks and a driving beat, perfect for late-night vibes.',
-      'A mellow indie ballad with warm vocals and lo-fi textures, ideal for a calm evening set.',
-      'A high-tempo electronic banger with punchy bass and crisp percussion, club-ready.',
-      'A soulful pop tune featuring smooth vocals and a catchy, radio-friendly chorus.'
-    ]
+    brand: ['KNEO Radio', 'SonicWave FM', 'Urban Beats', 'Galaxy Tunes', 'City Vibes']
   };
 
   const bitRateOptions = [
