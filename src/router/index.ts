@@ -24,6 +24,11 @@ import WelcomeView from '../views/WelcomeView.vue';
 import About from '../views/About.vue';
 import SubmitSongView from '../views/SubmitSongView.vue';
 import PostMessageView from '../views/PostMessageView.vue';
+// Mobile-first test views under /m
+import Welcome from '../views/Welcome.vue';
+import AboutM from '../views/AboutM.vue';
+import SubmitSong from '../views/SubmitSong.vue';
+import PostMessageM from '../views/PostMessageM.vue';
 // Player is served directly from public/player
 import Keycloak from "keycloak-js";
 import apiClient from "../api/apiClient";
@@ -71,6 +76,31 @@ const routes: Array<RouteRecordRaw> = [
         path: '/post-message',
         name: 'PostMessage',
         component: PostMessageView,
+        meta: { requiresAuth: false }
+    },
+    // New test routes for mobile-first public pages under /m
+    {
+        path: '/m',
+        name: 'WelcomeV2',
+        component: Welcome,
+        meta: { requiresAuth: false }
+    },
+    {
+        path: '/m/about',
+        name: 'PublicAboutV2',
+        component: AboutM,
+        meta: { requiresAuth: false }
+    },
+    {
+        path: '/m/submit-song',
+        name: 'SubmitSongV2',
+        component: SubmitSong,
+        meta: { requiresAuth: false }
+    },
+    {
+        path: '/m/post-message',
+        name: 'PostMessageV2',
+        component: PostMessageM,
         meta: { requiresAuth: false }
     },
     {

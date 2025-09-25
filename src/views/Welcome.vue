@@ -1,0 +1,166 @@
+<template>
+  <n-config-provider :theme="isDarkTheme ? darkTheme : null">
+    <n-layout :native-scrollbar="true"
+              :style="{ minHeight: '100vh', backgroundColor: isDarkTheme ? '#1a1a1a' : '#f8f8f8' }"
+              class="welcome-layout">
+      <n-layout-header bordered :style="{ background: 'transparent' }">
+        <n-space align="center" justify="space-between" :wrap="false" :style="{ maxWidth: '720px', margin: '0 auto', padding: '12px 16px' }">
+          <img src="/pwa-192x192.png" alt="Mixpla" style="width:32px;height:32px;" />
+          <n-switch :value="isDarkTheme" size="small" :round="false" @update:value="toggleTheme">
+            <template #checked-icon>
+              <n-icon><Moon /></n-icon>
+            </template>
+            <template #unchecked-icon>
+              <n-icon><Sun /></n-icon>
+            </template>
+          </n-switch>
+        </n-space>
+      </n-layout-header>
+
+      <n-layout-content :style="{ padding: '0 16px 24px' }">
+        <div class="root" :style="{ maxWidth: '720px', margin: '0 auto' }">
+          <n-space vertical size="large">
+            <n-space vertical size="small" align="center" justify="center">
+              <n-thing>
+                <template #header>
+                  <strong style="font-size:22px; font-weight:800;">Stream Your Story</strong>
+                </template>
+                <template #description>
+                  <span style="font-size:14px; opacity:.9;">Build your radio station. Let AI DJ handle the flow.</span>
+                </template>
+              </n-thing>
+            </n-space>
+
+            <router-link to="/outline/radiostations" style="text-decoration:none;">
+              <n-button size="large" block>
+                Manage Radiostations
+                <template #icon><n-icon><ArrowRight /></n-icon></template>
+              </n-button>
+            </router-link>
+
+            <n-card :segmented="{ content: true }" content-style="padding: 8px 12px;">
+              <template #header>
+                <n-space align="center" justify="space-between" :wrap="false" style="width:100%">
+                  <strong>Featured Stations</strong>
+                  <n-button text size="small" @click="fetchStations" :loading="loading">Refresh</n-button>
+                </n-space>
+              </template>
+
+              <template v-if="loading">
+                <n-skeleton text :repeat="3" />
+              </template>
+              <template v-else-if="error">
+                <n-text type="error" style="font-size:14px;">Failed to load stations</n-text>
+              </template>
+              <template v-else>
+                <n-space vertical size="small">
+                  <n-thing v-for="s in stations" :key="s.slugName" @click="openPlayer(s)"
+                          style="cursor:pointer;">
+                    <template #avatar>
+                      <div :style="{ width:'6px', height:'100%', borderRadius:'9999px', background: s.color }"></div>
+                    </template>
+                    <template #header>
+                      <n-space align="center" justify="space-between" :wrap="false">
+                        <strong style="font-size:15px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ s.name }}</strong>
+                        <n-text :class="{ online: ['ON_LINE','WARMING_UP'].includes(s.currentStatus as any) }" depth="3" style="font-size:12px;">
+                          {{ statusText(s.currentStatus) }}
+                        </n-text>
+                      </n-space>
+                    </template>
+                    <template #description>
+                      <n-ellipsis :line-clamp="2" style="font-size:12px; opacity:.85;">{{ s.description }}</n-ellipsis>
+                    </template>
+                    <template #footer>
+                      <n-space size="small" wrap>
+                        <router-link v-if="s.submissionPolicy !== 'NOT_ALLOWED'" :to="{ name: 'SubmitSong', query: { brand: s.slugName } }" style="text-decoration:none;">
+                          <n-button size="small" secondary>Submit song</n-button>
+                        </router-link>
+                        <router-link v-if="s.messagingPolicy !== 'NOT_ALLOWED'" :to="{ name: 'PostMessage', query: { brand: s.slugName } }" style="text-decoration:none;">
+                          <n-button size="small" tertiary>Post message</n-button>
+                        </router-link>
+                      </n-space>
+                    </template>
+                  </n-thing>
+                </n-space>
+              </template>
+            </n-card>
+
+            <n-space vertical size="small" align="center">
+              <a href="https://discord.com/channels/1395012925512613998/1395012926154346538" target="_blank" rel="noopener noreferrer" style="font-size:13px; text-decoration: underline;">Discord</a>
+              <router-link to="/about" style="font-size:13px; text-decoration: underline;">About</router-link>
+            </n-space>
+          </n-space>
+        </div>
+      </n-layout-content>
+    </n-layout>
+  </n-config-provider>
+</template>
+
+<script setup lang="ts">
+import { computed, inject, onMounted, ref, type Ref } from 'vue'
+import { NConfigProvider, NLayout, NLayoutHeader, NLayoutContent, NSpace, NCard, NThing, NEllipsis, NButton, NIcon, NText, NSkeleton, darkTheme } from 'naive-ui'
+import { ArrowRight, Sun, Moon } from '@vicons/tabler'
+import { useReferencesStore } from '../stores/kneo/referencesStore'
+import { MIXPLA_PLAYER_URL } from '../constants/config'
+
+interface Station {
+  name: string;
+  slugName: string;
+  color: string;
+  description: string;
+  currentStatus?: 'ON_LINE' | 'OFF_LINE' | 'WARMING_UP';
+  submissionPolicy?: 'NO_RESTRICTIONS' | 'REVIEW_REQUIRED' | 'NOT_ALLOWED';
+  messagingPolicy?: 'NO_RESTRICTIONS' | 'REVIEW_REQUIRED' | 'NOT_ALLOWED';
+}
+
+const referencesStore = useReferencesStore()
+const stations = ref<Station[]>([])
+const loading = ref(true)
+const error = ref<unknown | null>(null)
+
+const isDarkTheme = inject<Ref<boolean>>('isDarkTheme', ref(false))
+const toggleTheme = inject<(v: boolean) => void>('toggleTheme', () => {})
+
+const playerBase = computed(() => MIXPLA_PLAYER_URL)
+
+function statusText(s?: Station['currentStatus']) {
+  if (s === 'ON_LINE') return 'Online'
+  if (s === 'WARMING_UP') return 'Online'
+  if (s === 'OFF_LINE') return 'Offline'
+  return 'Unknown'
+}
+
+function openPlayer(s: Station) {
+  const url = `${playerBase.value}?radio=${encodeURIComponent(s.name.toLowerCase())}`
+  window.open(url, '_blank', 'noopener,noreferrer')
+}
+
+async function fetchStations() {
+  try {
+    loading.value = true
+    const data = await referencesStore.fetchRadioStations()
+    stations.value = data
+    error.value = null
+  } catch (e) {
+    error.value = e
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchStations()
+})
+</script>
+
+<style scoped>
+.online {
+  color: #16a34a;
+  text-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+}
+
+.welcome-dark :deep(.root),
+.welcome-dark :deep(.root *) {
+  color: #e0e0e0 !important;
+}
+</style>
