@@ -18,25 +18,18 @@
       </n-layout-header>
 
       <n-layout-content :style="{ padding: '0 16px 24px' }">
-        <div class="root" :style="{ maxWidth: '720px', margin: '0 auto' }">
+        <n-space vertical class="root" :style="{ maxWidth: '720px', margin: '0 auto' }">
           <n-space vertical size="large">
             <n-space vertical size="small" align="center" justify="center">
               <n-thing>
                 <template #header>
-                  <strong style="font-size:22px; font-weight:800;">Stream Your Story</strong>
+                  <strong style="font-size:24px; font-weight:800;">Stream Your Story</strong>
                 </template>
                 <template #description>
-                  <span style="font-size:14px; opacity:.9;">Build your radio station. Let AI DJ handle the flow.</span>
+                  <span style="font-size:19px; opacity:.9;">Build your radio station. Let AI DJ handle the flow.</span>
                 </template>
               </n-thing>
             </n-space>
-
-            <router-link to="/outline/radiostations" style="text-decoration:none;">
-              <n-button size="large" block>
-                Manage Radiostations
-                <template #icon><n-icon><ArrowRight /></n-icon></template>
-              </n-button>
-            </router-link>
 
             <n-card :segmented="{ content: true }" content-style="padding: 8px 12px;">
               <template #header>
@@ -62,20 +55,20 @@
                     <template #header>
                       <n-space align="center" justify="space-between" :wrap="false">
                         <strong style="font-size:15px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ s.name }}</strong>
-                        <n-text :class="{ online: ['ON_LINE','WARMING_UP'].includes(s.currentStatus as any) }" depth="3" style="font-size:12px;">
+                        <span :class="{ online: ['ON_LINE','WARMING_UP'].includes(s.currentStatus as any) }" style="font-size:12px;">
                           {{ statusText(s.currentStatus) }}
-                        </n-text>
+                        </span>
                       </n-space>
                     </template>
                     <template #description>
-                      <n-ellipsis :line-clamp="2" style="font-size:12px; opacity:.85;">{{ s.description }}</n-ellipsis>
+                      <n-ellipsis :line-clamp="2" style="font-size:14px; opacity:.85;">{{ s.description }}</n-ellipsis>
                     </template>
                     <template #footer>
                       <n-space size="small" wrap>
-                        <router-link v-if="s.submissionPolicy !== 'NOT_ALLOWED'" :to="{ name: 'SubmitSong', query: { brand: s.slugName } }" style="text-decoration:none;">
+                        <router-link v-if="s.submissionPolicy !== 'NOT_ALLOWED'" :to="{ name: 'SubmitSongV2', query: { brand: s.slugName } }" style="text-decoration:none;">
                           <n-button size="small" secondary>Submit song</n-button>
                         </router-link>
-                        <router-link v-if="s.messagingPolicy !== 'NOT_ALLOWED'" :to="{ name: 'PostMessage', query: { brand: s.slugName } }" style="text-decoration:none;">
+                        <router-link v-if="s.messagingPolicy !== 'NOT_ALLOWED'" :to="{ name: 'PostMessageV2', query: { brand: s.slugName } }" style="text-decoration:none;">
                           <n-button size="small" tertiary>Post message</n-button>
                         </router-link>
                       </n-space>
@@ -89,8 +82,17 @@
               <a href="https://discord.com/channels/1395012925512613998/1395012926154346538" target="_blank" rel="noopener noreferrer" style="font-size:13px; text-decoration: underline;">Discord</a>
               <router-link to="/about" style="font-size:13px; text-decoration: underline;">About</router-link>
             </n-space>
+
+            <n-space align="center" justify="center">
+              <router-link to="/outline/radiostations" style="text-decoration:none;">
+                <n-button size="large" style="width: 220px;">
+                  Manage Radiostations
+                  <template #icon><n-icon><ArrowRight /></n-icon></template>
+                </n-button>
+              </router-link>
+            </n-space>
           </n-space>
-        </div>
+        </n-space>
       </n-layout-content>
     </n-layout>
   </n-config-provider>
@@ -98,7 +100,7 @@
 
 <script setup lang="ts">
 import { computed, inject, onMounted, ref, type Ref } from 'vue'
-import { NConfigProvider, NLayout, NLayoutHeader, NLayoutContent, NSpace, NCard, NThing, NEllipsis, NButton, NIcon, NText, NSkeleton, darkTheme } from 'naive-ui'
+import { NConfigProvider, NLayout, NLayoutHeader, NLayoutContent, NSpace, NCard, NThing, NEllipsis, NButton, NIcon, NText, NTag, NSkeleton, NSwitch, darkTheme } from 'naive-ui'
 import { ArrowRight, Sun, Moon } from '@vicons/tabler'
 import { useReferencesStore } from '../stores/kneo/referencesStore'
 import { MIXPLA_PLAYER_URL } from '../constants/config'
@@ -155,12 +157,19 @@ onMounted(() => {
 
 <style scoped>
 .online {
-  color: #16a34a;
-  text-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+  color: #16a34a !important;
+  text-shadow: 0 0 6px rgba(34, 197, 94, 0.6) !important;
 }
 
+/* Force green in dark mode where we globally set text color via :deep */
 .welcome-dark :deep(.root),
 .welcome-dark :deep(.root *) {
   color: #e0e0e0 !important;
+}
+
+/* Re-apply green for status after global dark text color */
+.welcome-dark :deep(.root .online) {
+  color: #16a34a !important;
+  text-shadow: 0 0 6px rgba(34, 197, 94, 0.6) !important;
 }
 </style>

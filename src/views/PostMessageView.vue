@@ -3,14 +3,14 @@
     <div :style="{ minHeight: '100vh', padding: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center' }">
     <div style="max-width: 720px; width: 100%;">
       <n-grid cols="24" x-gap="16" y-gap="16">
-        <n-grid-item :span="24">
+        <n-grid-item :span="24" v-if="!hideBack">
           <router-link to="/" class="inline-block">
             <n-button>← Back</n-button>
           </router-link>
         </n-grid-item>
         
         <n-grid-item :span="24">
-          <n-card title="">
+          <n-card style="max-width: 720px; width: 100%;" title="">
             <n-form :model="form" ref="formRef" label-placement="top">
               <n-grid cols="24" x-gap="16" y-gap="8">
                 <n-grid-item :span="24">
@@ -52,13 +52,13 @@
 
                 <n-grid-item :span="12">
                   <n-form-item label="Email">
-                    <n-space>
-                      <n-input v-model:value="form.email" placeholder="" />
+                    <div style="display:flex; gap:8px; align-items:center; min-width:0; width:100%;">
+                      <n-input v-model:value="form.email" placeholder="" style="flex:1; min-width:0;" />
                       <n-button size="small" @click="sendCode" :loading="sendingCode"
                                 :disabled="sendingCode || !isValidEmail(form.email)">
                         {{ codeSent ? 'Resend code' : 'Send code' }}
                       </n-button>
-                    </n-space>
+                    </div>
                   </n-form-item>
                 </n-grid-item>
                 <n-grid-item :span="12">
@@ -125,6 +125,7 @@
 </template>
 
 <script setup lang="ts">
+const props = defineProps<{ hideBack?: boolean }>()
 import { computed, inject, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import {

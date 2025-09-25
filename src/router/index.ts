@@ -27,7 +27,7 @@ import PostMessageView from '../views/PostMessageView.vue';
 // Mobile-first test views under /m
 import Welcome from '../views/Welcome.vue';
 import AboutM from '../views/AboutM.vue';
-import SubmitSong from '../views/SubmitSong.vue';
+import SubmitSongM from '../views/SubmitSongM.vue';
 import PostMessageM from '../views/PostMessageM.vue';
 // Player is served directly from public/player
 import Keycloak from "keycloak-js";
@@ -94,7 +94,7 @@ const routes: Array<RouteRecordRaw> = [
     {
         path: '/m/submit-song',
         name: 'SubmitSongV2',
-        component: SubmitSong,
+        component: SubmitSongM,
         meta: { requiresAuth: false }
     },
     {
