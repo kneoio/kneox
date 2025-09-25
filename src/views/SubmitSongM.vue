@@ -1,4 +1,5 @@
 <template>
+  <n-config-provider :theme="providedIsDark && providedIsDark.value ? darkTheme : null" :style="{ backgroundColor: (providedIsDark && providedIsDark.value) ? '#1a1a1a' : '#f8f8f8', minHeight: '100vh' }">
   <n-space vertical :style="{ maxWidth: '720px', margin: '0 auto', padding: '16px' }">
     <StationHeaderMini
       :brand="form.brand"
@@ -135,6 +136,7 @@
       </n-alert>
     </n-form>
   </n-space>
+  </n-config-provider>
 </template>
 
 <script setup lang="ts">
@@ -147,7 +149,7 @@ import {
   NCheckbox,
   NCollapse,
   NCollapseItem,
-  NDivider,
+  NConfigProvider,
   NForm,
   NFormItem,
   NGrid,
@@ -155,17 +157,13 @@ import {
   NInput,
   NSelect,
   NUpload,
-  NH2,
-  NEllipsis,
-  NText,
-  NNumberAnimation,
   useMessage,
-  NInputGroup,
   NSpace
 } from 'naive-ui'
 import { useSubmissionStore } from '../stores/public/submissionStore'
 import { useReferencesStore } from '../stores/kneo/referencesStore'
 import MarkdownIt from 'markdown-it'
+import { darkTheme } from 'naive-ui'
 import StationHeaderMini from '../components/public/StationHeaderMini.vue'
 import EmailVerifyFields from '../components/public/EmailVerifyFields.vue'
 
