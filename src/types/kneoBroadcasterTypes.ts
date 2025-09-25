@@ -43,6 +43,18 @@ export interface ProfileSave {
     explicitContent: boolean;
 }
 
+export interface ProfileOverriding {
+    name: string;
+    description: string;
+}
+
+export interface AiOverriding {
+    name: string;
+    prompt: string;
+    talkativity: number;
+    preferredVoice: string;
+}
+
 export interface RadioStation {
     id: string;
     author: string;
@@ -63,7 +75,9 @@ export interface RadioStation {
     actionUrl: string;
     bitRate?: string;
     aiAgentId?: string;
+    aiOverriding?: AiOverriding;
     profileId?: string;
+    profileOverriding?: ProfileOverriding;
     timeZone?: string;
     managedBy?: ManagedBy;
     aiControlAllowed?: boolean;
@@ -81,7 +95,9 @@ export interface RadioStationSave {
     color: string;
     bitRate?: string;
     aiAgentId?: string;
+    aiOverriding?: AiOverriding;
     profileId?: string;
+    profileOverriding?: ProfileOverriding;
     timeZone?: string;
     managedBy?: ManagedBy;
     submissionPolicy?: SubmissionPolicy;
