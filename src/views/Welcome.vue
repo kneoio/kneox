@@ -15,10 +15,10 @@
             <n-space vertical size="small" align="center" justify="center">
               <n-thing>
                 <template #header>
-                  <n-h1 style="font-size:30px; font-weight:bold; font-family: 'Kaylon', sans-serif;">MIXPLA</n-h1>
+                  <n-h1 style="font-size:30px; font-weight:bold; font-family: 'Kaylon', sans-serif; margin-top: 0; margin-bottom: 0px;">MIXPLA</n-h1>
                 </template>
                 <template #description>
-                  <span style="font-size:19px; opacity:.9; font-family: 'ConthraxSB', sans-serif;">Build your radio station. Let AI DJ handle the flow.</span>
+                  <span style="font-size:20px; opacity:.9;">Build your radio station. Let AI DJ handle the flow.</span>
                 </template>
               </n-thing>
             </n-space>
