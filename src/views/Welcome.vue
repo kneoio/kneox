@@ -15,7 +15,7 @@
             <n-space vertical size="small" align="center" justify="center">
               <n-thing>
                 <template #header>
-                  <n-h1 style="font-size:24px; font-weight:800; font-family: 'ConthraxSB', sans-serif;">MIXPLA</n-h1>
+                  <n-h1 style="font-size:30px; font-weight:bold; font-family: 'Kaylon', sans-serif;">MIXPLA</n-h1>
                 </template>
                 <template #description>
                   <span style="font-size:19px; opacity:.9; font-family: 'ConthraxSB', sans-serif;">Build your radio station. Let AI DJ handle the flow.</span>
@@ -152,6 +152,13 @@ onMounted(() => {
   font-family: 'ConthraxSB';
   src: url('/src/assets/fonts/conthrax-sb.ttf') format('truetype');
   font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Kaylon';
+  src: url('/src/assets/fonts/kaylonbold.otf') format('opentype');
+  font-weight: 800;
   font-style: normal;
   font-display: swap;
 }

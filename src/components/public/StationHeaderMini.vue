@@ -1,9 +1,9 @@
 <template>
   <n-space vertical :wrap="false" :style="{ gap: '6px', marginBottom: '8px' }">
     <n-space align="center" :wrap="false" :style="{ gap: '12px' }">
-      <n-button quaternary size="small" @click="goBack" :focusable="false">
+      <n-button quaternary size="small" @click="goHome" :focusable="false">
         <n-icon size="16"><ArrowLeft /></n-icon>
-        Back
+        Home
       </n-button>
     </n-space>
     <n-space align="center" :wrap="false" :style="{ gap: '12px' }">
@@ -45,9 +45,8 @@ const props = defineProps<{
 const flashSongs = ref(false)
 
 const router = useRouter()
-function goBack() {
-  if (window.history.length > 1) router.back()
-  else router.push('/')
+function goHome() {
+  router.push('/')
 }
 
 function onSongsAnimationFinish() {

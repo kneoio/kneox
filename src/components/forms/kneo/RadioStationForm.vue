@@ -513,7 +513,7 @@ export default defineComponent( {
       profileId: undefined,
       timeZone: "",
       managedBy: undefined,
-      bitRate: "128000",
+      bitRate: 128000,
       submissionPolicy: undefined,
       messagingPolicy: undefined,
       aiOverriding: { name: "", prompt: "", talkativity: 0, preferredVoice: "" },
@@ -811,6 +811,20 @@ export default defineComponent( {
         await store.fetch( id );
         const currentData = store.getCurrent;
         Object.assign( localFormData, currentData );
+
+        // Normalize numeric fields to ensure sliders receive numbers
+        const normalizeNumericFields = () => {
+          // bitRate may arrive as a string from the server
+          const br = (localFormData as any).bitRate;
+          (localFormData as any).bitRate = typeof br === 'string' ? Number(br) || 128000 : (typeof br === 'number' ? br : 128000);
+
+          // aiOverriding.talkativity may also arrive as a string
+          if (localFormData.aiOverriding) {
+            const t = (localFormData.aiOverriding as any).talkativity;
+            (localFormData.aiOverriding as any).talkativity = typeof t === 'string' ? Number(t) || 0 : (typeof t === 'number' ? t : 0);
+          }
+        };
+        normalizeNumericFields();
 
 
         if ( localFormData.localizedName ) {
