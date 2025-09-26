@@ -140,7 +140,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import type { UploadCustomRequestOptions, UploadFileInfo } from 'naive-ui'
 import {
@@ -191,10 +191,6 @@ const form = ref({
   attachedMessage: ''
 })
 
-function onSongsAnimationFinish() {
-  flashSongs.value = false
-}
-
 const fileList = ref<UploadFileInfo[]>([])
 const currentUploadId = ref<string | null>(null)
 const uploadedFileName = ref<string>('')
@@ -211,19 +207,6 @@ const stationDescription = ref<string>('')
 const stationColor = ref<string>('')
 const stationAvailableSongs = ref<number | null>(null)
 const flashSongs = ref(false)
-const stationColorCss = computed(() => {
-  const c = stationColor.value || ''
-  const m = /^#([0-9a-fA-F]{8})$/.exec(c)
-  if (m) {
-    const hex = m[1]
-    const r = parseInt(hex.slice(0, 2), 16)
-    const g = parseInt(hex.slice(2, 4), 16)
-    const b = parseInt(hex.slice(4, 6), 16)
-    const a = parseInt(hex.slice(6, 8), 16) / 255
-    return `rgba(${r}, ${g}, ${b}, ${a})`
-  }
-  return c
-})
 const stationSlug = route.query.brand as string
 
 const agreeHighlightStyle = computed(() => {

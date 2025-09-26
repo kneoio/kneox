@@ -15,7 +15,7 @@
             <n-space vertical size="small" align="center" justify="center">
               <n-thing>
                 <template #header>
-                  <strong style="font-size:24px; font-weight:800; font-family: 'ConthraxSB', sans-serif;">Stream Your Story</strong>
+                  <n-h1 style="font-size:24px; font-weight:800; font-family: 'ConthraxSB', sans-serif;">MIXPLA</n-h1>
                 </template>
                 <template #description>
                   <span style="font-size:19px; opacity:.9; font-family: 'ConthraxSB', sans-serif;">Build your radio station. Let AI DJ handle the flow.</span>
@@ -46,7 +46,11 @@
                     <template #header>
                       <n-space align="center" justify="space-between" :wrap="false">
                         <strong style="font-size:15px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ s.name }}</strong>
-                        <span :class="{ online: ['ON_LINE','WARMING_UP'].includes(s.currentStatus as any) }" style="font-size:12px;">
+                        <span :class="{ online: ['ON_LINE','WARMING_UP'].includes(s.currentStatus as any) }"
+                              :style="(['ON_LINE','WARMING_UP'].includes(s.currentStatus as any))
+                              ? 'color: #84cc16 !important; text-shadow: 0 0 10px rgba(132, 204, 22, 1), 0 0 14px rgba(132, 204, 22, 0.6); font-weight: 400 !important;'
+                              : 'font-weight: 400;'"
+                        >
                           {{ statusText(s.currentStatus) }}
                         </span>
                       </n-space>
@@ -56,10 +60,10 @@
                     </template>
                     <template #footer>
                       <n-space size="small" wrap>
-                        <router-link v-if="s.submissionPolicy !== 'NOT_ALLOWED'" :to="{ name: 'SubmitSongV2', query: { brand: s.slugName } }" style="text-decoration:none;" @click.stop>
+                        <router-link v-if="s.submissionPolicy !== 'NOT_ALLOWED'" :to="{ name: 'SubmitSong', query: { brand: s.slugName } }" style="text-decoration:none;" @click.stop>
                           <n-button size="small" secondary>Submit song</n-button>
                         </router-link>
-                        <router-link v-if="s.messagingPolicy !== 'NOT_ALLOWED'" :to="{ name: 'PostMessageV2', query: { brand: s.slugName } }" style="text-decoration:none;" @click.stop>
+                        <router-link v-if="s.messagingPolicy !== 'NOT_ALLOWED'" :to="{ name: 'PostMessage', query: { brand: s.slugName } }" style="text-decoration:none;" @click.stop>
                           <n-button size="small" tertiary>Post message</n-button>
                         </router-link>
                       </n-space>
@@ -91,7 +95,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { NConfigProvider, NLayout, NLayoutHeader, NLayoutContent, NSpace, NCard, NThing, NEllipsis, NButton, NIcon, NText, NTag, NSkeleton } from 'naive-ui'
+import { NConfigProvider, NLayout, NLayoutHeader, NLayoutContent, NSpace, NCard, NThing, NH1, NButton, NIcon, NText, NSkeleton } from 'naive-ui'
 import { ArrowRight } from '@vicons/tabler'
 import { useReferencesStore } from '../stores/kneo/referencesStore'
 import { MIXPLA_PLAYER_URL } from '../constants/config'

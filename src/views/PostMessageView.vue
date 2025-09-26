@@ -8,7 +8,7 @@
             <n-button>← Back</n-button>
           </router-link>
         </n-grid-item>
-        
+
         <n-grid-item :span="24">
           <n-card style="max-width: 720px; width: 100%;" title="">
             <n-form :model="form" ref="formRef" label-placement="top">
@@ -136,7 +136,6 @@ import {
   NCollapse,
   NCollapseItem,
   NConfigProvider,
-  NDivider,
   NForm,
   NFormItem,
   NGrid,
@@ -290,7 +289,7 @@ async function handleSubmit() {
 
   try {
     const termsText = `${referencesStore.messagePostingAgreement.title}\n\n${referencesStore.messagePostingAgreement.clause}`
-    
+
     const payload = {
       confirmationCode: form.value.confirmationCode,
       from: form.value.from,

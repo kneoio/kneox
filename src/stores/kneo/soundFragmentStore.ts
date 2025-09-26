@@ -102,7 +102,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         apiViewResponse.value = response.data.payload;
     };
 
-    const fetchAvailableSoundFragments = async (brandName: string,  page = 1, pageSize = 10, filters: SoundFragmentFilterDTO = {}) => {
+    const fetchAvailableSoundFragments = async (brandName: string,  page = 1, pageSize = 10) => {
         const response = await apiClient.get(`/soundfragments/available-soundfragments?page=${page}&size=${pageSize}&brand=${brandName}`);
         if (!response?.data?.payload?.viewData?.entries) throw new Error('Invalid API response structure for available sound fragments');
 

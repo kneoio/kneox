@@ -20,16 +20,10 @@ import ProfileForm from '../components/forms/kneo/EnvironmentProfileForm.vue';
 import Events from '../components/lists/kneo/Events.vue';
 import EventForm from '../components/forms/kneo/EventForm.vue';
 import Profile from '../components/lists/kneo/Profile.vue';
-import WelcomeView from '../views/WelcomeView.vue';
-import About from '../views/About.vue';
-import SubmitSongView from '../views/SubmitSongView.vue';
-import PostMessageView from '../views/PostMessageView.vue';
-// Mobile-first test views under /m
 import Welcome from '../views/Welcome.vue';
 import AboutM from '../views/AboutM.vue';
 import SubmitSongM from '../views/SubmitSongM.vue';
 import PostMessageM from '../views/PostMessageM.vue';
-// Player is served directly from public/player
 import Keycloak from "keycloak-js";
 import apiClient from "../api/apiClient";
 
@@ -43,63 +37,23 @@ const routes: Array<RouteRecordRaw> = [
     {
         path: '/',
         name: 'Welcome',
-        component: WelcomeView,
-    },
-    {
-        path: '/welcome',
-        name: 'WelcomeView',
-        redirect: () => {
-            window.location.href = '/welcome.html';
-            return {name: 'WelcomeView'};
-        },
-        meta: {requiresAuth: false}
-    },
-    {
-        path: '/mixpla',
-        name: 'Mixpla',
-        component: WelcomeView,
-        meta: {requiresAuth: false}
+        component: Welcome,
     },
     {
         path: '/about',
-        name: 'PublicAbout',
-        component: About,
+        name: 'About',
+        component: AboutM,
         meta: { requiresAuth: false }
     },
     {
         path: '/submit-song',
         name: 'SubmitSong',
-        component: SubmitSongView,
+        component: SubmitSongM,
         meta: { requiresAuth: false }
     },
     {
         path: '/post-message',
         name: 'PostMessage',
-        component: PostMessageView,
-        meta: { requiresAuth: false }
-    },
-    // New test routes for mobile-first public pages under /m
-    {
-        path: '/m',
-        name: 'WelcomeV2',
-        component: Welcome,
-        meta: { requiresAuth: false }
-    },
-    {
-        path: '/m/about',
-        name: 'PublicAboutV2',
-        component: AboutM,
-        meta: { requiresAuth: false }
-    },
-    {
-        path: '/m/submit-song',
-        name: 'SubmitSongV2',
-        component: SubmitSongM,
-        meta: { requiresAuth: false }
-    },
-    {
-        path: '/m/post-message',
-        name: 'PostMessageV2',
         component: PostMessageM,
         meta: { requiresAuth: false }
     },
