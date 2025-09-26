@@ -379,7 +379,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, onUnmounted, reactive, ref, computed, watch } from "vue";
+import { defineComponent, onMounted, onUnmounted, reactive, ref, computed, watch, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
   NButton,
@@ -469,6 +469,19 @@ export default defineComponent( {
     const lang = ref( html() );
     const profileOverrideEnabled = ref( false );
     const aiOverrideEnabled = ref( false );
+    
+
+    const toBool = (v: any): boolean => {
+      if (typeof v === 'boolean') return v;
+      if (typeof v === 'number') return v === 1;
+      if (typeof v === 'string') {
+        const s = v.trim().toLowerCase();
+        return s === '1' || s === 'true' || s === 'yes';
+      }
+      return false;
+    };
+
+    
 
     const editorExtensions = computed( () => [
       EditorView.lineWrapping
@@ -809,8 +822,21 @@ export default defineComponent( {
         await profileStore.fetchAllUnsecured( 1, 100 );
         await referencesStore.fetchVoices();
         await store.fetch( id );
+        await nextTick();
         const currentData = store.getCurrent;
         Object.assign( localFormData, currentData );
+
+        // Initialize override toggles from payload flags if present
+        aiOverrideEnabled.value = toBool((currentData as any).aiOverridingEnabled);
+        profileOverrideEnabled.value = toBool((currentData as any).profileOverridingEnabled);
+
+        // Ensure override objects exist if enabled
+        if (aiOverrideEnabled.value && !localFormData.aiOverriding) {
+          (localFormData as any).aiOverriding = { name: '', prompt: '', talkativity: 0, preferredVoice: '' };
+        }
+        if (profileOverrideEnabled.value && !localFormData.profileOverriding) {
+          (localFormData as any).profileOverriding = { name: '', description: '' };
+        }
 
         // Normalize numeric fields to ensure sliders receive numbers
         const normalizeNumericFields = () => {
