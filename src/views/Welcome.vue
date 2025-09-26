@@ -44,30 +44,35 @@
                       <div :style="{ width:'6px', height:'100%', borderRadius:'9999px', background: s.color }"></div>
                     </template>
                     <template #header>
-                      <n-space align="center" justify="space-between" :wrap="false">
-                        <strong style="font-size:15px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ s.name }}</strong>
-                        <span :class="{ online: ['ON_LINE','WARMING_UP'].includes(s.currentStatus as any) }"
-                              :style="(['ON_LINE','WARMING_UP'].includes(s.currentStatus as any))
-                              ? 'color: #84cc16 !important; text-shadow: 0 0 10px rgba(132, 204, 22, 1), 0 0 14px rgba(132, 204, 22, 0.6); font-weight: 400 !important;'
-                              : 'font-weight: 400;'"
-                        >
-                          {{ statusText(s.currentStatus) }}
-                        </span>
-                      </n-space>
+                      <n-grid :cols="24" :x-gap="8" :y-gap="0" style="width: 100%">
+                        <n-gi :span="18">
+                          <n-space align="center" :wrap="false" style="min-width: 0;">
+                            <strong style="font-size:15px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ s.name }}</strong>
+                            <span :class="{ online: ['ON_LINE','WARMING_UP'].includes(s.currentStatus as any) }"
+                                  :style="(['ON_LINE','WARMING_UP'].includes(s.currentStatus as any))
+                                  ? 'color: #84cc16 !important; text-shadow: 0 0 10px rgba(132, 204, 22, 1), 0 0 14px rgba(132, 204, 22, 0.6); font-weight: 400 !important;'
+                                  : 'font-weight: 400;'"
+                            >
+                              {{ statusText(s.currentStatus) }}
+                            </span>
+                          </n-space>
+                        </n-gi>
+                        <n-gi :span="6" style="display:flex; justify-content:flex-end; min-width: 0;">
+                          <n-space size="small" :wrap="false" style="white-space: nowrap;">
+                            <router-link v-if="s.submissionPolicy !== 'NOT_ALLOWED'" :to="{ name: 'SubmitSong', query: { brand: s.slugName } }" style="text-decoration:none;" @click.stop>
+                              <n-button size="tiny" secondary>Submit song</n-button>
+                            </router-link>
+                            <router-link v-if="s.messagingPolicy !== 'NOT_ALLOWED'" :to="{ name: 'PostMessage', query: { brand: s.slugName } }" style="text-decoration:none;" @click.stop>
+                              <n-button size="tiny" tertiary>Post message</n-button>
+                            </router-link>
+                          </n-space>
+                        </n-gi>
+                      </n-grid>
                     </template>
                     <template #description>
                       <div style="font-size:14px; opacity:.85;">{{ s.description }}</div>
                     </template>
-                    <template #footer>
-                      <n-space size="small" wrap>
-                        <router-link v-if="s.submissionPolicy !== 'NOT_ALLOWED'" :to="{ name: 'SubmitSong', query: { brand: s.slugName } }" style="text-decoration:none;" @click.stop>
-                          <n-button size="small" secondary>Submit song</n-button>
-                        </router-link>
-                        <router-link v-if="s.messagingPolicy !== 'NOT_ALLOWED'" :to="{ name: 'PostMessage', query: { brand: s.slugName } }" style="text-decoration:none;" @click.stop>
-                          <n-button size="small" tertiary>Post message</n-button>
-                        </router-link>
-                      </n-space>
-                    </template>
+                    
                   </n-thing>
                 </n-space>
               </template>
@@ -95,7 +100,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { NConfigProvider, NLayout, NLayoutHeader, NLayoutContent, NSpace, NCard, NThing, NH1, NButton, NIcon, NText, NSkeleton } from 'naive-ui'
+import { NConfigProvider, NLayout, NLayoutHeader, NLayoutContent, NSpace, NCard, NThing, NH1, NButton, NIcon, NText, NSkeleton, NGrid, NGi } from 'naive-ui'
 import { ArrowRight } from '@vicons/tabler'
 import { useReferencesStore } from '../stores/kneo/referencesStore'
 import { MIXPLA_PLAYER_URL } from '../constants/config'
