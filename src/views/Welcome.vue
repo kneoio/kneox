@@ -36,7 +36,7 @@
               </template>
               <template v-else>
                 <n-space vertical size="small">
-                  <n-thing v-for="s in stations" :key="s.slugName" @click="openPlayer(s)"
+                  <n-thing v-for="s in stations" :key="s.name" @click="openPlayer(s)"
                           style="cursor:pointer;">
                     <template #avatar>
                       <div :style="{ width:'6px', height:'100%', borderRadius:'9999px', background: s.color }"></div>
@@ -58,10 +58,10 @@
                         <n-gi :span="6" class="actions" style="display:flex; justify-content:flex-end; min-width: 0;">
                           <n-space size="small" :wrap="false" style="white-space: nowrap;">
                             <router-link v-if="s.submissionPolicy !== 'NOT_ALLOWED'" :to="{ name: 'SubmitSong', query: { brand: s.slugName } }" style="text-decoration:none;" @click.stop>
-                              <n-button size="tiny">Submit song</n-button>
+                              <n-button size="tiny" dashed :color="s.color">Submit song</n-button>
                             </router-link>
                             <router-link v-if="s.messagingPolicy !== 'NOT_ALLOWED'" :to="{ name: 'PostMessage', query: { brand: s.slugName } }" style="text-decoration:none;" @click.stop>
-                              <n-button size="tiny">Post message</n-button>
+                              <n-button size="tiny" :color="s.color" dashed>Post message</n-button>
                             </router-link>
                           </n-space>
                         </n-gi>
@@ -70,7 +70,7 @@
                     <template #description>
                       <div style="font-size:14px; opacity:.85;">{{ s.description }}</div>
                     </template>
-                    
+                    <n-divider />
                   </n-thing>
                 </n-space>
               </template>
@@ -98,7 +98,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { NConfigProvider, NLayout, NLayoutHeader, NLayoutContent, NSpace, NCard, NThing, NH1, NButton, NIcon, NText, NSkeleton, NGrid, NGi } from 'naive-ui'
+import { NConfigProvider, NLayout, NLayoutHeader, NLayoutContent, NSpace, NCard, NThing, NH1, NButton, NIcon, NText, NSkeleton, NGrid, NGi, NDivider } from 'naive-ui'
 import { ArrowRight } from '@vicons/tabler'
 import { useReferencesStore } from '../stores/kneo/referencesStore'
 import { MIXPLA_PLAYER_URL } from '../constants/config'
@@ -179,4 +179,23 @@ onMounted(() => {
     margin-top: 6px;
   }
 }
+/*
+.mixpla-title {
+  font-size: 30px;
+  font-weight: bold;
+  font-family: 'Kaylon', sans-serif;
+  margin: 0;
+  background: linear-gradient(90deg, #0095ff, #0fb8ed, #020ef8, #5b899e, #2196f3, #9c27b0);
+  background-size: 400%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: glow-move 12s linear infinite;
+}
+
+@keyframes glow-move {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}*/
+
 </style>

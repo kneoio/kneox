@@ -11,20 +11,34 @@
         <n-h2 style="margin: 0; font-size: 1.25rem; font-weight: 700; line-height: 1.2;">{{ brand }}</n-h2>
       </n-ellipsis>
       <n-divider vertical />
-      <div v-if="availableSongs !== null" style="display:flex; flex-direction: column; line-height: 1.1; align-items: center;">
+      <div style="display:flex; flex-direction: column; line-height: 1.1; align-items: center; min-width: 40px; min-height: 40px;">
         <n-text depth="3">songs</n-text>
         <n-text
-          depth="3"
-          :class="flashSongs ? 'flash-pulse' : ''"
-          :style="`margin-top: 10px; text-align: center; font-family: Goldman, sans-serif; color: ${colorCss || 'inherit'} !important;`"
+            depth="3"
+            :class="flashSongs ? 'flash-pulse' : ''"
+            :style="`margin-top: 10px; text-align: center; font-family: Goldman, sans-serif; color: ${colorCss || 'inherit'} !important;`"
         >
-          <n-number-animation :from="0" :to="availableSongs || 0" @finish="onSongsAnimationFinish" />
+          <template v-if="availableSongs !== null">
+            <n-number-animation :from="0" :to="availableSongs || 0" @finish="onSongsAnimationFinish" />
+          </template>
+          <template v-else>
+            <span style="opacity:0">00</span>
+          </template>
         </n-text>
       </div>
-      <n-divider v-if="description" vertical />
-      <n-ellipsis v-if="description" :line-clamp="2" style="max-width: 58%;">
+
+      <n-divider vertical />
+
+      <n-ellipsis
+          v-if="description"
+          class="desc-block"
+          :line-clamp="2"
+          style="max-width: 58%;"
+      >
         <n-text depth="3" style="font-size: 12px;">{{ description }}</n-text>
       </n-ellipsis>
+
+
     </n-space>
   </n-space>
 </template>
@@ -86,4 +100,12 @@ const colorCss = computed(() => {
   50% { transform: scale(1.06); text-shadow: 0 0 12px currentColor; filter: brightness(1.15); }
   100% { transform: scale(1); text-shadow: 0 0 0px currentColor; filter: brightness(1); }
 }
+
+@media (max-width: 640px) {
+  :deep(.desc-block) {
+    display: none !important;
+  }
+}
+
+
 </style>
