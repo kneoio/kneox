@@ -1,9 +1,7 @@
 <template>
   <n-config-provider>
-    <n-layout :native-scrollbar="true"
-              :style="{ minHeight: '100vh', backgroundColor: '#f8f8f8' }"
-              class="welcome-layout">
-      <n-layout-header bordered :style="{ background: 'transparent' }">
+    <n-layout>
+      <n-layout-header bordered>
         <n-space align="center" justify="space-between" :wrap="false" :style="{ maxWidth: '720px', margin: '0 auto', padding: '12px 16px' }">
           <img src="/pwa-192x192.png" alt="Mixpla" style="width:32px;height:32px;" />
         </n-space>
@@ -60,10 +58,10 @@
                         <n-gi :span="6" class="actions" style="display:flex; justify-content:flex-end; min-width: 0;">
                           <n-space size="small" :wrap="false" style="white-space: nowrap;">
                             <router-link v-if="s.submissionPolicy !== 'NOT_ALLOWED'" :to="{ name: 'SubmitSong', query: { brand: s.slugName } }" style="text-decoration:none;" @click.stop>
-                              <n-button size="tiny" :style="buttonStyle(s.color)">Submit song</n-button>
+                              <n-button size="tiny">Submit song</n-button>
                             </router-link>
                             <router-link v-if="s.messagingPolicy !== 'NOT_ALLOWED'" :to="{ name: 'PostMessage', query: { brand: s.slugName } }" style="text-decoration:none;" @click.stop>
-                              <n-button size="tiny" :style="buttonStyle(s.color)">Post message</n-button>
+                              <n-button size="tiny">Post message</n-button>
                             </router-link>
                           </n-space>
                         </n-gi>
@@ -134,30 +132,6 @@ function openPlayer(s: Station) {
   window.open(url, '_blank', 'noopener,noreferrer')
 }
 
-function hexToRgba(hex: string, alpha = 1) {
-  let h = hex.trim()
-  if (h.startsWith('#')) h = h.slice(1)
-  if (h.length === 3) {
-    const r = parseInt(h[0] + h[0], 16)
-    const g = parseInt(h[1] + h[1], 16)
-    const b = parseInt(h[2] + h[2], 16)
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`
-  }
-  if (h.length === 6) {
-    const r = parseInt(h.slice(0, 2), 16)
-    const g = parseInt(h.slice(2, 4), 16)
-    const b = parseInt(h.slice(4, 6), 16)
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`
-  }
-  return hex
-}
-
-function buttonStyle(color: string) {
-  return {
-    border: '1px solid #6e6e6e',
-  } as Record<string, string>
-}
-
 async function fetchStations() {
   try {
     loading.value = true
@@ -198,19 +172,6 @@ onMounted(() => {
   text-shadow: 0 0 6px rgba(34, 197, 94, 0.6) !important;
 }
 
-/* Force green in dark mode where we globally set text color via :deep */
-.welcome-dark :deep(.root),
-.welcome-dark :deep(.root *) {
-  color: #e0e0e0 !important;
-}
-
-/* Re-apply green for status after global dark text color */
-.welcome-dark :deep(.root .online) {
-  color: #16a34a !important;
-  text-shadow: 0 0 6px rgba(34, 197, 94, 0.6) !important;
-}
-
-/* Mobile: place action buttons on a separate line and align left */
 @media (max-width: 640px) {
   .actions {
     grid-column: 1 / -1 !important;

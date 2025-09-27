@@ -1,13 +1,12 @@
 <template>
   <n-loading-bar-provider>
     <n-message-provider>
-      <n-config-provider
-          :theme="currentTheme"
-          :theme-overrides="currentThemeOverrides"
-          :hljs="hljs"
-          :style="{ backgroundColor: currentBackgroundColor, minHeight: '100vh' }"
-          class="theme-provider"
-      >
+      <n-config-provider 
+        :theme="darkTheme"
+        :theme-overrides="currentThemeOverrides"
+        :hljs="hljs"
+        >
+        <n-global-style />
         <router-view/>
         <GdprBanner />
       </n-config-provider>
@@ -17,7 +16,7 @@
 
 <script setup>
 import GdprBanner from './components/common/GdprBanner.vue'
-import {NConfigProvider, NLoadingBarProvider, NMessageProvider, darkTheme} from 'naive-ui'
+import {NConfigProvider, NGlobalStyle, NLoadingBarProvider, NMessageProvider, darkTheme} from 'naive-ui'
 import {ref, computed, onMounted, provide} from 'vue'
 import {useRoute} from 'vue-router'
 import hljs from 'highlight.js/lib/core'
@@ -90,7 +89,9 @@ const darkThemeOverrides = {
     tableHeaderColor: '#2a2a2a',
     hoverColor: 'rgba(255, 255, 255, 0.09)',
     tableColorHover: 'rgba(255, 255, 255, 0.09)',
-    pressedColor: 'rgba(255, 255, 255, 0.13)'
+    pressedColor: 'rgba(255, 255, 255, 0.13)',
+    textColor: '#f0f0f0',      
+    textColorBase: '#f0f0f0',  
   },
   PageHeader: {
     titleTextColor: '#f0f0f0',
@@ -116,43 +117,24 @@ function saveThemePreference() {
   setCookie('theme', isDarkTheme.value ? 'dark' : 'light')
 }
 
-// Check route scopes
-const isProtectedArea = computed(() => route.path.startsWith('/outline'))
-const allowPublicDark = computed(() => ['/about', '/submit-song', '/post-message'].includes(route.path))
-
-// Apply dark theme in protected area and About page
-const currentTheme = computed(() => {
-  return (isProtectedArea.value || allowPublicDark.value) && isDarkTheme.value ? darkTheme : null
-})
-
 const currentThemeOverrides = computed(() => {
-  if ((isProtectedArea.value || allowPublicDark.value) && isDarkTheme.value) {
+  if (isDarkTheme.value) {
     return darkThemeOverrides
   }
   return lightThemeOverrides
 })
 
-const currentBackgroundColor = computed(() => {
-  if ((isProtectedArea.value || allowPublicDark.value) && isDarkTheme.value) {
-    return '#1a1a1a'
-  }
-  return '#f8f8f8'
-})
 
-// Initialize from cookie or OS preference
 const initTheme = () => {
   const savedTheme = getCookie('theme')
   if (savedTheme) {
     isDarkTheme.value = savedTheme === 'dark'
   } else if (window.matchMedia) {
-    // Default to light theme when no preference is saved
     isDarkTheme.value = false
   }
 }
 
 initTheme()
-
-// Removed auto-switching with OS preference to keep light as default when no cookie
 
 onMounted(() => {
   initTheme()
@@ -170,23 +152,4 @@ body {
   }
 }
 
-.theme-provider {
-  color: #333;
-}
-
-.theme-provider[style*="background-color: rgb(248, 248, 248)"] {
-  color: #333 !important;
-}
-
-.theme-provider[style*="background-color: rgb(248, 248, 248)"] *:not(.n-button):not(.n-button *):not(.n-upload *):not(.n-upload-file-list *):not(.gdpr-banner):not(.gdpr-banner *) {
-  color: inherit !important;
-}
-
-.theme-provider[style*="background-color: rgb(26, 26, 26)"] {
-  color: #e0e0e0 !important;
-}
-
-.theme-provider[style*="background-color: rgb(26, 26, 26)"] *:not(.n-button):not(.n-button *):not(.n-upload *):not(.n-upload-file-list *):not(.gdpr-banner):not(.gdpr-banner *) {
-  color: inherit !important;
-}
 </style>
