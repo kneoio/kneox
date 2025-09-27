@@ -58,7 +58,7 @@ const lightThemeOverrides = {
     textColor2: '#555',
     textColor3: '#777',
     textColorDisabled: '#aaa',
-
+    closeIconColor: '#1e1f22',
     placeholderColor: '#999',
     iconColor: '#555',
     iconColorHover: '#222',

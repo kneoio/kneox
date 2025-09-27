@@ -73,7 +73,7 @@ export interface RadioStation {
     iceCastUrl?: string;
     mixplaUrl?: string;
     actionUrl: string;
-    bitRate?: string;
+    bitRate?: number;
     aiAgentId?: string;
     aiOverriding?: AiOverriding;
     profileId?: string;
@@ -93,7 +93,7 @@ export interface RadioStationSave {
     country: string;
     description: string;
     color: string;
-    bitRate?: string;
+    bitRate?: number;
     aiAgentId?: string;
     aiOverriding?: AiOverriding;
     profileId?: string;
@@ -244,11 +244,9 @@ export interface ListenerSave {
   country?: string;
   slugName?: string;
   archived?: number;
-  userId?: number; // Assuming userId might be set on creation or editable
-  listenerOf?: string[]; // Array of radio station IDs this listener is associated with
+  userId?: number;
+  listenerOf?: string[];
 }
-
-// Types for Events Feature
 
 export interface Event {
     id: string;

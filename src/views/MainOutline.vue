@@ -23,19 +23,21 @@
               :value="isDarkTheme"
               size="small"
               @update:value="toggleTheme"
-              :round="false"
+              :round="true"
+              :theme-overrides="{
+                  railColor: '#ccc',
+                  iconColor: '#000'
+              }"
           >
             <template #checked-icon>
-              <n-icon>
-                <Moon/>
-              </n-icon>
+              <n-icon><Moon/></n-icon>
             </template>
             <template #unchecked-icon>
-              <n-icon>
-                <Sun/>
-              </n-icon>
+              <n-icon><Sun/></n-icon>
             </template>
           </n-switch>
+
+
         </n-space>
       </div>
       <div class="drawer-content" style="overflow-y: auto; max-height: calc(100vh - 80px);">
