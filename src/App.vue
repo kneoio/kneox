@@ -1,17 +1,22 @@
 <template>
-  <n-loading-bar-provider>
+  <n-loading-bar-provider
+      :theme-overrides="{
+    colorLoading: '#9336f7',
+    colorError: '#ff6361'
+  }"
+  >
     <n-message-provider>
-      <n-config-provider 
-        :theme="darkTheme"
-        :theme-overrides="currentThemeOverrides"
-        :hljs="hljs"
-        >
+      <n-config-provider
+          :theme="darkTheme"
+          :theme-overrides="currentThemeOverrides"
+      >
         <n-global-style />
         <router-view/>
         <GdprBanner />
       </n-config-provider>
     </n-message-provider>
   </n-loading-bar-provider>
+
 </template>
 
 <script setup>
@@ -19,7 +24,6 @@ import GdprBanner from './components/common/GdprBanner.vue'
 import {NConfigProvider, NGlobalStyle, NLoadingBarProvider, NMessageProvider, darkTheme} from 'naive-ui'
 import {ref, computed, onMounted, provide} from 'vue'
 import {useRoute} from 'vue-router'
-import hljs from 'highlight.js/lib/core'
 
 const route = useRoute()
 const isDarkTheme = ref(false)
@@ -36,32 +40,39 @@ const lightThemeOverrides = {
     primaryColorHover: '#004f6d',
     primaryColorPressed: '#002e4b',
     primaryColorSuppl: '#004f6d',
-    infoColor: '#58508d',
-    infoColorHover: '#68609d',
-    infoColorPressed: '#47407d',
-    infoColorSuppl: '#68609d',
-    warningColor: '#ffa600',
-    warningColorHover: '#ffb700',
-    warningColorPressed: '#ff9500',
-    warningColorSuppl: '#ffb700',
-    errorColor: '#ff6361',
-    errorColorHover: '#ff7371',
-    errorColorPressed: '#ff5251',
-    errorColorSuppl: '#ff7371',
-    successColor: '#5e9e15',
-    successColorHover: '#9CCC65',
-    successColorPressed: '#7CB342',
-    successColorSuppl: '#9CCC65',
 
     bodyColor: '#f8f8f8',
-    textColorBase: '#333',
-    borderColor: '#e0e0e0',
-
-    color: '#f8f8f8',
+    baseColor: '#f8f8f8',
+    inputColor: '#fff',
+    cardColor: '#fff',
+    modalColor: '#fff',
+    popoverColor: '#fff',
+    tableColor: '#fff',
+    tableHeaderColor: '#f0f0f0',
+    hoverColor: 'rgba(0, 0, 0, 0.05)',
+    tableColorHover: 'rgba(0, 0, 0, 0.05)',
+    pressedColor: 'rgba(0, 0, 0, 0.08)',
     textColor: '#333',
+    textColorBase: '#333',
+    textColor1: '#333',
+    textColor2: '#555',
+    textColor3: '#777',
+    textColorDisabled: '#aaa',
 
+    placeholderColor: '#999',
+    iconColor: '#555',
+    iconColorHover: '#222',
+
+    dividerColor: '#e0e0e0',
+    borderColor: '#e0e0e0'
+  },
+  PageHeader: {
+    titleTextColor: '#333',
+    subtitleTextColor: '#555',
+    footerTextColor: '#777'
   }
 }
+
 
 const darkThemeOverrides = {
   common: {
@@ -70,7 +81,6 @@ const darkThemeOverrides = {
     primaryColorPressed: '#1E88E5',
     primaryColorSuppl: '#42A5F5',
     bodyColor: '#1a1a1a',
-    textColorBase: '#f0f0f0',
     textColor1: '#f0f0f0',
     textColor2: '#d0d0d0',
     textColor3: '#b0b0b0',

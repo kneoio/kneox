@@ -17,7 +17,7 @@
         <n-space justify="space-between" align="center">
           <n-space>
             <n-h2>MixpL^</n-h2>
-            <n-h6 style="color:#6c757d; font-size: small">manager v.1.8.10</n-h6>
+            <n-h6 style="font-size: small">manager v.1.8.10</n-h6>
           </n-space>
           <n-switch
               :value="isDarkTheme"
@@ -26,7 +26,7 @@
               :round="false"
           >
             <template #checked-icon>
-              <n-icon color="#0e7a0d">
+              <n-icon>
                 <Moon/>
               </n-icon>
             </template>
@@ -501,29 +501,6 @@ export default defineComponent({
 });
 </script>
 
-<style>
-/* Global theme styles for the protected area */
-.theme-provider {
-  color: #333;
-}
-
-.theme-provider[style*="background-color: rgb(248, 248, 248)"] {
-  color: #333 !important;
-}
-
-.theme-provider[style*="background-color: rgb(248, 248, 248)"] *:not(.n-button):not(.n-button *) {
-  color: inherit !important;
-}
-
-.theme-provider[style*="background-color: rgb(26, 26, 26)"] {
-  color: #f0f0f0 !important;
-}
-
-.theme-provider[style*="background-color: rgb(26, 26, 26)"] *:not(.n-button):not(.n-button *) {
-  color: inherit !important;
-}
-</style>
-
 <style scoped>
 .home {
   position: relative;
@@ -536,7 +513,7 @@ export default defineComponent({
   left: 0;
   width: 300px;
   height: 100vh;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 4px 0 8px rgba(0, 0, 0, 0.1);
   transform: translateX(-100%);
   transition: transform 0.3s ease;
   z-index: 1000;
