@@ -78,7 +78,7 @@
 
             <n-space vertical size="small" align="center">
               <a href="https://discord.com/channels/1395012925512613998/1395012926154346538" target="_blank" rel="noopener noreferrer" style="font-size:13px; text-decoration: underline;">Discord</a>
-              <router-link to="/m/about" style="font-size:13px; text-decoration: underline;">About</router-link>
+              <router-link to="/about" style="font-size:13px; text-decoration: underline;">About</router-link>
             </n-space>
 
             <n-space align="center" justify="center">
@@ -97,11 +97,27 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { NConfigProvider, NLayout, NLayoutHeader, NLayoutContent, NSpace, NCard, NThing, NH1, NButton, NIcon, NText, NSkeleton, NGrid, NGi, NDivider } from 'naive-ui'
-import { ArrowRight } from '@vicons/tabler'
-import { useReferencesStore } from '../stores/kneo/referencesStore'
-import { MIXPLA_PLAYER_URL } from '../constants/config'
+import {computed, onMounted, ref} from 'vue'
+import {
+  NButton,
+  NCard,
+  NConfigProvider,
+  NDivider,
+  NGi,
+  NGrid,
+  NH1,
+  NIcon,
+  NLayout,
+  NLayoutContent,
+  NLayoutHeader,
+  NSkeleton,
+  NSpace,
+  NText,
+  NThing
+} from 'naive-ui'
+import {ArrowRight} from '@vicons/tabler'
+import {useReferencesStore} from '../stores/kneo/referencesStore'
+import {MIXPLA_PLAYER_URL} from '../constants/config'
 
 interface Station {
   name: string;
@@ -128,15 +144,14 @@ function statusText(s?: Station['currentStatus']) {
 }
 
 function openPlayer(s: Station) {
-  const url = `${playerBase.value}?radio=${encodeURIComponent(s.name.toLowerCase())}`
+  const url = `${playerBase.value}?radio=${encodeURIComponent(s.slugName.toLowerCase())}`
   window.open(url, '_blank', 'noopener,noreferrer')
 }
 
 async function fetchStations() {
   try {
     loading.value = true
-    const data = await referencesStore.fetchRadioStations()
-    stations.value = data
+    stations.value = await referencesStore.fetchRadioStations()
     error.value = null
   } catch (e) {
     error.value = e

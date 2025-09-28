@@ -59,6 +59,7 @@ const props = defineProps<{
 const flashSongs = ref(false)
 
 const router = useRouter()
+
 function goHome() {
   router.push('/')
 }

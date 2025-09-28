@@ -1,10 +1,10 @@
 <template>
   <n-config-provider>
-    <n-layout :style="{ minHeight: '100vh', backgroundColor: '#f8f8f8' }">
+    <n-layout :style="{ minHeight: '100vh'}">
       <n-layout-header bordered :style="{ background: 'transparent' }">
         <n-space align="center" justify="space-between" :wrap="false" :style="{ maxWidth: '720px', margin: '0 auto', padding: '12px 16px' }">
-          <router-link to="/m" class="inline-block" style="text-decoration: none;">
-            <n-button quaternary>← Back</n-button>
+          <router-link to="/" class="inline-block" style="text-decoration: none;">
+            <n-button quaternary>← Home</n-button>
           </router-link>
         </n-space>
       </n-layout-header>
@@ -74,16 +74,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, ref, type Ref } from 'vue'
-import { NConfigProvider, NLayout, NLayoutHeader, NLayoutContent, NSpace, NCard, NText, NButton, darkTheme } from 'naive-ui'
-import { useReferencesStore } from '../stores/kneo/referencesStore'
+import { NConfigProvider, NLayout, NLayoutHeader, NLayoutContent, NSpace, NCard, NText, NButton } from 'naive-ui'
 
-const isDarkTheme = inject<Ref<boolean>>('isDarkTheme', ref(false))
-const providedIsDark = inject('isDarkTheme', ref(false)) as unknown as { value: boolean }
-const referencesStore = useReferencesStore()
-const localThemeOverrides = computed(() => {
-  return referencesStore.getLocalThemeOverrides(!!(providedIsDark && providedIsDark.value))
-})
 </script>
 
 <style scoped>
