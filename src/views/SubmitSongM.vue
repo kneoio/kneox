@@ -215,7 +215,7 @@ const agreeHighlightStyle = computed(() => {
     border: isOk ? '1px solid transparent' : '1px solid rgb(230, 59, 67)',
     padding: '6px 8px',
     borderRadius: '6px',
-    backgroundColor: isOk ? 'transparent' : '#fff1f0'
+    backgroundColor: isOk ? 'transparent' : '#ef3d3d'
   } as Record<string, string>
 })
 
