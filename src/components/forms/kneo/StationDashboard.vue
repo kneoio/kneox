@@ -491,6 +491,8 @@ export default defineComponent( {
           return ['#f0a020', '#f0a020']; // orange x2
         case 'SONG_INTRO_SONG':
           return ['#722ed1', '#722ed1', '#722ed1']; // purple x3
+        case 'INTRO_SONG_INTRO_SONG':
+          return ['#ef4444', '#ef4444', '#ef4444', '#ef4444']; // red x4
         default:
           return [];
       }
