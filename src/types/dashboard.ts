@@ -95,6 +95,13 @@ export interface PlaylistManagerStats {
     obtainedByPlaylist: string[];
     readyToBeConsumed: string[];
     brand: string;
+    livePlaylist?: Array<{
+        title?: string;
+        artist?: string;
+        source?: string;
+        obtained?: boolean;
+        mergingType?: string;
+    }>;
 }
 
 export interface StationDetails {
@@ -122,6 +129,12 @@ export interface StationDetails {
         timestamp: string;
         status: string;
     }[];
+    runningTasks?: Array<{
+        taskType: string;
+        target: string;
+        startTime: string;
+    }>;
+    heartbeat?: boolean;
 }
 
 export interface StationResponse {

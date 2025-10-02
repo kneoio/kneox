@@ -68,61 +68,27 @@
 
           <n-space size="medium">
             <n-card title="Live Playlist" size="small" style="flex: 1; min-width: 0;">
-              <n-space vertical size="medium">
-                <div>
-                  <n-text depth="2" style="font-weight: 600; margin-bottom: 8px; display: block;">In Queue:</n-text>
-                  <div
-                    v-if=" stationDetails?.playlistManagerStats?.obtainedByPlaylist && stationDetails.playlistManagerStats.obtainedByPlaylist.length > 0 ">
-                    <n-space vertical size="small">
-                      <div v-for=" ( fragment, index ) in stationDetails.playlistManagerStats.obtainedByPlaylist "
-                        :key="index" :style="{
-                          paddingLeft: '8px',
-                          borderLeft: '2px solid',
-                          fontSize: '0.875rem',
-                          backgroundColor: isCurrentSong( fragment ) ? 'var(--n-color-target)' : 'transparent',
-                          padding: isCurrentSong( fragment ) ? '4px 8px' : '0 0 0 8px',
-                          borderRadius: isCurrentSong( fragment ) ? '4px' : '0',
-                          fontWeight: isCurrentSong( fragment ) ? '600' : 'normal'
-                        }">
-                        <n-text :depth="isCurrentSong( fragment ) ? 1 : 3"
-                          :style="{ color: isCurrentSong( fragment ) ? 'white !important' : undefined }">
-                          {{ index + 1 }}.
-                          <span v-for="(c, i) in getMergingTypeColors(fragment)" :key="i" class="merge-box" :style="{ backgroundColor: c }"></span>
-                          {{ formatArtistTitle(fragment) }}
-                        </n-text>
-                      </div>
+              <n-timeline v-if="stationDetails?.playlistManagerStats?.livePlaylist && stationDetails.playlistManagerStats.livePlaylist.length > 0">
+                <n-timeline-item
+                  v-for="(fragment, index) in [...stationDetails.playlistManagerStats.livePlaylist].reverse()"
+                  :key="index"
+                  :type="getPlaylistItemType(fragment)"
+                  :title="formatArtistTitle(fragment)"
+                >
+                  <template #default>
+                    <n-space size="small" align="center">
+                      <n-tag v-if="fragment.source" :type="fragment.source === 'PRIORITIZED' ? 'warning' : 'default'" size="small">
+                        {{ fragment.source }}
+                      </n-tag>
+                      <n-tag v-if="!fragment.obtained" type="error" size="small">
+                        Not Obtained
+                      </n-tag>
+                      <span v-for="(c, i) in getMergingTypeColors(fragment)" :key="i" class="merge-box" :style="{ backgroundColor: c }"></span>
                     </n-space>
-                  </div>
-                  <n-text depth="3" v-else>No played fragments available.</n-text>
-                </div>
-
-                <div>
-                  <n-text depth="2" style="font-weight: 600; margin-bottom: 8px; display: block;">Ready to be queued:</n-text>
-                  <div
-                    v-if=" stationDetails?.playlistManagerStats?.readyToBeConsumed && stationDetails.playlistManagerStats.readyToBeConsumed.length > 0 ">
-                    <n-space vertical size="small">
-                      <div v-for=" ( fragment, index ) in stationDetails.playlistManagerStats.readyToBeConsumed "
-                        :key="index" :style="{
-                          paddingLeft: '8px',
-                          borderLeft: '2px solid',
-                          fontSize: '0.875rem',
-                          backgroundColor: isCurrentSong( fragment ) ? 'var(--n-color-target)' : 'transparent',
-                          padding: isCurrentSong( fragment ) ? '4px 8px' : '0 0 0 8px',
-                          borderRadius: isCurrentSong( fragment ) ? '4px' : '0',
-                          fontWeight: isCurrentSong( fragment ) ? '600' : 'normal'
-                        }">
-                        <n-text :depth="isCurrentSong( fragment ) ? 1 : 3"
-                          :style="{ color: isCurrentSong( fragment ) ? 'white !important' : undefined }">
-                          {{ index + 1 }}.
-                          <span v-for="(c, i) in getMergingTypeColors(fragment)" :key="i" class="merge-box" :style="{ backgroundColor: c }"></span>
-                          {{ formatArtistTitle(fragment) }}
-                        </n-text>
-                      </div>
-                    </n-space>
-                  </div>
-                  <n-text depth="3" v-else>No ready to play fragments available.</n-text>
-                </div>
-              </n-space>
+                  </template>
+                </n-timeline-item>
+              </n-timeline>
+              <n-text depth="3" v-else>No playlist items available.</n-text>
             </n-card>
 
             <div style="flex-shrink: 0; width: auto;">
@@ -602,6 +568,13 @@ export default defineComponent( {
       return cleanFragment === currentTrack;
     };
 
+    const getPlaylistItemType = (fragment: any): 'success' | 'warning' | 'error' | 'info' | 'default' => {
+      if (isCurrentSong(fragment)) return 'success';
+      if (!fragment.obtained) return 'error';
+      if (fragment.source === 'PRIORITIZED') return 'warning';
+      return 'default';
+    };
+
     const getStatusTimelineType = ( status: string | null | undefined ): 'success' | 'warning' | 'error' | 'default' => {
       if ( !status ) return 'default';
       switch ( status.toUpperCase() ) {
@@ -737,6 +710,7 @@ export default defineComponent( {
       broadcastFormRef,
       creatingBroadcast,
       handleBroadcast,
+      getPlaylistItemType,
     };
   },
 } );
