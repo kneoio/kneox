@@ -493,6 +493,8 @@ export default defineComponent( {
           return ['#722ed1', '#722ed1', '#722ed1']; // purple x3
         case 'INTRO_SONG_INTRO_SONG':
           return ['#ef4444', '#ef4444', '#ef4444', '#ef4444']; // red x4
+        case 'SONG_CROSSFADE_SONG':
+          return ['#7dd3fc']; // baby blue
         default:
           return [];
       }
