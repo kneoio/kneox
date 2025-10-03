@@ -60,7 +60,7 @@
           <n-card title="Status History" size="small">
             <n-timeline horizontal v-if=" statusHistoryTimeline.length > 0 ">
               <n-timeline-item v-for=" ( event, index ) in statusHistoryTimeline " :key="index"
-                :type="getStatusTimelineType( event.newStatus )" :title="formatStatus( event.newStatus )"
+                :type="getStatusTimelineType( event.status )" :title="formatStatus( event.status )"
                 :content="formatTimestamp( event.timestamp ) + ( event.timeDiff ? ' (' + event.timeDiff + ')' : '' )" />
             </n-timeline>
             <n-text depth="3" v-else>No status history available</n-text>
