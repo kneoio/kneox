@@ -416,8 +416,7 @@ import {
   RadioStation,
   BrandStatus,
   RadioStationSave,
-  ManagedBy,
-  SubmissionPolicy
+  ManagedBy
 } from "../../../types/kneoBroadcasterTypes";
 import { useRadioStationStore } from "../../../stores/kneo/radioStationStore";
 import { useAiAgentStore } from "../../../stores/kneo/aiAgentStore";

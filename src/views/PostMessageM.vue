@@ -115,8 +115,6 @@ const referencesStore = useReferencesStore()
 const nMessage = useMessage()
 const route = useRoute()
 
-const isDarkTheme = inject<Ref<boolean>>('isDarkTheme', ref(false))
-
 const form = ref({
   brand: '',
   from: '',

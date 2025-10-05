@@ -70,6 +70,9 @@ const lightThemeOverrides = {
     titleTextColor: '#333',
     subtitleTextColor: '#555',
     footerTextColor: '#777'
+  },
+  Timeline: {
+    lineColor: '#777'
   }
 }
 
