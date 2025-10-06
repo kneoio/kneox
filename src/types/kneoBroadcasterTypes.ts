@@ -123,6 +123,7 @@ export interface SoundFragment {
     defaultBrandId: string;
     representedInBrands: string[];
     uploadedFiles: UploadFileInfo[];
+    source?: string;
 }
 
 export interface SoundFragmentSave {
