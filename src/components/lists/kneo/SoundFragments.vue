@@ -224,6 +224,7 @@ export default defineComponent( {
 
     async function preFetch() {
       try {
+        loading.value = true;
         await Promise.all( [
           store.fetchAll(),
           referencesStore.fetchGenres(),

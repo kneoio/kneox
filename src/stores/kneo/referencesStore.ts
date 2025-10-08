@@ -52,6 +52,7 @@ export const useReferencesStore = defineStore('references', () => {
 
   const genreOptions = ref<Array<{label: string, value: string}>>([]);
   const voiceOptions = ref<Array<{label: string, value: string}>>([]);
+  const labelOptions = ref<Array<{ label: string; value: string; color?: string; fontColor?: string; style?: Record<string, string> }>>([]);
 
   const musicUploadAgreement = ref<{ title: string; clause: string; version: string }>({
     title: 'Music Upload Agreement',
@@ -120,6 +121,22 @@ export const useReferencesStore = defineStore('references', () => {
         }))
         .sort((a: {label: string}, b: {label: string}) =>
             a.label.localeCompare(b.label));
+  };
+
+  const fetchLabels = async () => {
+    const response = await apiClient.get('/labels?page=1&size=100');
+    if (!response?.data?.payload) throw new Error('Invalid API response');
+
+    labelOptions.value = response.data.payload.viewData.entries
+      .map((entry: any) => ({
+        label: entry.localizedName.en,
+        value: entry.id,
+        color: entry.color,
+        fontColor: entry.fontColor
+      }))
+        .sort((a: { label: string }, b: { label: string }) =>
+          a.label.localeCompare(b.label)
+        );
   };
 
   const fetchDictionary = async (type: 'agents' | 'profiles' | 'voices', page = 1, pageSize = 100) => {
@@ -273,6 +290,7 @@ export const useReferencesStore = defineStore('references', () => {
     voiceOptions,
     timezones,
     genreOptions,
+    labelOptions,
     eventTypeOptions,
     llmTypeOptions,
     mergerMethodOptions,
@@ -286,6 +304,7 @@ export const useReferencesStore = defineStore('references', () => {
     messagePostingAgreement,
     getLocalThemeOverrides,
     fetchGenres,
+    fetchLabels,
     fetchVoices,
     fetchDictionary,
     fetchRadioStations

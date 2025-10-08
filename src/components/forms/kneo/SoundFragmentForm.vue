@@ -41,10 +41,28 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
-                <n-form-item label="Genres">
-                  <n-select v-model:value="localFormData.genres" :options="referencesStore.genreOptions"
-                            multiple filterable style="width: 25%; max-width: 300px;"/>
-                </n-form-item>
+                <n-grid :cols="2" x-gap="12">
+                  <n-gi>
+                    <n-form-item label="Genres">
+                      <n-select
+                        v-model:value="localFormData.genres"
+                        :options="referencesStore.genreOptions"
+                        multiple
+                        filterable
+                        style="width: 50%; max-width: 600px;"
+                      />
+                    </n-form-item>
+                    <n-form-item label="Labels">
+                      <n-select
+                        v-model:value="localFormData.labels"
+                        :options="referencesStore.labelOptions"
+                        multiple
+                        filterable
+                        style="width: 50%; max-width: 600px;"                           
+                      />
+                    </n-form-item>
+                  </n-gi>                  
+                </n-grid>
               </n-gi>
               <n-gi>
                 <n-form-item label="Album">
@@ -107,8 +125,8 @@
 </template>
 
 <script lang="ts">
-import {defineComponent, onMounted, reactive, ref, watch, computed} from "vue";
-import {useRoute, useRouter} from "vue-router";
+import { defineComponent, onMounted, reactive, ref, watch, computed, h } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import {
   NButton,
   NButtonGroup,
@@ -121,6 +139,7 @@ import {
   NInput,
   NPageHeader,
   NSelect,
+  NTag,
   NTabPane,
   NTabs,
   NUpload,
@@ -130,16 +149,12 @@ import {
   type UploadCustomRequestOptions
 } from "naive-ui";
 import AclTable from '../../common/AclTable.vue';
-import {useSoundFragmentStore} from "../../../stores/kneo/soundFragmentStore";
-import {useRadioStationStore} from "../../../stores/kneo/radioStationStore";
-import {useReferencesStore} from "../../../stores/kneo/referencesStore";
-import {FragmentType, SoundFragment, SoundFragmentSave} from "../../../types/kneoBroadcasterTypes";
-import {
-  isErrorWithResponse,
-  capitalizeFirstLetter,
-  getErrorMessage
-} from '../../helpers/errorHandling';
-import {apiServer} from "../../../api/apiClient";
+import { useSoundFragmentStore } from "../../../stores/kneo/soundFragmentStore";
+import { useRadioStationStore } from "../../../stores/kneo/radioStationStore";
+import { useReferencesStore } from "../../../stores/kneo/referencesStore";
+import { FragmentType, SoundFragment, SoundFragmentSave } from "../../../types/kneoBroadcasterTypes";
+import { isErrorWithResponse, capitalizeFirstLetter, getErrorMessage } from '../../helpers/errorHandling';
+import { apiServer } from "../../../api/apiClient";
 import { uploadProgress, connectSSEProgress } from "../../../utils/fileUpload";
 import { handleFormSaveError } from "../../../utils/errorHandling";
 
@@ -158,6 +173,7 @@ export default defineComponent({
     NGrid,
     NGi,
     NSelect,
+    NTag,
     NDataTable,
     NIcon,
     AclTable,
@@ -190,6 +206,7 @@ export default defineComponent({
       title: "",
       artist: "",
       genres: [],
+      labels: [],
       album: "",
       description: "",
       url: "",
@@ -264,6 +281,28 @@ export default defineComponent({
         stopSimulation: null,
         eventSource: null
       };
+    };
+
+    const renderLabelTag = ({ option, handleClose }: any) => {
+      const bg = option?.color || '#e5e7eb';
+      const fg = option?.fontColor || '#111827';
+      return h(
+        NTag as any,
+        {
+          closable: true,
+          onClose: handleClose,
+          style: {
+            backgroundColor: bg,
+            color: fg,
+            border: 'none'
+          }
+        },
+        { default: () => option?.label || '' }
+      );
+    };
+
+    const renderLabel = (option: any) => {
+      return h('span', null, option?.label as string);
     };
 
     const applyMetadata = (metadata: any) => {
@@ -419,6 +458,7 @@ export default defineComponent({
           title: localFormData.title,
           artist: localFormData.artist,
           genres: localFormData.genres || [],
+          labels: localFormData.labels || [],
           album: localFormData.album,
           description: localFormData.description,
           representedInBrands: localFormData.representedInBrands,
@@ -570,7 +610,8 @@ export default defineComponent({
       try {
         await Promise.all([
           radioStationStore.fetchAll(1, 100),
-          referencesStore.fetchGenres()
+          referencesStore.fetchGenres(),
+          referencesStore.fetchLabels()
         ]);
       } catch (error) {
         console.error("Failed to preload references:", error);
@@ -658,6 +699,8 @@ export default defineComponent({
       aclData,
       aclLoading,
       backendProgress,
+      renderLabelTag,
+      renderLabel,
       originalUploadedFileNames // Add this to the return
     };
   },
