@@ -467,7 +467,9 @@ export default defineComponent({
 
         await store.save(saveDTO, localFormData.id);
         message.success("Saved successfully");
-        if (route.params.brandName) {
+        if (route.query.returnTo === 'StationPlaylist' && route.params.brandName) {
+          await router.push({ name: 'StationPlaylist', params: { brandName: route.params.brandName } });
+        } else if (route.params.brandName) {
           await router.push({name: 'StationSoundFragments', params: {brandName: route.params.brandName}});
         } else {
           await router.push("/outline/soundfragments");
@@ -501,7 +503,9 @@ export default defineComponent({
         loadingBar.start();
         await store.archive(localFormData.id);
         message.success("Sound fragment archived successfully");
-        if (route.params.brandName) {
+        if (route.query.returnTo === 'StationPlaylist' && route.params.brandName) {
+          await router.push({ name: 'StationPlaylist', params: { brandName: route.params.brandName } });
+        } else if (route.params.brandName) {
           await router.push({name: 'StationSoundFragments', params: {brandName: route.params.brandName}});
         } else {
           await router.push("/outline/soundfragments");

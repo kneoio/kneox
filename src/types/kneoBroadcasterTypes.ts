@@ -185,6 +185,7 @@ export interface AiAgent {
     prompts: string[];
     fillerPrompt: string[];
     preferredVoice: Voice[];
+    secondaryVoice?: Voice[];
     enabledTools: Tool[];
     talkativity: number;
     merger?: {
@@ -200,6 +201,7 @@ export interface AiAgentSave {
     prompts: string[];
     fillerPrompt: string[];
     preferredVoice: Voice[];
+    secondaryVoice?: Voice[];
     enabledTools: Tool[];
     talkativity: number;
     merger?: {
@@ -211,6 +213,7 @@ export interface AiAgentSave {
 // Extend the base AiAgent interface to include form-specific fields
 export interface AiAgentForm extends AiAgent {
     preferredVoiceId?: string;
+    secondaryVoiceId?: string;
 }
 
 // Types for Listeners Feature

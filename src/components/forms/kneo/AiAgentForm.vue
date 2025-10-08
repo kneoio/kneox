@@ -60,11 +60,7 @@
               </n-gi>
 
 
-              <n-gi>
-                <n-form-item label="Filler Prompt">
-                  <n-dynamic-tags v-model:value="localFormData.fillerPrompt" style="width: 60%;" />
-                </n-form-item>
-              </n-gi>
+              
             </n-grid>
           </n-form>
         </n-tab-pane>
@@ -244,6 +240,16 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
+                <n-form-item label="Secondary Voice">
+                  <n-select
+                    v-model:value="localFormData.secondaryVoiceId"
+                    :options="voiceOptions"
+                    filterable
+                    style="width: 30%; max-width: 300px;"
+                  />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
                 <n-form-item label="Talkativity">
                   <n-slider v-model:value="localFormData.talkativity" :min="0" :max="1" :step="0.05" :tooltip="false"
                     style="width: 50%; max-width: 600px;" />
@@ -287,7 +293,6 @@ import {
   NCard,
   NCollapseTransition,
   NDynamicInput,
-  NDynamicTags,
   NForm,
   NFormItem,
   NGi,
@@ -332,7 +337,6 @@ export default defineComponent({
     NSelect,
     NSlider,
     NDynamicInput,
-    NDynamicTags,
     NSpace,
     NCard,
     NTag,
@@ -383,6 +387,8 @@ export default defineComponent({
       fillerPrompt: [],
       preferredVoice: [],
       preferredVoiceId: "",
+      secondaryVoice: [],
+      secondaryVoiceId: "",
       enabledTools: [],
       talkativity: 0.3,
       merger: {
@@ -403,8 +409,6 @@ export default defineComponent({
     const playgroundThinking = ref<string>('');
     const playgroundSearchQuality = ref<string>('');
     const playgroundLlmType = ref<string>('');
-
-    const createFillerItem = () => "";
 
     const createVoiceItem = () => ({
       id: "",
@@ -552,7 +556,6 @@ export default defineComponent({
           preferredLang: localFormData.preferredLang as LanguageCode,
           llmType: localFormData.llmType || '',
           prompts: promptItems.value.map(p => p.text || ''),
-          fillerPrompt: localFormData.fillerPrompt || [],
           enabledTools: localFormData.enabledTools || [],
           talkativity: localFormData.talkativity || 0.3,
           preferredVoice: [],
@@ -571,6 +574,19 @@ export default defineComponent({
             saveData.preferredVoice = [{
               id: selectedVoice.value,
               name: selectedVoice.label
+            }];
+          }
+        }
+
+        if (localFormData.secondaryVoiceId) {
+          const selectedSecondary = voiceOptions.value.find(
+            (v: { label: string; value: string }) => v.value === localFormData.secondaryVoiceId
+          );
+
+          if (selectedSecondary) {
+            saveData.secondaryVoice = [{
+              id: selectedSecondary.value,
+              name: selectedSecondary.label
             }];
           }
         }
@@ -631,6 +647,10 @@ export default defineComponent({
             agentData.preferredVoiceId = agentData.preferredVoice[0]?.id || '';
           }
 
+          if (agentData.secondaryVoice && agentData.secondaryVoice.length > 0) {
+            agentData.secondaryVoiceId = agentData.secondaryVoice[0]?.id || '';
+          }
+
           if (!agentData.merger) {
             agentData.merger = {
               method: "INTRO_SONG",
@@ -668,7 +688,6 @@ export default defineComponent({
       voiceOptions,
       referencesStore,
       formTitle,
-      createFillerItem,
       createVoiceItem,
       createToolItem,
       createPromptItem,
