@@ -240,12 +240,13 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
-                <n-form-item label="Secondary Voice">
+                <n-form-item label="Copilot">
                   <n-select
-                    v-model:value="localFormData.secondaryVoiceId"
-                    :options="voiceOptions"
+                    v-model:value="localFormData.copilotId"
+                    :options="copilotOptions"
                     filterable
-                    style="width: 30%; max-width: 300px;"
+                    clearable
+                    style="width: 40%; max-width: 420px;"
                   />
                 </n-form-item>
               </n-gi>
@@ -254,6 +255,13 @@
                   <n-slider v-model:value="localFormData.talkativity" :min="0" :max="1" :step="0.05" :tooltip="false"
                     style="width: 50%; max-width: 600px;" />
                   <span style="margin-left: 12px;">{{ localFormData.talkativity }}</span>
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="Podcast Mode">
+                  <n-slider v-model:value="localFormData.podcastMode" :min="0" :max="1" :step="0.05" :tooltip="false"
+                    style="width: 50%; max-width: 600px;" />
+                  <span style="margin-left: 12px;">{{ localFormData.podcastMode }}</span>
                 </n-form-item>
               </n-gi>
               <n-gi>
@@ -374,6 +382,14 @@ export default defineComponent({
       }))
     );
 
+    const copilotOptions = computed(() => {
+      const list = store.getEntries || [];
+      return (list as any[]).map((a: any) => ({
+        label: a?.name || a?.id || '',
+        value: a?.id || ''
+      })).filter(opt => !!opt.value);
+    });
+
     const localFormData = reactive<AiAgentForm>({
       id: "",
       author: "",
@@ -387,10 +403,10 @@ export default defineComponent({
       fillerPrompt: [],
       preferredVoice: [],
       preferredVoiceId: "",
-      secondaryVoice: [],
-      secondaryVoiceId: "",
+      copilotId: "",
       enabledTools: [],
       talkativity: 0.3,
+      podcastMode: 0,
       merger: {
         method: "INTRO_SONG",
         gainIntro: 0
@@ -558,6 +574,7 @@ export default defineComponent({
           prompts: promptItems.value.map(p => p.text || ''),
           enabledTools: localFormData.enabledTools || [],
           talkativity: localFormData.talkativity || 0.3,
+          podcastMode: localFormData.podcastMode || 0,
           preferredVoice: [],
           merger: localFormData.merger ? {
             method: localFormData.merger.method,
@@ -569,31 +586,17 @@ export default defineComponent({
           const selectedVoice = voiceOptions.value.find(
             (v: { label: string; value: string }) => v.value === localFormData.preferredVoiceId
           );
-
           if (selectedVoice) {
-            saveData.preferredVoice = [{
-              id: selectedVoice.value,
-              name: selectedVoice.label
-            }];
+            saveData.preferredVoice = [{ id: selectedVoice.value, name: selectedVoice.label }];
           }
         }
 
-        if (localFormData.secondaryVoiceId) {
-          const selectedSecondary = voiceOptions.value.find(
-            (v: { label: string; value: string }) => v.value === localFormData.secondaryVoiceId
-          );
-
-          if (selectedSecondary) {
-            saveData.secondaryVoice = [{
-              id: selectedSecondary.value,
-              name: selectedSecondary.label
-            }];
-          }
+        if (localFormData.copilotId) {
+          saveData.copilot = localFormData.copilotId;
         }
 
         const id = localFormData.id ? localFormData.id : null;
         await store.save(saveData, id);
-
         message.success("AI Agent saved successfully");
         await router.push("/outline/ai_agents");
       } catch (error: any) {
@@ -614,7 +617,6 @@ export default defineComponent({
         aclData.value = [];
         return;
       }
-
       try {
         aclLoading.value = true;
         const response = await store.fetchAccessList(id);
@@ -638,31 +640,23 @@ export default defineComponent({
       try {
         loadingBar.start();
         await referencesStore.fetchVoices();
+        try { await store.fetchAllUnsecured(1, 1000); } catch {}
         const id = route.params.id as string;
         if (id) {
           await store.fetch(id);
           const agentData = { ...store.getCurrent } as AiAgentForm;
-
           if (agentData.preferredVoice && agentData.preferredVoice.length > 0) {
             agentData.preferredVoiceId = agentData.preferredVoice[0]?.id || '';
           }
-
-          if (agentData.secondaryVoice && agentData.secondaryVoice.length > 0) {
-            agentData.secondaryVoiceId = agentData.secondaryVoice[0]?.id || '';
-          }
-
           if (!agentData.merger) {
-            agentData.merger = {
-              method: "INTRO_SONG",
-              gainIntro: 0
-            };
+            agentData.merger = { method: "INTRO_SONG", gainIntro: 0 } as any;
           }
-
+          if (agentData.copilot) {
+            agentData.copilotId = agentData.copilot;
+          }
           Object.assign(localFormData, agentData);
           promptItems.value = (agentData.prompts || []).map((t: string) => ({ id: crypto.randomUUID(), text: t || '' }));
-        }
-        if (!id) {
-          // Ensure promptItems mirrors any initial localFormData.prompts (likely empty on new)
+        } else {
           promptItems.value = (localFormData.prompts || []).map((t: string) => ({ id: crypto.randomUUID(), text: t || '' }));
         }
       } catch (error: any) {
@@ -686,12 +680,12 @@ export default defineComponent({
       langOptions: referencesStore.languageOptions,
       llmTypeOptions: referencesStore.llmTypeOptions,
       voiceOptions,
+      copilotOptions,
       referencesStore,
       formTitle,
       createVoiceItem,
       createToolItem,
       createPromptItem,
-      playgroundVars,
       playgroundPrompt,
       playgroundLoading,
       playgroundResult,

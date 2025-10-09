@@ -185,9 +185,10 @@ export interface AiAgent {
     prompts: string[];
     fillerPrompt: string[];
     preferredVoice: Voice[];
-    secondaryVoice?: Voice[];
+    copilot?: string;
     enabledTools: Tool[];
     talkativity: number;
+    podcastMode: number;
     merger?: {
         method: string;
         gainIntro: number;
@@ -199,11 +200,12 @@ export interface AiAgentSave {
     preferredLang: LanguageCode;
     llmType?: string;
     prompts: string[];
-    fillerPrompt: string[];
+    fillerPrompt?: string[];
     preferredVoice: Voice[];
-    secondaryVoice?: Voice[];
+    copilot?: string;
     enabledTools: Tool[];
     talkativity: number;
+    podcastMode: number;
     merger?: {
         method: string;
         gainIntro: number;
@@ -213,7 +215,7 @@ export interface AiAgentSave {
 // Extend the base AiAgent interface to include form-specific fields
 export interface AiAgentForm extends AiAgent {
     preferredVoiceId?: string;
-    secondaryVoiceId?: string;
+    copilotId?: string;
 }
 
 // Types for Listeners Feature
