@@ -104,7 +104,6 @@ import {
   NGrid,
   NPageHeader,
   NTag,
-  NCode,
   NModal,
   NForm,
   NFormItem,
@@ -115,14 +114,14 @@ import {
 import {json} from "@codemirror/lang-json";
 import {EditorView} from "@codemirror/view";
 import CodeMirror from 'vue-codemirror6';
-import {useRouter} from 'vue-router';
+import { useRouter } from 'vue-router';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
 import {Memory} from "../../../types/kneoBroadcasterTypes";
 import {useMemoryStore} from "../../../stores/kneo/memoryStore";
 import {useRadioStationStore} from "../../../stores/kneo/radioStationStore";
 
 export default defineComponent({
-  components: {NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, NModal, NForm, NFormItem, NInput, NSelect, CodeMirror},
+  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, NModal, NForm, NFormItem, NInput, NSelect, CodeMirror },
   setup() {
     const router = useRouter();
     const store = useMemoryStore();
@@ -133,19 +132,19 @@ export default defineComponent({
     const intervalId = ref<number | null>(null);
     const checkedRowKeys = ref<(string | number)[]>([]);
     const hasSelection = computed(() => checkedRowKeys.value.length > 0);
-    
+
     const brandOptions = computed(() => {
       const radioStations = radioStationStore.getEntries || [];
       const brands = radioStations.map(station => station.slugName).filter(name => name && name.trim() !== '');
       const uniqueBrands = [...new Set(brands)];
       return uniqueBrands.map(brand => ({ label: brand, value: brand }));
     });
-    
+
     const memoryTypeOptions = [
       { label: 'EVENT', value: 'EVENT' },
       { label: 'MESSAGE', value: 'MESSAGE' }
     ];
-    
+
     const showTriggerEventModal = ref(false);
     const creatingMemoryLoading = ref(false);
     const formRef = ref();
@@ -154,12 +153,12 @@ export default defineComponent({
       content: '[\n  {\n    "type": "birthday",\n    "timestamp": "2024-09-17T10:00:00Z",\n    "description": "Congratulate Mark with her birthday",\n    "priority": "high"\n  }\n] ',
       memoryType: 'EVENT'
     });
-    
+
     const editorExtensions = computed(() => [
       json(),
       EditorView.lineWrapping
     ]);
-    
+
     const updateContentForMemoryType = (memoryType: string) => {
       if (memoryType === 'MESSAGE') {
         eventForm.value.content = '[\n  {\n    "from": "John",\n    "content": "Congratulate Mark with her birthday"\n  }\n]';
@@ -167,19 +166,11 @@ export default defineComponent({
         eventForm.value.content = '[\n  {\n    "type": "birthday",\n    "timestamp": "2024-09-17T10:00:00Z",\n    "description": "Congratulate Mark with her birthday",\n    "priority": "high"\n  }\n]';
       }
     };
-    
+
     watch(() => eventForm.value.memoryType, updateContentForMemoryType);
     const eventRules = {
-      brand: {
-        required: true,
-        message: 'Brand is required',
-        trigger: 'blur'
-      },
-      content: {
-        required: true,
-        message: 'Content is required',
-        trigger: 'blur'
-      }
+      brand: { required: true, message: 'Brand is required', trigger: 'blur' },
+      content: { required: true, message: 'Content is required', trigger: 'blur' }
     };
 
     async function preFetch() {
@@ -248,11 +239,9 @@ export default defineComponent({
       }
     };
 
-
-
     const handleDelete = async () => {
       if (checkedRowKeys.value.length === 0) {
-        message.info("No items selected for deletion.");
+        message.info('No items selected for deletion.');
         return;
       }
       try {
@@ -271,22 +260,19 @@ export default defineComponent({
     const handleTriggerEvent = async () => {
       try {
         await formRef.value?.validate();
-      } catch (validationErrors) {
+      } catch {
         message.error('Please fill in all required fields');
         return;
       }
-      
       try {
         creatingMemoryLoading.value = true;
         let content: any = null;
         try {
           content = JSON.parse(eventForm.value.content);
         } catch {
-          // If user typed plain text, wrap into a minimal object
           const text = String(eventForm.value.content || '').trim();
           content = text ? [{ content: text }] : [];
         }
-        // Ensure array payload as required by API
         if (!Array.isArray(content)) {
           if (typeof content === 'string') {
             content = [{ content }];
@@ -316,32 +302,21 @@ export default defineComponent({
         style: 'cursor: pointer;',
         onClick: (e: MouseEvent) => {
           const target = e.target as HTMLElement;
-          if (target.closest('.n-checkbox') || target.closest('[data-n-checkbox]')) {
-            return;
-          }
-          const routeTo = {name: 'MemoryForm', params: {id: row.id}}; 
-          router.push(routeTo).catch((err) => {
-            console.error('Navigation error:', err);
-          });
+          if (target.closest('.n-checkbox') || target.closest('[data-n-checkbox]')) return;
+          const routeTo = { name: 'MemoryForm', params: { id: row.id } };
+          router.push(routeTo).catch(err => console.error('Navigation error:', err));
         },
       };
     };
 
     const columns = computed<DataTableColumns<Memory>>(() => {
       const baseColumns: DataTableColumns<Memory> = [
-        {
-          type: 'selection',
-          fixed: 'left',
-          width: 50
-        },
-        {
-          title: 'Brand',
-          key: 'brand',
-          render: (row: Memory) => row.brand
-        },
+        { type: 'selection', fixed: 'left', width: 50 },
+        { title: 'Brand', key: 'brand', minWidth: 140, render: (row: Memory) => row.brand },
         {
           title: 'Memory Type',
           key: 'memoryType',
+          minWidth: 140,
           render: (row: Memory) => {
             let tagType: 'success' | 'warning' | 'info' | 'default' = 'default';
             if (row.memoryType === 'LISTENERS') tagType = 'success';
@@ -354,49 +329,36 @@ export default defineComponent({
         {
           title: 'Content',
           key: 'content',
+          minWidth: 300,
           render: (row: Memory) => {
             let str = '';
             try {
               if (row && typeof row.content !== 'undefined' && row.content !== null) {
                 str = typeof row.content === 'string' ? row.content : JSON.stringify(row.content);
               }
-            } catch (e) {
+            } catch {
               str = '';
             }
-            const shown = str.length > 100 ? str.substring(0, 100) + '...' : str;
-            return h(NCode, { code: shown });
+            return h('div', { class: 'ellipsis-cell', title: str }, str);
           }
         },
-        {
-          title: 'Created Date',
-          key: 'regDate',
-          render: (row: Memory) => new Date(row.regDate).toLocaleString()
-        }
+        { title: 'Created Date', key: 'regDate', minWidth: 180, render: (row: Memory) => new Date(row.regDate).toLocaleString() }
       ];
 
       if (isMobile.value) {
         return [
-          {
-            type: 'selection',
-            fixed: 'left',
-            width: 50,
-          },
+          { type: 'selection', fixed: 'left', width: 50 },
           {
             title: 'Memory',
             key: 'combined',
-            render: (row: Memory) => {
-              return h('div', {}, [
-                h('div', { style: 'font-weight: bold;' }, `Brand: ${row.brand}`),
-                h('div', {style: 'font-size: 0.9rem;'}, `Type: ${row.memoryType}`),
-                h('div', {
-                  style: 'font-size: 0.8rem; color: #888;'
-                }, `Created: ${new Date(row.regDate).toLocaleDateString()}`)
-              ]);
-            }
+            render: (row: Memory) => h('div', {}, [
+              h('div', { style: 'font-weight: bold;' }, `Brand: ${row.brand}`),
+              h('div', { style: 'font-size: 0.9rem;' }, `Type: ${row.memoryType}`),
+              h('div', { style: 'font-size: 0.8rem; color: #888;' }, `Created: ${new Date(row.regDate).toLocaleDateString()}`)
+            ])
           }
         ];
       }
-
       return baseColumns;
     });
 
@@ -423,12 +385,16 @@ export default defineComponent({
       updateContentForMemoryType,
       formRef
     };
-  },
+  }
 });
+
 </script>
 
 <style scoped>
-.p-4 {
-  padding: 1rem;
+.p-4 { padding: 1rem; }
+.ellipsis-cell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

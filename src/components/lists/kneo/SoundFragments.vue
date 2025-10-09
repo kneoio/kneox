@@ -9,29 +9,29 @@
       </n-page-header>
     </n-gi>
 
-    <n-gi :span="isMobile ? 1 : 6" class="flex items-center">
+    <n-gi :span="isMobile ? 1 : 6" class="flex items-center flex-wrap gap-2">
       <n-button-group class="mr-4">
-        <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
-        <n-button type="error" :disabled="!hasSelection" @click="handleDelete" size="large">
+        <n-button @click="handleNewClick" type="primary" :size="isMobile ? 'medium' : 'large'">New</n-button>
+        <n-button type="error" :disabled="!hasSelection" @click="handleDelete" :size="isMobile ? 'medium' : 'large'">
           Delete ({{ checkedRowKeys.length }})
         </n-button>
-        <n-button type="primary" :disabled="!hasSelection" @click="handleBulkBrandUpdate" size="large">
+        <n-button type="primary" :disabled="!hasSelection" @click="handleBulkBrandUpdate" :size="isMobile ? 'medium' : 'large'">
           Update Brands ({{ checkedRowKeys.length }})
         </n-button>
       </n-button-group>
 
-      <n-button @click="toggleFilters" type="default" size="large" class="mr-4">
+      <n-button @click="toggleFilters" type="default" :size="isMobile ? 'medium' : 'large'" class="mr-4">
         Filter
       </n-button>
 
-      <n-input v-model:value="searchQuery" placeholder="Search..." clearable size="large" style="width: 250px"
+      <n-input v-model:value="searchQuery" placeholder="Search..." clearable :size="isMobile ? 'medium' : 'large'" :style="{ width: isMobile ? '100%' : '250px' }"
         @keydown.enter="handleSearch" @clear="handleSearch" />
     </n-gi>
 
     <n-gi :span="isMobile ? 1 : 6">
       <n-collapse-transition :show="showFilters">
-        <div style="width: 50%;">
-          <n-grid :cols="3" x-gap="12" y-gap="0">
+        <div :style="{ width: isMobile ? '100%' : '50%' }">
+          <n-grid :cols="isMobile ? 1 : 3" x-gap="12" y-gap="0">
             <n-gi>
               <n-form-item label="Genre" size="small" :show-feedback="false">
                 <n-select v-model:value="filters.genre" :options="referencesStore.genreOptions" multiple filterable
@@ -57,7 +57,7 @@
 
     <n-gi :span="isMobile ? 1 : 6">
       <n-data-table remote :columns="columns" :row-key="rowKey" :data="store.getEntries"
-        :pagination="store.getPagination" :bordered="false" :row-props="getRowProps" :loading="loading"
+        :pagination="store.getPagination" :bordered="false" :row-props="getRowProps" :loading="loading" :size="isMobile ? 'small' : 'large'"
         v-model:checked-row-keys="checkedRowKeys" @update:page="handlePageChange"
         @update:page-size="handlePageSizeChange">
         <template #loading>
@@ -109,7 +109,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref, onUnmounted, watch } from 'vue';
+import { computed, defineComponent, h, onMounted, ref, onUnmounted, watch } from 'vue';
 import {
   DataTableColumns,
   NButton,
@@ -273,28 +273,35 @@ export default defineComponent( {
     } );
 
     const columns = computed<DataTableColumns<SoundFragment>>( () => {
-      const baseColumns: DataTableColumns<SoundFragment> = [
-        {
-          type: 'selection',
-          fixed: 'left',
-          width: 50
-        },
-        { title: 'Title', key: 'title', width: 250 },
-        { title: 'Artist', key: 'artist', width: 250 },
-        { title: 'Source', key: 'source', width: 140 }
-      ];
-
-      if ( !isMobile.value ) {
-        baseColumns.push( { title: 'Type', key: 'type', width: 120 } );
+      // Mobile: selection + combined stacked column
+      if (isMobile.value) {
+        return [
+          { type: 'selection', fixed: 'left', width: 50 },
+          {
+            title: 'Fragment',
+            key: 'combined',
+            minWidth: 260,
+            render: (row: SoundFragment) => {
+              const lines: any[] = [];
+              lines.push(h('div', { style: 'font-weight: 600;' }, row.title || '—'));
+              if (row.artist) lines.push(h('div', { style: 'font-size: 12px; color: #888;' }, row.artist));
+              if (row.description) lines.push(h('div', { class: 'ellipsis-cell', title: String(row.description) }, String(row.description)));
+              return h('div', {}, lines);
+            }
+          }
+        ];
       }
-      // Always append Description as the last column
-      baseColumns.push({
-        title: 'Description',
-        key: 'description',
-        ellipsis: { tooltip: true },
-        minWidth: 200
-      });
-      return baseColumns;
+
+      // Desktop: multi-column with minWidth + ellipsis
+      const cols: DataTableColumns<SoundFragment> = [
+        { type: 'selection', fixed: 'left', width: 50 },
+        { title: 'Title', key: 'title', minWidth: 200, ellipsis: { tooltip: true } },
+        { title: 'Artist', key: 'artist', minWidth: 160, ellipsis: { tooltip: true } },
+        { title: 'Source', key: 'source', minWidth: 120 },
+        { title: 'Type', key: 'type', minWidth: 120 },
+        { title: 'Description', key: 'description', ellipsis: { tooltip: true }, minWidth: 280 }
+      ];
+      return cols;
     } );
 
     const getRowProps = ( row: SoundFragment ) => {
@@ -448,11 +455,13 @@ export default defineComponent( {
 </script>
 
 <style scoped>
-.p-4 {
-  padding: 1rem;
-}
-
-:deep(.n-base-selection) {
-  min-width: 200px;
+.p-4 { padding: 1rem; }
+:deep(.n-base-selection) { min-width: 200px; }
+.ellipsis-cell {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>
