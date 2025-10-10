@@ -184,6 +184,8 @@ export interface AiAgent {
     llmType?: string;
     prompts: string[];
     fillerPrompt: string[];
+    messagePrompts?: string[];
+    miniPodcastPrompts?: string[];
     preferredVoice: Voice[];
     copilot?: string;
     enabledTools: Tool[];
@@ -201,6 +203,8 @@ export interface AiAgentSave {
     llmType?: string;
     prompts: string[];
     fillerPrompt?: string[];
+    messagePrompts?: string[];
+    miniPodcastPrompts?: string[];
     preferredVoice: Voice[];
     copilot?: string;
     enabledTools: Tool[];

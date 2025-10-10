@@ -27,6 +27,17 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
+                <n-form-item label="Copilot">
+                  <n-select
+                    v-model:value="localFormData.copilotId"
+                    :options="copilotOptions"
+                    filterable
+                    clearable
+                    style="width: 25%; max-width: 300px;"
+                  />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
                 <n-form-item label="Preferred Language">
                   <n-select v-model:value="localFormData.preferredLang" :options="langOptions"
                     style="width: 25%; max-width: 300px;" />
@@ -104,6 +115,90 @@
                           }"
                           :extensions="editorExtensions"
 
+                        />
+                      </n-space>
+                    </template>
+                  </n-dynamic-input>
+                </n-form-item>
+              </n-gi>
+            </n-grid>
+          </n-form>
+        </n-tab-pane>
+        <n-tab-pane name="message-prompts" tab="Message Prompts">
+          <n-form label-placement="left" label-width="auto">
+            <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
+              <n-gi>
+                <n-form-item label="Message Prompts">
+                  <n-dynamic-input v-model:value="messagePromptItems" :on-create="createPromptItem"
+                    style="width: 90%;">
+                    <template #default="{ value, index }">
+                      <n-space vertical size="small" :key="value.id">
+                        <strong>{{ index + 1 }}</strong>
+                        <n-space size="small" wrap>
+                          <n-button
+                            v-for="opt in referencesStore.variableOptions"
+                            :key="opt.value"
+                            size="small"
+                            type="primary"
+                            @click="insertMessageVariable(index, opt.value)"
+                          >{{ opt.label }}</n-button>
+                        </n-space>
+                        <CodeMirror
+                          :key="value.id"
+                          :model-value="value.text"
+                          @update:model-value="(val) => updateMessagePrompt(index, (typeof val === 'string' ? val : (val?.data ?? '')) )"
+                          basic
+                          @ready="(payload: any) => onMessageEditorReady(index, payload?.view)"
+                          :style="{
+                            width: '800px',
+                            height: '500px',
+                            border: '1px solid #d9d9d9',
+                            borderRadius: '3px',
+                            overflow: 'auto'
+                          }"
+                          :extensions="editorExtensions"
+                        />
+                      </n-space>
+                    </template>
+                  </n-dynamic-input>
+                </n-form-item>
+              </n-gi>
+            </n-grid>
+          </n-form>
+        </n-tab-pane>
+        <n-tab-pane name="mini-podcast-prompts" tab="Mini Podcast Prompts">
+          <n-form label-placement="left" label-width="auto">
+            <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
+              <n-gi>
+                <n-form-item label="Mini Podcast Prompts">
+                  <n-dynamic-input v-model:value="miniPodcastPromptItems" :on-create="createPromptItem"
+                    style="width: 90%;">
+                    <template #default="{ value, index }">
+                      <n-space vertical size="small" :key="value.id">
+                        <strong>{{ index + 1 }}</strong>
+                        <n-space size="small" wrap>
+                          <n-button
+                            v-for="opt in referencesStore.variableOptions"
+                            :key="opt.value"
+                            size="small"
+                            type="primary"
+                            @click="insertMiniPodcastVariable(index, opt.value)"
+                          >{{ opt.label }}</n-button>
+                        </n-space>
+                        <CodeMirror
+                          :key="value.id"
+                          :model-value="value.text"
+                          @update:model-value="(val) => updateMiniPodcastPrompt(index, (typeof val === 'string' ? val : (val?.data ?? '')) )"
+                          basic
+                          @ready="(payload: any) => onMiniPodcastEditorReady(index, payload?.view)"
+                          :style="{
+                            width: '800px',
+                            height: '500px',
+                            border: '1px solid #d9d9d9',
+                            borderRadius: '3px',
+                            overflow: 'auto'
+                          }"
+                          :extensions="editorExtensions"
                         />
                       </n-space>
                     </template>
@@ -240,15 +335,6 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
-                <n-form-item label="Copilot">
-                  <n-select
-                    v-model:value="localFormData.copilotId"
-                    :options="copilotOptions"
-                    filterable
-                    clearable
-                    style="width: 40%; max-width: 420px;"
-                  />
-                </n-form-item>
               </n-gi>
               <n-gi>
                 <n-form-item label="Talkativity">
@@ -415,6 +501,8 @@ export default defineComponent({
 
     // Stable prompt items with IDs to prevent index-based reuse issues
     const promptItems = ref<Array<{ id: string; text: string }>>([]);
+    const messagePromptItems = ref<Array<{ id: string; text: string }>>([]);
+    const miniPodcastPromptItems = ref<Array<{ id: string; text: string }>>([]);
 
     // Playground state
     const playgroundVars = ref<Array<{ name: string; value: string }>>([]);
@@ -441,6 +529,14 @@ export default defineComponent({
 
     const updatePrompt = (index: number, text: string) => {
       const item = promptItems.value[index];
+      if (item) item.text = text || '';
+    };
+    const updateMessagePrompt = (index: number, text: string) => {
+      const item = messagePromptItems.value[index];
+      if (item) item.text = text || '';
+    };
+    const updateMiniPodcastPrompt = (index: number, text: string) => {
+      const item = miniPodcastPromptItems.value[index];
       if (item) item.text = text || '';
     };
 
@@ -472,6 +568,50 @@ export default defineComponent({
       const newText = view.state.doc.toString();
       if (Array.isArray(promptItems.value) && promptItems.value[index]) {
         promptItems.value[index].text = newText;
+      }
+      view.focus();
+    };
+
+    const messageEditorViews = ref<Record<number, EditorView | null>>({});
+    const onMessageEditorReady = (index: number, view?: EditorView) => {
+      if (view) messageEditorViews.value[index] = view;
+    };
+    const insertMessageVariable = (index: number, variableName: string) => {
+      const view = messageEditorViews.value[index];
+      if (!view) return;
+      const insertText = `{${variableName}}`;
+      const sel = view.state.selection.main;
+      const from = sel.from;
+      const to = sel.to;
+      view.dispatch({
+        changes: { from, to, insert: insertText },
+        selection: { anchor: from + insertText.length }
+      });
+      const newText = view.state.doc.toString();
+      if (Array.isArray(messagePromptItems.value) && messagePromptItems.value[index]) {
+        messagePromptItems.value[index].text = newText;
+      }
+      view.focus();
+    };
+
+    const miniPodcastEditorViews = ref<Record<number, EditorView | null>>({});
+    const onMiniPodcastEditorReady = (index: number, view?: EditorView) => {
+      if (view) miniPodcastEditorViews.value[index] = view;
+    };
+    const insertMiniPodcastVariable = (index: number, variableName: string) => {
+      const view = miniPodcastEditorViews.value[index];
+      if (!view) return;
+      const insertText = `{${variableName}}`;
+      const sel = view.state.selection.main;
+      const from = sel.from;
+      const to = sel.to;
+      view.dispatch({
+        changes: { from, to, insert: insertText },
+        selection: { anchor: from + insertText.length }
+      });
+      const newText = view.state.doc.toString();
+      if (Array.isArray(miniPodcastPromptItems.value) && miniPodcastPromptItems.value[index]) {
+        miniPodcastPromptItems.value[index].text = newText;
       }
       view.focus();
     };
@@ -572,6 +712,8 @@ export default defineComponent({
           preferredLang: localFormData.preferredLang as LanguageCode,
           llmType: localFormData.llmType || '',
           prompts: promptItems.value.map(p => p.text || ''),
+          messagePrompts: messagePromptItems.value.map(p => p.text || ''),
+          miniPodcastPrompts: miniPodcastPromptItems.value.map(p => p.text || ''),
           enabledTools: localFormData.enabledTools || [],
           talkativity: localFormData.talkativity || 0.3,
           podcastMode: localFormData.podcastMode || 0,
@@ -656,8 +798,12 @@ export default defineComponent({
           }
           Object.assign(localFormData, agentData);
           promptItems.value = (agentData.prompts || []).map((t: string) => ({ id: crypto.randomUUID(), text: t || '' }));
+          messagePromptItems.value = (agentData.messagePrompts || []).map((t: string) => ({ id: crypto.randomUUID(), text: t || '' }));
+          miniPodcastPromptItems.value = (agentData.miniPodcastPrompts || []).map((t: string) => ({ id: crypto.randomUUID(), text: t || '' }));
         } else {
           promptItems.value = (localFormData.prompts || []).map((t: string) => ({ id: crypto.randomUUID(), text: t || '' }));
+          messagePromptItems.value = [];
+          miniPodcastPromptItems.value = [];
         }
       } catch (error: any) {
         console.error("Failed to fetch data:", error);
@@ -708,6 +854,16 @@ export default defineComponent({
       showResultModal,
       onEditorReady,
       insertVariable,
+      // message prompts
+      messagePromptItems,
+      updateMessagePrompt,
+      onMessageEditorReady,
+      insertMessageVariable,
+      // mini podcast prompts
+      miniPodcastPromptItems,
+      updateMiniPodcastPrompt,
+      onMiniPodcastEditorReady,
+      insertMiniPodcastVariable,
       // prompts
       promptItems,
       updatePrompt

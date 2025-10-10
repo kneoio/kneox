@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 import apiClient from '../../api/apiClient';
+import type { AxiosProgressEvent } from 'axios';
 import type { ApiFormResponse, ApiViewPageResponse } from "../../types";
 import type { SoundFragment, SoundFragmentSave } from "../../types/kneoBroadcasterTypes";
 // Local DTOs for filter usage
@@ -148,13 +149,17 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
                 throw new Error('Request timeout. Please try again.');
             } else if (error.message.includes('Network Error')) {
                 throw new Error('Network error. Please check your connection and try again.');
-            } else {
                 throw new Error(`Upload session failed: ${error.message || 'Unknown error'}`);
             }
         }
     };
 
-    const uploadFile = async (id: string, file: File, uploadId: string) => {
+    const uploadFile = async (
+        id: string,
+        file: File,
+        uploadId: string,
+        onProgress?: (progress: { percent: number }) => void
+    ) => {
         const maxSizeBytes = 200 * 1024 * 1024; // 200MB
 
         if (file.size > maxSizeBytes) {
@@ -169,10 +174,19 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
                 timeout: 600000, // 10 minutes
                 maxContentLength: 200 * 1024 * 1024,
                 maxBodyLength: 200 * 1024 * 1024,
+                onUploadProgress: (evt: AxiosProgressEvent) => {
+                    try {
+                        const total = (evt.total ?? 0);
+                        if (total > 0) {
+                            const percent = Math.round((evt.loaded / total) * 100);
+                            onProgress?.({ percent });
+                        }
+                    } catch (_) {
+                        // ignore progress errors
+                    }
+                }
             });
-
             return response.data;
-
         } catch (error: any) {
             if (error.response) {
                 const status = error.response.status;
@@ -194,9 +208,9 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
                     default:
                         throw new Error(`Upload failed: ${errorData?.error?.message || errorData?.message || `HTTP ${status}`}`);
                 }
-            } else if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+            } else if (error.code === 'ECONNABORTED' || (error.message || '').includes('timeout')) {
                 throw new Error('Upload timeout. Please try with a smaller file or check your connection.');
-            } else if (error.message.includes('Network Error')) {
+            } else if ((error.message || '').includes('Network Error')) {
                 throw new Error('Network error. Please check your connection and try again.');
             } else {
                 throw new Error(`Upload failed: ${error.message || 'Unknown error'}`);

@@ -154,8 +154,6 @@ import { useRadioStationStore } from "../../../stores/kneo/radioStationStore";
 import { useReferencesStore } from "../../../stores/kneo/referencesStore";
 import { FragmentType, SoundFragment, SoundFragmentSave } from "../../../types/kneoBroadcasterTypes";
 import { isErrorWithResponse, capitalizeFirstLetter, getErrorMessage } from '../../helpers/errorHandling';
-import { apiServer } from "../../../api/apiClient";
-import { uploadProgress, connectSSEProgress } from "../../../utils/fileUpload";
 import { handleFormSaveError } from "../../../utils/errorHandling";
 
 export default defineComponent({
@@ -190,7 +188,7 @@ export default defineComponent({
     const fileList = ref<UploadFileInfo[]>([]);
     const uploadedFileNames = ref<string[]>([]);
     const originalUploadedFileNames = ref<string[]>([]);
-    const backendProgress = ref(0);
+    // simplified approach does not track backend progress via SSE
 
     const aclData = ref<any[]>([]);
     const aclLoading = ref(false);
@@ -257,32 +255,6 @@ export default defineComponent({
       console.log(`[${getTimestamp()}] ${message}`);
     };
 
-    let globalProgressState = {
-      isSimulationActive: false,
-      hasSSEStarted: false,
-      currentProgress: 0,
-      stopSimulation: null as (() => void) | null,
-      eventSource: null as EventSource | null
-    };
-
-
-
-    const resetProgressState = () => {
-      if (globalProgressState.stopSimulation) {
-        globalProgressState.stopSimulation();
-      }
-      if (globalProgressState.eventSource) {
-        globalProgressState.eventSource.close();
-      }
-      globalProgressState = {
-        isSimulationActive: false,
-        hasSSEStarted: false,
-        currentProgress: 0,
-        stopSimulation: null,
-        eventSource: null
-      };
-    };
-
     const renderLabelTag = ({ option, handleClose }: any) => {
       const bg = option?.color || '#e5e7eb';
       const fg = option?.fontColor || '#111827';
@@ -341,42 +313,57 @@ export default defineComponent({
       }
     };
 
-    const handleUpload = async ({file, onFinish, onError}: UploadCustomRequestOptions) => {
+    const handleUpload = async ({ file, onProgress, onFinish, onError }: UploadCustomRequestOptions) => {
       try {
-        resetProgressState();
-
         const entityId = localFormData.id || "temp";
         const uploadId = crypto.randomUUID();
-        const startTime = Date.now();
         const originalFileName = file.name;
         logWithTimestamp(`Start upload session, uploadId: ${uploadId}, originalFileName: ${originalFileName}`);
-
-        const sessionData = await store.startUploadSession(entityId, uploadId, startTime);
-        globalProgressState.stopSimulation = uploadProgress(
-            globalProgressState,
-            sessionData.estimatedDurationSeconds,
-            (progress) => {
-              if (fileList.value[0]) {
-                fileList.value = [{
-                  ...fileList.value[0],
-                  percentage: progress,
-                  status: 'uploading'
-                }];
-              }
-            },
-            () => {
-              // logWithTimestamp('Simulation phase completed');
-            }
-        );
-        logWithTimestamp(`Starting upload: ${originalFileName}, Estimated: ${sessionData.estimatedDurationSeconds}`);
         if (!file.file) {
           throw new Error('No file content to upload');
         }
-        await store.uploadFile(entityId, file.file, uploadId);
-        connectSSE(uploadId, originalFileName); // Pass original filename to SSE
+        // Mark UI as uploading
+        if (fileList.value[0]) {
+          fileList.value[0] = { ...fileList.value[0], status: 'uploading', percentage: 0 } as any;
+        }
+        // Direct upload with real-time progress
+        const res = await store.uploadFile(entityId, file.file, uploadId, (p) => {
+          try {
+            onProgress && onProgress(p as any);
+            if (fileList.value[0]) {
+              fileList.value[0] = { ...fileList.value[0], status: 'uploading', percentage: p.percent } as any;
+            }
+          } catch (_) { /* noop */ }
+        });
+        // Ensure final 100%
+        onProgress && onProgress({ percent: 100 } as any);
+        // Update file list UI state
+        if (fileList.value[0]) {
+          fileList.value[0] = {
+            ...fileList.value[0],
+            name: originalFileName,
+            percentage: 100,
+            status: 'finished'
+          } as any;
+        }
+
+        if (originalFileName && !originalUploadedFileNames.value.includes(originalFileName)) {
+          originalUploadedFileNames.value.push(originalFileName);
+        }
+        if (originalFileName && !uploadedFileNames.value.includes(originalFileName)) {
+          uploadedFileNames.value.push(originalFileName);
+        }
+
+        // Apply metadata if backend returns it in response
+        const metadata = (res as any)?.metadata;
+        if (metadata) {
+          applyMetadata(metadata);
+        }
+
+        if (onFinish) onFinish();
+        message.success(`File "${originalFileName}" uploaded successfully`);
 
       } catch (error: any) {
-        resetProgressState();
         logWithTimestamp(`Upload error: ${getErrorMessage(error)}`);
         message.error(getErrorMessage(error));
         if (onError) onError(error as Error);
@@ -422,10 +409,6 @@ export default defineComponent({
       uploadedFileNames.value = uploadedFileNames.value.filter(name => name !== file.name);
       originalUploadedFileNames.value = originalUploadedFileNames.value.filter(name => name !== file.name);
 
-      if (globalProgressState.isSimulationActive || globalProgressState.hasSSEStarted) {
-        resetProgressState();
-      }
-
       logWithTimestamp(`Removed file: ${file.name} (index: ${index}, list size: ${fileList?.length ?? 0})`);
       return true;
     };
@@ -437,9 +420,7 @@ export default defineComponent({
     };
 
     const handleSave = async () => {
-      const isUploading = fileList.value.some(file =>
-          file.status === 'uploading' || globalProgressState.isSimulationActive || globalProgressState.hasSSEStarted
-      );
+      const isUploading = fileList.value.some(file => file.status === 'uploading');
 
       if (isUploading) {
         message.warning("Please wait for the file upload to complete before saving.");
@@ -541,66 +522,7 @@ export default defineComponent({
       }
     };
 
-    const connectSSE = (uploadId: string, originalFileName: string) => {
-      const url = `${apiServer}/soundfragments/upload-progress/${uploadId}/stream`;
-      const es = connectSSEProgress(
-          globalProgressState,
-          url,
-          {
-            onDisplayProgress: (progress) => {
-              if (fileList.value[0]) {
-                const current = fileList.value[0];
-                fileList.value = [{ ...current, percentage: progress, status: 'uploading' }];
-              }
-            },
-            onFinished: ({ fileName, fileId, metadata }) => {
-              const correctFileName = fileName || originalFileName;
-
-              if (correctFileName && !originalUploadedFileNames.value.includes(correctFileName)) {
-                originalUploadedFileNames.value.push(correctFileName);
-              }
-              if (correctFileName && !uploadedFileNames.value.includes(correctFileName)) {
-                uploadedFileNames.value.push(correctFileName);
-              }
-
-              if (fileList.value[0]) {
-                fileList.value[0] = {
-                  ...fileList.value[0],
-                  name: correctFileName,
-                  percentage: 100,
-                  status: 'finished',
-                  id: fileId || fileList.value[0].id
-                };
-              }
-              globalProgressState.currentProgress = 100;
-              resetProgressState();
-
-              if (metadata) {
-                applyMetadata(metadata);
-              }
-              message.success(`File "${correctFileName}" uploaded successfully`);
-            },
-            onError: () => {
-              const currentFile = fileList.value[0];
-              if (globalProgressState.isSimulationActive && currentFile) {
-                setTimeout(() => {
-                  if (fileList.value[0] && ((fileList.value[0].percentage ?? 0) < 100)) {
-                    fileList.value[0] = { ...fileList.value[0], percentage: 100, status: 'finished' };
-                    globalProgressState.currentProgress = 100;
-                    resetProgressState();
-                  }
-                }, 2000);
-              }
-            },
-            onRawData: (data) => {
-              const serverProgress = data?.percentage || 0;
-              backendProgress.value = serverProgress;
-            }
-          }
-      );
-      globalProgressState.eventSource = es;
-      return es;
-    };
+    
 
     watch(activeTab, (newTab) => {
       if (newTab === 'acl') {
@@ -702,7 +624,6 @@ export default defineComponent({
       referencesStore,
       aclData,
       aclLoading,
-      backendProgress,
       renderLabelTag,
       renderLabel,
       originalUploadedFileNames // Add this to the return
