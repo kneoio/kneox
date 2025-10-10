@@ -498,8 +498,14 @@ export default defineComponent({
       }
     };
 
-    const goBack = () => {
-      router.back();
+    const goBack = async () => {
+      if (route.query.returnTo === 'StationPlaylist' && route.params.brandName) {
+        await router.push({ name: 'StationPlaylist', params: { brandName: route.params.brandName } });
+      } else if (route.params.brandName) {
+        await router.push({ name: 'StationSoundFragments', params: { brandName: route.params.brandName } });
+      } else {
+        await router.push('/outline/soundfragments');
+      }
     };
 
     const fetchAclData = async () => {

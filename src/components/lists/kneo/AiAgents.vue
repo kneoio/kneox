@@ -196,7 +196,15 @@ export default defineComponent({
           title: 'Talkativity',
           key: 'talkativity',
           width: 100,
-          render: (row) => `${Math.round(row.talkativity * 100)}%`
+          render: (row) => {
+            const t = typeof row.talkativity === 'number' ? row.talkativity : 0;
+            const threshold = 0.1;
+            if (t <= threshold) {
+              return h('span', { style: 'color: inherit;' }, `${Math.round(t * 100)}%`);
+            }
+            const alpha = Math.min(1, 0.4 + 0.6 * ((t - threshold) / (1 - threshold)));
+            return h('span', { style: `color: rgba(255, 0, 0, ${alpha});` }, `${Math.round(t * 100)}%`);
+          }
         },
         {
           title: 'Preferred Voice',
