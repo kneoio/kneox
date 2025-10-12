@@ -36,6 +36,7 @@
     "@babel/core": "^7.24.6",
     "@babel/preset-env": "^7.24.6",
     "@rollup/plugin-babel": "^6.0.4",
+    "@types/markdown-it": "^14.1.2",
     "@types/node": "^20.12.12",
     "@vitejs/plugin-vue": "^5.0.5",
     "typescript": "^5.2.2",

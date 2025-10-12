@@ -68,21 +68,24 @@
 
           <n-space size="medium">
             <n-card title="Live Playlist" size="small" style="flex: 1; min-width: 0;">
-              <n-timeline v-if="stationDetails?.playlistManagerStats?.livePlaylist && stationDetails.playlistManagerStats.livePlaylist.length > 0">
+              <n-timeline v-if="combinedPlaylist.length > 0">
                 <n-timeline-item
-                  v-for="(fragment, index) in [...stationDetails.playlistManagerStats.livePlaylist].reverse()"
+                  v-for="(fragment, index) in combinedPlaylist"
                   :key="index"
                   :type="getPlaylistItemType(fragment)"
                   :title="formatArtistTitle(fragment)"
                 >
                   <template #default>
                     <n-space size="small" align="center">
-                      <n-tag v-if="fragment.source" :type="fragment.source === 'PRIORITIZED' ? 'warning' : 'default'" size="small">
-                        {{ fragment.source }}
+                      <n-tag v-if="fragment.isPlayingNow" type="error" size="small" strong>
+                        Playing now
                       </n-tag>
-                      <n-tag v-if="!fragment.obtained" type="error" size="small">
-                        Not Obtained
+                      <n-tag v-if="fragment.isQueued" type="info" size="small">
+                        Queued
                       </n-tag>
+                      <n-text v-if="fragment.duration" depth="3" style="font-size: 0.75rem;">
+                        {{ formatDuration(fragment.duration) }}
+                      </n-text>
                       <span v-for="(c, i) in getMergingTypeColors(fragment)" :key="i" class="merge-box" :style="{ backgroundColor: c }"></span>
                     </n-space>
                   </template>
@@ -257,6 +260,19 @@ export default defineComponent( {
         minute: '2-digit',
         second: '2-digit'
       } );
+    } );
+
+    const combinedPlaylist = computed( () => {
+      const livePlaylist = stationDetails.value?.playlistManagerStats?.livePlaylist || [];
+      const queued = stationDetails.value?.playlistManagerStats?.queued || [];
+      
+      // Create combined list: live playlist first, then queued items in reverse order
+      const combined = [
+        ...livePlaylist.map(item => ({ ...item, isQueued: false, isPlayingNow: isCurrentSong(item) })),
+        ...queued.slice().reverse().map(item => ({ ...item, isQueued: true, isPlayingNow: isCurrentSong(item) }))
+      ];
+      
+      return combined;
     } );
 
     const timelineDisplay = computed( () => {
@@ -484,6 +500,13 @@ export default defineComponent( {
       return artist ? `${artist} — ${title}` : title;
     };
 
+    const formatDuration = (seconds: number): string => {
+      if (!seconds || seconds <= 0) return '0:00';
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = seconds % 60;
+      return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    };
+
     const getHlsCurrentTrackDisplay = (): string => {
       const songStats = stationDetails.value?.songStatistics as any;
       if (!songStats) return 'N/A';
@@ -674,6 +697,7 @@ export default defineComponent( {
       currentListeners,
       lastUpdateTime,
       timelineDisplay,
+      combinedPlaylist,
       stationColor,
       getStatusInfo,
       managedByInfo,
@@ -697,6 +721,7 @@ export default defineComponent( {
       getHlsRequestCount,
       getHlsListenersCount,
       formatArtistTitle,
+      formatDuration,
       isCurrentSong,
       statusHistoryTimeline,
       getStatusTimelineType,

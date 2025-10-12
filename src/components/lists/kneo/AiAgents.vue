@@ -207,6 +207,15 @@ export default defineComponent({
           }
         },
         {
+          title: 'Podcast Mode',
+          key: 'podcastMode',
+          width: 100,
+          render: (row) => {
+            const p = typeof row.podcastMode === 'number' ? row.podcastMode : 0;
+            return h('span', { style: 'color: inherit;' }, `${Math.round(p * 100)}%`);
+          }
+        },
+        {
           title: 'Preferred Voice',
           key: 'preferredVoice',
           width: 200,
