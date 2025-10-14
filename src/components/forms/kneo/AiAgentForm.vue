@@ -79,33 +79,18 @@
           <n-form label-placement="left" label-width="auto">
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
               <n-gi>
-                <n-text depth="3" style="display: block; margin-bottom: 8px; width: 90%;">
-                  You can suggest to use: <code>[sad]</code>,<code>[angry]</code>,<code>[curious]</code>,<code>[happily]</code>,<code>[whispers]</code>,<code>[shouts]</code>,<code>[laughs]</code>,<code>[clears throat]</code>
-                </n-text>
-              </n-gi>
-
-              <n-gi>
                 <n-form-item label="Prompts">
                   <n-dynamic-input v-model:value="promptItems" :on-create="createPromptItem"
                     style="width: 90%;">
                     <template #default="{ value, index }">
                       <n-space vertical size="small" :key="value.id">
-                        <n-space align="center" size="small">
+                        <n-space align="center" style="margin-bottom: 12px;">
                           <strong>{{ index + 1 }}</strong>
-                          <n-switch v-model:value="value.enabled" size="small">
+                          <n-switch v-model:value="value.enabled" :round="false">
                             <template #checked>Enabled</template>
                             <template #unchecked>Disabled</template>
                           </n-switch>
-                        </n-space>
-                        <n-space size="small" wrap>
-                          <n-button
-                            v-for="opt in referencesStore.variableOptions"
-                            :key="opt.value"
-                            size="small"
-                            type="primary"
-                            @click="insertVariable(index, opt.value)"
-                          >{{ opt.label }}</n-button>
-                        </n-space>
+                        </n-space>                       
                         <CodeMirror
                           :key="value.id"
                           :model-value="value.text"
@@ -807,16 +792,16 @@ export default defineComponent({
           Object.assign(localFormData, agentData);
           promptItems.value = (agentData.prompts || []).map((p: { enabled: boolean; prompt: string }) => ({
             id: crypto.randomUUID(),
-            text: p?.prompt || '',
-            enabled: !!p?.enabled
+            text: p.prompt || '',
+            enabled: p.enabled
           }));
           messagePromptItems.value = (agentData.messagePrompts || []).map((t: string) => ({ id: crypto.randomUUID(), text: t || '' }));
           miniPodcastPromptItems.value = (agentData.miniPodcastPrompts || []).map((t: string) => ({ id: crypto.randomUUID(), text: t || '' }));
         } else {
           promptItems.value = (localFormData.prompts || []).map((p: { enabled: boolean; prompt: string }) => ({
             id: crypto.randomUUID(),
-            text: p?.prompt || '',
-            enabled: !!p?.enabled
+            text: p.prompt || '',
+            enabled: p.enabled
           }));
           messagePromptItems.value = [];
           miniPodcastPromptItems.value = [];

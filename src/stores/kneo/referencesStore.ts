@@ -225,11 +225,7 @@ export const useReferencesStore = defineStore('references', () => {
     { label: 'Intro Song', value: 'INTRO_SONG' }
   ];
 
-  const variableOptions = ref<Array<{label: string, value: string}>>([
-    { label: 'ai_dj_name', value: 'ai_dj_name' },
-    { label: 'brand', value: 'brand' }
-  ]);
-
+  
   const variableSampleData: Record<string, string[]> = {
     ai_dj_name: ['DJ Nova', 'DJ Echo', 'DJ Pulse', 'DJ Orion', 'DJ Lyra'],
     brand: ['KNEO Radio', 'SonicWave FM', 'Urban Beats', 'Galaxy Tunes', 'City Vibes']
@@ -294,7 +290,6 @@ export const useReferencesStore = defineStore('references', () => {
     eventTypeOptions,
     llmTypeOptions,
     mergerMethodOptions,
-    variableOptions,
     variableSampleData,
     bitRateOptions,
     submissionPolicyOptions,
