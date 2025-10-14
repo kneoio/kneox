@@ -90,7 +90,13 @@
                     style="width: 90%;">
                     <template #default="{ value, index }">
                       <n-space vertical size="small" :key="value.id">
-                        <strong>{{ index + 1 }}</strong>
+                        <n-space align="center" size="small">
+                          <strong>{{ index + 1 }}</strong>
+                          <n-switch v-model:value="value.enabled" size="small">
+                            <template #checked>Enabled</template>
+                            <template #unchecked>Disabled</template>
+                          </n-switch>
+                        </n-space>
                         <n-space size="small" wrap>
                           <n-button
                             v-for="opt in referencesStore.variableOptions"
@@ -103,7 +109,7 @@
                         <CodeMirror
                           :key="value.id"
                           :model-value="value.text"
-                          @update:model-value="(val) => updatePrompt(index, (typeof val === 'string' ? val : (val?.data ?? '')) )"
+                          @update:model-value="(val) => updatePrompt(index, (typeof val === 'string' ? val : (((val as any)?.data) ?? '')) )"
                           basic
                           @ready="(payload: any) => onEditorReady(index, payload?.view)"
                           :style="{
@@ -146,7 +152,7 @@
                         <CodeMirror
                           :key="value.id"
                           :model-value="value.text"
-                          @update:model-value="(val) => updateMessagePrompt(index, (typeof val === 'string' ? val : (val?.data ?? '')) )"
+                          @update:model-value="(val) => updateMessagePrompt(index, (typeof val === 'string' ? val : (((val as any)?.data) ?? '')) )"
                           basic
                           @ready="(payload: any) => onMessageEditorReady(index, payload?.view)"
                           :style="{
@@ -188,7 +194,7 @@
                         <CodeMirror
                           :key="value.id"
                           :model-value="value.text"
-                          @update:model-value="(val) => updateMiniPodcastPrompt(index, (typeof val === 'string' ? val : (val?.data ?? '')) )"
+                          @update:model-value="(val) => updateMiniPodcastPrompt(index, (typeof val === 'string' ? val : (((val as any)?.data) ?? '')) )"
                           basic
                           @ready="(payload: any) => onMiniPodcastEditorReady(index, payload?.view)"
                           :style="{
@@ -247,7 +253,7 @@
                 <n-form-item label="Prompt">
                   <CodeMirror
                     :model-value="playgroundPrompt"
-                    @update:model-value="(val) => (playgroundPrompt = typeof val === 'string' ? val : (val?.data ?? ''))"
+                    @update:model-value="(val) => (playgroundPrompt = typeof val === 'string' ? val : (((val as any)?.data) ?? ''))"
                     basic
                     :style="{
                       width: '800px',
@@ -402,6 +408,7 @@ import {
   NText,
   NModal,
   NScrollbar,
+  NSwitch,
   useLoadingBar,
   useMessage
 } from 'naive-ui';
@@ -438,6 +445,7 @@ export default defineComponent({
     NCollapseTransition,
     NModal,
     NScrollbar,
+    NSwitch,
     CodeMirror,
     AclTable
   },
@@ -500,7 +508,7 @@ export default defineComponent({
     });
 
     // Stable prompt items with IDs to prevent index-based reuse issues
-    const promptItems = ref<Array<{ id: string; text: string }>>([]);
+    const promptItems = ref<Array<{ id: string; text: string; enabled: boolean }>>([]);
     const messagePromptItems = ref<Array<{ id: string; text: string }>>([]);
     const miniPodcastPromptItems = ref<Array<{ id: string; text: string }>>([]);
 
@@ -525,7 +533,7 @@ export default defineComponent({
       description: ""
     });
 
-    const createPromptItem = () => ({ id: crypto.randomUUID(), text: "" });
+    const createPromptItem = () => ({ id: crypto.randomUUID(), text: "", enabled: true });
 
     const updatePrompt = (index: number, text: string) => {
       const item = promptItems.value[index];
@@ -711,7 +719,7 @@ export default defineComponent({
           name: localFormData.name || '',
           preferredLang: localFormData.preferredLang as LanguageCode,
           llmType: localFormData.llmType || '',
-          prompts: promptItems.value.map(p => p.text || ''),
+          prompts: promptItems.value.map(p => ({ enabled: !!p.enabled, prompt: p.text || '' })),
           messagePrompts: messagePromptItems.value.map(p => p.text || ''),
           miniPodcastPrompts: miniPodcastPromptItems.value.map(p => p.text || ''),
           enabledTools: localFormData.enabledTools || [],
@@ -797,11 +805,20 @@ export default defineComponent({
             agentData.copilotId = agentData.copilot;
           }
           Object.assign(localFormData, agentData);
-          promptItems.value = (agentData.prompts || []).map((t: string) => ({ id: crypto.randomUUID(), text: t || '' }));
+          // Backward compatibility: `prompts` may be array of strings or Prompt objects
+          promptItems.value = (agentData.prompts || []).map((p: any) => {
+            const text = typeof p === 'string' ? p : (p?.prompt || '');
+            const enabled = typeof p === 'object' && p ? !!p.enabled : true;
+            return { id: crypto.randomUUID(), text, enabled };
+          });
           messagePromptItems.value = (agentData.messagePrompts || []).map((t: string) => ({ id: crypto.randomUUID(), text: t || '' }));
           miniPodcastPromptItems.value = (agentData.miniPodcastPrompts || []).map((t: string) => ({ id: crypto.randomUUID(), text: t || '' }));
         } else {
-          promptItems.value = (localFormData.prompts || []).map((t: string) => ({ id: crypto.randomUUID(), text: t || '' }));
+          promptItems.value = (localFormData.prompts || []).map((p: any) => {
+            const text = typeof p === 'string' ? p : (p?.prompt || '');
+            const enabled = typeof p === 'object' && p ? !!p.enabled : true;
+            return { id: crypto.randomUUID(), text, enabled };
+          });
           messagePromptItems.value = [];
           miniPodcastPromptItems.value = [];
         }
@@ -842,6 +859,7 @@ export default defineComponent({
       createVariableItem,
       refillVariable,
       refillAllVariables,
+      playgroundVars,
       usePrompt,
       sendPlaygroundRequest,
       handleSave,

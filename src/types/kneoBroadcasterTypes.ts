@@ -173,6 +173,11 @@ export interface Tool {
     name: string;
 }
 
+export interface Prompt {
+    enabled: boolean;
+    prompt: string;
+}
+
 export interface AiAgent {
     id: string;
     author: string;
@@ -182,7 +187,7 @@ export interface AiAgent {
     name: string;
     preferredLang: LanguageCode;
     llmType?: string;
-    prompts: string[];
+    prompts: Prompt[];
     fillerPrompt: string[];
     messagePrompts?: string[];
     miniPodcastPrompts?: string[];
@@ -201,7 +206,7 @@ export interface AiAgentSave {
     name: string;
     preferredLang: LanguageCode;
     llmType?: string;
-    prompts: string[];
+    prompts: Prompt[];
     fillerPrompt?: string[];
     messagePrompts?: string[];
     miniPodcastPrompts?: string[];
