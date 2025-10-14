@@ -230,13 +230,11 @@ export default defineComponent({
           render: (row: AiAgent) => {
             if (!row.prompts || row.prompts.length === 0) return 'N/A';
             const maxLength = isMobile.value ? 40 : 80;
-            const toText = (p: any) => typeof p === 'string' ? p : (p?.prompt ?? '');
-            const toPrefix = (p: any) => (typeof p === 'object' && p && p.enabled === false) ? '[off] ' : '';
             return row.prompts
-              .map((p: any) => {
-                const text = toText(p);
+              .map((p: { enabled: boolean; prompt: string }) => {
+                const text = p?.prompt || '';
                 const short = text.substring(0, maxLength) + (text.length > maxLength ? '...' : '');
-                return toPrefix(p) + short;
+                return (p.enabled === false ? '[off] ' : '') + short;
               })
               .join('; ');
           }

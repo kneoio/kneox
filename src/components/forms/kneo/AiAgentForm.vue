@@ -805,20 +805,19 @@ export default defineComponent({
             agentData.copilotId = agentData.copilot;
           }
           Object.assign(localFormData, agentData);
-          // Backward compatibility: `prompts` may be array of strings or Prompt objects
-          promptItems.value = (agentData.prompts || []).map((p: any) => {
-            const text = typeof p === 'string' ? p : (p?.prompt || '');
-            const enabled = typeof p === 'object' && p ? !!p.enabled : true;
-            return { id: crypto.randomUUID(), text, enabled };
-          });
+          promptItems.value = (agentData.prompts || []).map((p: { enabled: boolean; prompt: string }) => ({
+            id: crypto.randomUUID(),
+            text: p?.prompt || '',
+            enabled: !!p?.enabled
+          }));
           messagePromptItems.value = (agentData.messagePrompts || []).map((t: string) => ({ id: crypto.randomUUID(), text: t || '' }));
           miniPodcastPromptItems.value = (agentData.miniPodcastPrompts || []).map((t: string) => ({ id: crypto.randomUUID(), text: t || '' }));
         } else {
-          promptItems.value = (localFormData.prompts || []).map((p: any) => {
-            const text = typeof p === 'string' ? p : (p?.prompt || '');
-            const enabled = typeof p === 'object' && p ? !!p.enabled : true;
-            return { id: crypto.randomUUID(), text, enabled };
-          });
+          promptItems.value = (localFormData.prompts || []).map((p: { enabled: boolean; prompt: string }) => ({
+            id: crypto.randomUUID(),
+            text: p?.prompt || '',
+            enabled: !!p?.enabled
+          }));
           messagePromptItems.value = [];
           miniPodcastPromptItems.value = [];
         }
