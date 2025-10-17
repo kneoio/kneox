@@ -42,7 +42,7 @@
               Stop Station
             </n-button>
           </n-button-group>
-          <n-button type="primary" tertiary style="margin-left: 8px;" @click="showBroadcastModal = true">
+          <n-button type="primary" style="margin-left: 8px;" @click="showBroadcastModal = true">
             Broadcast message
           </n-button>
           <n-space size="large" style="margin-left: 30px;">
@@ -60,7 +60,7 @@
           <n-card title="Status History" size="small">
             <n-timeline horizontal v-if=" statusHistoryTimeline.length > 0 ">
               <n-timeline-item v-for=" ( event, index ) in statusHistoryTimeline " :key="index"
-                :type="getStatusTimelineType( event.newStatus )" :title="formatStatus( event.newStatus )"
+                :type="getStatusTimelineType( event.status )" :title="formatStatus( event.status )"
                 :content="formatTimestamp( event.timestamp ) + ( event.timeDiff ? ' (' + event.timeDiff + ')' : '' )" />
             </n-timeline>
             <n-text depth="3" v-else>No status history available</n-text>
@@ -176,10 +176,10 @@
   <n-modal v-model:show="showBroadcastModal" preset="dialog" title="Broadcast message">
     <n-form :model="broadcastForm" ref="broadcastFormRef">
       <n-form-item label="From" path="from">
-        <n-input v-model:value="broadcastForm.from" placeholder="e.g. John" />
+        <n-input class="broadcast-input" v-model:value="broadcastForm.from" placeholder="e.g. John" />
       </n-form-item>
       <n-form-item label="Message" path="content">
-        <n-input v-model:value="broadcastForm.content" type="textarea" :autosize="{ minRows: 2, maxRows: 4 }" placeholder="Your message to listeners" />
+        <n-input class="broadcast-textarea" v-model:value="broadcastForm.content" type="textarea" :autosize="{ minRows: 2, maxRows: 4 }" placeholder="Your message to listeners" />
       </n-form-item>
       <n-text depth="3" style="display:block; margin-top: 4px;">
         Note: Your message will be processed by the DJ if the radio station supports it.
@@ -263,15 +263,14 @@ export default defineComponent( {
     } );
 
     const combinedPlaylist = computed( () => {
-      const livePlaylist = stationDetails.value?.playlistManagerStats?.livePlaylist || [];
-      const queued = stationDetails.value?.playlistManagerStats?.queued || [];
-      
-      // Create combined list: live playlist first, then queued items in reverse order
+      const livePlaylist = (stationDetails.value?.playlistManagerStats?.livePlaylist || []) as any[];
+      const queued = ((stationDetails.value?.playlistManagerStats as any)?.queued || []) as any[];
+
       const combined = [
-        ...livePlaylist.map(item => ({ ...item, isQueued: false, isPlayingNow: isCurrentSong(item) })),
-        ...queued.slice().reverse().map(item => ({ ...item, isQueued: true, isPlayingNow: isCurrentSong(item) }))
+        ...livePlaylist.map((item: any) => ({ ...item, isQueued: false, isPlayingNow: isCurrentSong(item) })),
+        ...queued.slice().reverse().map((item: any) => ({ ...item, isQueued: true, isPlayingNow: isCurrentSong(item) }))
       ];
-      
+
       return combined;
     } );
 
@@ -568,7 +567,7 @@ export default defineComponent( {
         'DISCONNECTED': 'Disconnected'
       };
 
-      return statusMap[status.toUpperCase()] || status.replace( /_/g, ' ' );
+      return statusMap[status.toUpperCase()] ;
     };
 
     const getHlsRequestCount = () => {
@@ -757,6 +756,23 @@ export default defineComponent( {
     transform: scale(1);
     opacity: 1;
   }
+}
+
+:deep(.broadcast-input .n-input),
+:deep(.broadcast-textarea .n-input) {
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25);
+  border-radius: 6px;
+  background-color: var(--n-color);
+}
+
+:deep(.broadcast-input .n-input:hover),
+:deep(.broadcast-textarea .n-input:hover) {
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+
+:deep(.broadcast-input .n-input.n-input--focus),
+:deep(.broadcast-textarea .n-input.n-input--focus) {
+  box-shadow: 0 0 0 2px rgba(24, 160, 88, 0.45);
 }
 
 .merge-box {

@@ -47,9 +47,9 @@
                           <n-space align="center" :wrap="false" style="min-width: 0;">
                             <strong style="font-size:15px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ s.name }}</strong>
                             <span :class="{ online: ['ON_LINE','WARMING_UP'].includes(s.currentStatus as any) }"
-                                  :style="(['ON_LINE','WARMING_UP'].includes(s.currentStatus as any))
-                                  ? 'color: #84cc16 !important; text-shadow: 0 0 10px rgba(132, 204, 22, 1), 0 0 14px rgba(132, 204, 22, 0.6); font-weight: 400 !important;'
-                                  : 'font-weight: 400;'"
+                                   :style="(['ON_LINE','WARMING_UP'].includes(s.currentStatus as any))
+                                   ? 'color: #84cc16 !important; text-shadow: 0 0 14px rgba(132, 204, 22, 1), 0 0 24px rgba(132, 204, 22, 0.75); font-weight: 400 !important; font-size: 12px;'
+                                   : 'font-weight: 400; font-size: 12px;'"
                             >
                               {{ statusText(s.currentStatus) }}
                             </span>

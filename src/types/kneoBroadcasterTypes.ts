@@ -71,6 +71,7 @@ export interface RadioStation {
     url: string;
     hlsUrl: string;
     iceCastUrl?: string;
+    mp3Url?: string;
     mixplaUrl?: string;
     actionUrl: string;
     bitRate?: number;

@@ -94,13 +94,14 @@
                   </n-button>
                 </n-form-item>
               </n-gi>
+              
               <n-gi>
-                <n-form-item label="Icecast URL">
+                <n-form-item label="MP3 URL">
                   <n-text style="width: 50%; max-width: 600px; font-family: monospace; cursor: pointer; color: #1890ff;"
-                    @click="openUrl( localFormData.iceCastUrl )">
-                    {{ localFormData.iceCastUrl }}
+                    @click="openUrl( localFormData.mp3Url )">
+                    {{ localFormData.mp3Url }}
                   </n-text>
-                  <n-button type="primary" text @click="copyToClipboard( localFormData.iceCastUrl || '' )"
+                  <n-button type="primary" text @click="copyToClipboard( localFormData.mp3Url || '' )"
                     style="margin-left: 8px;">
                     <template #icon>
                       <n-icon>
@@ -520,6 +521,7 @@ export default defineComponent( {
       color: "#FFFFFF",
       hlsUrl: "",
       iceCastUrl: "",
+      mp3Url: "",
       mixplaUrl: "",
       aiAgentId: undefined,
       profileId: undefined,
