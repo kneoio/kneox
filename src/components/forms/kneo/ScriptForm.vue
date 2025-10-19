@@ -56,27 +56,46 @@
           <n-form label-placement="left" label-width="auto">
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
               <n-gi>
-                <n-form-item label="Scenes">
+                <n-form-item>
                   <n-dynamic-input
                     v-model:value="sceneItems"
                     :on-create="createSceneItem"
-                    style="width: 95%;"
+                    :item-style="{ alignItems: 'flex-start', marginBottom: '16px' }"
+                    style="width: 820px;"
                   >
                     <template #default="{ value }">
                       <n-grid cols="24" x-gap="12" y-gap="8" style="width: 100%;">
-                        <n-gi :span="6">
-                          <n-input v-model:value="value.type" placeholder="Type" />
-                        </n-gi>
-                        <n-gi :span="8">
-                          <n-date-picker v-model:value="value.startTime" type="datetime" placeholder="Start time" style="width: 100%;" />
+                        <n-gi :span="24">
+                          <n-form-item label="Type" style="margin-bottom: 8px;">
+                            <n-input v-model:value="value.type" placeholder="Type" style="width: 25%; max-width: 300px;" />
+                          </n-form-item>
                         </n-gi>
                         <n-gi :span="24">
-                          <n-text strong>Prompts</n-text>
-                          <n-dynamic-input v-model:value="value.prompts" :on-create="createPromptString">
-                            <template #default="{ value: pval }">
-                              <n-input v-model:value="pval.text" type="textarea" :rows="2" placeholder="Prompt text" style="width: 800px;" />
-                            </template>
-                          </n-dynamic-input>
+                          <n-form-item label="Start time" style="margin-bottom: 8px;">
+                            <n-date-picker
+                              v-model:value="value.startTime"
+                              type="datetime"
+                              placeholder="Start time"
+                              style="width: 25%; max-width: 300px;"
+                            />
+                          </n-form-item>
+                        </n-gi>
+                        <n-gi :span="24">
+                          <n-form-item label="Prompt">
+                            <CodeMirror
+                              :model-value="value.prompt"
+                              @update:model-value="(val) => (value.prompt = typeof val === 'string' ? val : (((val as any)?.data) ?? ''))"
+                              basic
+                              :style="{
+                                width: '800px',
+                                height: '300px',
+                                border: '1px solid #d9d9d9',
+                                borderRadius: '3px',
+                                overflow: 'auto'
+                              }"
+                              :extensions="editorExtensions"
+                            />
+                          </n-form-item>
                         </n-gi>
                       </n-grid>
                     </template>
@@ -117,6 +136,9 @@ import { useScriptSceneStore } from '../../../stores/kneo/scriptSceneStore';
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 import { Script, ScriptSave, ScriptScene } from '../../../types/kneoBroadcasterTypes';
 import { getErrorMessage, handleFormSaveError } from '../../../utils/errorHandling';
+import { EditorView } from "@codemirror/view";
+import { json } from "@codemirror/lang-json";
+import CodeMirror from 'vue-codemirror6';
 
 export default defineComponent({
   name: "ScriptForm",
@@ -134,7 +156,8 @@ export default defineComponent({
     NSelect,
     NDynamicInput,
     NDatePicker,
-    NText
+    NText,
+    CodeMirror
   },
   setup() {
     const loadingBar = useLoadingBar();
@@ -146,7 +169,12 @@ export default defineComponent({
     const route = useRoute();
 
     const activeTab = ref("properties");
-    const sceneItems = ref<Array<{ id?: string; type?: string; startTime?: number | null; prompts: Array<{ text: string }> }>>([]);
+    const sceneItems = ref<Array<{ id?: string; type?: string; startTime?: number | null; prompt: string }>>([]);
+
+    const editorExtensions = computed(() => [
+      json(),
+      EditorView.lineWrapping
+    ]);
 
     const formTitle = computed(() => localFormData.id ? 'Edit Script' : 'Create New Script');
 
@@ -161,8 +189,7 @@ export default defineComponent({
       labels: []
     });
 
-    const createPromptString = () => ({ text: '' });
-    const createSceneItem = () => ({ type: '', startTime: null as number | null, prompts: [createPromptString()] });
+    const createSceneItem = () => ({ type: '', startTime: null as number | null, prompt: '' });
 
     const handleSave = async () => {
       try {
@@ -230,7 +257,9 @@ export default defineComponent({
         id: s.id,
         type: s.type || '',
         startTime: s.startTime ? Date.parse(s.startTime) : null,
-        prompts: (s.prompts || []).map((t: any) => ({ text: typeof t === 'string' ? t : (t?.prompt || '') }))
+        prompt: Array.isArray((s as any).prompts) && (s as any).prompts.length > 0
+          ? (typeof (s as any).prompts[0] === 'string' ? (s as any).prompts[0] : ((s as any).prompts[0]?.prompt || ''))
+          : ''
       }));
     };
 
@@ -257,7 +286,7 @@ export default defineComponent({
       referencesStore,
       sceneItems,
       createSceneItem,
-      createPromptString
+      editorExtensions
     };
   }
 });
