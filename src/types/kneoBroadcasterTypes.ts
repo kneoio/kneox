@@ -337,3 +337,26 @@ export interface ScriptSave {
     description: string;
     labels: string[];
 }
+
+// Script Scenes
+export interface ScriptScene {
+id?: string;
+scriptId?: string;
+type?: string;
+prompts?: string[];
+startTime?: string;
+}
+
+export interface ScriptSceneViewData {
+count: number;
+pageNum: number;
+maxPage: number;
+pageSize: number;
+entries: ScriptScene[];
+}
+
+export interface ScriptSceneSave {
+type?: string;
+prompts?: string[];
+startTime?: string;
+}

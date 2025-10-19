@@ -52,13 +52,47 @@
             </n-grid>
           </n-form>
         </n-tab-pane>
+        <n-tab-pane name="scenes" tab="Scenes">
+          <n-form label-placement="left" label-width="auto">
+            <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
+              <n-gi>
+                <n-form-item label="Scenes">
+                  <n-dynamic-input
+                    v-model:value="sceneItems"
+                    :on-create="createSceneItem"
+                    style="width: 95%;"
+                  >
+                    <template #default="{ value }">
+                      <n-grid cols="24" x-gap="12" y-gap="8" style="width: 100%;">
+                        <n-gi :span="6">
+                          <n-input v-model:value="value.type" placeholder="Type" />
+                        </n-gi>
+                        <n-gi :span="8">
+                          <n-date-picker v-model:value="value.startTime" type="datetime" placeholder="Start time" style="width: 100%;" />
+                        </n-gi>
+                        <n-gi :span="24">
+                          <n-text strong>Prompts</n-text>
+                          <n-dynamic-input v-model:value="value.prompts" :on-create="createPromptString">
+                            <template #default="{ value: pval }">
+                              <n-input v-model:value="pval.text" type="textarea" :rows="2" placeholder="Prompt text" style="width: 800px;" />
+                            </template>
+                          </n-dynamic-input>
+                        </n-gi>
+                      </n-grid>
+                    </template>
+                  </n-dynamic-input>
+                </n-form-item>
+              </n-gi>
+            </n-grid>
+          </n-form>
+        </n-tab-pane>
       </n-tabs>
     </n-gi>
   </n-grid>
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, onMounted, reactive, ref } from "vue";
+import { computed, defineComponent, onMounted, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
   NButton,
@@ -72,12 +106,16 @@ import {
   NTabs,
   NTabPane,
   NSelect,
+  NDynamicInput,
+  NDatePicker,
+  NText,
   useLoadingBar,
   useMessage
 } from 'naive-ui';
 import { useScriptStore } from '../../../stores/kneo/scriptStore';
+import { useScriptSceneStore } from '../../../stores/kneo/scriptSceneStore';
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
-import { Script, ScriptSave } from '../../../types/kneoBroadcasterTypes';
+import { Script, ScriptSave, ScriptScene } from '../../../types/kneoBroadcasterTypes';
 import { getErrorMessage, handleFormSaveError } from '../../../utils/errorHandling';
 
 export default defineComponent({
@@ -93,17 +131,22 @@ export default defineComponent({
     NTabPane,
     NGrid,
     NGi,
-    NSelect
+    NSelect,
+    NDynamicInput,
+    NDatePicker,
+    NText
   },
   setup() {
     const loadingBar = useLoadingBar();
     const message = useMessage();
     const router = useRouter();
     const store = useScriptStore();
+    const sceneStore = useScriptSceneStore();
     const referencesStore = useReferencesStore();
     const route = useRoute();
 
     const activeTab = ref("properties");
+    const sceneItems = ref<Array<{ id?: string; type?: string; startTime?: number | null; prompts: Array<{ text: string }> }>>([]);
 
     const formTitle = computed(() => localFormData.id ? 'Edit Script' : 'Create New Script');
 
@@ -117,6 +160,9 @@ export default defineComponent({
       description: "",
       labels: []
     });
+
+    const createPromptString = () => ({ text: '' });
+    const createSceneItem = () => ({ type: '', startTime: null as number | null, prompts: [createPromptString()] });
 
     const handleSave = async () => {
       try {
@@ -172,13 +218,46 @@ export default defineComponent({
       }
     });
 
+    const loadScenes = async () => {
+      const id = route.params.id as string;
+      if (!id || id === 'new') {
+        sceneItems.value = [];
+        return;
+      }
+      await sceneStore.fetchForScript(id, 1, 100);
+      const entries = (sceneStore.getEntries as unknown as ScriptScene[]) || [];
+      sceneItems.value = entries.map((s) => ({
+        id: s.id,
+        type: s.type || '',
+        startTime: s.startTime ? Date.parse(s.startTime) : null,
+        prompts: (s.prompts || []).map((t: any) => ({ text: typeof t === 'string' ? t : (t?.prompt || '') }))
+      }));
+    };
+
+    watch(activeTab, async (tab) => {
+      if (tab === 'scenes') {
+        try {
+          loadingBar.start();
+          await loadScenes();
+        } catch (e: any) {
+          const data = e?.response?.data;
+          if (data?.message) message.error(String(data.message)); else message.error(getErrorMessage(e));
+        } finally {
+          loadingBar.finish();
+        }
+      }
+    });
+
     return {
       localFormData,
       formTitle,
       handleSave,
       goBack,
       activeTab,
-      referencesStore
+      referencesStore,
+      sceneItems,
+      createSceneItem,
+      createPromptString
     };
   }
 });
