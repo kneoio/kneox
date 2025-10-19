@@ -53,7 +53,7 @@
           </n-form>
         </n-tab-pane>
         <n-tab-pane name="scenes" tab="Scenes">
-          <n-form label-placement="left" label-width="auto">
+          <n-form label-placement="left" label-width="150px">
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
               <n-gi>
                 <n-form-item>
