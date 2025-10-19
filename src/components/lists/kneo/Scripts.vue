@@ -190,17 +190,7 @@ export default defineComponent({
           fixed: 'left',
           width: 50
         },
-        {title: 'Name', key: 'name', width: 200},
-        {
-          title: 'Description',
-          key: 'description',
-          ellipsis: {tooltip: true},
-          render: (row: Script) => {
-            const maxLength = isMobile.value ? 40 : 100;
-            const text = row.description || '';
-            return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
-          }
-        },
+        { title: 'Name', key: 'name', width: 200 },
         {
           title: 'Labels',
           key: 'labels',
@@ -208,6 +198,16 @@ export default defineComponent({
           render: (row: Script) => {
             if (!row.labels || row.labels.length === 0) return 'N/A';
             return row.labels.join(', ');
+          }
+        },
+        {
+          title: 'Description',
+          key: 'description',
+          ellipsis: { tooltip: true },
+          render: (row: Script) => {
+            const maxLength = isMobile.value ? 40 : 100;
+            const text = row.description || '';
+            return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
           }
         }
       ];

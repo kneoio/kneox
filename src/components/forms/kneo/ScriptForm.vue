@@ -28,11 +28,11 @@
               </n-gi>
               <n-gi>
                 <n-form-item label="Description">
-                  <n-input 
-                    v-model:value="localFormData.description" 
-                    type="textarea" 
-                    :rows="4"
-                    style="width: 80%; max-width: 800px;" 
+                  <n-input
+                    v-model:value="localFormData.description"
+                    type="textarea"
+                    :autosize="{ minRows: 3, maxRows: 6 }"
+                    style="width: 50%; max-width: 600px;"
                     placeholder="Enter script description..."
                   />
                 </n-form-item>
@@ -44,7 +44,7 @@
                     :options="referencesStore.labelOptions"
                     multiple
                     filterable
-                    style="width: 60%; max-width: 600px;"
+                    style="width: 25%; max-width: 300px;"
                     placeholder="Select labels..."
                   />
                 </n-form-item>
