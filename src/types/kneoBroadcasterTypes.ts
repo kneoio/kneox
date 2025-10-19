@@ -320,3 +320,20 @@ export interface SubmissionPayload {
     termsText?: string;
     agreementVersion?: string;
 }
+
+export interface Script {
+    id: string;
+    author: string;
+    regDate: string;
+    lastModifier: string;
+    lastModifiedDate: string;
+    name: string;
+    description: string;
+    labels: string[];
+}
+
+export interface ScriptSave {
+    name: string;
+    description: string;
+    labels: string[];
+}

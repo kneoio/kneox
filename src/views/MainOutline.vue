@@ -108,7 +108,8 @@ import {
   Sun,
   Moon,
   Calendar,
-  User
+  User,
+  FileText
 } from '@vicons/tabler';
 import {useRadioStationStore} from "../stores/kneo/radioStationStore";
 import {RadioStation, BrandStatus} from "../types/kneoBroadcasterTypes";
@@ -333,6 +334,11 @@ export default defineComponent({
           icon: () => h(Robot)
         },
         {
+          label: 'Scripts',
+          key: 'scripts',
+          icon: () => h(FileText)
+        },
+        {
           type: 'divider',
           key: 'd1'
         },
@@ -368,6 +374,7 @@ export default defineComponent({
       if (route.name === 'Memories') return 'memories';
       if (route.name === 'Events') return 'events';
       if (route.name === 'AiAgents') return 'ai_agents';
+      if (route.name === 'Scripts') return 'scripts';
       if (route.name === 'EnvironmentProfiles') return 'environment_profiles';
       if (route.name === 'Listeners') return 'listeners';
       if (route.name === 'Profile') return 'profile';
@@ -421,6 +428,8 @@ export default defineComponent({
         await router.push({name: 'Events'});
       } else if (key === 'ai_agents') {
         await router.push({name: 'AiAgents'});
+      } else if (key === 'scripts') {
+        await router.push({name: 'Scripts'});
       } else if (key === 'environment_profiles') {
         await router.push({name: 'EnvironmentProfiles'});
       }
