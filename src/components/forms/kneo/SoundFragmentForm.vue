@@ -56,6 +56,8 @@
                       <n-select
                         v-model:value="localFormData.labels"
                         :options="referencesStore.labelOptions"
+                        :render-tag="renderLabelTag"
+                        :render-label="renderLabel"
                         multiple
                         filterable
                         style="width: 50%; max-width: 600px;"                           

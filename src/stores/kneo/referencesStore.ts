@@ -139,6 +139,22 @@ export const useReferencesStore = defineStore('references', () => {
         );
   };
 
+  const fetchLabelsByCategory = async (category: string) => {
+    const response = await apiClient.get(`/labels/only/category/${encodeURIComponent(category)}`);
+    if (!response?.data?.payload) throw new Error('Invalid API response');
+
+    const options = response.data.payload.viewData.entries
+      .map((entry: any) => ({
+        label: entry.localizedName?.en ?? entry.name ?? '',
+        value: entry.id,
+        color: entry.color,
+        fontColor: entry.fontColor
+      }))
+      .sort((a: { label: string }, b: { label: string }) => a.label.localeCompare(b.label));
+
+    return options as Array<{ label: string; value: string; color?: string; fontColor?: string }>;
+  };
+
   const fetchDictionary = async (type: 'agents' | 'profiles' | 'voices', page = 1, pageSize = 100) => {
     const response = await unsecuredClient.get(`/dictionary/${type}?page=${page}&size=${pageSize}`);
     if (response?.data?.payload) {
@@ -300,6 +316,7 @@ export const useReferencesStore = defineStore('references', () => {
     getLocalThemeOverrides,
     fetchGenres,
     fetchLabels,
+    fetchLabelsByCategory,
     fetchVoices,
     fetchDictionary,
     fetchRadioStations
