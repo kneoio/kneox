@@ -323,11 +323,9 @@ export default defineComponent({
         if (!file.file) {
           throw new Error('No file content to upload');
         }
-        // Mark UI as uploading
         if (fileList.value[0]) {
           fileList.value[0] = { ...fileList.value[0], status: 'uploading', percentage: 0 } as any;
         }
-        // Direct upload with real-time progress
         const res = await store.uploadFile(entityId, file.file, uploadId, (p) => {
           try {
             onProgress && onProgress(p as any);
@@ -336,9 +334,7 @@ export default defineComponent({
             }
           } catch (_) { /* noop */ }
         });
-        // Ensure final 100%
         onProgress && onProgress({ percent: 100 } as any);
-        // Update file list UI state
         if (fileList.value[0]) {
           fileList.value[0] = {
             ...fileList.value[0],
@@ -355,7 +351,6 @@ export default defineComponent({
           uploadedFileNames.value.push(originalFileName);
         }
 
-        // Apply metadata if backend returns it in response
         const metadata = (res as any)?.metadata;
         if (metadata) {
           applyMetadata(metadata);
@@ -367,7 +362,7 @@ export default defineComponent({
       } catch (error: any) {
         logWithTimestamp(`Upload error: ${getErrorMessage(error)}`);
         message.error(getErrorMessage(error));
-        if (onError) onError(error as Error);
+        if (onError) onError();
         throw error;
       }
     };
@@ -427,10 +422,7 @@ export default defineComponent({
 
       try {
         loadingBar.start();
-        const filesToSend = originalUploadedFileNames.value.length > 0
-            ? originalUploadedFileNames.value
-            : uploadedFileNames.value;
-
+        const filesToSend = uploadedFileNames.value;
 
         const saveDTO: SoundFragmentSave = {
           type: localFormData.type,
@@ -441,7 +433,7 @@ export default defineComponent({
           album: localFormData.album,
           description: localFormData.description,
           representedInBrands: localFormData.representedInBrands,
-          newlyUploaded: filesToSend 
+          newlyUploaded: filesToSend.length > 0 ? filesToSend : null
         };
 
         await store.save(saveDTO, localFormData.id as string );
@@ -536,7 +528,6 @@ export default defineComponent({
 
     onMounted(async () => {
       const id = route.params.id as string;
-      // Load option sources first so selects can resolve labels for values
       try {
         await Promise.all([
           radioStationStore.fetchAll(1, 100),
@@ -547,29 +538,14 @@ export default defineComponent({
         console.error("Failed to preload references:", error);
       }
 
-      const mapLegacyGenreLabelsToValues = () => {
-        if (!Array.isArray(localFormData.genres)) return;
-        const opts = referencesStore.genreOptions || [];
-        const valuesSet = new Set(opts.map((o: any) => o.value));
-        const labelToValue = new Map(opts.map((o: any) => [o.label, o.value]));
-        localFormData.genres = (localFormData.genres || []).map((g: string) =>
-            valuesSet.has(g) ? g : (labelToValue.get(g) || g)
-        );
-      };
+      
 
       if (id && id !== 'new') {
         try {
           loadingBar.start();
           await store.fetch(id);
           Object.assign(localFormData, store.getCurrent);
-          // Backward compatibility: convert single genre to genres[] if needed
-          const anyCurrent: any = store.getCurrent as any;
-          if (!localFormData.genres || !Array.isArray(localFormData.genres)) {
-            const single = anyCurrent.genre;
-            localFormData.genres = single ? [single] : [];
-          }
-          // Map legacy labels to UUID values now that options are loaded
-          mapLegacyGenreLabelsToValues();
+          
 
           if (localFormData.uploadedFiles?.length) {
             fileList.value = localFormData.uploadedFiles.map(f => ({
@@ -577,8 +553,7 @@ export default defineComponent({
               name: f.name,
               status: 'finished' as const
             }));
-            // For existing files, populate both arrays with the same values
-            uploadedFileNames.value = localFormData.uploadedFiles.map(f => f.name);
+            uploadedFileNames.value = [];
             originalUploadedFileNames.value = localFormData.uploadedFiles.map(f => f.name);
           }
         } catch (error) {
@@ -589,12 +564,6 @@ export default defineComponent({
       } else {
         await store.fetch(id);
         Object.assign(localFormData, store.getCurrent);
-        const anyCurrent: any = store.getCurrent as any;
-        if (!localFormData.genres || !Array.isArray(localFormData.genres)) {
-          const single = anyCurrent.genre;
-          localFormData.genres = single ? [single] : [];
-        }
-        mapLegacyGenreLabelsToValues();
       }
     });
 

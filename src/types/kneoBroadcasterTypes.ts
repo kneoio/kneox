@@ -137,7 +137,7 @@ export interface SoundFragmentSave {
     album?: string;
     description: string;
     representedInBrands: string[];
-    newlyUploaded: string[];
+    newlyUploaded: string[] | null;
     tempFileIds?: string[];
 }
 
