@@ -17,6 +17,8 @@ import AiAgents from '../components/lists/kneo/AiAgents.vue';
 import AiAgentForm from '../components/forms/kneo/AiAgentForm.vue';
 import Scripts from '../components/lists/kneo/Scripts.vue';
 import ScriptForm from '../components/forms/kneo/ScriptForm.vue';
+import Prompts from '../components/lists/kneo/Prompts.vue';
+import PromptForm from '../components/forms/kneo/PromptForm.vue';
 import EnvironmentProfiles from '../components/lists/kneo/EnvironmentProfiles.vue';
 import ProfileForm from '../components/forms/kneo/EnvironmentProfileForm.vue';
 import Events from '../components/lists/kneo/Events.vue';
@@ -174,6 +176,17 @@ const routes: Array<RouteRecordRaw> = [
                 path: 'scripts/:id',
                 name: 'ScriptForm',
                 component: ScriptForm,
+                props: true
+            },
+            {
+                path: 'prompts',
+                name: 'Prompts',
+                component: Prompts
+            },
+            {
+                path: 'prompts/:id',
+                name: 'PromptForm',
+                component: PromptForm,
                 props: true
             },
             {

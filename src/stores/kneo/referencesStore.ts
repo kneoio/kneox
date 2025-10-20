@@ -241,6 +241,11 @@ export const useReferencesStore = defineStore('references', () => {
     { label: 'Intro Song', value: 'INTRO_SONG' }
   ];
 
+  const promptTypeOptions = [
+    { label: 'Variables', value: 'VARIABLES' },
+    { label: 'Embellish', value: 'EMBELLISH' }
+  ];
+
   
   const variableSampleData: Record<string, string[]> = {
     ai_dj_name: ['DJ Nova', 'DJ Echo', 'DJ Pulse', 'DJ Orion', 'DJ Lyra'],
@@ -306,6 +311,7 @@ export const useReferencesStore = defineStore('references', () => {
     eventTypeOptions,
     llmTypeOptions,
     mergerMethodOptions,
+    promptTypeOptions,
     variableSampleData,
     bitRateOptions,
     submissionPolicyOptions,

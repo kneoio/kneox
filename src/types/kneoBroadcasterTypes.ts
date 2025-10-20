@@ -360,3 +360,27 @@ type?: string;
 prompts?: string[];
 startTime?: string;
 }
+
+// Prompts (Broadcaster)
+export interface BroadcastPrompt {
+    id: string;
+    author: string;
+    regDate: string;
+    lastModifier: string;
+    lastModifiedDate: string;
+    enabled: boolean;
+    prompt: string;
+    promptType?: string;
+    languageCode?: string;
+    isMaster?: boolean;
+    locked?: boolean;
+}
+
+export interface BroadcastPromptSave {
+    enabled?: boolean;
+    prompt?: string;
+    promptType?: string;
+    languageCode?: string;
+    isMaster?: boolean;
+    locked?: boolean;
+}

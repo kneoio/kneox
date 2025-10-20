@@ -339,6 +339,11 @@ export default defineComponent({
           icon: () => h(FileText)
         },
         {
+          label: 'Prompts',
+          key: 'prompts',
+          icon: () => h(FileText)
+        },
+        {
           type: 'divider',
           key: 'd1'
         },
@@ -375,6 +380,7 @@ export default defineComponent({
       if (route.name === 'Events') return 'events';
       if (route.name === 'AiAgents') return 'ai_agents';
       if (route.name === 'Scripts') return 'scripts';
+      if (route.name === 'Prompts') return 'prompts';
       if (route.name === 'EnvironmentProfiles') return 'environment_profiles';
       if (route.name === 'Listeners') return 'listeners';
       if (route.name === 'Profile') return 'profile';
@@ -430,6 +436,8 @@ export default defineComponent({
         await router.push({name: 'AiAgents'});
       } else if (key === 'scripts') {
         await router.push({name: 'Scripts'});
+      } else if (key === 'prompts') {
+        await router.push({name: 'Prompts'});
       } else if (key === 'environment_profiles') {
         await router.push({name: 'EnvironmentProfiles'});
       }
