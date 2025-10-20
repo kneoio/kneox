@@ -445,10 +445,10 @@ export default defineComponent({
           album: localFormData.album,
           description: localFormData.description,
           representedInBrands: localFormData.representedInBrands,
-          newlyUploaded: filesToSend // Use original filenames
+          newlyUploaded: filesToSend 
         };
 
-        await store.save(saveDTO, localFormData.id);
+        await store.save(saveDTO, route.params.id as string);
         message.success("Saved successfully");
         if (route.query.returnTo === 'StationPlaylist' && route.params.brandName) {
           await router.push({ name: 'StationPlaylist', params: { brandName: route.params.brandName } });
