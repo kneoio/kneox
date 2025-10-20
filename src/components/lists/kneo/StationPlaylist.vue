@@ -54,41 +54,7 @@ import { useSoundFragmentStore } from '../../../stores/kneo/soundFragmentStore';
 import { SoundFragment } from '../../../types/kneoBroadcasterTypes';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
 
-const columns: DataTableColumns<SoundFragment> = [
-  { type: 'selection' },
-  {
-    title: 'Title',
-    key: 'soundfragment.title',
-    width: 300
-  },
-  {
-    title: 'Artist',
-    key: 'soundfragment.artist',
-    width: 300
-  },
-  {
-    title: 'Album',
-    key: 'soundfragment.album',
-    width: 300
-  },
-  {
-    title: 'Source',
-    key: 'soundfragment.source',
-    width: 140
-  },
-  {
-    title: 'Played Count',
-    key: 'playedByBrandCount',
-    width: 120,
-    render: (row: any) => row.playedByBrandCount ?? 0
-  },
-  {
-    title: 'Description',
-    key: 'soundfragment.description',
-    ellipsis: { tooltip: true },
-    minWidth: 200
-  }
-];
+// columns moved into setup to access store for formatting
 
 export default defineComponent({
   name: 'StationPlaylist',
@@ -189,6 +155,16 @@ export default defineComponent({
         loading.value = false;
       }
     };
+
+    const columns = computed<DataTableColumns<any>>(() => [
+      { type: 'selection' },
+      { title: 'Title', key: 'soundfragment.title', width: 300 },
+      { title: 'Artist', key: 'soundfragment.artist', width: 300 },
+      { title: 'Album', key: 'soundfragment.album', width: 300 },
+      { title: 'Source', key: 'soundfragment.source', width: 140, render: (row: any) => store.formatSource(row.soundfragment?.source) },
+      { title: 'Played Count', key: 'playedByBrandCount', width: 120, render: (row: any) => row.playedByBrandCount ?? 0 },
+      { title: 'Description', key: 'soundfragment.description', ellipsis: { tooltip: true }, minWidth: 200 }
+    ]);
 
     return {
       loading,

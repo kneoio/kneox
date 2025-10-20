@@ -229,13 +229,7 @@ export default defineComponent({
       { label: 'Advertisement', value: 'ADVERTISEMENT' }
     ];
 
-    const sourceDisplayValue = computed(() => {
-      const sourceMap: Record<string, string> = {
-        'USER_UPLOAD': 'User\'s Upload',
-        'CONTRIBUTION': 'Contribution'
-      };
-      return sourceMap[localFormData.source] || localFormData.source;
-    });
+    const sourceDisplayValue = computed(() => store.formatSource(localFormData.source));
 
     const formTitle = computed(() => localFormData.id ? 'Edit Sound Fragment' : 'Create New Sound Fragment');
 

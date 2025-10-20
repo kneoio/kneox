@@ -278,6 +278,19 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         return response.data;
     };
 
+    // Centralized display mapping for source values
+    const formatSource = (source?: string): string => {
+        const map: Record<string, string> = {
+            USER_UPLOAD: "User's Upload",
+            CONTRIBUTION: 'Contribution',
+            RECOVERED_FROM_SPACES: 'Recovered',
+            ORPHAN_RECOVERY: 'Recovered',
+            SUNO_PROMPT: 'Generative prompt',
+            TEXT_FOR_TTS: 'Text to Speech'
+        };
+        return source ? (map[source] ?? source) : '';
+    };
+
     return {
         apiViewResponse,
         apiFormResponse,
@@ -298,6 +311,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         downloadFile,
         fetchAccessList,
         bulkBrandUpdate,
-        archive: archiveSoundFragment
+        archive: archiveSoundFragment,
+        formatSource
     };
 });
