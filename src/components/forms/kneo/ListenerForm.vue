@@ -255,9 +255,6 @@ export default defineComponent({
         };
 
         console.log('Data to save:', dataToSave);
-        console.log('Current localFormData:', localFormData);
-        console.log('localizedNameArray:', localizedNameArray.value);
-        console.log('nickNameArray:', nickNameArray.value);
 
         await store.saveListener(dataToSave, localFormData.id);
         message.success("Listener saved successfully");

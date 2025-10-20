@@ -92,7 +92,7 @@ export interface RadioStation {
 export interface RadioStationSave {
     localizedName: Record<string, string>;
     country: string;
-    description: string;
+    description?: string;
     color: string;
     bitRate?: number;
     aiAgentId?: string;

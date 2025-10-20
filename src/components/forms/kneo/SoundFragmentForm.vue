@@ -50,6 +50,7 @@
                         multiple
                         filterable
                         style="width: 50%; max-width: 600px;"
+                        placeholder=""
                       />
                     </n-form-item>
                     <n-form-item label="Labels">
@@ -60,7 +61,8 @@
                         :render-label="renderLabel"
                         multiple
                         filterable
-                        style="width: 50%; max-width: 600px;"                           
+                        style="width: 50%; max-width: 600px;"
+                        placeholder=""
                       />
                     </n-form-item>
                   </n-gi>                  
@@ -190,19 +192,18 @@ export default defineComponent({
     const fileList = ref<UploadFileInfo[]>([]);
     const uploadedFileNames = ref<string[]>([]);
     const originalUploadedFileNames = ref<string[]>([]);
-    // simplified approach does not track backend progress via SSE
-
     const aclData = ref<any[]>([]);
     const aclLoading = ref(false);
 
     const localFormData = reactive<SoundFragment>({
-      slugName: "",
       id: null,
+      slugName: "",
       author: "",
       regDate: "",
       lastModifier: "",
       lastModifiedDate: "",
       type: FragmentType.SONG,
+      source: "",
       title: "",
       artist: "",
       genres: [],
@@ -230,10 +231,8 @@ export default defineComponent({
 
     const sourceDisplayValue = computed(() => {
       const sourceMap: Record<string, string> = {
-        'USER_UPLOAD': 'User Upload',
-        'ORPHAN_RECOVERY': 'Orphan Recovery',
-        'SUNO_PROMPT': 'Suno Prompt',
-        'TEXT_FOR_TTS': 'Text for TTS'
+        'USER_UPLOAD': 'User\'s Upload',
+        'CONTRIBUTION': 'Contribution'
       };
       return sourceMap[localFormData.source] || localFormData.source;
     });
@@ -258,8 +257,8 @@ export default defineComponent({
     };
 
     const renderLabelTag = ({ option, handleClose }: any) => {
-      const bg = option?.color || '#e5e7eb';
-      const fg = option?.fontColor || '#111827';
+      const bg = option?.color;
+      const fg = option?.fontColor;
       return h(
         NTag as any,
         {
@@ -386,7 +385,6 @@ export default defineComponent({
         message.error(`Download failed: ${getErrorMessage(error)}`);
         loadingBar.error();
       }
-      // prevent default anchor behavior
       return false;
     };
 
@@ -407,11 +405,9 @@ export default defineComponent({
 
     };
 
-    const handleRemove = ({ file, fileList, index }: { file: Required<UploadFileInfo>; fileList: Required<UploadFileInfo>[]; index: number }) => {
+    const handleRemove = ({ file }: { file: Required<UploadFileInfo>; fileList: Required<UploadFileInfo>[]; index: number }) => {
       uploadedFileNames.value = uploadedFileNames.value.filter(name => name !== file.name);
       originalUploadedFileNames.value = originalUploadedFileNames.value.filter(name => name !== file.name);
-
-      logWithTimestamp(`Removed file: ${file.name} (index: ${index}, list size: ${fileList?.length ?? 0})`);
       return true;
     };
 
@@ -448,7 +444,7 @@ export default defineComponent({
           newlyUploaded: filesToSend 
         };
 
-        await store.save(saveDTO, route.params.id as string);
+        await store.save(saveDTO, localFormData.id as string );
         message.success("Saved successfully");
         if (route.query.returnTo === 'StationPlaylist' && route.params.brandName) {
           await router.push({ name: 'StationPlaylist', params: { brandName: route.params.brandName } });
@@ -576,7 +572,6 @@ export default defineComponent({
           mapLegacyGenreLabelsToValues();
 
           if (localFormData.uploadedFiles?.length) {
-            // Do not expose direct URLs in the upload list; rely on @preview/@download handlers
             fileList.value = localFormData.uploadedFiles.map(f => ({
               id: f.name,
               name: f.name,
@@ -594,20 +589,12 @@ export default defineComponent({
       } else {
         await store.fetch(id);
         Object.assign(localFormData, store.getCurrent);
-        // Ensure genres array exists for new form as well; handle legacy default
         const anyCurrent: any = store.getCurrent as any;
         if (!localFormData.genres || !Array.isArray(localFormData.genres)) {
           const single = anyCurrent.genre;
           localFormData.genres = single ? [single] : [];
         }
-        // Map legacy labels to UUID values for new forms as well
         mapLegacyGenreLabelsToValues();
-
-        // Clear default "Please Input" values for new forms
-        if (localFormData.title === 'Please Input') localFormData.title = '';
-        if (localFormData.artist === 'Please Input') localFormData.artist = '';
-        if (localFormData.album === 'Please Input') localFormData.album = '';
-        if (localFormData.description === 'Please Input') localFormData.description = '';
       }
     });
 
