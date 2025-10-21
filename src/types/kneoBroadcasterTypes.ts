@@ -374,6 +374,7 @@ export interface BroadcastPrompt {
     languageCode?: string;
     isMaster?: boolean;
     locked?: boolean;
+    title?: string;
 }
 
 export interface BroadcastPromptSave {
@@ -383,4 +384,5 @@ export interface BroadcastPromptSave {
     languageCode?: string;
     isMaster?: boolean;
     locked?: boolean;
+    title?: string;
 }

@@ -24,8 +24,8 @@
           <n-form label-placement="left" label-width="auto">
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
               <n-gi>
-                <n-form-item label="Enabled">
-                  <n-switch v-model:value="localFormData.enabled" />
+                <n-form-item label="Title">
+                  <n-input v-model:value="localFormData.title" style="width: 50%; max-width: 600px;" placeholder=""/>
                 </n-form-item>
               </n-gi>
               <n-gi>
@@ -37,6 +37,22 @@
                 <n-form-item label="Language">
                   <n-select v-model:value="localFormData.languageCode" :options="langOptions" style="width: 25%; max-width: 300px;" />
                 </n-form-item>
+              </n-gi>
+              <n-gi>
+                <div style="display: flex; align-items: center; gap: 16px;">
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <span>Enabled</span>
+                    <n-switch v-model:value="localFormData.enabled" />
+                  </div>
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <span>Master</span>
+                    <n-switch v-model:value="localFormData.isMaster" />
+                  </div>
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <span>Locked</span>
+                    <n-switch v-model:value="localFormData.locked" />
+                  </div>
+                </div>
               </n-gi>
               <n-gi>
                 <n-form-item label="Prompt">
@@ -55,18 +71,12 @@
                   />
                 </n-form-item>
               </n-gi>
-              <n-gi>
-                <n-form-item label="Master">
-                  <n-switch v-model:value="localFormData.isMaster" />
-                </n-form-item>
-              </n-gi>
-              <n-gi>
-                <n-form-item label="Locked">
-                  <n-switch v-model:value="localFormData.locked" />
-                </n-form-item>
-              </n-gi>
+              
             </n-grid>
           </n-form>
+        </n-tab-pane>
+        <n-tab-pane name="acl" tab="ACL">
+          <acl-table :acl-data="aclData" :loading="aclLoading" />
         </n-tab-pane>
       </n-tabs>
     </n-gi>
@@ -74,7 +84,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, onMounted, reactive, ref } from 'vue';
+import { computed, defineComponent, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
   NButton,
@@ -99,6 +109,7 @@ import { BroadcastPrompt, BroadcastPromptSave } from '../../../types/kneoBroadca
 import { usePromptStore } from '../../../stores/kneo/promptStore';
 import { getErrorMessage, handleFormSaveError } from '../../../utils/errorHandling';
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
+import AclTable from '../../common/AclTable.vue';
 
 export default defineComponent({
   name: 'PromptForm',
@@ -115,7 +126,8 @@ export default defineComponent({
     NGi,
     NSelect,
     NSwitch,
-    CodeMirror
+    CodeMirror,
+    AclTable
   },
   setup() {
     const loadingBar = useLoadingBar();
@@ -126,6 +138,8 @@ export default defineComponent({
     const route = useRoute();
 
     const activeTab = ref('properties');
+    const aclData = ref<any[]>([]);
+    const aclLoading = ref(false);
 
     const editorExtensions = computed(() => [json(), EditorView.lineWrapping]);
 
@@ -137,6 +151,7 @@ export default defineComponent({
       regDate: '',
       lastModifier: '',
       lastModifiedDate: '',
+      title: '',
       enabled: false,
       prompt: '',
       promptType: '',
@@ -149,6 +164,7 @@ export default defineComponent({
       try {
         loadingBar.start();
         const saveData: BroadcastPromptSave = {
+          title: localFormData.title,
           enabled: localFormData.enabled,
           prompt: localFormData.prompt,
           promptType: localFormData.promptType,
@@ -198,6 +214,35 @@ export default defineComponent({
       }
     });
 
+    const fetchAclData = async () => {
+      const id = route.params.id as string;
+      if (!id || id === 'new') {
+        aclData.value = [];
+        return;
+      }
+      try {
+        aclLoading.value = true;
+        const response = await store.fetchAccessList(id);
+        aclData.value = response.accessList || [];
+      } catch (error: any) {
+        const data = error?.response?.data;
+        if (data?.message) {
+          message.error(String(data.message));
+        } else {
+          message.error(getErrorMessage(error));
+        }
+        aclData.value = [];
+      } finally {
+        aclLoading.value = false;
+      }
+    };
+
+    watch(activeTab, (newTab) => {
+      if (newTab === 'acl') {
+        fetchAclData();
+      }
+    });
+
     return {
       localFormData,
       formTitle,
@@ -206,7 +251,9 @@ export default defineComponent({
       activeTab,
       editorExtensions,
       langOptions: (referencesStore as any).languageOptions,
-      promptTypeOptions: (referencesStore as any).promptTypeOptions
+      promptTypeOptions: (referencesStore as any).promptTypeOptions,
+      aclData,
+      aclLoading
     };
   }
 });

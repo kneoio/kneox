@@ -79,6 +79,12 @@ export const usePromptStore = defineStore('promptStore', () => {
     await apiClient.delete(`/prompts/${id}`);
   };
 
+  const fetchAccessList = async (id: string) => {
+    const response = await apiClient.get(`/prompts/${id}/access`);
+    if (!response?.data) throw new Error('Invalid API response');
+    return response.data;
+  };
+
   return {
     apiViewResponse,
     apiFormResponse,
@@ -87,6 +93,7 @@ export const usePromptStore = defineStore('promptStore', () => {
     fetch,
     save,
     deletePrompt,
+    fetchAccessList,
     getEntries,
     getPagination,
     getCurrent,

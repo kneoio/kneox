@@ -52,58 +52,8 @@
             </n-grid>
           </n-form>
         </n-tab-pane>
-        <n-tab-pane name="scenes" tab="Scenes">
-          <n-form label-placement="left" label-width="150px">
-            <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
-              <n-gi>
-                <n-form-item>
-                  <n-dynamic-input
-                    v-model:value="sceneItems"
-                    :on-create="createSceneItem"
-                    :item-style="{ alignItems: 'flex-start', marginBottom: '16px' }"
-                    style="width: 820px;"
-                  >
-                    <template #default="{ value }">
-                      <n-grid cols="24" x-gap="12" y-gap="8" style="width: 100%;">
-                        <n-gi :span="24">
-                          <n-form-item label="Type" style="margin-bottom: 8px;">
-                            <n-input v-model:value="value.type" placeholder="Type" style="width: 25%; max-width: 300px;" />
-                          </n-form-item>
-                        </n-gi>
-                        <n-gi :span="24">
-                          <n-form-item label="Start time" style="margin-bottom: 8px;">
-                            <n-date-picker
-                              v-model:value="value.startTime"
-                              type="datetime"
-                              placeholder="Start time"
-                              style="width: 25%; max-width: 300px;"
-                            />
-                          </n-form-item>
-                        </n-gi>
-                        <n-gi :span="24">
-                          <n-form-item label="Prompt">
-                            <CodeMirror
-                              :model-value="value.prompt"
-                              @update:model-value="(val) => (value.prompt = typeof val === 'string' ? val : (((val as any)?.data) ?? ''))"
-                              basic
-                              :style="{
-                                width: '800px',
-                                height: '300px',
-                                border: '1px solid #d9d9d9',
-                                borderRadius: '3px',
-                                overflow: 'auto'
-                              }"
-                              :extensions="editorExtensions"
-                            />
-                          </n-form-item>
-                        </n-gi>
-                      </n-grid>
-                    </template>
-                  </n-dynamic-input>
-                </n-form-item>
-              </n-gi>
-            </n-grid>
-          </n-form>
+        <n-tab-pane name="acl" tab="ACL">
+          <acl-table :acl-data="aclData" :loading="aclLoading" />
         </n-tab-pane>
       </n-tabs>
     </n-gi>
@@ -125,20 +75,18 @@ import {
   NTabs,
   NTabPane,
   NSelect,
-  NDynamicInput,
-  NDatePicker,
   NText,
   useLoadingBar,
   useMessage
 } from 'naive-ui';
 import { useScriptStore } from '../../../stores/kneo/scriptStore';
-import { useScriptSceneStore } from '../../../stores/kneo/scriptSceneStore';
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 import { Script, ScriptSave, ScriptScene } from '../../../types/kneoBroadcasterTypes';
 import { getErrorMessage, handleFormSaveError } from '../../../utils/errorHandling';
 import { EditorView } from "@codemirror/view";
 import { json } from "@codemirror/lang-json";
 import CodeMirror from 'vue-codemirror6';
+import AclTable from '../../common/AclTable.vue';
 
 export default defineComponent({
   name: "ScriptForm",
@@ -154,22 +102,21 @@ export default defineComponent({
     NGrid,
     NGi,
     NSelect,
-    NDynamicInput,
-    NDatePicker,
     NText,
-    CodeMirror
+    CodeMirror,
+    AclTable
   },
   setup() {
     const loadingBar = useLoadingBar();
     const message = useMessage();
     const router = useRouter();
     const store = useScriptStore();
-    const sceneStore = useScriptSceneStore();
     const referencesStore = useReferencesStore();
     const route = useRoute();
 
     const activeTab = ref("properties");
-    const sceneItems = ref<Array<{ id?: string; type?: string; startTime?: number | null; prompt: string }>>([]);
+    const aclData = ref<any[]>([]);
+    const aclLoading = ref(false);
 
     const editorExtensions = computed(() => [
       json(),
@@ -189,7 +136,6 @@ export default defineComponent({
       labels: []
     });
 
-    const createSceneItem = () => ({ type: '', startTime: null as number | null, prompt: '' });
 
     const handleSave = async () => {
       try {
@@ -245,35 +191,28 @@ export default defineComponent({
       }
     });
 
-    const loadScenes = async () => {
+    const fetchAclData = async () => {
       const id = route.params.id as string;
       if (!id || id === 'new') {
-        sceneItems.value = [];
+        aclData.value = [];
         return;
       }
-      await sceneStore.fetchForScript(id, 1, 100);
-      const entries = (sceneStore.getEntries as unknown as ScriptScene[]) || [];
-      sceneItems.value = entries.map((s) => ({
-        id: s.id,
-        type: s.type || '',
-        startTime: s.startTime ? Date.parse(s.startTime) : null,
-        prompt: Array.isArray((s as any).prompts) && (s as any).prompts.length > 0
-          ? (typeof (s as any).prompts[0] === 'string' ? (s as any).prompts[0] : ((s as any).prompts[0]?.prompt || ''))
-          : ''
-      }));
+      try {
+        aclLoading.value = true;
+        const response = await store.fetchAccessList(id);
+        aclData.value = response.accessList || [];
+      } catch (e: any) {
+        const data = e?.response?.data;
+        if (data?.message) message.error(String(data.message)); else message.error(getErrorMessage(e));
+        aclData.value = [];
+      } finally {
+        aclLoading.value = false;
+      }
     };
 
     watch(activeTab, async (tab) => {
-      if (tab === 'scenes') {
-        try {
-          loadingBar.start();
-          await loadScenes();
-        } catch (e: any) {
-          const data = e?.response?.data;
-          if (data?.message) message.error(String(data.message)); else message.error(getErrorMessage(e));
-        } finally {
-          loadingBar.finish();
-        }
+      if (tab === 'acl') {
+        await fetchAclData();
       }
     });
 
@@ -284,9 +223,9 @@ export default defineComponent({
       goBack,
       activeTab,
       referencesStore,
-      sceneItems,
-      createSceneItem,
-      editorExtensions
+      editorExtensions,
+      aclData,
+      aclLoading
     };
   }
 });

@@ -2,22 +2,19 @@
   <n-grid :cols="isMobile ? 1 : 6" x-gap="12" y-gap="12" class="p-4">
     <n-gi>
       <n-page-header>
-        <template #title>Prompts</template>
+        <template #title>Scenes</template>
         <template #footer>
-          Total: {{ store.getPagination.itemCount }}
+          <div style="display:flex; gap:12px; align-items:center;">
+            <span>Total: {{ store.getPagination.itemCount }}</span>
+          </div>
         </template>
       </n-page-header>
     </n-gi>
 
     <n-gi :span="isMobile ? 1 : 6">
       <n-button-group>
-        <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
-        <n-button
-          type="error"
-          :disabled="!hasSelection"
-          @click="handleDelete"
-          size="large"
-        >
+        <n-button @click="handleNewClick" type="primary" size="large" :disabled="!selectedScriptId">New</n-button>
+        <n-button type="error" :disabled="!hasSelection" @click="handleDelete" size="large">
           Delete ({{ checkedRowKeys.length }})
         </n-button>
       </n-button-group>
@@ -38,7 +35,7 @@
         @update:page-size="handlePageSizeChange"
       >
         <template #loading>
-          <loader-icon/>
+          <loader-icon />
         </template>
       </n-data-table>
     </n-gi>
@@ -50,40 +47,61 @@ import { computed, defineComponent, h, onMounted, onUnmounted, ref } from 'vue';
 import { DataTableColumns, NButton, NButtonGroup, NCheckbox, NDataTable, NGi, NGrid, NPageHeader, useMessage } from 'naive-ui';
 import { useRouter } from 'vue-router';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
-import { BroadcastPrompt } from '../../../types/kneoBroadcasterTypes';
-import { usePromptStore } from '../../../stores/kneo/promptStore';
+import { ScriptScene } from '../../../types/kneoBroadcasterTypes';
+import { useScriptSceneStore } from '../../../stores/kneo/scriptSceneStore';
+import { useScriptStore } from '../../../stores/kneo/scriptStore';
 
 export default defineComponent({
   components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon },
   setup() {
     const router = useRouter();
     const message = useMessage();
-    const store = usePromptStore();
+    const store = useScriptSceneStore();
+    const scriptsStore = useScriptStore();
     const isMobile = ref(window.innerWidth < 768);
     const loading = ref(false);
     const intervalId = ref<number | null>(null);
     const checkedRowKeys = ref<(string | number)[]>([]);
+    const selectedScriptId = ref<string | null>(null);
+
+    const scriptOptions = computed(() => (scriptsStore.getEntries || []).map((s: any) => ({ label: s.name || s.id, value: s.id })));
 
     async function preFetch() {
       try {
         loading.value = true;
-        await store.fetchAll();
+        await scriptsStore.fetchAll(1, 100);
+        const opts = scriptOptions.value;
+        if (!selectedScriptId.value && Array.isArray(opts) && opts.length > 0) {
+          selectedScriptId.value = opts[0].value as string;
+          await fetchScenes(1, store.getPagination.pageSize);
+        }
       } catch (error) {
-        console.error('Failed to fetch initial Prompt data:', error);
-        message.error('Failed to load Prompts.');
+        console.error('Failed to fetch scripts:', error);
+        message.error('Failed to load Scripts.');
       } finally {
         loading.value = false;
       }
     }
 
+    const fetchScenes = async (page?: number, pageSize?: number) => {
+      if (!selectedScriptId.value) return;
+      try {
+        loading.value = true;
+        await store.fetchForScript(selectedScriptId.value, page || 1, pageSize || store.getPagination.pageSize);
+      } catch (e) {
+        console.error('Failed to fetch Scenes:', e);
+        message.error('Failed to load Scenes.');
+      } finally {
+        loading.value = false;
+      }
+    };
+
     const startPeriodicRefresh = () => {
       if (!intervalId.value) {
         intervalId.value = window.setInterval(async () => {
           try {
-            await store.fetchAll(store.getPagination.page, store.getPagination.pageSize);
-          } catch (error) {
-            console.error('Periodic refresh of Prompts failed:', error);
-          }
+            await fetchScenes(store.getPagination.page, store.getPagination.pageSize);
+          } catch {}
         }, 30000);
       }
     };
@@ -95,9 +113,6 @@ export default defineComponent({
       }
     };
 
-    preFetch();
-    startPeriodicRefresh();
-
     onMounted(() => {
       window.addEventListener('resize', () => {
         isMobile.value = window.innerWidth < 768;
@@ -108,81 +123,72 @@ export default defineComponent({
       stopPeriodicRefresh();
     });
 
+    preFetch();
+    startPeriodicRefresh();
+
     const handlePageChange = async (page: number) => {
-      try {
-        loading.value = true;
-        await store.fetchAll(page, store.getPagination.pageSize);
-        checkedRowKeys.value = [];
-      } finally {
-        loading.value = false;
-      }
+      await fetchScenes(page, store.getPagination.pageSize);
+      checkedRowKeys.value = [];
     };
 
     const handlePageSizeChange = async (pageSize: number) => {
-      try {
-        loading.value = true;
-        await store.fetchAll(1, pageSize);
-        checkedRowKeys.value = [];
-      } finally {
-        loading.value = false;
-      }
+      await fetchScenes(1, pageSize);
+      checkedRowKeys.value = [];
     };
 
     const hasSelection = computed(() => checkedRowKeys.value.length > 0);
 
     const handleNewClick = () => {
-      router.push('/outline/prompts/new');
+      if (!selectedScriptId.value) return;
+      router.push({ name: 'SceneForm', params: { id: 'new' }, query: { scriptId: selectedScriptId.value } });
     };
 
     const handleDelete = async () => {
       if (checkedRowKeys.value.length === 0) {
-        message.warning('Please select Prompts to delete.');
+        message.warning('Please select Scenes to delete.');
         return;
       }
       try {
         loading.value = true;
-        const deletePromises = checkedRowKeys.value.map(id => store.deletePrompt(id as string));
+        const deletePromises = checkedRowKeys.value.map(id => store.remove(id as string));
         await Promise.all(deletePromises);
-        message.success(`${checkedRowKeys.value.length} Prompt(s) deleted successfully.`);
+        message.success(`${checkedRowKeys.value.length} Scene(s) deleted successfully.`);
         checkedRowKeys.value = [];
-        await store.fetchAll(store.getPagination.page, store.getPagination.pageSize);
+        await fetchScenes(store.getPagination.page, store.getPagination.pageSize);
       } catch (error) {
-        console.error('Failed to delete Prompts:', error);
-        message.error('Failed to delete Prompts.');
+        console.error('Failed to delete Scenes:', error);
+        message.error('Failed to delete Scenes.');
       } finally {
         loading.value = false;
       }
     };
 
-    const getRowProps = (row: BroadcastPrompt) => {
+    const getRowProps = (row: ScriptScene) => {
       return {
         style: 'cursor: pointer;',
         onClick: (e: MouseEvent) => {
           const target = e.target as HTMLElement;
           if (target.closest('.n-checkbox') || target.closest('[data-n-checkbox]')) return;
-          const routeTo = { name: 'PromptForm', params: { id: row.id } };
-          router.push(routeTo).catch((err) => {
-            console.error('Navigation error:', err);
-          });
+          router.push({ name: 'SceneForm', params: { id: row.id } });
         },
       };
     };
 
-    const columns = computed<DataTableColumns<BroadcastPrompt>>(() => {
-      const baseColumns: DataTableColumns<BroadcastPrompt> = [
+    // no script combobox; scenes load based on auto-selected script
+
+    const columns = computed<DataTableColumns<ScriptScene>>(() => {
+      const baseColumns: DataTableColumns<ScriptScene> = [
         { type: 'selection', fixed: 'left', width: 50 },
-        { title: 'Type', key: 'promptType', width: 120 },
-        { title: 'Lang', key: 'languageCode', width: 100 },
-        { title: 'Enabled', key: 'enabled', width: 100, render: (r) => r.enabled ? 'Yes' : 'No' },
-        { title: 'Master', key: 'isMaster', width: 100, render: (r) => r.isMaster ? 'Yes' : 'No' },
-        { title: 'Locked', key: 'locked', width: 100, render: (r) => r.locked ? 'Yes' : 'No' },
+        { title: 'Type', key: 'type', width: 140 },
+        { title: 'Start Time', key: 'startTime', width: 200 },
         {
           title: 'Prompt',
-          key: 'prompt',
+          key: 'prompts',
           ellipsis: { tooltip: true },
-          render: (row: BroadcastPrompt) => {
+          render: (row: ScriptScene) => {
+            const textArr = (row as any).prompts || [];
+            const text = Array.isArray(textArr) && textArr.length > 0 ? (typeof textArr[0] === 'string' ? textArr[0] : (textArr[0]?.prompt || '')) : '';
             const maxLength = isMobile.value ? 60 : 140;
-            const text = row.prompt || '';
             return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
           }
         },
@@ -202,21 +208,21 @@ export default defineComponent({
                 if (checkedRowKeys.value.length === store.getEntries.length) {
                   checkedRowKeys.value = [];
                 } else {
-                  checkedRowKeys.value = store.getEntries.map((item: BroadcastPrompt) => item.id);
+                  checkedRowKeys.value = store.getEntries.map((item: ScriptScene) => item.id as string);
                 }
               }
             })
           },
           {
-            title: 'Prompt',
+            title: 'Scene',
             key: 'combined',
-            render: (row: BroadcastPrompt) => {
+            render: (row: ScriptScene) => {
+              const textArr = (row as any).prompts || [];
+              const text = Array.isArray(textArr) && textArr.length > 0 ? (typeof textArr[0] === 'string' ? textArr[0] : (textArr[0]?.prompt || '')) : '';
               const maxLength = 100;
-              const text = row.prompt || '';
               return h('div', {}, [
-                h('div', { style: 'font-weight: bold;' }, `${row.languageCode || ''} ${row.promptType || ''}`.trim()),
+                h('div', { style: 'font-weight: bold;' }, `${row.type || ''}`.trim()),
                 h('div', { style: 'font-size: 0.8rem;' }, text.length > maxLength ? text.substring(0, maxLength) + '...' : text),
-                h('div', { style: 'font-size: 0.8rem;' }, `Enabled: ${row.enabled ? 'Yes' : 'No'}, Master: ${row.isMaster ? 'Yes' : 'No'}`)
               ]);
             }
           }
@@ -229,7 +235,7 @@ export default defineComponent({
     return {
       store,
       columns,
-      rowKey: (row: BroadcastPrompt) => row.id,
+      rowKey: (row: ScriptScene) => row.id as string,
       isMobile,
       handleNewClick,
       handleDelete,
@@ -238,7 +244,9 @@ export default defineComponent({
       handlePageChange,
       handlePageSizeChange,
       loading,
-      checkedRowKeys
+      checkedRowKeys,
+      selectedScriptId,
+      scriptOptions,
     };
   },
 });

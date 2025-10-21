@@ -109,8 +109,13 @@ import {
   Moon,
   Calendar,
   User,
-  FileText
+  FileText,
+  Prompt,
+  Ripple,
+  Tent,
+  BuildingSkyscraper
 } from '@vicons/tabler';
+import { LayersLinked } from '@vicons/tabler';
 import {useRadioStationStore} from "../stores/kneo/radioStationStore";
 import {RadioStation, BrandStatus} from "../types/kneoBroadcasterTypes";
 import keycloakInst from '../keycloakFactory.js';
@@ -231,13 +236,13 @@ export default defineComponent({
       const allStationsOption: MenuOption = {
         label: 'All Radiostations',
         key: 'radiostations',
-        icon: () => h(List)
+        icon: () => h(Ripple)
       };
 
       const homeOption: MenuOption = {
         label: 'Home',
         key: 'home',
-        icon: () => h(List)
+        icon: () => h(BuildingSkyscraper)
       };
 
       const profileOption: MenuOption = {
@@ -339,9 +344,14 @@ export default defineComponent({
           icon: () => h(FileText)
         },
         {
+          label: 'Scenes',
+          key: 'scenes',
+          icon: () => h(LayersLinked)
+        },
+        {
           label: 'Prompts',
           key: 'prompts',
-          icon: () => h(FileText)
+          icon: () => h(Prompt)
         },
         {
           type: 'divider',
@@ -380,6 +390,7 @@ export default defineComponent({
       if (route.name === 'Events') return 'events';
       if (route.name === 'AiAgents') return 'ai_agents';
       if (route.name === 'Scripts') return 'scripts';
+      if (route.name === 'Scenes') return 'scenes';
       if (route.name === 'Prompts') return 'prompts';
       if (route.name === 'EnvironmentProfiles') return 'environment_profiles';
       if (route.name === 'Listeners') return 'listeners';
@@ -436,6 +447,8 @@ export default defineComponent({
         await router.push({name: 'AiAgents'});
       } else if (key === 'scripts') {
         await router.push({name: 'Scripts'});
+      } else if (key === 'scenes') {
+        await router.push({name: 'Scenes'});
       } else if (key === 'prompts') {
         await router.push({name: 'Prompts'});
       } else if (key === 'environment_profiles') {
