@@ -130,6 +130,8 @@ export default defineComponent({
 
     const hasSelection = computed(() => checkedRowKeys.value.length > 0);
 
+    const rowKeyFn = (row: BroadcastPrompt) => row.id ?? `${row.promptType || 'type'}-${row.languageCode || 'lang'}-${(row.prompt || '').slice(0,20)}`;
+
     const handleNewClick = () => {
       router.push('/outline/prompts/new');
     };
@@ -174,7 +176,7 @@ export default defineComponent({
         { title: 'Type', key: 'promptType', width: 120 },
         { title: 'Lang', key: 'languageCode', width: 100 },
         { title: 'Enabled', key: 'enabled', width: 100, render: (r) => r.enabled ? 'Yes' : 'No' },
-        { title: 'Master', key: 'isMaster', width: 100, render: (r) => r.isMaster ? 'Yes' : 'No' },
+        { title: 'Master', key: 'master', width: 100, render: (r) => r.master ? 'Yes' : 'No' },
         { title: 'Locked', key: 'locked', width: 100, render: (r) => r.locked ? 'Yes' : 'No' },
         {
           title: 'Prompt',
@@ -202,7 +204,9 @@ export default defineComponent({
                 if (checkedRowKeys.value.length === store.getEntries.length) {
                   checkedRowKeys.value = [];
                 } else {
-                  checkedRowKeys.value = store.getEntries.map((item: BroadcastPrompt) => item.id);
+                  checkedRowKeys.value = store.getEntries
+                    .filter((item: BroadcastPrompt) => !!item.id)
+                    .map((item: BroadcastPrompt) => item.id as string);
                 }
               }
             })
@@ -216,7 +220,7 @@ export default defineComponent({
               return h('div', {}, [
                 h('div', { style: 'font-weight: bold;' }, `${row.languageCode || ''} ${row.promptType || ''}`.trim()),
                 h('div', { style: 'font-size: 0.8rem;' }, text.length > maxLength ? text.substring(0, maxLength) + '...' : text),
-                h('div', { style: 'font-size: 0.8rem;' }, `Enabled: ${row.enabled ? 'Yes' : 'No'}, Master: ${row.isMaster ? 'Yes' : 'No'}`)
+                h('div', { style: 'font-size: 0.8rem;' }, `Enabled: ${row.enabled ? 'Yes' : 'No'}, Master: ${row.master ? 'Yes' : 'No'}`)
               ]);
             }
           }
@@ -229,7 +233,7 @@ export default defineComponent({
     return {
       store,
       columns,
-      rowKey: (row: BroadcastPrompt) => row.id,
+      rowKey: rowKeyFn,
       isMobile,
       handleNewClick,
       handleDelete,

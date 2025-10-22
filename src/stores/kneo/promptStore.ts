@@ -21,7 +21,7 @@ export const usePromptStore = defineStore('promptStore', () => {
       prompt: '',
       promptType: '',
       languageCode: '',
-      isMaster: false,
+      master: false,
       locked: false
     } as BroadcastPrompt;
     return apiFormResponse.value?.docData || def;

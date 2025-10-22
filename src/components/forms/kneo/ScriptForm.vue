@@ -41,7 +41,7 @@
                 <n-form-item label="Labels">
                   <n-select
                     v-model:value="localFormData.labels"
-                    :options="referencesStore.labelOptions"
+                    :options="scriptLabelOptions"
                     multiple
                     filterable
                     style="width: 25%; max-width: 300px;"
@@ -112,6 +112,7 @@ export default defineComponent({
     const router = useRouter();
     const store = useScriptStore();
     const referencesStore = useReferencesStore();
+    const scriptLabelOptions = ref<Array<{ label: string; value: string; color?: string; fontColor?: string }>>([]);
     const route = useRoute();
 
     const activeTab = ref("properties");
@@ -166,8 +167,8 @@ export default defineComponent({
     onMounted(async () => {
       try {
         loadingBar.start();
-        // Load label options first
-        await referencesStore.fetchLabels();
+        // Load category-specific label options for scripts
+        scriptLabelOptions.value = await referencesStore.fetchLabelsByCategory('script');
         
         const id = route.params.id as string;
         if (id && id !== 'new') {
@@ -225,8 +226,9 @@ export default defineComponent({
       referencesStore,
       editorExtensions,
       aclData,
-      aclLoading
+      aclLoading,
+      scriptLabelOptions,
     };
-  }
+  },
 });
 </script>

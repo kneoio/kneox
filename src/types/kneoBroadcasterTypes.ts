@@ -372,7 +372,7 @@ export interface BroadcastPrompt {
     prompt: string;
     promptType?: string;
     languageCode?: string;
-    isMaster?: boolean;
+    master?: boolean;
     locked?: boolean;
     title?: string;
 }
@@ -382,7 +382,7 @@ export interface BroadcastPromptSave {
     prompt?: string;
     promptType?: string;
     languageCode?: string;
-    isMaster?: boolean;
+    master?: boolean;
     locked?: boolean;
     title?: string;
 }

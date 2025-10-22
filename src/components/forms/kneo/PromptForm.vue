@@ -46,7 +46,7 @@
                   </div>
                   <div style="display:flex; align-items:center; gap:6px;">
                     <span>Master</span>
-                    <n-switch v-model:value="localFormData.isMaster" />
+                    <n-switch v-model:value="localFormData.master" />
                   </div>
                   <div style="display:flex; align-items:center; gap:6px;">
                     <span>Locked</span>
@@ -156,7 +156,7 @@ export default defineComponent({
       prompt: '',
       promptType: '',
       languageCode: '',
-      isMaster: false,
+      master: false,
       locked: false
     });
 
@@ -169,7 +169,7 @@ export default defineComponent({
           prompt: localFormData.prompt,
           promptType: localFormData.promptType,
           languageCode: localFormData.languageCode,
-          isMaster: localFormData.isMaster,
+          master: localFormData.master,
           locked: localFormData.locked,
         };
         const id = localFormData.id ? localFormData.id : null;

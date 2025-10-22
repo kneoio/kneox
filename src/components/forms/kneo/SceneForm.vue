@@ -16,6 +16,15 @@
       <n-form label-placement="left" label-width="auto">
         <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
           <n-gi>
+            <n-form-item label="Script">
+              <n-select
+                v-model:value="selectedScriptId"
+                :options="scriptOptions"
+                style="width: 25%; max-width: 300px;"
+              />
+            </n-form-item>
+          </n-gi>
+          <n-gi>
             <n-form-item label="Type">
               <n-input v-model:value="localFormData.type" style="width: 25%; max-width: 300px;" placeholder="" />
             </n-form-item>
@@ -26,19 +35,11 @@
             </n-form-item>
           </n-gi>
           <n-gi>
-            <n-form-item label="Prompt">
-              <CodeMirror
-                :model-value="promptText"
-                @update:model-value="(val) => (promptText = typeof val === 'string' ? val : (((val as any)?.data) ?? ''))"
-                basic
-                :style="{
-                  width: '800px',
-                  height: '300px',
-                  border: '1px solid #d9d9d9',
-                  borderRadius: '3px',
-                  overflow: 'auto'
-                }"
-                :extensions="editorExtensions"
+            <n-form-item label="Prompts">
+              <n-transfer
+                v-model:value="selectedPromptIds"
+                :options="promptOptions"
+                style="width: 50%; max-width: 600px;"
               />
             </n-form-item>
           </n-gi>
@@ -59,17 +60,17 @@ import {
   NGi,
   NGrid,
   NInput,
+  NSelect,
   NPageHeader,
   NTimePicker,
+  NTransfer,
   useLoadingBar,
   useMessage
 } from 'naive-ui';
-import { EditorView } from '@codemirror/view';
-import { json } from '@codemirror/lang-json';
-import CodeMirror from 'vue-codemirror6';
 import { ScriptScene, ScriptSceneSave } from '../../../types/kneoBroadcasterTypes';
 import { useScriptSceneStore } from '../../../stores/kneo/scriptSceneStore';
 import { useScriptStore } from '../../../stores/kneo/scriptStore';
+import { usePromptStore } from '../../../stores/kneo/promptStore';
 import { getErrorMessage, handleFormSaveError } from '../../../utils/errorHandling';
 
 export default defineComponent({
@@ -80,11 +81,12 @@ export default defineComponent({
     NForm,
     NFormItem,
     NInput,
+    NSelect,
     NButton,
     NGrid,
     NGi,
     NTimePicker,
-    CodeMirror
+    NTransfer
   },
   setup() {
     const loadingBar = useLoadingBar();
@@ -93,9 +95,22 @@ export default defineComponent({
     const route = useRoute();
     const store = useScriptSceneStore();
     const scriptsStore = useScriptStore();
-
-    const editorExtensions = computed(() => [json(), EditorView.lineWrapping]);
+    const promptStore = usePromptStore();
     const selectedScriptId = ref<string | null>(null);
+    const selectedPromptIds = ref<string[]>([]);
+    const scriptOptions = computed(() =>
+      (scriptsStore.getEntries || [])
+        .filter((s: any) => typeof s.id === 'string' && s.id)
+        .map((s: any) => ({ label: s.name || s.id, value: s.id as string }))
+    );
+    const promptOptions = computed(() =>
+      (promptStore.getEntries || [])
+        .filter((p: any) => typeof p.id === 'string' && p.id)
+        .map((p: any) => ({
+          label: `${p.languageCode || ''} ${p.promptType || ''}`.trim() || p.id,
+          value: p.id as string
+        }))
+    );
 
     const formTitle = computed(() => (localFormData.id ? 'Edit Scene' : 'Create New Scene'));
 
@@ -108,7 +123,6 @@ export default defineComponent({
     });
 
     const startTimeMs = ref<number | null>(null);
-    const promptText = ref<string>('');
 
     const parseTimeToMs = (timeStr: string | undefined | null): number | null => {
       if (!timeStr) return null;
@@ -139,7 +153,9 @@ export default defineComponent({
           selectedScriptId.value = data.scriptId || selectedScriptId.value;
           startTimeMs.value = parseTimeToMs(data.startTime);
           const arr = (data as any).prompts || [];
-          promptText.value = Array.isArray(arr) && arr.length > 0 ? (typeof arr[0] === 'string' ? arr[0] : (arr[0]?.prompt || '')) : '';
+          selectedPromptIds.value = Array.isArray(arr)
+            ? (arr.filter((v: any) => typeof v === 'string' && v) as string[])
+            : [];
         }
       }
     };
@@ -149,7 +165,7 @@ export default defineComponent({
         loadingBar.start();
         const saveData: ScriptSceneSave = {
           type: localFormData.type || '',
-          prompts: promptText.value ? [promptText.value] : [],
+          prompts: selectedPromptIds.value,
           startTime: startTimeMs.value != null ? formatTimeFromMs(startTimeMs.value) : undefined,
         };
         const id = route.params.id as string;
@@ -179,6 +195,7 @@ export default defineComponent({
     onMounted(async () => {
       try {
         loadingBar.start();
+        await promptStore.fetchAll(1, 100);
         await load();
       } catch (e) {
         message.error(getErrorMessage(e));
@@ -192,10 +209,11 @@ export default defineComponent({
       formTitle,
       handleSave,
       goBack,
-      editorExtensions,
       selectedScriptId,
       startTimeMs,
-      promptText,
+      selectedPromptIds,
+      promptOptions,
+      scriptOptions,
     };
   }
 });
