@@ -47,14 +47,14 @@
 
 <script lang="ts">
 import { computed, defineComponent, h, onMounted, onUnmounted, ref } from 'vue';
-import { DataTableColumns, NButton, NButtonGroup, NCheckbox, NDataTable, NGi, NGrid, NPageHeader, useMessage } from 'naive-ui';
+import { DataTableColumns, NButton, NButtonGroup, NCheckbox, NDataTable, NGi, NGrid, NPageHeader, NTag, useMessage } from 'naive-ui';
 import { useRouter } from 'vue-router';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
 import { BroadcastPrompt } from '../../../types/kneoBroadcasterTypes';
 import { usePromptStore } from '../../../stores/kneo/promptStore';
 
 export default defineComponent({
-  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon },
+  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, NTag },
   setup() {
     const router = useRouter();
     const message = useMessage();
@@ -173,11 +173,20 @@ export default defineComponent({
     const columns = computed<DataTableColumns<BroadcastPrompt>>(() => {
       const baseColumns: DataTableColumns<BroadcastPrompt> = [
         { type: 'selection', fixed: 'left', width: 50 },
-        { title: 'Type', key: 'promptType', width: 120 },
+        { title: 'Type', key: 'promptType', width: 120, render: (r) => h(NTag as any, { size: 'small' }, { default: () => r.promptType || '' }) },
         { title: 'Lang', key: 'languageCode', width: 100 },
-        { title: 'Enabled', key: 'enabled', width: 100, render: (r) => r.enabled ? 'Yes' : 'No' },
-        { title: 'Master', key: 'master', width: 100, render: (r) => r.master ? 'Yes' : 'No' },
-        { title: 'Locked', key: 'locked', width: 100, render: (r) => r.locked ? 'Yes' : 'No' },
+        {
+          title: 'Flags',
+          key: 'flags',
+          width: 220,
+          render: (r: BroadcastPrompt) => {
+            const tags: any[] = [];
+            if (r.enabled) tags.push(h(NTag as any, { type: 'info', size: 'small', style: 'margin-right: 6px;' }, { default: () => 'ENABLED' }));
+            if (r.master) tags.push(h(NTag as any, { type: 'success', size: 'small', style: 'margin-right: 6px;' }, { default: () => 'MASTER' }));
+            if (r.locked) tags.push(h(NTag as any, { type: 'error', size: 'small' }, { default: () => 'LOCKED' }));
+            return h('div', { style: 'display: flex; align-items: center;' }, tags);
+          }
+        },
         {
           title: 'Prompt',
           key: 'prompt',
@@ -218,9 +227,16 @@ export default defineComponent({
               const maxLength = 100;
               const text = row.prompt || '';
               return h('div', {}, [
-                h('div', { style: 'font-weight: bold;' }, `${row.languageCode || ''} ${row.promptType || ''}`.trim()),
-                h('div', { style: 'font-size: 0.8rem;' }, text.length > maxLength ? text.substring(0, maxLength) + '...' : text),
-                h('div', { style: 'font-size: 0.8rem;' }, `Enabled: ${row.enabled ? 'Yes' : 'No'}, Master: ${row.master ? 'Yes' : 'No'}`)
+                h('div', { style: 'font-weight: bold; display: flex; align-items: center;' }, [
+                  `${row.languageCode || ''}`,
+                  row.promptType ? h(NTag as any, { size: 'small', style: 'margin-left: 6px;' }, { default: () => row.promptType }) : null
+                ]),
+                h('div', { style: 'font-size: 0.8rem; margin: 4px 0;' }, text.length > maxLength ? text.substring(0, maxLength) + '...' : text),
+                h('div', { style: 'display: flex; align-items: center;' }, [
+                  row.enabled ? h(NTag as any, { type: 'info', size: 'small', style: 'margin-right: 6px;' }, { default: () => 'ENABLED' }) : null,
+                  row.master ? h(NTag as any, { type: 'success', size: 'small', style: 'margin-right: 6px;' }, { default: () => 'MASTER' }) : null,
+                  row.locked ? h(NTag as any, { type: 'error', size: 'small' }, { default: () => 'LOCKED' }) : null,
+                ])
               ]);
             }
           }

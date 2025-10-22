@@ -2,7 +2,10 @@
   <n-grid cols="6" x-gap="12" y-gap="12" class="m-5">
     <n-gi span="6">
       <n-page-header :subtitle="formTitle" @back="goBack">
-        <template #title>{{ localFormData.id ? 'Prompt' : 'New Prompt' }}</template>
+        <template #title>
+          <span>{{ localFormData.id ? 'Prompt' : 'New Prompt' }}</span>
+          <n-tag v-if="localFormData.master" type="success" size="small" class="ml-2">MASTER</n-tag>
+        </template>
         <template #footer>
           Registered: {{ localFormData.regDate }}, Last Modified: {{ localFormData.lastModifiedDate }}
           <br>
@@ -15,6 +18,7 @@
       <n-button-group>
         <n-button type="primary" @click="handleSave" size="large">Save</n-button>
         <n-button type="default" disabled size="large">Archive</n-button>
+        <n-button type="default" :disabled="!localFormData.master" size="large">Replicate</n-button>
       </n-button-group>
     </n-gi>
 
@@ -99,6 +103,7 @@ import {
   NTabPane,
   NSelect,
   NSwitch,
+  NTag,
   useLoadingBar,
   useMessage
 } from 'naive-ui';
@@ -126,6 +131,7 @@ export default defineComponent({
     NGi,
     NSelect,
     NSwitch,
+    NTag,
     CodeMirror,
     AclTable
   },

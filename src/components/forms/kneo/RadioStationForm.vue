@@ -148,65 +148,6 @@
                     disabled />
                 </n-form-item>
               </n-gi>
-              <n-gi v-if="selectedAgent">
-                <n-form-item label="Talkativity">
-                  <n-slider :value="selectedAgent.talkativity" :min="0" :max="1" :step="0.05" :tooltip="false"
-                    style="width: 50%; max-width: 600px;" disabled />
-                  <span style="margin-left: 12px;">{{ selectedAgent.talkativity?.toFixed(2) || '0.00' }}</span>
-                </n-form-item>
-              </n-gi>
-              <n-gi v-if="selectedAgent">
-                <n-form-item label="Preferred Voice">
-                  <n-select :value="selectedAgent.preferredVoice[0]?.name" 
-                    :options="voiceOptions"
-                    filterable
-                    style="width: 30%; max-width: 300px;" 
-                    disabled />
-                </n-form-item>
-              </n-gi>
-
-              <n-gi>
-                <n-form-item label="Override AI Agent">
-                  <n-checkbox v-model:checked="aiOverrideEnabled">
-                    Enable AI agent override
-                  </n-checkbox>
-                </n-form-item>
-              </n-gi>
-
-              <n-gi v-if="aiOverrideEnabled">
-                <n-form-item label="Override Name">
-                  <n-input v-model:value="localFormData.aiOverriding.name" 
-                    placeholder=""
-                    style="width: 50%; max-width: 600px;" />
-                </n-form-item>
-              </n-gi>
-
-              <n-gi v-if="aiOverrideEnabled">
-                <n-form-item label="Override Prompt">
-                  <n-input v-model:value="localFormData.aiOverriding.prompt" 
-                    type="textarea" 
-                    placeholder=""
-                    :autosize="{ minRows: 3, maxRows: 5 }"
-                    style="width: 50%; max-width: 600px;" />
-                </n-form-item>
-              </n-gi>
-
-              <n-gi v-if="aiOverrideEnabled">
-                <n-form-item label="Override Talkativity">
-                  <n-slider v-model:value="localFormData.aiOverriding.talkativity" :min="0" :max="1" :step="0.05" :tooltip="false"
-                    style="width: 50%; max-width: 600px;" />
-                  <span style="margin-left: 12px;">{{ localFormData.aiOverriding.talkativity }}</span>
-                </n-form-item>
-              </n-gi>
-
-              <n-gi v-if="aiOverrideEnabled">
-                <n-form-item label="Override Preferred Voice">
-                  <n-select v-model:value="localFormData.aiOverriding.preferredVoice" 
-                    :options="voiceOptions"
-                    filterable
-                    style="width: 30%; max-width: 300px;" />
-                </n-form-item>
-              </n-gi>
             </n-grid>
           </n-form>
         </n-tab-pane>
@@ -366,6 +307,71 @@
                 <n-form-item label="Song Submission Allowed">
                   <n-select v-model:value="localFormData.submissionPolicy" :options="referencesStore.submissionPolicyOptions"
                     style="width: 25%; max-width: 300px;" />
+                </n-form-item>
+              </n-gi>
+            </n-grid>
+          </n-form>
+        </n-tab-pane>
+        <n-tab-pane name="advanced" tab="Advanced">
+          <n-form label-placement="left" label-width="150px">
+            <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
+              <n-gi v-if="selectedAgent">
+                <n-form-item label="Talkativity">
+                  <n-slider :value="selectedAgent.talkativity" :min="0" :max="1" :step="0.05" :tooltip="false"
+                    style="width: 50%; max-width: 600px;" disabled />
+                  <span style="margin-left: 12px;">{{ selectedAgent.talkativity?.toFixed(2) || '0.00' }}</span>
+                </n-form-item>
+              </n-gi>
+              <n-gi v-if="selectedAgent">
+                <n-form-item label="Preferred Voice">
+                  <n-select :value="selectedAgent.preferredVoice[0]?.name" 
+                    :options="voiceOptions"
+                    filterable
+                    style="width: 30%; max-width: 300px;" 
+                    disabled />
+                </n-form-item>
+              </n-gi>
+
+              <n-gi>
+                <n-form-item label="Override AI Agent">
+                  <n-checkbox v-model:checked="aiOverrideEnabled">
+                    Enable AI agent override
+                  </n-checkbox>
+                </n-form-item>
+              </n-gi>
+
+              <n-gi v-if="aiOverrideEnabled">
+                <n-form-item label="Override Name">
+                  <n-input v-model:value="localFormData.aiOverriding.name" 
+                    placeholder=""
+                    style="width: 50%; max-width: 600px;" />
+                </n-form-item>
+              </n-gi>
+
+              <n-gi v-if="aiOverrideEnabled">
+                <n-form-item label="Override Prompt">
+                  <n-input v-model:value="localFormData.aiOverriding.prompt" 
+                    type="textarea" 
+                    placeholder=""
+                    :autosize="{ minRows: 3, maxRows: 5 }"
+                    style="width: 50%; max-width: 600px;" />
+                </n-form-item>
+              </n-gi>
+
+              <n-gi v-if="aiOverrideEnabled">
+                <n-form-item label="Override Talkativity">
+                  <n-slider v-model:value="localFormData.aiOverriding.talkativity" :min="0" :max="1" :step="0.05" :tooltip="false"
+                    style="width: 50%; max-width: 600px;" />
+                  <span style="margin-left: 12px;">{{ localFormData.aiOverriding.talkativity }}</span>
+                </n-form-item>
+              </n-gi>
+
+              <n-gi v-if="aiOverrideEnabled">
+                <n-form-item label="Override Preferred Voice">
+                  <n-select v-model:value="localFormData.aiOverriding.preferredVoice" 
+                    :options="voiceOptions"
+                    filterable
+                    style="width: 30%; max-width: 300px;" />
                 </n-form-item>
               </n-gi>
             </n-grid>
