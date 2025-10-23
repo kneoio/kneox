@@ -343,8 +343,10 @@ export interface ScriptScene {
 id?: string;
 scriptId?: string;
 type?: string;
+title?: string;
 prompts?: string[];
 startTime?: string;
+weekdays?: number[];
 }
 
 export interface ScriptSceneViewData {
@@ -357,8 +359,10 @@ entries: ScriptScene[];
 
 export interface ScriptSceneSave {
 type?: string;
+title?: string;
 prompts?: string[];
 startTime?: string;
+weekdays?: number[];
 }
 
 // Prompts (Broadcaster)

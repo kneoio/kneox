@@ -25,6 +25,11 @@
             </n-form-item>
           </n-gi>
           <n-gi>
+            <n-form-item label="Title">
+              <n-input v-model:value="localFormData.title" style="width: 50%; max-width: 600px;" placeholder="" />
+            </n-form-item>
+          </n-gi>
+          <n-gi v-if="false">
             <n-form-item label="Type">
               <n-input v-model:value="localFormData.type" style="width: 25%; max-width: 300px;" placeholder="" />
             </n-form-item>
@@ -32,6 +37,19 @@
           <n-gi>
             <n-form-item label="Start time">
               <n-time-picker v-model:value="startTimeMs" format="HH:mm:ss" style="width: 25%; max-width: 300px;" />
+            </n-form-item>
+          </n-gi>
+          <n-gi>
+            <n-form-item label="Weekdays">
+              <n-checkbox-group v-model:value="selectedWeekdays" style="width: 50%; max-width: 600px;">
+                <n-checkbox :value="1" label="Mon" />
+                <n-checkbox :value="2" label="Tue" />
+                <n-checkbox :value="3" label="Wed" />
+                <n-checkbox :value="4" label="Thu" />
+                <n-checkbox :value="5" label="Fri" />
+                <n-checkbox :value="6" label="Sat" />
+                <n-checkbox :value="7" label="Sun" />
+              </n-checkbox-group>
             </n-form-item>
           </n-gi>
           <n-gi>
@@ -64,6 +82,8 @@ import {
   NPageHeader,
   NTimePicker,
   NTransfer,
+  NCheckbox,
+  NCheckboxGroup,
   useLoadingBar,
   useMessage
 } from 'naive-ui';
@@ -86,7 +106,9 @@ export default defineComponent({
     NGrid,
     NGi,
     NTimePicker,
-    NTransfer
+    NTransfer,
+    NCheckbox,
+    NCheckboxGroup
   },
   setup() {
     const loadingBar = useLoadingBar();
@@ -98,6 +120,7 @@ export default defineComponent({
     const promptStore = usePromptStore();
     const selectedScriptId = ref<string | null>(null);
     const selectedPromptIds = ref<string[]>([]);
+    const selectedWeekdays = ref<number[]>([]);
     const scriptOptions = computed(() =>
       (scriptsStore.getEntries || [])
         .filter((s: any) => typeof s.id === 'string' && s.id)
@@ -156,6 +179,8 @@ export default defineComponent({
           selectedPromptIds.value = Array.isArray(arr)
             ? (arr.filter((v: any) => typeof v === 'string' && v) as string[])
             : [];
+          const w = (data as any).weekdays || [];
+          selectedWeekdays.value = Array.isArray(w) ? (w.filter((n: any) => Number.isInteger(n)) as number[]) : [];
         }
       }
     };
@@ -165,8 +190,10 @@ export default defineComponent({
         loadingBar.start();
         const saveData: ScriptSceneSave = {
           type: localFormData.type || '',
+          title: localFormData.title || '',
           prompts: selectedPromptIds.value,
           startTime: startTimeMs.value != null ? formatTimeFromMs(startTimeMs.value) : undefined,
+          weekdays: selectedWeekdays.value,
         };
         const id = route.params.id as string;
         if (!id || id === 'new') {
@@ -212,6 +239,7 @@ export default defineComponent({
       selectedScriptId,
       startTimeMs,
       selectedPromptIds,
+      selectedWeekdays,
       promptOptions,
       scriptOptions,
     };

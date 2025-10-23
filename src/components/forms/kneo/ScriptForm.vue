@@ -52,6 +52,20 @@
             </n-grid>
           </n-form>
         </n-tab-pane>
+        <n-tab-pane name="scenes" tab="Scenes">
+          <n-data-table
+            remote
+            :columns="sceneColumns"
+            :row-key="sceneRowKey"
+            :data="sceneStore.getEntries"
+            :pagination="false"
+            :bordered="false"
+            :loading="scenesLoading"
+            size="small"
+            :style="{ width: '800px' }"
+            default-expand-all
+          />
+        </n-tab-pane>
         <n-tab-pane name="acl" tab="ACL">
           <acl-table :acl-data="aclData" :loading="aclLoading" />
         </n-tab-pane>
@@ -74,12 +88,14 @@ import {
   NPageHeader,
   NTabs,
   NTabPane,
+  NDataTable,
   NSelect,
   NText,
   useLoadingBar,
   useMessage
 } from 'naive-ui';
 import { useScriptStore } from '../../../stores/kneo/scriptStore';
+import { useScriptSceneStore } from '../../../stores/kneo/scriptSceneStore';
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 import { Script, ScriptSave, ScriptScene } from '../../../types/kneoBroadcasterTypes';
 import { getErrorMessage, handleFormSaveError } from '../../../utils/errorHandling';
@@ -103,6 +119,7 @@ export default defineComponent({
     NGi,
     NSelect,
     NText,
+    NDataTable,
     CodeMirror,
     AclTable
   },
@@ -112,6 +129,8 @@ export default defineComponent({
     const router = useRouter();
     const store = useScriptStore();
     const referencesStore = useReferencesStore();
+    const sceneStore = useScriptSceneStore();
+    const scenesLoading = ref(false);
     const scriptLabelOptions = ref<Array<{ label: string; value: string; color?: string; fontColor?: string }>>([]);
     const route = useRoute();
 
@@ -136,6 +155,23 @@ export default defineComponent({
       description: "",
       labels: []
     });
+
+    const sceneRowKey = (row: any) => row.id || `${row.type || 'scene'}-${row.startTime || ''}`;
+    const sceneColumns = computed(() => [
+      { title: 'Type', key: 'type', width: 140 },
+      { title: 'Start', key: 'startTime', width: 140 },
+      { title: 'Prompts', key: 'prompts', render: (r: any) => Array.isArray(r.prompts) ? r.prompts.length : 0 }
+    ]);
+
+    const fetchScenes = async () => {
+      if (!localFormData.id) return;
+      try {
+        scenesLoading.value = true;
+        await sceneStore.fetchForScript(localFormData.id, 1, 50);
+      } finally {
+        scenesLoading.value = false;
+      }
+    };
 
 
     const handleSave = async () => {
@@ -175,6 +211,9 @@ export default defineComponent({
           await store.fetch(id);
           const scriptData = { ...store.getCurrent } as Script;
           Object.assign(localFormData, scriptData);
+          if (activeTab.value === 'scenes') {
+            await fetchScenes();
+          }
         }
       } catch (error: any) {
         console.error("Failed to fetch data:", error);
@@ -215,6 +254,9 @@ export default defineComponent({
       if (tab === 'acl') {
         await fetchAclData();
       }
+      if (tab === 'scenes') {
+        await fetchScenes();
+      }
     });
 
     return {
@@ -228,6 +270,10 @@ export default defineComponent({
       aclData,
       aclLoading,
       scriptLabelOptions,
+      sceneStore,
+      scenesLoading,
+      sceneColumns,
+      sceneRowKey,
     };
   },
 });

@@ -113,7 +113,8 @@ import {
   Prompt,
   Ripple,
   Tent,
-  BuildingSkyscraper
+  BuildingSkyscraper,
+  Fall
 } from '@vicons/tabler';
 import { LayersLinked } from '@vicons/tabler';
 import {useRadioStationStore} from "../stores/kneo/radioStationStore";
@@ -254,7 +255,7 @@ export default defineComponent({
           }, keycloakInst.tokenParsed?.preferred_username || '')
         ]),
         key: 'profile',
-        icon: () => h(User)
+        icon: () => h(Fall)
       };
 
       const logoutOption: MenuOption = {
@@ -341,11 +342,6 @@ export default defineComponent({
         {
           label: 'Scripts',
           key: 'scripts',
-          icon: () => h(FileText)
-        },
-        {
-          label: 'Scenes',
-          key: 'scenes',
           icon: () => h(LayersLinked)
         },
         {
@@ -390,7 +386,6 @@ export default defineComponent({
       if (route.name === 'Events') return 'events';
       if (route.name === 'AiAgents') return 'ai_agents';
       if (route.name === 'Scripts') return 'scripts';
-      if (route.name === 'Scenes') return 'scenes';
       if (route.name === 'Prompts') return 'prompts';
       if (route.name === 'EnvironmentProfiles') return 'environment_profiles';
       if (route.name === 'Listeners') return 'listeners';
@@ -447,8 +442,6 @@ export default defineComponent({
         await router.push({name: 'AiAgents'});
       } else if (key === 'scripts') {
         await router.push({name: 'Scripts'});
-      } else if (key === 'scenes') {
-        await router.push({name: 'Scenes'});
       } else if (key === 'prompts') {
         await router.push({name: 'Prompts'});
       } else if (key === 'environment_profiles') {
