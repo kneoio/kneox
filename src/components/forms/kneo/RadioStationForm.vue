@@ -141,6 +141,12 @@
                     style="width: 50%; max-width: 600px;" />
                 </n-form-item>
               </n-gi>
+              <n-gi>
+                <n-form-item label="Mode">
+                  <n-select v-model:value="localFormData.aiAgentMode" :options="aiAgentModeOptions"
+                    style="width: 25%; max-width: 300px;" />
+                </n-form-item>
+              </n-gi>
               <n-gi v-if="selectedAgent">
                 <n-form-item label="Preferred Language">
                   <n-input :value="selectedAgent.preferredLang"
@@ -423,7 +429,8 @@ import {
   RadioStation,
   BrandStatus,
   RadioStationSave,
-  ManagedBy
+  ManagedBy,
+  AiAgentMode
 } from "../../../types/kneoBroadcasterTypes";
 import { useRadioStationStore } from "../../../stores/kneo/radioStationStore";
 import { useAiAgentStore } from "../../../stores/kneo/aiAgentStore";
@@ -501,6 +508,11 @@ export default defineComponent( {
       { value: ManagedBy.ITSELF, label: "Itself" },
       /*{ value: ManagedBy.AI_AGENT, label: "AI Agent" },*/
       { value: ManagedBy.MIX, label: "AI DJ" }
+    ];
+
+    const aiAgentModeOptions = [
+      { value: AiAgentMode.BASIC, label: "Basic" },
+      { value: AiAgentMode.SCRIPT_FOLLOWING, label: "Script Following" }
     ];
 
 
@@ -661,6 +673,7 @@ export default defineComponent( {
           bitRate: localFormData.bitRate,
           submissionPolicy: localFormData.submissionPolicy,
           messagingPolicy: localFormData.messagingPolicy,
+          aiAgentMode: localFormData.aiAgentMode,
           aiOverriding: aiOverrideEnabled.value ? localFormData.aiOverriding : undefined,
           profileOverriding: profileOverrideEnabled.value ? localFormData.profileOverriding : undefined,
           schedule: localFormData.schedule ? JSON.parse( JSON.stringify( localFormData.schedule ) ) : undefined
@@ -926,6 +939,7 @@ export default defineComponent( {
       aclLoading,
       timezones: referencesStore.timezones,
       managedByOptions,
+      aiAgentModeOptions,
       targetOptions,
       referencesStore,
       scheduleTasksArray,

@@ -26,6 +26,11 @@ export enum SubmissionPolicy {
     NO_RESTRICTIONS = "NO_RESTRICTIONS"
 }
 
+export enum AiAgentMode {
+    BASIC = "BASIC",
+    SCRIPT_FOLLOWING = "SCRIPT_FOLLOWING"
+}
+
 export interface Profile {
     id: string;
     author?: string;
@@ -84,6 +89,7 @@ export interface RadioStation {
     aiControlAllowed?: boolean;
     submissionPolicy?: SubmissionPolicy;
     messagingPolicy?: SubmissionPolicy;
+    aiAgentMode?: AiAgentMode;
     schedule?: {
         enabled: boolean;
     };
@@ -103,6 +109,7 @@ export interface RadioStationSave {
     managedBy?: ManagedBy;
     submissionPolicy?: SubmissionPolicy;
     messagingPolicy?: SubmissionPolicy;
+    aiAgentMode?: AiAgentMode;
     schedule?: any;
 }
 
