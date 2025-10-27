@@ -124,7 +124,7 @@ interface Station {
   slugName: string;
   color: string;
   description: string;
-  currentStatus?: 'ON_LINE' | 'OFF_LINE' | 'WARMING_UP';
+  currentStatus?: 'ON_LINE' | 'OFF_LINE' | 'WARMING_UP' | 'WAITING_FOR_CURATOR';
   submissionPolicy?: 'NO_RESTRICTIONS' | 'REVIEW_REQUIRED' | 'NOT_ALLOWED';
   messagingPolicy?: 'NO_RESTRICTIONS' | 'REVIEW_REQUIRED' | 'NOT_ALLOWED';
 }
@@ -139,6 +139,7 @@ const playerBase = computed(() => MIXPLA_PLAYER_URL)
 function statusText(s?: Station['currentStatus']) {
   if (s === 'ON_LINE') return 'Online'
   if (s === 'WARMING_UP') return 'Online'
+  if (s === 'WAITING_FOR_CURATOR') return 'Online'
   if (s === 'OFF_LINE') return 'Offline'
   return 'Unknown'
 }
