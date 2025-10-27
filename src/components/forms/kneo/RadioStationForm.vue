@@ -185,7 +185,7 @@
 
               <n-gi v-if="profileOverrideEnabled">
                 <n-form-item label="Override Name">
-                  <n-input v-model:value="localFormData.profileOverriding.name" 
+                  <n-input v-model:value="localFormData.profileOverriding!.name" 
                     placeholder=""
                     style="width: 50%; max-width: 600px;" />
                 </n-form-item>
@@ -193,7 +193,7 @@
 
               <n-gi v-if="profileOverrideEnabled">
                 <n-form-item label="Override Description">
-                  <n-input v-model:value="localFormData.profileOverriding.description" 
+                  <n-input v-model:value="localFormData.profileOverriding!.description" 
                     type="textarea" 
                     placeholder=""
                     :autosize="{ minRows: 3, maxRows: 5 }"
