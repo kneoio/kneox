@@ -242,8 +242,11 @@ export const useReferencesStore = defineStore('references', () => {
   ];
 
   const promptTypeOptions = [
-    { label: 'Variables', value: 'VARIABLES' },
-    { label: 'Embellish', value: 'EMBELLISH' }
+    { label: 'Basic Intro', value: 'BASIC_INTRO' },
+    { label: 'User Message', value: 'USER_MESSAGE' },
+    { label: 'Event', value: 'EVENT' },
+    { label: 'News', value: 'NEWS' },
+    { label: 'Weather', value: 'WEATHER' }
   ];
 
   

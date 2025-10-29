@@ -111,6 +111,7 @@ export interface RadioStationSave {
     messagingPolicy?: SubmissionPolicy;
     aiAgentMode?: AiAgentMode;
     schedule?: any;
+    scripts?: string[];
 }
 
 export interface SoundFragment {

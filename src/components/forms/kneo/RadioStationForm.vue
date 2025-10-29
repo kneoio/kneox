@@ -142,9 +142,9 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
-                <n-form-item label="Mode">
-                  <n-select v-model:value="localFormData.aiAgentMode" :options="aiAgentModeOptions"
-                    style="width: 25%; max-width: 300px;" />
+                <n-form-item label="Script">
+                  <n-select v-model:value="localFormData.scriptId" :options="scriptOptions"
+                    style="width: 50%; max-width: 600px;" />
                 </n-form-item>
               </n-gi>
               <n-gi v-if="selectedAgent">
@@ -435,6 +435,7 @@ import {
 import { useRadioStationStore } from "../../../stores/kneo/radioStationStore";
 import { useAiAgentStore } from "../../../stores/kneo/aiAgentStore";
 import { useProfileStore } from "../../../stores/kneo/profileStore";
+import { useScriptStore } from "../../../stores/kneo/scriptStore";
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 import { handleFormSaveError, getErrorMessage } from '../../../utils/errorHandling';
 import AclTable from '../../common/AclTable.vue';
@@ -475,6 +476,7 @@ export default defineComponent( {
     const store = useRadioStationStore();
     const aiAgentStore = useAiAgentStore();
     const profileStore = useProfileStore();
+    const scriptStore = useScriptStore();
     const referencesStore = useReferencesStore();
     const route = useRoute();
     const activeTab = ref( "properties" );
@@ -510,10 +512,6 @@ export default defineComponent( {
       { value: ManagedBy.MIX, label: "AI DJ" }
     ];
 
-    const aiAgentModeOptions = [
-      { value: AiAgentMode.BASIC, label: "Basic" },
-      { value: AiAgentMode.SCRIPT_FOLLOWING, label: "Script Following" }
-    ];
 
 
 
@@ -543,6 +541,7 @@ export default defineComponent( {
       mixplaUrl: "",
       aiAgentId: undefined,
       profileId: undefined,
+      scriptId: undefined,
       timeZone: "",
       managedBy: undefined,
       bitRate: 128000,
@@ -610,6 +609,13 @@ export default defineComponent( {
       } ) );
     } );
 
+    const scriptOptions = computed( () => {
+      return scriptStore.getEntries.map( script => ( {
+        label: script.name,
+        value: script.id
+      } ) );
+    } );
+
     const startClockUpdate = () => {
       if ( !clockIntervalId.value ) {
         clockIntervalId.value = window.setInterval( () => {
@@ -673,10 +679,10 @@ export default defineComponent( {
           bitRate: localFormData.bitRate,
           submissionPolicy: localFormData.submissionPolicy,
           messagingPolicy: localFormData.messagingPolicy,
-          aiAgentMode: localFormData.aiAgentMode,
           aiOverriding: aiOverrideEnabled.value ? localFormData.aiOverriding : undefined,
           profileOverriding: profileOverrideEnabled.value ? localFormData.profileOverriding : undefined,
-          schedule: localFormData.schedule ? JSON.parse( JSON.stringify( localFormData.schedule ) ) : undefined
+          schedule: localFormData.schedule ? JSON.parse( JSON.stringify( localFormData.schedule ) ) : undefined,
+          scripts: localFormData.scriptId ? [localFormData.scriptId] : undefined
         };
 
 
@@ -840,6 +846,7 @@ export default defineComponent( {
         loadingBar.start();
         await aiAgentStore.fetchAllUnsecured( 1, 100 );
         await profileStore.fetchAllUnsecured( 1, 100 );
+        await scriptStore.fetchAll( 1, 100 );
         await referencesStore.fetchVoices();
         await store.fetch( id );
         await nextTick();
@@ -872,6 +879,9 @@ export default defineComponent( {
         };
         normalizeNumericFields();
 
+        if ((currentData as any).scriptIds && Array.isArray((currentData as any).scriptIds) && (currentData as any).scriptIds.length > 0) {
+          (localFormData as any).scriptId = (currentData as any).scriptIds[0];
+        }
 
         if ( localFormData.localizedName ) {
           localizedNameArray.value = Object.entries( localFormData.localizedName ).map( ( [language, name] ) => ( {
@@ -930,6 +940,7 @@ export default defineComponent( {
       bitRateOptions: referencesStore.bitRateOptions,
       agentOptions,
       profileOptions,
+      scriptOptions,
       selectedAgent,
       selectedProfile,
       copyToClipboard,
@@ -939,7 +950,6 @@ export default defineComponent( {
       aclLoading,
       timezones: referencesStore.timezones,
       managedByOptions,
-      aiAgentModeOptions,
       targetOptions,
       referencesStore,
       scheduleTasksArray,
