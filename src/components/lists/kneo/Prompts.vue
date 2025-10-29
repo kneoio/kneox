@@ -161,7 +161,13 @@ export default defineComponent({
         style: 'cursor: pointer;',
         onClick: (e: MouseEvent) => {
           const target = e.target as HTMLElement;
-          if (target.closest('.n-checkbox') || target.closest('[data-n-checkbox]')) return;
+          if (
+            target.closest('.n-checkbox') ||
+            target.closest('[data-n-checkbox]') ||
+            target.closest('.n-data-table-expand-trigger')
+          ) {
+            return;
+          }
           const routeTo = { name: 'PromptForm', params: { id: row.id } };
           router.push(routeTo).catch((err) => {
             console.error('Navigation error:', err);
@@ -187,6 +193,7 @@ export default defineComponent({
             return h('div', { style: 'display: flex; align-items: center;' }, tags);
           }
         },
+        { title: 'Title', key: 'title', width: 300 },
         {
           title: 'Prompt',
           key: 'prompt',

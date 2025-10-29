@@ -18,7 +18,7 @@
       <n-button-group>
         <n-button type="primary" @click="handleSave" size="large">Save</n-button>
         <n-button type="default" disabled size="large">Archive</n-button>
-        <n-button type="default" :disabled="!localFormData.master" size="large">Replicate</n-button>
+        <n-button type="default" :disabled="!localFormData.master" @click="handleReplicateClick" size="large">Replicate</n-button>
       </n-button-group>
     </n-gi>
 
@@ -44,22 +44,10 @@
               </n-gi>
               <n-gi>
                 <div style="display: flex; align-items: center; gap: 16px;">
-                  <div style="display:flex; align-items:center; gap:6px;">
-                    <span>Enabled</span>
-                    <n-switch v-model:value="localFormData.enabled" />
-                  </div>
-                  <div style="display:flex; align-items:center; gap:6px;">
-                    <span>Master</span>
-                    <n-switch v-model:value="localFormData.master" />
-                  </div>
-                  <div style="display:flex; align-items:center; gap:6px;">
-                    <span>Locked</span>
-                    <n-switch v-model:value="localFormData.locked" />
-                  </div>
-                  <div style="display:flex; align-items:center; gap:6px;">
-                    <span>Podcast</span>
-                    <n-switch v-model:value="localFormData.podcast" />
-                  </div>
+                  <n-checkbox v-model:checked="localFormData.enabled">Enabled</n-checkbox>
+                  <n-checkbox v-model:checked="localFormData.master">Master</n-checkbox>
+                  <n-checkbox v-model:checked="localFormData.locked">Locked</n-checkbox>
+                  <n-checkbox v-model:checked="localFormData.podcast">Podcast</n-checkbox>
                 </div>
               </n-gi>
               <n-gi>
@@ -68,6 +56,7 @@
                     :model-value="localFormData.prompt"
                     @update:model-value="(val) => (localFormData.prompt = typeof val === 'string' ? val : (((val as any)?.data) ?? ''))"
                     basic
+                    :disabled="localFormData.locked"
                     :style="{
                       width: '800px',
                       height: '300px',
@@ -89,6 +78,28 @@
       </n-tabs>
     </n-gi>
   </n-grid>
+
+  <n-modal v-model:show="showReplicateDialog" preset="dialog" title="Replicate Prompt">
+    <n-space vertical>
+      <n-text>Select languages to replicate this prompt:</n-text>
+      <n-grid :cols="3" x-gap="12" y-gap="8">
+        <n-gi v-for="lang in langOptions" :key="lang.value">
+          <n-checkbox 
+            :checked="selectedLanguages.includes(lang.value)" 
+            @update:checked="(checked) => toggleLanguage(lang.value, checked)"
+          >
+            {{ lang.label }}
+          </n-checkbox>
+        </n-gi>
+      </n-grid>
+    </n-space>
+    <template #action>
+      <n-space>
+        <n-button @click="showReplicateDialog = false">Cancel</n-button>
+        <n-button type="primary" @click="handleReplicate" :disabled="selectedLanguages.length === 0">Replicate</n-button>
+      </n-space>
+    </template>
+  </n-modal>
 </template>
 
 <script lang="ts">
@@ -108,6 +119,10 @@ import {
   NSelect,
   NSwitch,
   NTag,
+  NModal,
+  NSpace,
+  NText,
+  NCheckbox,
   useLoadingBar,
   useMessage
 } from 'naive-ui';
@@ -136,6 +151,10 @@ export default defineComponent({
     NSelect,
     NSwitch,
     NTag,
+    NModal,
+    NSpace,
+    NText,
+    NCheckbox,
     CodeMirror,
     AclTable
   },
@@ -150,6 +169,8 @@ export default defineComponent({
     const activeTab = ref('properties');
     const aclData = ref<any[]>([]);
     const aclLoading = ref(false);
+    const showReplicateDialog = ref(false);
+    const selectedLanguages = ref<string[]>([]);
 
     const editorExtensions = computed(() => [handlebarsLanguage, EditorView.lineWrapping]);
 
@@ -198,6 +219,34 @@ export default defineComponent({
 
     const goBack = () => {
       router.push('/outline/prompts');
+    };
+
+    const handleReplicateClick = () => {
+      selectedLanguages.value = (referencesStore as any).languageOptions.map((lang: any) => lang.value);
+      showReplicateDialog.value = true;
+    };
+
+    const handleReplicate = async () => {
+      try {
+        loadingBar.start();
+        message.info(`Replicating prompt to ${selectedLanguages.value.length} language(s)...`);
+        showReplicateDialog.value = false;
+      } catch (error: any) {
+        console.error('Failed to replicate prompt:', error);
+        message.error('Failed to replicate prompt.');
+      } finally {
+        loadingBar.finish();
+      }
+    };
+
+    const toggleLanguage = (langValue: string, checked: boolean) => {
+      if (checked) {
+        if (!selectedLanguages.value.includes(langValue)) {
+          selectedLanguages.value.push(langValue);
+        }
+      } else {
+        selectedLanguages.value = selectedLanguages.value.filter(l => l !== langValue);
+      }
     };
 
     onMounted(async () => {
@@ -265,7 +314,12 @@ export default defineComponent({
       langOptions: (referencesStore as any).languageOptions,
       promptTypeOptions: (referencesStore as any).promptTypeOptions,
       aclData,
-      aclLoading
+      aclLoading,
+      showReplicateDialog,
+      selectedLanguages,
+      handleReplicateClick,
+      handleReplicate,
+      toggleLanguage
     };
   }
 });
