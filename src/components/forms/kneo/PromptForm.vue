@@ -108,7 +108,7 @@ import {
   useMessage
 } from 'naive-ui';
 import { EditorView } from '@codemirror/view';
-import { handlebars } from '@xiechao/codemirror-lang-handlebars';
+import { handlebarsLanguage } from '@xiechao/codemirror-lang-handlebars';
 import CodeMirror from 'vue-codemirror6';
 import { BroadcastPrompt, BroadcastPromptSave } from '../../../types/kneoBroadcasterTypes';
 import { usePromptStore } from '../../../stores/kneo/promptStore';
@@ -147,7 +147,7 @@ export default defineComponent({
     const aclData = ref<any[]>([]);
     const aclLoading = ref(false);
 
-    const editorExtensions = computed(() => [handlebars(), EditorView.lineWrapping]);
+    const editorExtensions = computed(() => [handlebarsLanguage, EditorView.lineWrapping]);
 
     const formTitle = computed(() => (localFormData.id ? 'Edit Prompt' : 'Create New Prompt'));
 
