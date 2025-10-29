@@ -387,6 +387,7 @@ export interface BroadcastPrompt {
     master?: boolean;
     locked?: boolean;
     title?: string;
+    podcast?: boolean;
 }
 
 export interface BroadcastPromptSave {
@@ -397,4 +398,5 @@ export interface BroadcastPromptSave {
     master?: boolean;
     locked?: boolean;
     title?: string;
+    podcast?: boolean;
 }

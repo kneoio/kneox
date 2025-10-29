@@ -56,6 +56,10 @@
                     <span>Locked</span>
                     <n-switch v-model:value="localFormData.locked" />
                   </div>
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <span>Podcast</span>
+                    <n-switch v-model:value="localFormData.podcast" />
+                  </div>
                 </div>
               </n-gi>
               <n-gi>
@@ -163,7 +167,8 @@ export default defineComponent({
       promptType: '',
       languageCode: '',
       master: false,
-      locked: false
+      locked: false,
+      podcast: false
     });
 
     const handleSave = async () => {
@@ -177,6 +182,7 @@ export default defineComponent({
           languageCode: localFormData.languageCode,
           master: localFormData.master,
           locked: localFormData.locked,
+          podcast: localFormData.podcast,
         };
         const id = localFormData.id ? localFormData.id : null;
         await store.save(saveData, id);

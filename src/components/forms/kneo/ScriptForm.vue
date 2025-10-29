@@ -61,6 +61,7 @@
             :pagination="false"
             :bordered="false"
             :loading="scenesLoading"
+            :row-props="getSceneRowProps"
             size="small"
             :style="{ width: '800px' }"
             default-expand-all
@@ -259,6 +260,15 @@ export default defineComponent({
       }
     });
 
+    const getSceneRowProps = (row: ScriptScene) => {
+      return {
+        style: 'cursor: pointer;',
+        onClick: () => {
+          router.push({ name: 'SceneForm', params: { id: row.id } });
+        }
+      };
+    };
+
     return {
       localFormData,
       formTitle,
@@ -274,6 +284,7 @@ export default defineComponent({
       scenesLoading,
       sceneColumns,
       sceneRowKey,
+      getSceneRowProps,
     };
   },
 });
