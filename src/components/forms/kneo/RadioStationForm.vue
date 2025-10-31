@@ -879,8 +879,8 @@ export default defineComponent( {
         };
         normalizeNumericFields();
 
-        if ((currentData as any).scriptIds && Array.isArray((currentData as any).scriptIds) && (currentData as any).scriptIds.length > 0) {
-          (localFormData as any).scriptId = (currentData as any).scriptIds[0];
+        if ((currentData as any).scripts && Array.isArray((currentData as any).scripts) && (currentData as any).scripts.length > 0) {
+          (localFormData as any).scriptId = (currentData as any).scripts[0];
         }
 
         if ( localFormData.localizedName ) {
