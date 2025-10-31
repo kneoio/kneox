@@ -567,7 +567,7 @@ export default defineComponent( {
         'DISCONNECTED': 'Disconnected'
       };
 
-      return statusMap[status.toUpperCase()] ;
+      return statusMap[status.toUpperCase()] || status;
     };
 
     const getHlsRequestCount = () => {
@@ -631,6 +631,7 @@ export default defineComponent( {
 
         return {
           ...event,
+          status: event.newStatus,
           timeDiff
         };
       } );

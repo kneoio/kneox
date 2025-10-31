@@ -1,5 +1,5 @@
 <template>
-  <n-grid cols="6" x-gap="12" y-gap="12" class="m-5">
+  <n-grid cols="6" x-gap="12" y-gap="12" class="m-5" v-bind="$attrs">
     <n-gi span="6">
       <n-page-header :subtitle="formTitle" @back="goBack">
         <template #title>
@@ -137,6 +137,7 @@ import AclTable from '../../common/AclTable.vue';
 
 export default defineComponent({
   name: 'PromptForm',
+  inheritAttrs: false,
   components: {
     NPageHeader,
     NButtonGroup,
