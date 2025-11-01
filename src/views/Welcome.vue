@@ -139,7 +139,6 @@ const playerBase = computed(() => MIXPLA_PLAYER_URL)
 function statusText(s?: Station['currentStatus']) {
   if (s === 'ON_LINE') return 'Online'
   if (s === 'WARMING_UP') return 'Online'
-  if (s === 'WAITING_FOR_CURATOR') return 'Online'
   if (s === 'OFF_LINE') return 'Offline'
   return 'Unknown'
 }

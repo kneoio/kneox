@@ -11,7 +11,6 @@ type RadioStationStatus =
     | 'ON_LINE'
     | 'QUEUE_SATURATED'
     | 'WARMING_UP'
-    | 'WAITING_FOR_CURATOR'
     | 'IDLE'
     | 'SYSTEM_ERROR'
     | 'OFF_LINE';
@@ -50,8 +49,6 @@ export const useStationColumns = (
                 return { text: 'Queue Saturated', type: 'warning' };
             case 'WARMING_UP':
                 return { text: 'Warming Up', type: 'warning' };
-            case 'WAITING_FOR_CURATOR':
-                return { text: 'Waiting for Curator', type: 'warning' };
             case 'IDLE':
                 return { text: 'Idle', type: 'error' };
             case 'SYSTEM_ERROR':

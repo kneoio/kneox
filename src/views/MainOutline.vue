@@ -189,8 +189,6 @@ export default defineComponent({
           return '#00aa00';
         case BrandStatus.WARMING_UP:
           return '#ffa500';
-        case BrandStatus.WAITING_FOR_CURATOR:
-          return '#ff69b4';
         case BrandStatus.IDLE:
           return '#bd621c';
         case BrandStatus.SYSTEM_ERROR:

@@ -126,13 +126,6 @@
                             </n-icon></span>
                         </n-space>
                       </n-space>
-                      <n-space justify="space-between">
-                        <n-text strong>Est. Listeners:</n-text>
-                        <n-text v-if=" getHlsListenersCount() === -1 " depth="3"
-                          title="Cannot determine listeners (check config/duration)">N/A
-                        </n-text>
-                        <n-text v-else>{{ getHlsListenersCount() }}</n-text>
-                      </n-space>
                     </n-space>
                   </div>
                 </n-space>
@@ -245,7 +238,7 @@ export default defineComponent( {
     } );
 
     const isOnline = computed( () => {
-      return stationDetails.value?.status === 'ON_LINE' || stationDetails.value?.status === 'WARMING_UP' || stationDetails.value?.status === 'QUEUE_SATURATED' || stationDetails.value?.status === 'WAITING_FOR_CURATOR';
+      return stationDetails.value?.status === 'ON_LINE' || stationDetails.value?.status === 'WARMING_UP' || stationDetails.value?.status === 'QUEUE_SATURATED';
     } );
 
     const currentListeners = computed( () => {
@@ -345,8 +338,6 @@ export default defineComponent( {
           return '#18a058';
         case 'WARMING_UP':
           return '#f0a020';
-        case 'WAITING_FOR_CURATOR':
-          return '#f0a020';
         case 'IDLE':
           return '#d03050';
         case 'SYSTEM_ERROR':
@@ -366,8 +357,6 @@ export default defineComponent( {
           return { text: 'Queue Saturated', type: 'success' as const };
         case 'WARMING_UP':
           return { text: 'Warming Up', type: 'warning' as const };
-        case 'WAITING_FOR_CURATOR':
-          return { text: 'Waiting for listener', type: 'warning' as const };
         case 'IDLE':
           return { text: 'Idle', type: 'warning' as const };
         case 'SYSTEM_ERROR':
@@ -557,7 +546,6 @@ export default defineComponent( {
         'IDLE': 'Idle',
         'WARMING_UP': 'Warming Up',
         'QUEUE_SATURATED': 'Queue Saturated',
-        'WAITING_FOR_CURATOR': 'Waiting for listener',
         'SYSTEM_ERROR': 'System Error',
         'STARTING': 'Starting',
         'STOPPING': 'Stopping',
@@ -604,7 +592,6 @@ export default defineComponent( {
         case 'QUEUE_SATURATED':
           return 'success';
         case 'WARMING_UP':
-        case 'WAITING_FOR_CURATOR':
         case 'IDLE':
           return 'warning';
         case 'SYSTEM_ERROR':
