@@ -50,26 +50,13 @@
                       @update:model-value="(val) => (localFormData.content = typeof val === 'string' ? val : (((val as any)?.data) ?? ''))"
                       basic
                       :style="{
-                      width: '800px',
-                      height: '300px',
-                      border: '1px solid #d9d9d9',
-                      borderRadius: '3px',
-                      overflow: 'auto'
-                    }"
+                        width: '1200px',
+                        height: '600px',
+                        border: '1px solid #d9d9d9',
+                        borderRadius: '3px',
+                        overflow: 'auto'
+                      }"
                       :extensions="editorExtensions"
-                  />
-                </n-form-item>
-              </n-gi>
-              <n-gi>
-                <n-form-item label="Preview">
-                  <n-input
-                      v-model:value="previewContent"
-                      type="textarea"
-                      readonly
-                      :style="{
-                      width: '800px',
-                      height: '300px'
-                    }"
                   />
                 </n-form-item>
               </n-gi>
@@ -104,7 +91,8 @@ import {
   useMessage
 } from 'naive-ui';
 import {EditorView} from '@codemirror/view';
-import {handlebarsLanguage} from '@xiechao/codemirror-lang-handlebars';
+import {StreamLanguage} from '@codemirror/language';
+import {kotlin} from '@codemirror/legacy-modes/mode/clike';
 import CodeMirror from 'vue-codemirror6';
 import {Draft, DraftSave} from '../../../types/kneoBroadcasterTypes';
 import {useDraftStore} from '../../../stores/kneo/draftStore';
@@ -137,22 +125,17 @@ export default defineComponent({
     const store = useDraftStore();
     const referencesStore = useReferencesStore();
     const route = useRoute();
-
     const activeTab = ref('properties');
     const aclData = ref<any[]>([]);
     const aclLoading = ref(false);
-
-    const editorExtensions = computed(() => [handlebarsLanguage, EditorView.lineWrapping]);
-
+    const editorExtensions = computed(() => [StreamLanguage.define(kotlin), EditorView.lineWrapping]);
     const formTitle = computed(() => (localFormData.id ? 'Edit Draft' : 'Create New Draft'));
-
     const draftTypeOptions = [
-      { label: 'General', value: 'general' },
-      { label: 'Script', value: 'script' },
-      { label: 'Prompt', value: 'prompt' },
-      { label: 'Note', value: 'note' }
+      {label: 'General', value: 'general'},
+      {label: 'Script', value: 'script'},
+      {label: 'Prompt', value: 'prompt'},
+      {label: 'Note', value: 'note'}
     ];
-
     const localFormData = reactive<Draft>({
       id: '',
       author: '',
@@ -164,25 +147,6 @@ export default defineComponent({
       draftType: '',
       languageCode: '',
       archived: 0
-    });
-
-    const randomValues = reactive({
-      name: 'John Doe',
-      age: 25,
-      city: 'New York',
-      email: 'john@example.com',
-      phone: '+1234567890'
-    });
-
-    const previewContent = computed(() => {
-      if (!localFormData.content) return '';
-      let result = localFormData.content;
-      result = result.replace(/\{\{name\}\}/g, randomValues.name);
-      result = result.replace(/\{\{age\}\}/g, String(randomValues.age));
-      result = result.replace(/\{\{city\}\}/g, randomValues.city);
-      result = result.replace(/\{\{email\}\}/g, randomValues.email);
-      result = result.replace(/\{\{phone\}\}/g, randomValues.phone);
-      return result;
     });
 
     const handleSave = async () => {
@@ -214,11 +178,14 @@ export default defineComponent({
     onMounted(async () => {
       try {
         loadingBar.start();
-        try { await (referencesStore as any).fetchLanguages?.(); } catch {}
+        try {
+          await (referencesStore as any).fetchLanguages?.();
+        } catch {
+        }
         const id = route.params.id as string;
         if (id) {
           await store.fetch(id);
-          const data = { ...store.getCurrent } as Draft;
+          const data = {...store.getCurrent} as Draft;
           Object.assign(localFormData, data);
         }
       } catch (error: any) {
@@ -276,8 +243,7 @@ export default defineComponent({
       langOptions: (referencesStore as any).languageOptions,
       draftTypeOptions,
       aclData,
-      aclLoading,
-      previewContent
+      aclLoading
     };
   }
 });
