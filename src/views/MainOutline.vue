@@ -114,7 +114,8 @@ import {
   Ripple,
   Tent,
   BuildingSkyscraper,
-  Fall
+  Fall,
+  ToiletPaper
 } from '@vicons/tabler';
 import { LayersLinked } from '@vicons/tabler';
 import {useRadioStationStore} from "../stores/kneo/radioStationStore";
@@ -350,6 +351,11 @@ export default defineComponent({
           icon: () => h(Prompt)
         },
         {
+          label: 'Drafts',
+          key: 'drafts',
+          icon: () => h(ToiletPaper)
+        },
+        {
           type: 'divider',
           key: 'd1'
         },
@@ -387,6 +393,7 @@ export default defineComponent({
       if (route.name === 'AiAgents') return 'ai_agents';
       if (route.name === 'Scripts') return 'scripts';
       if (route.name === 'Prompts') return 'prompts';
+      if (route.name === 'Drafts') return 'drafts';
       if (route.name === 'EnvironmentProfiles') return 'environment_profiles';
       if (route.name === 'Listeners') return 'listeners';
       if (route.name === 'Profile') return 'profile';
@@ -444,6 +451,8 @@ export default defineComponent({
         await router.push({name: 'Scripts'});
       } else if (key === 'prompts') {
         await router.push({name: 'Prompts'});
+      } else if (key === 'drafts') {
+        await router.push({name: 'Drafts'});
       } else if (key === 'environment_profiles') {
         await router.push({name: 'EnvironmentProfiles'});
       }

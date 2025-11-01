@@ -400,3 +400,24 @@ export interface BroadcastPromptSave {
     title?: string;
     podcast?: boolean;
 }
+
+export interface Draft {
+    id: string;
+    author: string;
+    regDate: string;
+    lastModifier: string;
+    lastModifiedDate: string;
+    draftType?: string;
+    title?: string;
+    content?: string;
+    languageCode?: string;
+    archived?: number;
+}
+
+export interface DraftSave {
+    draftType?: string;
+    title?: string;
+    content?: string;
+    languageCode?: string;
+    archived?: number;
+}
