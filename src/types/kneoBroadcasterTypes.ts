@@ -420,4 +420,5 @@ export interface DraftSave {
     content?: string;
     languageCode?: string;
     archived?: number;
+    localizedName?: Record<string, string>;
 }

@@ -158,6 +158,9 @@ export default defineComponent({
           draftType: localFormData.draftType,
           languageCode: localFormData.languageCode,
           archived: localFormData.archived,
+          localizedName: {
+            en: localFormData.title || 'Default Title'
+          }
         };
         const id = localFormData.id ? localFormData.id : null;
         await store.save(saveData, id);
