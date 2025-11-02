@@ -63,6 +63,19 @@ export default defineComponent({
     const intervalId = ref<number | null>(null);
     const checkedRowKeys = ref<(string | number)[]>([]);
 
+    const typeToTagType: Record<string, 'primary' | 'info' | 'success' | 'warning' | 'error' | undefined> = {
+      INTRO_DRAFT: 'primary',
+      MESSAGE_DRAFT: 'info',
+      OUTRO_DRAFT: 'success',
+      AD_DRAFT: 'warning',
+      NEWS_DRAFT: 'error',
+      EVENT_DRAFT: 'warning',
+      // fallback synonyms
+      NEWS: 'error',
+      EVENT: 'warning'
+    };
+    const getTypeType = (t?: string) => (t ? (typeToTagType as any)[t] : undefined);
+
     async function preFetch() {
       try {
         loading.value = true;
@@ -136,19 +149,8 @@ export default defineComponent({
         message.warning('Please select Drafts to delete.');
         return;
       }
-      try {
-        loading.value = true;
-        const deletePromises = checkedRowKeys.value.map(id => store.deleteDraft(id as string));
-        await Promise.all(deletePromises);
-        message.success(`${checkedRowKeys.value.length} Draft(s) deleted successfully.`);
-        checkedRowKeys.value = [];
-        await store.fetchAll(store.getPagination.page, store.getPagination.pageSize);
-      } catch (error) {
-        console.error('Failed to delete Drafts:', error);
-        message.error('Failed to delete Drafts.');
-      } finally {
-        loading.value = false;
-      }
+      message.error("Drafts can't be deleted.");
+      return;
     };
 
     const getRowProps = (row: Draft) => {
@@ -174,7 +176,7 @@ export default defineComponent({
     const columns = computed<DataTableColumns<Draft>>(() => {
       const baseColumns: DataTableColumns<Draft> = [
         { type: 'selection', fixed: 'left', width: 50 },
-        { title: 'Type', key: 'draftType', width: 150, render: (r) => h(NTag as any, { size: 'small' }, { default: () => r.draftType || '' }) },
+        { title: 'Type', key: 'draftType', width: 150, render: (r) => h(NTag as any, { size: 'small', type: getTypeType(r.draftType) }, { default: () => r.draftType || '' }) },
         { title: 'Lang', key: 'languageCode', width: 100 },
         { title: 'Title', key: 'title', width: 300 },
         {
@@ -219,7 +221,7 @@ export default defineComponent({
               return h('div', {}, [
                 h('div', { style: 'font-weight: bold; display: flex; align-items: center;' }, [
                   `${row.title || ''}`,
-                  row.draftType ? h(NTag as any, { size: 'small', style: 'margin-left: 6px;' }, { default: () => row.draftType }) : null
+                  row.draftType ? h(NTag as any, { size: 'small', style: 'margin-left: 6px;', type: getTypeType(row.draftType) }, { default: () => row.draftType }) : null
                 ]),
                 h('div', { style: 'font-size: 0.8rem; margin: 4px 0;' }, text.length > maxLength ? text.substring(0, maxLength) + '...' : text),
                 h('div', { style: 'font-size: 0.75rem; color: #666;' }, row.languageCode || '')
