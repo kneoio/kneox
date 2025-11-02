@@ -205,7 +205,9 @@ export default defineComponent({
           ) {
             return;
           }
-          const routeTo = { name: 'ScriptForm', params: { id: row.id } };
+          const routeTo = row.children 
+            ? { name: 'ScriptForm', params: { id: row.id } }
+            : { name: 'SceneForm', params: { id: row.id } };
           router.push(routeTo).catch((err) => {
             console.error('Navigation error:', err);
           });

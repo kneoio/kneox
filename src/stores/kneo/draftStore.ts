@@ -7,6 +7,11 @@ import { Draft, DraftSave } from "../../types/kneoBroadcasterTypes";
 export const useDraftStore = defineStore('draftStore', () => {
   const apiViewResponse = ref<ApiViewPageResponse<Draft> | null>(null);
   const apiFormResponse = ref<ApiFormResponse<Draft> | null>(null);
+  const draftTypeOptions = ref<Array<{ label: string; value: string }>>([
+    { label: 'INTRO_DRAFT', value: 'INTRO_DRAFT' },
+    { label: 'MESSAGE_DRAFT', value: 'MESSAGE_DRAFT' },
+    { label: 'NEWS_INTRO_DRAFT', value: 'NEWS_INTRO_DRAFT' }
+  ]);
 
   const getEntries = computed(() => apiViewResponse.value?.viewData.entries || []);
 
@@ -96,5 +101,6 @@ export const useDraftStore = defineStore('draftStore', () => {
     getEntries,
     getPagination,
     getCurrent,
+    draftTypeOptions,
   };
 });

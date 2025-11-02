@@ -43,6 +43,15 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
+                <n-form-item label="Draft">
+                  <n-select v-model:value="selectedDraftId" :options="draftOptions" style="width: 25%; max-width: 300px;" />
+                  <div style="margin-top: 6px; display: flex; align-items: center; gap: 6px;">
+                    <n-icon size="14"><InfoCircle /></n-icon>
+                    <n-text depth="3" style="font-size: 12px;">Prompt Type should match Draft Type</n-text>
+                  </div>
+                </n-form-item>
+              </n-gi>
+              <n-gi>
                 <div style="display: flex; align-items: center; gap: 16px;">
                   <n-checkbox v-model:checked="localFormData.enabled">Enabled</n-checkbox>
                   <n-checkbox v-model:checked="localFormData.master">Master</n-checkbox>
@@ -123,6 +132,7 @@ import {
   NSpace,
   NText,
   NCheckbox,
+  NIcon,
   useLoadingBar,
   useMessage
 } from 'naive-ui';
@@ -133,7 +143,9 @@ import { BroadcastPrompt, BroadcastPromptSave } from '../../../types/kneoBroadca
 import { usePromptStore } from '../../../stores/kneo/promptStore';
 import { getErrorMessage, handleFormSaveError } from '../../../utils/errorHandling';
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
+import { useDraftStore } from '../../../stores/kneo/draftStore';
 import AclTable from '../../common/AclTable.vue';
+import { InfoCircle } from '@vicons/tabler';
 
 export default defineComponent({
   name: 'PromptForm',
@@ -156,6 +168,8 @@ export default defineComponent({
     NSpace,
     NText,
     NCheckbox,
+    NIcon,
+    InfoCircle,
     CodeMirror,
     AclTable
   },
@@ -165,6 +179,7 @@ export default defineComponent({
     const router = useRouter();
     const store = usePromptStore();
     const referencesStore = useReferencesStore();
+    const draftStore = useDraftStore();
     const route = useRoute();
 
     const activeTab = ref('properties');
@@ -176,6 +191,10 @@ export default defineComponent({
     const editorExtensions = computed(() => [handlebarsLanguage, EditorView.lineWrapping]);
 
     const formTitle = computed(() => (localFormData.id ? 'Edit Prompt' : 'Create New Prompt'));
+    const selectedDraftId = ref<string | null>(null);
+    const draftOptions = computed(() =>
+      (draftStore.getEntries || []).map((d: any) => ({ label: d.title || d.id, value: d.id }))
+    );
 
     const localFormData = reactive<BroadcastPrompt>({
       id: '',
@@ -206,6 +225,7 @@ export default defineComponent({
           locked: localFormData.locked,
           podcast: localFormData.podcast,
         };
+        (saveData as any).draftId = selectedDraftId.value || null;
         const id = localFormData.id ? localFormData.id : null;
         await store.save(saveData, id);
         message.success('Prompt saved successfully');
@@ -254,11 +274,13 @@ export default defineComponent({
       try {
         loadingBar.start();
         try { await (referencesStore as any).fetchLanguages?.(); } catch {}
+        try { await draftStore.fetchAll(1, 100); } catch {}
         const id = route.params.id as string;
         if (id) {
           await store.fetch(id);
           const data = { ...store.getCurrent } as BroadcastPrompt;
           Object.assign(localFormData, data);
+          selectedDraftId.value = (data as any).draftId || null;
         }
       } catch (error: any) {
         console.error('Failed to fetch data:', error);
@@ -314,6 +336,8 @@ export default defineComponent({
       editorExtensions,
       langOptions: (referencesStore as any).languageOptions,
       promptTypeOptions: (referencesStore as any).promptTypeOptions,
+      selectedDraftId,
+      draftOptions,
       aclData,
       aclLoading,
       showReplicateDialog,

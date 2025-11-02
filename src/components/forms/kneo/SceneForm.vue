@@ -54,11 +54,20 @@
           </n-gi>
           <n-gi>
             <n-form-item label="Prompts">
-              <n-transfer
+              <n-dynamic-input
                 v-model:value="selectedPromptIds"
-                :options="promptOptions"
+                placeholder="Select prompt"
                 style="width: 50%; max-width: 600px;"
-              />
+              >
+                <template #default="{ index }">
+                  <n-select
+                    v-model:value="selectedPromptIds[index]"
+                    :options="promptOptions"
+                    placeholder="Select prompt"
+                    style="width: 100%;"
+                  />
+                </template>
+              </n-dynamic-input>
             </n-form-item>
           </n-gi>
         </n-grid>
@@ -81,7 +90,7 @@ import {
   NSelect,
   NPageHeader,
   NTimePicker,
-  NTransfer,
+  NDynamicInput,
   NCheckbox,
   NCheckboxGroup,
   useLoadingBar,
@@ -106,7 +115,7 @@ export default defineComponent({
     NGrid,
     NGi,
     NTimePicker,
-    NTransfer,
+    NDynamicInput,
     NCheckbox,
     NCheckboxGroup
   },
@@ -191,7 +200,7 @@ export default defineComponent({
         const saveData: ScriptSceneSave = {
           type: localFormData.type || '',
           title: localFormData.title || '',
-          prompts: selectedPromptIds.value,
+          prompts: selectedPromptIds.value.filter(id => id),
           startTime: startTimeMs.value != null ? formatTimeFromMs(startTimeMs.value) : undefined,
           weekdays: selectedWeekdays.value,
         };
@@ -207,7 +216,7 @@ export default defineComponent({
           await store.upsert(id, saveData);
         }
         message.success('Scene saved successfully');
-        await router.push('/outline/scenes');
+        await router.push({ name: 'Scripts' });
       } catch (error: any) {
         handleFormSaveError(error, message);
       } finally {
@@ -216,7 +225,7 @@ export default defineComponent({
     };
 
     const goBack = () => {
-      router.push('/outline/scenes');
+      router.push({ name: 'Scripts' });
     };
 
     onMounted(async () => {
