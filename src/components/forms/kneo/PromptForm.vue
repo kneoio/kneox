@@ -17,7 +17,7 @@
     <n-gi class="mt-2" span="6">
       <n-button-group>
         <n-button type="primary" @click="handleSave" size="large">Save</n-button>
-        <n-button type="default" disabled size="large">Archive</n-button>
+        <n-button type="default" @click="openTestDialog" size="large">Test</n-button>
         <n-button type="default" :disabled="!localFormData.master" @click="handleReplicateClick" size="large">Replicate</n-button>
       </n-button-group>
     </n-gi>
@@ -52,12 +52,14 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
-                <div style="display: flex; align-items: center; gap: 16px;">
-                  <n-checkbox v-model:checked="localFormData.enabled">Enabled</n-checkbox>
-                  <n-checkbox v-model:checked="localFormData.master">Master</n-checkbox>
-                  <n-checkbox v-model:checked="localFormData.locked">Locked</n-checkbox>
-                  <n-checkbox v-model:checked="localFormData.podcast">Podcast</n-checkbox>
-                </div>
+                <n-form-item label="Options">
+                  <div style="display: flex; align-items: center; gap: 16px;">
+                    <n-checkbox v-model:checked="localFormData.enabled">Enabled</n-checkbox>
+                    <n-checkbox v-model:checked="localFormData.master">Master</n-checkbox>
+                    <n-checkbox v-model:checked="localFormData.locked">Locked</n-checkbox>
+                    <n-checkbox v-model:checked="localFormData.podcast">Podcast</n-checkbox>
+                  </div>
+                </n-form-item>
               </n-gi>
               <n-gi>
                 <n-form-item label="Prompt">
@@ -67,8 +69,8 @@
                     basic
                     :disabled="localFormData.locked"
                     :style="{
-                      width: '800px',
-                      height: '300px',
+                      width: '1200px',
+                      height: '600px',
                       border: '1px solid #d9d9d9',
                       borderRadius: '3px',
                       overflow: 'auto'
@@ -87,6 +89,49 @@
       </n-tabs>
     </n-gi>
   </n-grid>
+
+  <n-modal
+    v-model:show="showTestDialog"
+    preset="dialog"
+    :closable="false"
+    :mask-closable="false"
+    :close-on-esc="false"
+  >
+    <template #header>
+      <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+        <span>Test Prompt</span>
+        <button type="button" @click="showTestDialog = false" aria-label="Close" style="background:none; border:none; font-size:18px; line-height:1; cursor:pointer;">×</button>
+      </div>
+    </template>
+    <n-space vertical size="small">
+      <n-form label-placement="left" label-width="auto">
+        <n-grid :cols="1" x-gap="12" y-gap="8">
+          <n-gi>
+            <n-form-item label="Song">
+              <n-select v-model:value="testSongId" :options="songOptions" filterable style="width: 100%; max-width: 100%;" />
+            </n-form-item>
+          </n-gi>
+          <n-gi>
+            <n-form-item label="Agent">
+              <n-select v-model:value="testAgentId" :options="agentOptions" filterable style="width: 100%; max-width: 100%;" />
+            </n-form-item>
+          </n-gi>
+          <n-gi>
+            <n-form-item label="Station">
+              <n-select v-model:value="testStationId" :options="stationOptions" filterable style="width: 100%; max-width: 100%;" />
+            </n-form-item>
+          </n-gi>
+        </n-grid>
+      </n-form>
+      <n-space>
+        <n-button type="primary" :loading="testLoading" @click="runPromptTest">Run</n-button>
+      </n-space>
+      <n-text depth="3">Draft Result</n-text>
+      <n-input type="textarea" :value="testDraftResult" :autosize="{ minRows: 6, maxRows: 12 }" style="width: 100%;" readonly />
+      <n-text depth="3">Prompt Result</n-text>
+      <n-input type="textarea" :value="testPromptResult" :autosize="{ minRows: 6, maxRows: 12 }" style="width: 100%;" readonly />
+    </n-space>
+  </n-modal>
 
   <n-modal v-model:show="showReplicateDialog" preset="dialog" title="Replicate Prompt">
     <n-space vertical>
@@ -144,6 +189,10 @@ import { usePromptStore } from '../../../stores/kneo/promptStore';
 import { getErrorMessage, handleFormSaveError } from '../../../utils/errorHandling';
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 import { useDraftStore } from '../../../stores/kneo/draftStore';
+import { useSoundFragmentStore } from '../../../stores/kneo/soundFragmentStore';
+import { useAiAgentStore } from '../../../stores/kneo/aiAgentStore';
+import { useRadioStationStore } from '../../../stores/kneo/radioStationStore';
+import apiClient from '../../../api/apiClient';
 import AclTable from '../../common/AclTable.vue';
 import { InfoCircle } from '@vicons/tabler';
 
@@ -180,6 +229,9 @@ export default defineComponent({
     const store = usePromptStore();
     const referencesStore = useReferencesStore();
     const draftStore = useDraftStore();
+    const soundStore = useSoundFragmentStore();
+    const aiAgentStore = useAiAgentStore();
+    const radioStore = useRadioStationStore();
     const route = useRoute();
 
     const activeTab = ref('properties');
@@ -187,6 +239,13 @@ export default defineComponent({
     const aclLoading = ref(false);
     const showReplicateDialog = ref(false);
     const selectedLanguages = ref<string[]>([]);
+    const showTestDialog = ref(false);
+    const testSongId = ref<string | null>(null);
+    const testAgentId = ref<string | null>(null);
+    const testStationId = ref<string | null>(null);
+    const testDraftResult = ref('');
+    const testPromptResult = ref('');
+    const testLoading = ref(false);
 
     const editorExtensions = computed(() => [handlebarsLanguage, EditorView.lineWrapping]);
 
@@ -195,6 +254,18 @@ export default defineComponent({
     const draftOptions = computed(() =>
       (draftStore.getEntries || []).map((d: any) => ({ label: d.title || d.id, value: d.id }))
     );
+    const songOptions = computed(() => {
+      const list = (soundStore as any).getEntries || [];
+      return list.map((s: any) => ({ label: s.title || s.id, value: s.id }));
+    });
+    const agentOptions = computed(() => {
+      const list = (aiAgentStore as any).getEntries || [];
+      return list.map((a: any) => ({ label: a.name || a.id, value: a.id }));
+    });
+    const stationOptions = computed(() => {
+      const list = (radioStore as any).getEntries || [];
+      return list.map((st: any) => ({ label: st.localizedName?.en || st.name || st.slugName || st.id, value: st.id }));
+    });
 
     const localFormData = reactive<BroadcastPrompt>({
       id: '',
@@ -215,8 +286,13 @@ export default defineComponent({
     const handleSave = async () => {
       try {
         loadingBar.start();
+        const lang = localFormData.languageCode || '';
+        const hasLangInTitle = lang && (localFormData.title || '').includes(lang);
+        const titleToSave = hasLangInTitle || !lang
+          ? (localFormData.title || '')
+          : `${(localFormData.title || '').trim()} (${lang})`;
         const saveData: BroadcastPromptSave = {
-          title: localFormData.title,
+          title: titleToSave,
           enabled: localFormData.enabled,
           prompt: localFormData.prompt,
           promptType: localFormData.promptType,
@@ -267,6 +343,52 @@ export default defineComponent({
         }
       } else {
         selectedLanguages.value = selectedLanguages.value.filter(l => l !== langValue);
+      }
+    };
+
+    const openTestDialog = async () => {
+      try {
+        loadingBar.start();
+        try { await soundStore.fetchAll(1, 100); } catch {}
+        try { await aiAgentStore.fetchAllUnsecured?.(1, 100); } catch {}
+        try { await radioStore.fetchAll(1, 100); } catch {}
+      } finally {
+        loadingBar.finish();
+      }
+      testDraftResult.value = '';
+      testPromptResult.value = '';
+      showTestDialog.value = true;
+    };
+
+    const runPromptTest = async () => {
+      try {
+        testLoading.value = true;
+        const payload = {
+          promptType: localFormData.promptType,
+          languageCode: localFormData.languageCode,
+          songId: testSongId.value,
+          agentId: testAgentId.value,
+          stationId: testStationId.value,
+          code: localFormData.prompt
+        };
+        const response = await apiClient.post('/prompts/test', payload);
+        const data = response.data;
+        testDraftResult.value = typeof data?.draftResult === 'string' ? data.draftResult : JSON.stringify(data?.draftResult || '');
+        testPromptResult.value = typeof data?.promptResult === 'string' ? data.promptResult : JSON.stringify(data?.promptResult || '');
+      } catch (error: any) {
+        const data = error?.response?.data;
+        const opts = { duration: 0, closable: true } as const;
+        if (data?.error) {
+          message.error(String(data.error), opts);
+        } else if (data?.message) {
+          message.error(String(data.message), opts);
+        } else if (data) {
+          message.error(typeof data === 'string' ? data : JSON.stringify(data), opts);
+        } else {
+          message.error(getErrorMessage(error), opts);
+        }
+      } finally {
+        testLoading.value = false;
       }
     };
 
@@ -344,7 +466,19 @@ export default defineComponent({
       selectedLanguages,
       handleReplicateClick,
       handleReplicate,
-      toggleLanguage
+      toggleLanguage,
+      showTestDialog,
+      testSongId,
+      testAgentId,
+      testStationId,
+      testDraftResult,
+      testPromptResult,
+      testLoading,
+      songOptions,
+      agentOptions,
+      stationOptions,
+      openTestDialog,
+      runPromptTest
     };
   }
 });

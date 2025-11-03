@@ -56,16 +56,35 @@
             <n-form-item label="Prompts">
               <n-dynamic-input
                 v-model:value="selectedPromptIds"
-                placeholder="Select prompt"
+                placeholder=""
                 style="width: 50%; max-width: 600px;"
               >
                 <template #default="{ index }">
-                  <n-select
-                    v-model:value="selectedPromptIds[index]"
-                    :options="promptOptions"
-                    placeholder="Select prompt"
-                    style="width: 100%;"
-                  />
+                  <div style="display: flex;">
+                    <n-select
+                      v-model:value="selectedPromptIds[index]"
+                      :options="promptOptions"
+                      placeholder=""
+                      style="margin-right: 10px; min-width: 450px;"
+                    />
+                    <n-button
+                      :disabled="!selectedPromptIds[index]"
+                      @click="detachPrompt(index)"
+                      style="margin-right: 10px;"
+                    >
+                      <n-icon>
+                        <TagOff />
+                      </n-icon>
+                    </n-button>
+                    <n-button
+                      :disabled="!selectedPromptIds[index]"
+                      @click="goToPrompt(selectedPromptIds[index])"
+                    >
+                      <n-icon>
+                        <ChevronRight />
+                      </n-icon>
+                    </n-button>
+                  </div>
                 </template>
               </n-dynamic-input>
             </n-form-item>
@@ -93,9 +112,11 @@ import {
   NDynamicInput,
   NCheckbox,
   NCheckboxGroup,
+  NIcon,
   useLoadingBar,
   useMessage
 } from 'naive-ui';
+import { ChevronRight, TagOff } from '@vicons/tabler';
 import { ScriptScene, ScriptSceneSave } from '../../../types/kneoBroadcasterTypes';
 import { useScriptSceneStore } from '../../../stores/kneo/scriptSceneStore';
 import { useScriptStore } from '../../../stores/kneo/scriptStore';
@@ -117,7 +138,10 @@ export default defineComponent({
     NTimePicker,
     NDynamicInput,
     NCheckbox,
-    NCheckboxGroup
+    NCheckboxGroup,
+    NIcon,
+    ChevronRight,
+    TagOff
   },
   setup() {
     const loadingBar = useLoadingBar();
@@ -158,7 +182,6 @@ export default defineComponent({
 
     const parseTimeToMs = (timeStr: string | undefined | null): number | null => {
       if (!timeStr) return null;
-      // Accept 'HH:mm' or 'HH:mm:ss' or ISO; default to time-part
       const iso = timeStr.includes('T') ? timeStr : `1970-01-01T${timeStr.length === 5 ? timeStr + ':00' : timeStr}Z`;
       const ms = Date.parse(iso);
       return Number.isNaN(ms) ? null : ms;
@@ -224,6 +247,14 @@ export default defineComponent({
       }
     };
 
+    const goToPrompt = (promptId: string) => {
+      if (promptId) router.push({ name: 'PromptForm', params: { id: promptId } });
+    };
+
+    const detachPrompt = (index: number) => {
+      selectedPromptIds.value[index] = '';
+    };
+
     const goBack = () => {
       router.push({ name: 'Scripts' });
     };
@@ -251,6 +282,8 @@ export default defineComponent({
       selectedWeekdays,
       promptOptions,
       scriptOptions,
+      goToPrompt,
+      detachPrompt
     };
   }
 });

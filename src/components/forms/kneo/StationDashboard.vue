@@ -21,6 +21,7 @@
           <n-text depth="3" style="font-size: 14px;">
             {{ currentListeners }} listeners
           </n-text>
+          <n-text depth="3" style="font-size: 12px; margin-left: 8px;">Updated: {{ lastUpdateTime }}</n-text>
         </n-space>
         <n-space >
           <n-button-group>
@@ -77,9 +78,13 @@
                 >
                   <template #default>
                     <n-space size="small" align="center">
-                      <n-tag v-if="fragment.isPlayingNow" type="error" size="small" strong>
-                        Playing now
-                      </n-tag>
+                      <span v-if="fragment.isPlayingNow" class="playing-indicator" aria-label="Playing now">
+                        <svg viewBox="0 0 24 14" width="24" height="14" role="img">
+                          <rect class="bar b1" x="1" y="2" width="4" height="10" rx="1" />
+                          <rect class="bar b2" x="9" y="2" width="4" height="10" rx="1" />
+                          <rect class="bar b3" x="17" y="2" width="4" height="10" rx="1" />
+                        </svg>
+                      </span>
                       <n-tag v-if="fragment.isQueued" type="info" size="small">
                         Queued
                       </n-tag>
@@ -98,37 +103,48 @@
               <n-card size="small">
                 <template #header>
                   <n-space justify="space-between" align="center">
-                    <span>Segments Timeline</span>
-                    <n-text depth="3" style="font-size: 0.85rem;">Updated: {{ lastUpdateTime }}</n-text>
+                    <span>
+                      DJ
+                      <span v-if="stationDetails?.aiDjStats?.djName"> — {{ stationDetails.aiDjStats.djName }}</span>
+                    </span>
+                    <n-tag v-if="isDjActive" type="info" size="small">Active</n-tag>
+                    <n-tag v-else-if="isDjOffline" type="error" size="small">DJ is offline</n-tag>
                   </n-space>
                 </template>
-                <n-space vertical size="small">
-                  <div v-if=" hasHlsSongStats() ">
-                    <n-space vertical size="small" class="current-track-info">
-                      <n-space justify="space-between">
-                        <n-text strong>Current Track:</n-text>
-                        <span class="song-title" :title="getHlsCurrentTrackDisplay()">{{
-                          getHlsCurrentTrackDisplay()
-                        }}</span>
-                      </n-space>
-                      <n-space justify="space-between">
-                        <n-text strong>Est. Time:</n-text>
-                        <n-text>{{ getHlsTimestamp() }}</n-text>
-                      </n-space>
-                      <n-space justify="space-between">
-                        <n-text strong>Recent Requests:</n-text>
-                        <n-space align="center" size="small">
-                          <n-text>{{ getHlsRequestCount() }}</n-text>
-                          <n-text depth="3" style="font-size: 0.9em;">/ 5min</n-text>
-                          <span v-if=" getHlsRequestCount() > 0 ">
-                            <n-icon size="18" color="green">
-                              <Activity />
-                            </n-icon></span>
+                <n-space vertical size="small" v-if="stationDetails?.aiDjStats">
+                  <n-space vertical size="small">
+                    <n-space justify="space-between">
+                      <n-text strong>Current Scene:</n-text>
+                      <n-text>{{ stationDetails.aiDjStats.currentSceneTitle }}</n-text>
+                    </n-space>
+                    <n-space justify="space-between" v-if="isDjActive">
+                      <n-text depth="3">Time:</n-text>
+                      <n-text>{{ formatTime(stationDetails.aiDjStats.sceneStartTime) }} - {{ formatTime(stationDetails.aiDjStats.sceneEndTime) }}</n-text>
+                    </n-space>
+                    <n-space justify="space-between">
+                      <n-text depth="3">Duration:</n-text>
+                      <n-text>{{ formatSceneDuration(stationDetails.aiDjStats.sceneStartTime, stationDetails.aiDjStats.sceneEndTime) }}</n-text>
+                    </n-space>
+                    <n-space justify="space-between" v-if="isDjActive">
+                      <n-text depth="3">Next Scene:</n-text>
+                      <n-text>{{ stationDetails.aiDjStats.nextSceneTitle }}</n-text>
+                    </n-space>
+                    <n-space justify="space-between">
+                      <n-text depth="3">Prompts:</n-text>
+                      <n-text>{{ stationDetails.aiDjStats.promptCount }}</n-text>
+                    </n-space>
+                    <n-space vertical v-if="stationDetails.aiDjStats.messages && stationDetails.aiDjStats.messages.length" size="small">
+                      <n-text strong>Messages</n-text>
+                      <n-space vertical size="small">
+                        <n-space v-for="(m, idx) in stationDetails.aiDjStats.messages" :key="idx" align="center" justify="space-between">
+                          <n-tag :type="mapMessageType(m.type)" size="small" :bordered="false">{{ m.type }}</n-tag>
+                          <n-text>{{ m.message }}</n-text>
                         </n-space>
                       </n-space>
                     </n-space>
-                  </div>
+                  </n-space>
                 </n-space>
+                <n-text v-else depth="3">No DJ information available</n-text>
               </n-card>
             </div>
 
@@ -236,6 +252,19 @@ export default defineComponent( {
     const stationDetails = computed( () => {
       return dashboardStore.getStationDetails( props.brandName );
     } );
+
+    const isDjActive = computed(() => {
+      const stats = stationDetails.value?.aiDjStats;
+      if (!stats?.lastRequestTime) return false;
+      const last = new Date(stats.lastRequestTime);
+      if (isNaN(last.getTime())) return false;
+      return (Date.now() - last.getTime()) < 5 * 60 * 1000;
+    });
+
+    const isDjOffline = computed(() => {
+      const stats = stationDetails.value?.aiDjStats;
+      return !stats?.djName && !stats?.lastRequestTime;
+    });
 
     const isOnline = computed( () => {
       return stationDetails.value?.status === 'ON_LINE' || stationDetails.value?.status === 'WARMING_UP' || stationDetails.value?.status === 'QUEUE_SATURATED';
@@ -387,6 +416,101 @@ export default defineComponent( {
       return `${MIXPLA_PLAYER_URL}?radio=${encodeURIComponent( props.brandName.toLowerCase() )}`;
     } );
 
+    const formatTime = (timeString: string) => {
+      if (!timeString) return '';
+      // If it's already in HH:mm format, return as is
+      if (/^\d{2}:\d{2}(:\d{2})?$/.test(timeString)) {
+        return timeString;
+      }
+      // If it's a full ISO string, extract time part
+      try {
+        const date = new Date(timeString);
+        if (isNaN(date.getTime())) return timeString; // Invalid date
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      } catch (e) {
+        return timeString; // Return original if parsing fails
+      }
+    };
+
+    const parseTimeToMinutes = (timeStr: string): number => {
+      if (!timeStr) return 0;
+      
+      // Handle HH:mm format
+      const match = timeStr.match(/^(\d{1,2}):(\d{2})/);
+      if (match) {
+        const hours = parseInt(match[1], 10);
+        const minutes = parseInt(match[2], 10);
+        return hours * 60 + minutes;
+      }
+      
+      // Handle ISO date string
+      try {
+        const date = new Date(timeStr);
+        if (!isNaN(date.getTime())) {
+          return date.getHours() * 60 + date.getMinutes();
+        }
+      } catch (e) {
+        // Continue to return 0
+      }
+      
+      return 0;
+    };
+
+    const calculateDuration = (startTime: string, endTime: string): string => {
+      if (!startTime || !endTime) return '--:--';
+      
+      const startMinutes = parseTimeToMinutes(startTime);
+      let endMinutes = parseTimeToMinutes(endTime);
+      
+      // Handle overnight case (end time is next day)
+      if (endMinutes <= startMinutes) {
+        endMinutes += 24 * 60; // Add 24 hours in minutes
+      }
+      
+      const totalMinutes = endMinutes - startMinutes;
+      
+      // Handle full 24-hour case
+      if (totalMinutes >= 24 * 60) return '24:00';
+      
+      // Format as HH:MM
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    };
+
+    const formatSceneDuration = (startTime: string, endTime: string): string => {
+      const duration = calculateDuration(startTime, endTime);
+      if (duration === '24:00') return 'Full 24-hours';
+      
+      // If duration is less than 1 hour, show in minutes
+      if (duration.startsWith('00:')) {
+        const minutes = parseInt(duration.substring(3), 10);
+        return `${minutes} min`;
+      }
+      
+      // If minutes is 00, show just hours
+      if (duration.endsWith(':00')) {
+        const hours = parseInt(duration.split(':')[0], 10);
+        return `${hours} hour${hours > 1 ? 's' : ''}`;
+      }
+      
+      // Otherwise show full HH:MM
+      return duration;
+    };
+
+    const calculatePreviousSceneEnd = (currentStartTime: string): string => {
+      if (!currentStartTime) return '';
+      
+      // For demo purposes, assume previous scene ended 1 hour before current scene
+      // In a real implementation, you'd get this from the actual scene data
+      const currentMinutes = parseTimeToMinutes(currentStartTime);
+      const prevEndMinutes = (currentMinutes - 60 + (24 * 60)) % (24 * 60);
+      
+      const hours = Math.floor(prevEndMinutes / 60);
+      const minutes = prevEndMinutes % 60;
+      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    };
+
     const isHeartbeatActive = computed( () => {
       return stationDetails.value?.heartbeat === true;
     } );
@@ -505,12 +629,6 @@ export default defineComponent( {
       return artist ? `${String(artist).trim()} — ${clean}` : clean;
     };
 
-    const getHlsTimestamp = (): string => {
-      const songStats = stationDetails.value?.songStatistics;
-      if ( !songStats ) return 'N/A';
-      return formatTimestamp( songStats.segmentTimestamp.toString() );
-    };
-
     const formatTimestamp = ( timestamp: string ): string => {
       const date = new Date( timestamp );
       return date.toLocaleTimeString( [], { hour: '2-digit', minute: '2-digit', second: '2-digit' } );
@@ -558,13 +676,6 @@ export default defineComponent( {
       return statusMap[status.toUpperCase()] || status;
     };
 
-    const getHlsRequestCount = () => {
-      if ( stationDetails.value && typeof stationDetails.value.songStatistics === 'object' && stationDetails.value.songStatistics !== null ) {
-        return stationDetails.value.songStatistics.requestCount || 0;
-      }
-      return 0;
-    };
-
     const getHlsListenersCount = (): number => {
       return currentListeners.value;
     };
@@ -584,6 +695,15 @@ export default defineComponent( {
       if (fragment.source === 'PRIORITIZED') return 'warning';
       return 'default';
     };
+
+    const mapMessageType = (t: any): 'info' | 'warning' | 'error' | 'default' => {
+      const v = String(t || '').toUpperCase();
+      if (v === 'INFO') return 'info';
+      if (v === 'WARNING') return 'warning';
+      if (v === 'ERROR') return 'error';
+      return 'default';
+    };
+
 
     const getStatusTimelineType = ( status: string | null | undefined ): 'success' | 'warning' | 'error' | 'default' => {
       if ( !status ) return 'default';
@@ -618,7 +738,7 @@ export default defineComponent( {
 
         return {
           ...event,
-          status: event.newStatus,
+          status: (event as any).newStatus,
           timeDiff
         };
       } );
@@ -679,42 +799,27 @@ export default defineComponent( {
 
 
     return {
-      stationDetails,
+      dashboardStore,
+      isStartingStation,
+      isStoppingStation,
       isOnline,
+      isDjActive,
+      isDjOffline,
       currentListeners,
       lastUpdateTime,
-      timelineDisplay,
       combinedPlaylist,
+      timelineDisplay,
+      timelineItems,
       stationColor,
       getStatusInfo,
       managedByInfo,
       stationInitials,
       mixplaUrl,
       isHeartbeatActive,
-      // test player
-      
-      handleStart,
-      handleStop,
-      openMixpla,
-      isStartingStation,
-      isStoppingStation,
-      cleanTitle,
-      getMergingTypeSymbol,
-      getMergingTypeColors,
-      hasHlsSongStats,
-      getHlsCurrentTrack,
-      getHlsTimestamp,
-      getHlsCurrentTrackDisplay,
-      getHlsRequestCount,
-      getHlsListenersCount,
-      formatArtistTitle,
-      formatDuration,
-      isCurrentSong,
       statusHistoryTimeline,
       getStatusTimelineType,
-      timelineItems,
-      formatTimestamp,
       formatStatus,
+      formatTimestamp,
       formatTaskType,
       getTaskDuration,
       showBroadcastModal,
@@ -723,6 +828,16 @@ export default defineComponent( {
       creatingBroadcast,
       handleBroadcast,
       getPlaylistItemType,
+      formatArtistTitle,
+      stationDetails,
+      handleStart,
+      handleStop,
+      formatDuration,
+      getMergingTypeColors,
+      formatTime,
+      formatSceneDuration,
+      mapMessageType,
+      calculatePreviousSceneEnd
     };
   },
 } );
@@ -781,5 +896,27 @@ export default defineComponent( {
     opacity: 0.7;
     transform: scale(1.05);
   }
+}
+
+.playing-indicator {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 6px;
+}
+.playing-indicator svg .bar {
+  fill: #ef4444;
+  animation: equalize 1s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+.playing-indicator svg .bar.b1 { animation-delay: 0s; }
+.playing-indicator svg .bar.b2 { animation-delay: 0.15s; }
+.playing-indicator svg .bar.b3 { animation-delay: 0.3s; }
+
+@keyframes equalize {
+  0%, 100% { transform: scaleY(0.3); }
+  20% { transform: scaleY(0.9); }
+  40% { transform: scaleY(0.5); }
+  60% { transform: scaleY(1.0); }
+  80% { transform: scaleY(0.6); }
 }
 </style>

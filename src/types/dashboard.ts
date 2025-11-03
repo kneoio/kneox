@@ -104,6 +104,21 @@ export interface PlaylistManagerStats {
     }>;
 }
 
+export interface AiDjStats {
+    currentSceneId: string;
+    currentSceneTitle: string;
+    sceneStartTime: string;
+    sceneEndTime: string;
+    promptCount: number;
+    nextSceneTitle: string;
+    lastRequestTime: string;
+    djName: string;
+    messages?: Array<{
+        type: string;
+        message: string;
+    }>;
+}
+
 export interface StationDetails {
     brandName: string;
     status: string;
@@ -135,6 +150,7 @@ export interface StationDetails {
         startTime: string;
     }>;
     heartbeat?: boolean;
+    aiDjStats?: AiDjStats;
 }
 
 export interface StationResponse {
