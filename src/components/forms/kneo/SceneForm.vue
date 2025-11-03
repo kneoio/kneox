@@ -36,7 +36,7 @@
           </n-gi>
           <n-gi>
             <n-form-item label="Start time">
-              <n-time-picker v-model:value="startTimeMs" format="HH:mm:ss" style="width: 25%; max-width: 300px;" />
+              <n-time-picker v-model:value="startTimeMs" format="HH:mm:ss" style="width: 12.5%; max-width: 150px;" />
             </n-form-item>
           </n-gi>
           <n-gi>
@@ -139,7 +139,7 @@ export default defineComponent({
       (promptStore.getEntries || [])
         .filter((p: any) => typeof p.id === 'string' && p.id)
         .map((p: any) => ({
-          label: `${p.languageCode || ''} ${p.promptType || ''}`.trim() || p.id,
+          label: p.title || p.id,
           value: p.id as string
         }))
     );
