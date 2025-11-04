@@ -176,7 +176,6 @@ export default defineComponent({
     const columns = computed<DataTableColumns<Draft>>(() => {
       const baseColumns: DataTableColumns<Draft> = [
         { type: 'selection', fixed: 'left', width: 50 },
-        { title: 'Type', key: 'draftType', width: 150, render: (r) => h(NTag as any, { size: 'small', type: getTypeType(r.draftType) }, { default: () => r.draftType || '' }) },
         { title: 'Lang', key: 'languageCode', width: 100 },
         { title: 'Title', key: 'title', width: 300 },
         {

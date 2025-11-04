@@ -13,8 +13,10 @@
     </n-gi>
 
     <n-gi span="6">
-      <n-form label-placement="left" label-width="auto">
-        <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
+      <n-tabs v-model:value="activeTab">
+        <n-tab-pane name="properties" tab="Properties">
+          <n-form label-placement="left" label-width="auto">
+            <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
           <n-gi>
             <n-form-item label="Script">
               <n-select
@@ -29,14 +31,14 @@
               <n-input v-model:value="localFormData.title" style="width: 50%; max-width: 600px;" placeholder="" />
             </n-form-item>
           </n-gi>
-          <n-gi v-if="false">
-            <n-form-item label="Type">
-              <n-input v-model:value="localFormData.type" style="width: 25%; max-width: 300px;" placeholder="" />
-            </n-form-item>
-          </n-gi>
           <n-gi>
             <n-form-item label="Start time">
               <n-time-picker v-model:value="startTimeMs" format="HH:mm:ss" style="width: 12.5%; max-width: 150px;" />
+            </n-form-item>
+          </n-gi>
+          <n-gi>
+            <n-form-item label="One-time run">
+              <n-checkbox v-model:checked="localFormData.oneTimeRun">Activated</n-checkbox>
             </n-form-item>
           </n-gi>
           <n-gi>
@@ -89,14 +91,19 @@
               </n-dynamic-input>
             </n-form-item>
           </n-gi>
-        </n-grid>
-      </n-form>
+            </n-grid>
+          </n-form>
+        </n-tab-pane>
+        <n-tab-pane name="acl" tab="ACL">
+          <AclTable :acl-data="aclData" :loading="aclLoading" />
+        </n-tab-pane>
+      </n-tabs>
     </n-gi>
   </n-grid>
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, onMounted, reactive, ref } from 'vue';
+import { computed, defineComponent, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
   NButton,
@@ -112,6 +119,8 @@ import {
   NDynamicInput,
   NCheckbox,
   NCheckboxGroup,
+  NTabs,
+  NTabPane,
   NIcon,
   useLoadingBar,
   useMessage
@@ -122,6 +131,7 @@ import { useScriptSceneStore } from '../../../stores/kneo/scriptSceneStore';
 import { useScriptStore } from '../../../stores/kneo/scriptStore';
 import { usePromptStore } from '../../../stores/kneo/promptStore';
 import { getErrorMessage, handleFormSaveError } from '../../../utils/errorHandling';
+import AclTable from '../../common/AclTable.vue';
 
 export default defineComponent({
   name: 'SceneForm',
@@ -139,9 +149,12 @@ export default defineComponent({
     NDynamicInput,
     NCheckbox,
     NCheckboxGroup,
+    NTabs,
+    NTabPane,
     NIcon,
     ChevronRight,
-    TagOff
+    TagOff,
+    AclTable
   },
   setup() {
     const loadingBar = useLoadingBar();
@@ -152,6 +165,9 @@ export default defineComponent({
     const scriptsStore = useScriptStore();
     const promptStore = usePromptStore();
     const selectedScriptId = ref<string | null>(null);
+    const activeTab = ref('properties');
+    const aclData = ref<any[]>([]);
+    const aclLoading = ref(false);
     const selectedPromptIds = ref<string[]>([]);
     const selectedWeekdays = ref<number[]>([]);
     const scriptOptions = computed(() =>
@@ -173,7 +189,6 @@ export default defineComponent({
     const localFormData = reactive<Partial<ScriptScene>>({
       id: '',
       scriptId: '',
-      type: '',
       prompts: [],
       startTime: ''
     });
@@ -217,14 +232,32 @@ export default defineComponent({
       }
     };
 
+    const fetchAclData = async () => {
+      const id = route.params.id as string;
+      if (!id || id === 'new') {
+        aclData.value = [];
+        return;
+      }
+      try {
+        aclLoading.value = true;
+        const response = await (store as any).fetchAccessList?.(id);
+        aclData.value = response?.accessList || [];
+      } catch (error: any) {
+        message.error(getErrorMessage(error));
+        aclData.value = [];
+      } finally {
+        aclLoading.value = false;
+      }
+    };
+
     const handleSave = async () => {
       try {
         loadingBar.start();
         const saveData: ScriptSceneSave = {
-          type: localFormData.type || '',
-          title: localFormData.title || '',
-          prompts: selectedPromptIds.value.filter(id => id),
+          title: localFormData.title as any,
+          prompts: selectedPromptIds.value,
           startTime: startTimeMs.value != null ? formatTimeFromMs(startTimeMs.value) : undefined,
+          oneTimeRun: localFormData.oneTimeRun as any,
           weekdays: selectedWeekdays.value,
         };
         const id = route.params.id as string;
@@ -271,6 +304,10 @@ export default defineComponent({
       }
     });
 
+    watch(activeTab, (val) => {
+      if (val === 'acl') fetchAclData();
+    });
+
     return {
       localFormData,
       formTitle,
@@ -283,7 +320,10 @@ export default defineComponent({
       promptOptions,
       scriptOptions,
       goToPrompt,
-      detachPrompt
+      detachPrompt,
+      activeTab,
+      aclData,
+      aclLoading
     };
   }
 });

@@ -353,6 +353,7 @@ type?: string;
 title?: string;
 prompts?: string[];
 startTime?: string;
+oneTimeRun?: boolean;
 weekdays?: number[];
 }
 
@@ -369,6 +370,7 @@ type?: string;
 title?: string;
 prompts?: string[];
 startTime?: string;
+oneTimeRun?: boolean;
 weekdays?: number[];
 }
 

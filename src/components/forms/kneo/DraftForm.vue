@@ -32,12 +32,6 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
-                <n-form-item label="Draft Type">
-                  <n-select v-model:value="localFormData.draftType" :options="draftTypeOptions"
-                            style="width: 25%; max-width: 300px;"/>
-                </n-form-item>
-              </n-gi>
-              <n-gi>
                 <n-form-item label="Language">
                   <n-select v-model:value="localFormData.languageCode" :options="langOptions"
                             style="width: 25%; max-width: 300px;"/>
@@ -192,7 +186,6 @@ export default defineComponent({
       lastModifiedDate: '',
       title: '',
       content: '',
-      draftType: '',
       languageCode: '',
       archived: 0
     });
@@ -235,7 +228,6 @@ export default defineComponent({
       try {
         testLoading.value = true;
         const payload = {
-          draftType: localFormData.draftType,
           languageCode: localFormData.languageCode,
           songId: testSongId.value,
           agentId: testAgentId.value,
@@ -272,7 +264,6 @@ export default defineComponent({
         const saveData: DraftSave = {
           title: titleToSave,
           content: localFormData.content,
-          draftType: localFormData.draftType,
           languageCode: localFormData.languageCode,
           archived: localFormData.archived,
           localizedName: {
@@ -373,7 +364,6 @@ export default defineComponent({
       activeTab,
       editorExtensions,
       langOptions: (referencesStore as any).languageOptions,
-      draftTypeOptions: (store as any).draftTypeOptions,
       aclData,
       aclLoading
     };

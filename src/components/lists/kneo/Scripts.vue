@@ -180,9 +180,16 @@ export default defineComponent({
 
       try {
         loading.value = true;
-        const deletePromises = checkedRowKeys.value.map(id => store.deleteScript(id as string));
+        const topLevelIds = new Set((treeData.value || []).map((r: any) => r.id));
+        const deletePromises = checkedRowKeys.value.map((id) => {
+          const key = id as string;
+          if (topLevelIds.has(key)) {
+            return store.deleteScript(key);
+          }
+          return sceneStore.remove(key);
+        });
         await Promise.all(deletePromises);
-        message.success(`${checkedRowKeys.value.length} Script(s) deleted successfully.`);
+        message.success(`${checkedRowKeys.value.length} item(s) deleted successfully.`);
         checkedRowKeys.value = [];
         await store.fetchAll(store.getPagination.page, store.getPagination.pageSize);
       } catch (error) {
