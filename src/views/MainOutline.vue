@@ -115,7 +115,8 @@ import {
   Tent,
   BuildingSkyscraper,
   Fall,
-  ToiletPaper
+  ToiletPaper,
+  Gauge
 } from '@vicons/tabler';
 import { LayersLinked } from '@vicons/tabler';
 import {useRadioStationStore} from "../stores/kneo/radioStationStore";
@@ -280,6 +281,11 @@ export default defineComponent({
           allStationsOption,
           homeOption,
           {
+            label: 'Scenes',
+            key: 'scenes',
+            icon: () => h(Gauge)
+          },
+          {
             type: 'divider',
             key: 'd1'
           },
@@ -344,6 +350,11 @@ export default defineComponent({
           icon: () => h(LayersLinked)
         },
         {
+          label: 'Scenes',
+          key: 'scenes',
+          icon: () => h(Gauge)
+        },
+        {
           label: 'Prompts',
           key: 'prompts',
           icon: () => h(Prompt)
@@ -390,6 +401,7 @@ export default defineComponent({
       if (route.name === 'Events') return 'events';
       if (route.name === 'AiAgents') return 'ai_agents';
       if (route.name === 'Scripts') return 'scripts';
+      if (route.name === 'Scenes') return 'scenes';
       if (route.name === 'Prompts') return 'prompts';
       if (route.name === 'Drafts') return 'drafts';
       if (route.name === 'EnvironmentProfiles') return 'environment_profiles';
@@ -447,6 +459,8 @@ export default defineComponent({
         await router.push({name: 'AiAgents'});
       } else if (key === 'scripts') {
         await router.push({name: 'Scripts'});
+      } else if (key === 'scenes') {
+        await router.push({name: 'Scenes'});
       } else if (key === 'prompts') {
         await router.push({name: 'Prompts'});
       } else if (key === 'drafts') {

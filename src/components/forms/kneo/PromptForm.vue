@@ -62,7 +62,13 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
-                <n-form-item label="Prompt">
+                <n-form-item>
+                  <template #label>
+                    <div>
+                      Prompt<br>
+                      <n-text depth="3" style="font-size: 12px;">Handlebars</n-text>
+                    </div>
+                  </template>
                   <CodeMirror
                     :model-value="localFormData.prompt"
                     @update:model-value="(val) => (localFormData.prompt = typeof val === 'string' ? val : (((val as any)?.data) ?? ''))"
@@ -96,6 +102,7 @@
     :closable="false"
     :mask-closable="false"
     :close-on-esc="false"
+    :style="{ width: isWideScreen ? '1000px' : '90vw', backgroundColor: themeVars.modalColor }"
   >
     <template #header>
       <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
@@ -108,17 +115,29 @@
         <n-grid :cols="1" x-gap="12" y-gap="8">
           <n-gi>
             <n-form-item label="Song">
-              <n-select v-model:value="testSongId" :options="songOptions" filterable style="width: 100%; max-width: 100%;" />
+              <n-select v-model:value="testSongId" :options="songOptions" filterable style="width: 100%; max-width: 480px;" />
             </n-form-item>
           </n-gi>
           <n-gi>
             <n-form-item label="Agent">
-              <n-select v-model:value="testAgentId" :options="agentOptions" filterable style="width: 100%; max-width: 100%;" />
+              <n-select v-model:value="testAgentId" :options="agentOptions" filterable style="width: 100%; max-width: 480px;" />
             </n-form-item>
           </n-gi>
           <n-gi>
             <n-form-item label="Station">
-              <n-select v-model:value="testStationId" :options="stationOptions" filterable style="width: 100%; max-width: 100%;" />
+              <n-select v-model:value="testStationId" :options="stationOptions" filterable style="width: 100%; max-width: 480px;" />
+            </n-form-item>
+          </n-gi>
+          <n-gi>
+            <n-form-item label="LLM Type">
+              <n-radio-group v-model:value="testLlmType" name="llm-type-group">
+                <n-radio-button
+                  v-for="opt in llmTypeOptions"
+                  :key="opt.value"
+                  :value="opt.value"
+                  :label="opt.label"
+                />
+              </n-radio-group>
             </n-form-item>
           </n-gi>
         </n-grid>
@@ -127,9 +146,11 @@
         <n-button type="primary" :loading="testLoading" @click="runPromptTest">Run</n-button>
       </n-space>
       <n-text depth="3">Draft Result</n-text>
-      <n-input type="textarea" :value="testDraftResult" :autosize="{ minRows: 6, maxRows: 12 }" style="width: 100%;" readonly />
+      <n-input type="textarea" placeholder="" :value="testDraftResult" :autosize="{ minRows: 6, maxRows: 12 }" style="width: 100%;" readonly />
       <n-text depth="3">Prompt Result</n-text>
-      <n-input type="textarea" :value="testPromptResult" :autosize="{ minRows: 6, maxRows: 12 }" style="width: 100%;" readonly />
+      <div style="width: 100%; max-height: 400px; overflow: auto;">
+        <n-code :code="testPromptResult" language="markdown" word-wrap />
+      </div>
     </n-space>
   </n-modal>
 
@@ -157,7 +178,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, onMounted, reactive, ref, watch } from 'vue';
+import { computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
   NButton,
@@ -171,15 +192,19 @@ import {
   NTabs,
   NTabPane,
   NSelect,
+  NRadioGroup,
+  NRadioButton,
   NSwitch,
   NTag,
   NModal,
   NSpace,
   NText,
+  NCode,
   NCheckbox,
   NIcon,
   useLoadingBar,
-  useMessage
+  useMessage,
+  useThemeVars
 } from 'naive-ui';
 import { EditorView } from '@codemirror/view';
 import { handlebarsLanguage } from '@xiechao/codemirror-lang-handlebars';
@@ -216,14 +241,18 @@ export default defineComponent({
     NModal,
     NSpace,
     NText,
+    NCode,
     NCheckbox,
     NIcon,
     InfoCircle,
+    NRadioGroup,
+    NRadioButton,
     CodeMirror,
     AclTable
   },
   setup() {
     const loadingBar = useLoadingBar();
+    const themeVars = useThemeVars();
     const message = useMessage();
     const router = useRouter();
     const store = usePromptStore();
@@ -234,6 +263,13 @@ export default defineComponent({
     const radioStore = useRadioStationStore();
     const route = useRoute();
 
+    const isWideScreen = ref(window.innerWidth >= 1200);
+    const handleResize = () => {
+      isWideScreen.value = window.innerWidth >= 1200;
+    };
+    onMounted(() => window.addEventListener('resize', handleResize));
+    onUnmounted(() => window.removeEventListener('resize', handleResize));
+
     const activeTab = ref('properties');
     const aclData = ref<any[]>([]);
     const aclLoading = ref(false);
@@ -243,6 +279,7 @@ export default defineComponent({
     const testSongId = ref<string | null>(null);
     const testAgentId = ref<string | null>(null);
     const testStationId = ref<string | null>(null);
+    const testLlmType = ref<string | null>(null);
     const testDraftResult = ref('');
     const testPromptResult = ref('');
     const testLoading = ref(false);
@@ -256,11 +293,11 @@ export default defineComponent({
     );
     const songOptions = computed(() => {
       const list = (soundStore as any).getEntries || [];
-      return list.map((s: any) => ({ label: s.title || s.id, value: s.id }));
+      return list.slice(0, 10).map((s: any) => ({ label: s.title || s.id, value: s.id }));
     });
     const agentOptions = computed(() => {
       const list = (aiAgentStore as any).getEntries || [];
-      return list.map((a: any) => ({ label: a.name || a.id, value: a.id }));
+      return list.slice(0, 10).map((a: any) => ({ label: a.name || a.id, value: a.id }));
     });
     const stationOptions = computed(() => {
       const list = (radioStore as any).getEntries || [];
@@ -349,8 +386,8 @@ export default defineComponent({
     const openTestDialog = async () => {
       try {
         loadingBar.start();
-        try { await soundStore.fetchAll(1, 100); } catch {}
-        try { await aiAgentStore.fetchAllUnsecured?.(1, 100); } catch {}
+        try { await soundStore.fetchAll(1, 10); } catch {}
+        try { await aiAgentStore.fetchAllUnsecured?.(1, 10); } catch {}
         try { await radioStore.fetchAll(1, 100); } catch {}
       } finally {
         loadingBar.finish();
@@ -363,27 +400,50 @@ export default defineComponent({
     const runPromptTest = async () => {
       try {
         testLoading.value = true;
-        const payload = {
-          promptType: localFormData.promptType,
-          languageCode: localFormData.languageCode,
-          songId: testSongId.value,
-          agentId: testAgentId.value,
-          stationId: testStationId.value,
-          code: localFormData.prompt
+        testDraftResult.value = '';
+        testPromptResult.value = '';
+
+        // 1) Execute draft first (if a draft is selected and content available)
+        let executedDraft: string | null = null;
+        try {
+          const draftId = selectedDraftId.value;
+          const allDrafts = (draftStore.getEntries || []) as any[];
+          const selectedDraft = allDrafts.find((d: any) => d.id === draftId);
+          const draftContent = selectedDraft?.content || null;
+          if (draftContent) {
+            const draftPayload = {
+              languageCode: localFormData.languageCode,
+              songId: testSongId.value,
+              agentId: testAgentId.value,
+              stationId: testStationId.value,
+              code: draftContent
+            };
+            const draftResp = await apiClient.post('/drafts/test', draftPayload, { responseType: 'text' });
+            executedDraft = typeof draftResp.data === 'string' ? draftResp.data : String(draftResp.data ?? '');
+            testDraftResult.value = executedDraft;
+          }
+        } catch (e) {
+          // Surface draft errors but continue to prompt test with null draft
+          const data = (e as any)?.response?.data;
+          const msg = typeof data === 'string' ? data : (data?.message || getErrorMessage(e));
+          message.warning(`Draft test failed: ${msg}`, { duration: 5000 });
+        }
+
+        // 2) Execute prompt using executed draft and chosen llmType
+        const promptPayload: any = {
+          prompt: localFormData.prompt,
+          draft: executedDraft,
+          llmType: testLlmType.value || null
         };
-        const response = await apiClient.post('/prompts/test', payload);
-        const data = response.data;
-        testDraftResult.value = typeof data?.draftResult === 'string' ? data.draftResult : JSON.stringify(data?.draftResult || '');
-        testPromptResult.value = typeof data?.promptResult === 'string' ? data.promptResult : JSON.stringify(data?.promptResult || '');
+        const promptResp = await apiClient.post('/prompts/test', promptPayload, { responseType: 'text' as any });
+        testPromptResult.value = typeof promptResp.data === 'string' ? promptResp.data : String(promptResp.data ?? '');
       } catch (error: any) {
         const data = error?.response?.data;
         const opts = { duration: 0, closable: true } as const;
-        if (data?.error) {
-          message.error(String(data.error), opts);
-        } else if (data?.message) {
-          message.error(String(data.message), opts);
+        if (typeof data === 'string') {
+          message.error(data, opts);
         } else if (data) {
-          message.error(typeof data === 'string' ? data : JSON.stringify(data), opts);
+          message.error(JSON.stringify(data), opts);
         } else {
           message.error(getErrorMessage(error), opts);
         }
@@ -471,6 +531,7 @@ export default defineComponent({
       testSongId,
       testAgentId,
       testStationId,
+      testLlmType,
       testDraftResult,
       testPromptResult,
       testLoading,
@@ -478,7 +539,10 @@ export default defineComponent({
       agentOptions,
       stationOptions,
       openTestDialog,
-      runPromptTest
+      runPromptTest,
+      llmTypeOptions: (referencesStore as any).llmTypeOptions,
+      themeVars,
+      isWideScreen
     };
   }
 });

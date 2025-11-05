@@ -11,8 +11,7 @@
 
     <n-gi :span="isMobile ? 1 : 6">
       <n-button-group>
-        <n-button @click="handleNewClick" type="primary" size="large">New Script</n-button>
-        <n-button @click="handleNewSceneClick" type="primary" size="large">New Scene</n-button>
+        <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
         <n-button
             type="error"
             :disabled="!hasSelection"
@@ -107,7 +106,8 @@ export default defineComponent({
                 tags: '',
                 description: '',
                 startTime: sc.startTime || '',
-                weekdays: weekdaysText
+                weekdays: weekdaysText,
+                oneTimeRun: !!(sc as any).oneTimeRun
               };
             });
             return { id: s.id, name: s.name, tags: resolveLabelNames((s as any).labels || []), labelUuids: (s as any).labels || [], description: s.description || '', children };
@@ -244,7 +244,18 @@ export default defineComponent({
           });
         }
       },
-      { title: 'Start Time', key: 'startTime' },
+      {
+        title: 'Start Time',
+        key: 'startTime',
+        render: (row: any) => {
+          const content: any[] = [];
+          if (row.startTime) content.push(h('span', row.startTime));
+          if (!row.children && row.oneTimeRun) {
+            content.push(h(NTag, { type: 'success', size: 'small', style: 'margin-left:8px;' }, { default: () => 'One-time' }));
+          }
+          return content.length > 0 ? h('div', { style: 'display:flex; align-items:center;' }, content) : null;
+        }
+      },
       { title: 'Weekdays', key: 'weekdays' },
       { title: 'Description', key: 'description' }
     ]));

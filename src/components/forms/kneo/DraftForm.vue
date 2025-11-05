@@ -38,7 +38,13 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
-                <n-form-item label="Content">
+                <n-form-item>
+                   <template #label>
+                    <div>
+                      Code<br>
+                      <n-text depth="3" style="font-size: 12px;">Groovy</n-text>
+                    </div>
+                  </template>
                   <CodeMirror
                       :model-value="localFormData.content"
                       @update:model-value="(val) => (localFormData.content = typeof val === 'string' ? val : (((val as any)?.data) ?? ''))"
@@ -71,6 +77,7 @@
     :closable="false"
     :mask-closable="false"
     :close-on-esc="false"
+    :style="{ backgroundColor: themeVars.modalColor }"
   >
     <template #header>
       <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
@@ -126,7 +133,8 @@ import {
   NSpace,
   NText,
   useLoadingBar,
-  useMessage
+  useMessage,
+  useThemeVars
 } from 'naive-ui';
 import {EditorView} from '@codemirror/view';
 import {StreamLanguage} from '@codemirror/language';
@@ -165,6 +173,7 @@ export default defineComponent({
   },
   setup() {
     const loadingBar = useLoadingBar();
+    const themeVars = useThemeVars();
     const message = useMessage();
     const router = useRouter();
     const store = useDraftStore();
@@ -365,7 +374,8 @@ export default defineComponent({
       editorExtensions,
       langOptions: (referencesStore as any).languageOptions,
       aclData,
-      aclLoading
+      aclLoading,
+      themeVars
     };
   }
 });

@@ -22,6 +22,7 @@ import PromptForm from '../components/forms/kneo/PromptForm.vue';
 import Drafts from '../components/lists/kneo/Drafts.vue';
 import DraftForm from '../components/forms/kneo/DraftForm.vue';
 import SceneForm from '../components/forms/kneo/SceneForm.vue';
+import Scenes from '../components/lists/kneo/Scenes.vue';
 import EnvironmentProfiles from '../components/lists/kneo/EnvironmentProfiles.vue';
 import ProfileForm from '../components/forms/kneo/EnvironmentProfileForm.vue';
 import Events from '../components/lists/kneo/Events.vue';
@@ -174,6 +175,11 @@ const routes: Array<RouteRecordRaw> = [
                 path: 'scripts',
                 name: 'Scripts',
                 component: Scripts
+            },
+            {
+                path: 'scenes',
+                name: 'Scenes',
+                component: Scenes
             },
             {
                 path: 'scripts/:id',

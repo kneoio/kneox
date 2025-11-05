@@ -11,6 +11,7 @@
 
     <n-gi :span="isMobile ? 1 : 6">
       <n-button-group>
+        <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
         <n-button
           type="error"
           :disabled="!hasSelection"
@@ -144,13 +145,16 @@ export default defineComponent({
 
     const rowKeyFn = (row: Draft) => row.id ?? `${row.draftType || 'type'}-${row.languageCode || 'lang'}-${(row.title || '').slice(0,20)}`;
 
+    const handleNewClick = () => {
+      router.push({ name: 'DraftForm', params: { id: 'new' } });
+    };
+
     const handleDelete = async () => {
       if (checkedRowKeys.value.length === 0) {
         message.warning('Please select Drafts to delete.');
         return;
       }
       message.error("Drafts can't be deleted.");
-      return;
     };
 
     const getRowProps = (row: Draft) => {
@@ -238,6 +242,7 @@ export default defineComponent({
       columns,
       rowKey: rowKeyFn,
       isMobile,
+      handleNewClick,
       handleDelete,
       hasSelection,
       getRowProps,
