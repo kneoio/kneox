@@ -413,6 +413,9 @@ export interface Draft {
     content?: string;
     languageCode?: string;
     archived?: number;
+    enabled?: boolean;
+    isMaster?: boolean;
+    locked?: boolean;
 }
 
 export interface DraftSave {
@@ -421,5 +424,8 @@ export interface DraftSave {
     content?: string;
     languageCode?: string;
     archived?: number;
+    enabled?: boolean;
+    isMaster?: boolean;
+    locked?: boolean;
     localizedName?: Record<string, string>;
 }

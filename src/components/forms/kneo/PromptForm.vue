@@ -33,11 +33,6 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
-                <n-form-item label="Prompt Type">
-                  <n-select v-model:value="localFormData.promptType" :options="promptTypeOptions" style="width: 25%; max-width: 300px;" />
-                </n-form-item>
-              </n-gi>
-              <n-gi>
                 <n-form-item label="Language">
                   <n-select v-model:value="localFormData.languageCode" :options="langOptions" style="width: 25%; max-width: 300px;" />
                 </n-form-item>
@@ -45,10 +40,6 @@
               <n-gi>
                 <n-form-item label="Draft">
                   <n-select v-model:value="selectedDraftId" :options="draftOptions" style="width: 25%; max-width: 300px;" />
-                  <div style="margin-top: 6px; display: flex; align-items: center; gap: 6px;">
-                    <n-icon size="14"><InfoCircle /></n-icon>
-                    <n-text depth="3" style="font-size: 12px;">Prompt Type should match Draft Type</n-text>
-                  </div>
                 </n-form-item>
               </n-gi>
               <n-gi>

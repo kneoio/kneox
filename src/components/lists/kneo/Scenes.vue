@@ -24,6 +24,7 @@
         :row-key="rowKey"
         :data="pagedRows"
         :bordered="false"
+        :row-props="getRowProps"
         :loading="loading"
         :pagination="pagination"
         v-model:checked-row-keys="checkedRowKeys"

@@ -17,6 +17,7 @@
       <n-button-group>
         <n-button type="primary" @click="handleSave" size="large">Save</n-button>
         <n-button type="default" @click="openTestDialog" size="large">Test</n-button>
+        <n-button type="default" @click="handleReplicateClick" size="large" :disabled="!localFormData.isMaster">Replicate</n-button>
       </n-button-group>
     </n-gi>
 
@@ -38,6 +39,15 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
+                <n-form-item label="Options">
+                  <div style="display: flex; align-items: center; gap: 16px;">
+                    <n-checkbox v-model:checked="localFormData.enabled">Enabled</n-checkbox>
+                    <n-checkbox v-model:checked="localFormData.isMaster">Master</n-checkbox>
+                    <n-checkbox v-model:checked="localFormData.locked">Locked</n-checkbox>
+                  </div>
+                </n-form-item>
+              </n-gi>
+              <n-gi>
                 <n-form-item>
                    <template #label>
                     <div>
@@ -49,6 +59,7 @@
                       :model-value="localFormData.content"
                       @update:model-value="(val) => (localFormData.content = typeof val === 'string' ? val : (((val as any)?.data) ?? ''))"
                       basic
+                      :disabled="localFormData.locked"
                       :style="{
                         width: '1200px',
                         height: '600px',
@@ -112,6 +123,28 @@
       <n-input type="textarea" :value="testResult" :autosize="{ minRows: 6, maxRows: 12 }" style="width: 100%;" readonly />
     </n-space>
   </n-modal>
+
+  <n-modal v-model:show="showReplicateDialog" preset="dialog" title="Replicate Draft">
+    <n-space vertical>
+      <n-text>Select languages to replicate this draft:</n-text>
+      <n-grid :cols="3" x-gap="12" y-gap="8">
+        <n-gi v-for="lang in langOptions" :key="lang.value">
+          <n-checkbox 
+            :checked="selectedLanguages.includes(lang.value)" 
+            @update:checked="(checked) => toggleLanguage(lang.value, checked)"
+          >
+            {{ lang.label }}
+          </n-checkbox>
+        </n-gi>
+      </n-grid>
+    </n-space>
+    <template #action>
+      <n-space>
+        <n-button @click="showReplicateDialog = false">Cancel</n-button>
+        <n-button type="primary" @click="handleReplicate" :disabled="selectedLanguages.length === 0">Replicate</n-button>
+      </n-space>
+    </template>
+  </n-modal>
 </template>
 
 <script lang="ts">
@@ -132,6 +165,7 @@ import {
   NModal,
   NSpace,
   NText,
+  NCheckbox,
   useLoadingBar,
   useMessage,
   useThemeVars
@@ -168,6 +202,7 @@ export default defineComponent({
     NModal,
     NSpace,
     NText,
+    NCheckbox,
     CodeMirror,
     AclTable
   },
@@ -196,7 +231,10 @@ export default defineComponent({
       title: '',
       content: '',
       languageCode: '',
-      archived: 0
+      archived: 0,
+      enabled: false,
+      isMaster: false,
+      locked: false
     });
 
     const showTestDialog = ref(false);
@@ -205,6 +243,9 @@ export default defineComponent({
     const testStationId = ref<string | null>(null);
     const testResult = ref('');
     const testLoading = ref(false);
+
+    const showReplicateDialog = ref(false);
+    const selectedLanguages = ref<string[]>([]);
 
     const promptTypeOptions = (referencesStore as any).promptTypeOptions;
     const songOptions = computed(() => {
@@ -262,6 +303,43 @@ export default defineComponent({
       }
     };
 
+    const handleReplicateClick = () => {
+      selectedLanguages.value = [];
+      showReplicateDialog.value = true;
+    };
+
+    const handleReplicate = async () => {
+      try {
+        loadingBar.start();
+        message.info(`Replicating draft to ${selectedLanguages.value.length} language(s)...`);
+        showReplicateDialog.value = false;
+        for (const lang of selectedLanguages.value) {
+          const payload = {
+            toTranslate: localFormData.content || '',
+            translationType: 'PROMPT',
+            language: lang
+          };
+          await apiClient.post('/translate', payload);
+        }
+        message.success('Draft replicated successfully');
+      } catch (error: any) {
+        console.error('Failed to replicate draft:', error);
+        message.error('Failed to replicate draft.');
+      } finally {
+        loadingBar.finish();
+      }
+    };
+
+    const toggleLanguage = (langValue: string, checked: boolean) => {
+      if (checked) {
+        if (!selectedLanguages.value.includes(langValue)) {
+          selectedLanguages.value.push(langValue);
+        }
+      } else {
+        selectedLanguages.value = selectedLanguages.value.filter(l => l !== langValue);
+      }
+    };
+
     const handleSave = async () => {
       try {
         loadingBar.start();
@@ -275,6 +353,9 @@ export default defineComponent({
           content: localFormData.content,
           languageCode: localFormData.languageCode,
           archived: localFormData.archived,
+          enabled: localFormData.enabled,
+          isMaster: localFormData.isMaster,
+          locked: localFormData.locked,
           localizedName: {
             en: localFormData.title || 'Default Title'
           }
@@ -369,6 +450,11 @@ export default defineComponent({
       agentOptions,
       stationOptions,
       runDraftTest,
+      showReplicateDialog,
+      selectedLanguages,
+      handleReplicateClick,
+      handleReplicate,
+      toggleLanguage,
       goBack,
       activeTab,
       editorExtensions,
