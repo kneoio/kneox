@@ -28,11 +28,11 @@
               </n-gi>
               <n-gi>
                 <n-form-item label="Description">
-                  <n-input 
-                    v-model:value="localFormData.description" 
-                    type="textarea" 
-                    :rows="4"
-                    style="width: 80%; max-width: 800px;" 
+                  <n-input
+                    v-model:value="localFormData.description"
+                    type="textarea"
+                    :autosize="{ minRows: 3, maxRows: 6 }"
+                    style="width: 50%; max-width: 600px;"
                     placeholder="Enter script description..."
                   />
                 </n-form-item>
@@ -41,10 +41,10 @@
                 <n-form-item label="Labels">
                   <n-select
                     v-model:value="localFormData.labels"
-                    :options="referencesStore.labelOptions"
+                    :options="scriptLabelOptions"
                     multiple
                     filterable
-                    style="width: 60%; max-width: 600px;"
+                    style="width: 25%; max-width: 300px;"
                     placeholder="Select labels..."
                   />
                 </n-form-item>
@@ -52,13 +52,31 @@
             </n-grid>
           </n-form>
         </n-tab-pane>
+        <n-tab-pane name="scenes" tab="Scenes">
+          <n-data-table
+            remote
+            :columns="sceneColumns"
+            :row-key="sceneRowKey"
+            :data="sceneStore.getEntries"
+            :pagination="false"
+            :bordered="false"
+            :loading="scenesLoading"
+            :row-props="getSceneRowProps"
+            size="small"
+            :style="{ width: '800px' }"
+            default-expand-all
+          />
+        </n-tab-pane>
+        <n-tab-pane name="acl" tab="ACL">
+          <acl-table :acl-data="aclData" :loading="aclLoading" />
+        </n-tab-pane>
       </n-tabs>
     </n-gi>
   </n-grid>
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, onMounted, reactive, ref } from "vue";
+import { computed, defineComponent, onMounted, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
   NButton,
@@ -71,14 +89,21 @@ import {
   NPageHeader,
   NTabs,
   NTabPane,
+  NDataTable,
   NSelect,
+  NText,
   useLoadingBar,
   useMessage
 } from 'naive-ui';
 import { useScriptStore } from '../../../stores/kneo/scriptStore';
+import { useScriptSceneStore } from '../../../stores/kneo/scriptSceneStore';
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
-import { Script, ScriptSave } from '../../../types/kneoBroadcasterTypes';
+import { Script, ScriptSave, ScriptScene } from '../../../types/kneoBroadcasterTypes';
 import { getErrorMessage, handleFormSaveError } from '../../../utils/errorHandling';
+import { EditorView } from "@codemirror/view";
+import { json } from "@codemirror/lang-json";
+import CodeMirror from 'vue-codemirror6';
+import AclTable from '../../common/AclTable.vue';
 
 export default defineComponent({
   name: "ScriptForm",
@@ -93,7 +118,11 @@ export default defineComponent({
     NTabPane,
     NGrid,
     NGi,
-    NSelect
+    NSelect,
+    NText,
+    NDataTable,
+    CodeMirror,
+    AclTable
   },
   setup() {
     const loadingBar = useLoadingBar();
@@ -101,9 +130,19 @@ export default defineComponent({
     const router = useRouter();
     const store = useScriptStore();
     const referencesStore = useReferencesStore();
+    const sceneStore = useScriptSceneStore();
+    const scenesLoading = ref(false);
+    const scriptLabelOptions = ref<Array<{ label: string; value: string; color?: string; fontColor?: string }>>([]);
     const route = useRoute();
 
     const activeTab = ref("properties");
+    const aclData = ref<any[]>([]);
+    const aclLoading = ref(false);
+
+    const editorExtensions = computed(() => [
+      json(),
+      EditorView.lineWrapping
+    ]);
 
     const formTitle = computed(() => localFormData.id ? 'Edit Script' : 'Create New Script');
 
@@ -117,6 +156,24 @@ export default defineComponent({
       description: "",
       labels: []
     });
+
+    const sceneRowKey = (row: any) => row.id || `${row.type || 'scene'}-${row.startTime || ''}`;
+    const sceneColumns = computed(() => [
+      { title: 'Type', key: 'type', width: 140 },
+      { title: 'Start', key: 'startTime', width: 140 },
+      { title: 'Prompts', key: 'prompts', render: (r: any) => Array.isArray(r.prompts) ? r.prompts.length : 0 }
+    ]);
+
+    const fetchScenes = async () => {
+      if (!localFormData.id) return;
+      try {
+        scenesLoading.value = true;
+        await sceneStore.fetchForScript(localFormData.id, 1, 50);
+      } finally {
+        scenesLoading.value = false;
+      }
+    };
+
 
     const handleSave = async () => {
       try {
@@ -147,14 +204,17 @@ export default defineComponent({
     onMounted(async () => {
       try {
         loadingBar.start();
-        // Load label options first
-        await referencesStore.fetchLabels();
+        // Load category-specific label options for scripts
+        scriptLabelOptions.value = await referencesStore.fetchLabelsByCategory('script');
         
         const id = route.params.id as string;
         if (id && id !== 'new') {
           await store.fetch(id);
           const scriptData = { ...store.getCurrent } as Script;
           Object.assign(localFormData, scriptData);
+          if (activeTab.value === 'scenes') {
+            await fetchScenes();
+          }
         }
       } catch (error: any) {
         console.error("Failed to fetch data:", error);
@@ -172,14 +232,60 @@ export default defineComponent({
       }
     });
 
+    const fetchAclData = async () => {
+      const id = route.params.id as string;
+      if (!id || id === 'new') {
+        aclData.value = [];
+        return;
+      }
+      try {
+        aclLoading.value = true;
+        const response = await store.fetchAccessList(id);
+        aclData.value = response.accessList || [];
+      } catch (e: any) {
+        const data = e?.response?.data;
+        if (data?.message) message.error(String(data.message)); else message.error(getErrorMessage(e));
+        aclData.value = [];
+      } finally {
+        aclLoading.value = false;
+      }
+    };
+
+    watch(activeTab, async (tab) => {
+      if (tab === 'acl') {
+        await fetchAclData();
+      }
+      if (tab === 'scenes') {
+        await fetchScenes();
+      }
+    });
+
+    const getSceneRowProps = (row: ScriptScene) => {
+      return {
+        style: 'cursor: pointer;',
+        onClick: () => {
+          router.push({ name: 'SceneForm', params: { id: row.id } });
+        }
+      };
+    };
+
     return {
       localFormData,
       formTitle,
       handleSave,
       goBack,
       activeTab,
-      referencesStore
+      referencesStore,
+      editorExtensions,
+      aclData,
+      aclLoading,
+      scriptLabelOptions,
+      sceneStore,
+      scenesLoading,
+      sceneColumns,
+      sceneRowKey,
+      getSceneRowProps,
     };
-  }
+  },
 });
 </script>

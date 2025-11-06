@@ -134,8 +134,6 @@ export default defineComponent({
           return { color: '#00aa00', text: '● QUEUE SATURATED' };
         case 'WARMING_UP':
           return { color: '#ffa500', text: '● WARMING UP' };
-        case 'WAITING_FOR_CURATOR':
-          return { color: '#ff69b4', text: '● WAITING FOR LISTENER' };
         case 'IDLE':
           return { color: '#888888', text: '○ IDLE' };
         case 'SYSTEM_ERROR':

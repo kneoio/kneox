@@ -93,6 +93,12 @@ export const useScriptStore = defineStore('scriptStore', () => {
         await apiClient.delete(`/scripts/${id}`);
     };
 
+    const fetchAccessList = async (id: string) => {
+        const response = await apiClient.get(`/scripts/${id}/access`);
+        if (!response?.data) throw new Error('Invalid API response');
+        return response.data;
+    };
+
     return {
         apiViewResponse,
         apiFormResponse,
@@ -101,6 +107,7 @@ export const useScriptStore = defineStore('scriptStore', () => {
         fetch: fetchScript,
         save,
         deleteScript,
+        fetchAccessList,
         getEntries,
         getPagination,
         getCurrent,

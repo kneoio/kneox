@@ -297,7 +297,7 @@ export default defineComponent( {
         { type: 'selection', fixed: 'left', width: 50 },
         { title: 'Title', key: 'title', minWidth: 200, ellipsis: { tooltip: true } },
         { title: 'Artist', key: 'artist', minWidth: 160, ellipsis: { tooltip: true } },
-        { title: 'Source', key: 'source', minWidth: 120 },
+        { title: 'Source', key: 'source', minWidth: 120, render: (row: SoundFragment) => store.formatSource(row.source as any) },
         { title: 'Type', key: 'type', minWidth: 120 },
         { title: 'Description', key: 'description', ellipsis: { tooltip: true }, minWidth: 280 }
       ];

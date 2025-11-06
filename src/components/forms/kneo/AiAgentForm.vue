@@ -399,7 +399,7 @@ import {
 } from 'naive-ui';
 import { EditorView } from "@codemirror/view";
 
-import { json } from "@codemirror/lang-json";
+import { handlebarsLanguage } from "@xiechao/codemirror-lang-handlebars";
 import CodeMirror from 'vue-codemirror6';
 import { useAiAgentStore } from '../../../stores/kneo/aiAgentStore';
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
@@ -442,7 +442,7 @@ export default defineComponent({
     const referencesStore = useReferencesStore();
     const route = useRoute();
     const editorExtensions = computed(() => [
-      json(),
+      handlebarsLanguage,
       EditorView.lineWrapping
     ]);
 

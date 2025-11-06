@@ -9,7 +9,6 @@ export enum BrandStatus {
     ON_LINE = "ON_LINE",  
     QUEUE_SATURATED = "QUEUE_SATURATED",
     WARMING_UP = "WARMING_UP",
-    WAITING_FOR_CURATOR = "WAITING_FOR_CURATOR",
     IDLE = "IDLE",
     SYSTEM_ERROR = "SYSTEM_ERROR",
 }
@@ -24,6 +23,11 @@ export enum SubmissionPolicy {
     NOT_ALLOWED = "NOT_ALLOWED",
     REVIEW_REQUIRED = "REVIEW_REQUIRED",
     NO_RESTRICTIONS = "NO_RESTRICTIONS"
+}
+
+export enum AiAgentMode {
+    BASIC = "BASIC",
+    SCRIPT_FOLLOWING = "SCRIPT_FOLLOWING"
 }
 
 export interface Profile {
@@ -84,6 +88,7 @@ export interface RadioStation {
     aiControlAllowed?: boolean;
     submissionPolicy?: SubmissionPolicy;
     messagingPolicy?: SubmissionPolicy;
+    aiAgentMode?: AiAgentMode;
     schedule?: {
         enabled: boolean;
     };
@@ -92,7 +97,7 @@ export interface RadioStation {
 export interface RadioStationSave {
     localizedName: Record<string, string>;
     country: string;
-    description: string;
+    description?: string;
     color: string;
     bitRate?: number;
     aiAgentId?: string;
@@ -103,7 +108,9 @@ export interface RadioStationSave {
     managedBy?: ManagedBy;
     submissionPolicy?: SubmissionPolicy;
     messagingPolicy?: SubmissionPolicy;
+    aiAgentMode?: AiAgentMode;
     schedule?: any;
+    scripts?: string[];
 }
 
 export interface SoundFragment {
@@ -137,7 +144,7 @@ export interface SoundFragmentSave {
     album?: string;
     description: string;
     representedInBrands: string[];
-    newlyUploaded: string[];
+    newlyUploaded: string[] | null;
     tempFileIds?: string[];
 }
 
@@ -336,4 +343,89 @@ export interface ScriptSave {
     name: string;
     description: string;
     labels: string[];
+}
+
+// Script Scenes
+export interface ScriptScene {
+id?: string;
+scriptId?: string;
+type?: string;
+title?: string;
+prompts?: string[];
+startTime?: string;
+oneTimeRun?: boolean;
+weekdays?: number[];
+}
+
+export interface ScriptSceneViewData {
+count: number;
+pageNum: number;
+maxPage: number;
+pageSize: number;
+entries: ScriptScene[];
+}
+
+export interface ScriptSceneSave {
+type?: string;
+title?: string;
+prompts?: string[];
+startTime?: string;
+oneTimeRun?: boolean;
+weekdays?: number[];
+}
+
+// Prompts (Broadcaster)
+export interface BroadcastPrompt {
+    id: string;
+    author: string;
+    regDate: string;
+    lastModifier: string;
+    lastModifiedDate: string;
+    enabled: boolean;
+    prompt: string;
+    promptType?: string;
+    languageCode?: string;
+    master?: boolean;
+    locked?: boolean;
+    title?: string;
+    podcast?: boolean;
+}
+
+export interface BroadcastPromptSave {
+    enabled?: boolean;
+    prompt?: string;
+    promptType?: string;
+    languageCode?: string;
+    master?: boolean;
+    locked?: boolean;
+    title?: string;
+    podcast?: boolean;
+}
+
+export interface Draft {
+    id: string;
+    author: string;
+    regDate: string;
+    lastModifier: string;
+    lastModifiedDate: string;
+    draftType?: string;
+    title?: string;
+    content?: string;
+    languageCode?: string;
+    archived?: number;
+    enabled?: boolean;
+    isMaster?: boolean;
+    locked?: boolean;
+}
+
+export interface DraftSave {
+    draftType?: string;
+    title?: string;
+    content?: string;
+    languageCode?: string;
+    archived?: number;
+    enabled?: boolean;
+    isMaster?: boolean;
+    locked?: boolean;
+    localizedName?: Record<string, string>;
 }

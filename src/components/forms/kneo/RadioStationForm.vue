@@ -141,70 +141,17 @@
                     style="width: 50%; max-width: 600px;" />
                 </n-form-item>
               </n-gi>
+              <n-gi>
+                <n-form-item label="Script">
+                  <n-select v-model:value="localFormData.scriptId" :options="scriptOptions"
+                    style="width: 50%; max-width: 600px;" />
+                </n-form-item>
+              </n-gi>
               <n-gi v-if="selectedAgent">
                 <n-form-item label="Preferred Language">
                   <n-input :value="selectedAgent.preferredLang"
                     style="width: 50%; max-width: 600px; cursor: not-allowed;" readonly
                     disabled />
-                </n-form-item>
-              </n-gi>
-              <n-gi v-if="selectedAgent">
-                <n-form-item label="Talkativity">
-                  <n-slider :value="selectedAgent.talkativity" :min="0" :max="1" :step="0.05" :tooltip="false"
-                    style="width: 50%; max-width: 600px;" disabled />
-                  <span style="margin-left: 12px;">{{ selectedAgent.talkativity?.toFixed(2) || '0.00' }}</span>
-                </n-form-item>
-              </n-gi>
-              <n-gi v-if="selectedAgent">
-                <n-form-item label="Preferred Voice">
-                  <n-select :value="selectedAgent.preferredVoice[0]?.name" 
-                    :options="voiceOptions"
-                    filterable
-                    style="width: 30%; max-width: 300px;" 
-                    disabled />
-                </n-form-item>
-              </n-gi>
-
-              <n-gi>
-                <n-form-item label="Override AI Agent">
-                  <n-checkbox v-model:checked="aiOverrideEnabled">
-                    Enable AI agent override
-                  </n-checkbox>
-                </n-form-item>
-              </n-gi>
-
-              <n-gi v-if="aiOverrideEnabled">
-                <n-form-item label="Override Name">
-                  <n-input v-model:value="localFormData.aiOverriding.name" 
-                    placeholder=""
-                    style="width: 50%; max-width: 600px;" />
-                </n-form-item>
-              </n-gi>
-
-              <n-gi v-if="aiOverrideEnabled">
-                <n-form-item label="Override Prompt">
-                  <n-input v-model:value="localFormData.aiOverriding.prompt" 
-                    type="textarea" 
-                    placeholder=""
-                    :autosize="{ minRows: 3, maxRows: 5 }"
-                    style="width: 50%; max-width: 600px;" />
-                </n-form-item>
-              </n-gi>
-
-              <n-gi v-if="aiOverrideEnabled">
-                <n-form-item label="Override Talkativity">
-                  <n-slider v-model:value="localFormData.aiOverriding.talkativity" :min="0" :max="1" :step="0.05" :tooltip="false"
-                    style="width: 50%; max-width: 600px;" />
-                  <span style="margin-left: 12px;">{{ localFormData.aiOverriding.talkativity }}</span>
-                </n-form-item>
-              </n-gi>
-
-              <n-gi v-if="aiOverrideEnabled">
-                <n-form-item label="Override Preferred Voice">
-                  <n-select v-model:value="localFormData.aiOverriding.preferredVoice" 
-                    :options="voiceOptions"
-                    filterable
-                    style="width: 30%; max-width: 300px;" />
                 </n-form-item>
               </n-gi>
             </n-grid>
@@ -238,7 +185,7 @@
 
               <n-gi v-if="profileOverrideEnabled">
                 <n-form-item label="Override Name">
-                  <n-input v-model:value="localFormData.profileOverriding.name" 
+                  <n-input v-model:value="localFormData.profileOverriding!.name" 
                     placeholder=""
                     style="width: 50%; max-width: 600px;" />
                 </n-form-item>
@@ -246,7 +193,7 @@
 
               <n-gi v-if="profileOverrideEnabled">
                 <n-form-item label="Override Description">
-                  <n-input v-model:value="localFormData.profileOverriding.description" 
+                  <n-input v-model:value="localFormData.profileOverriding!.description" 
                     type="textarea" 
                     placeholder=""
                     :autosize="{ minRows: 3, maxRows: 5 }"
@@ -371,6 +318,71 @@
             </n-grid>
           </n-form>
         </n-tab-pane>
+        <n-tab-pane name="advanced" tab="Advanced">
+          <n-form label-placement="left" label-width="150px">
+            <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
+              <n-gi v-if="selectedAgent">
+                <n-form-item label="Talkativity">
+                  <n-slider :value="selectedAgent.talkativity" :min="0" :max="1" :step="0.05" :tooltip="false"
+                    style="width: 50%; max-width: 600px;" disabled />
+                  <span style="margin-left: 12px;">{{ selectedAgent.talkativity?.toFixed(2) || '0.00' }}</span>
+                </n-form-item>
+              </n-gi>
+              <n-gi v-if="selectedAgent">
+                <n-form-item label="Preferred Voice">
+                  <n-select :value="selectedAgent.preferredVoice[0]?.name" 
+                    :options="voiceOptions"
+                    filterable
+                    style="width: 30%; max-width: 300px;" 
+                    disabled />
+                </n-form-item>
+              </n-gi>
+
+              <n-gi>
+                <n-form-item label="Override AI Agent">
+                  <n-checkbox v-model:checked="aiOverrideEnabled">
+                    Enable AI agent override
+                  </n-checkbox>
+                </n-form-item>
+              </n-gi>
+
+              <n-gi v-if="aiOverrideEnabled">
+                <n-form-item label="Override Name">
+                  <n-input v-model:value="localFormData.aiOverriding.name" 
+                    placeholder=""
+                    style="width: 50%; max-width: 600px;" />
+                </n-form-item>
+              </n-gi>
+
+              <n-gi v-if="aiOverrideEnabled">
+                <n-form-item label="Override Prompt">
+                  <n-input v-model:value="localFormData.aiOverriding.prompt" 
+                    type="textarea" 
+                    placeholder=""
+                    :autosize="{ minRows: 3, maxRows: 5 }"
+                    style="width: 50%; max-width: 600px;" />
+                </n-form-item>
+              </n-gi>
+
+              <n-gi v-if="aiOverrideEnabled">
+                <n-form-item label="Override Talkativity">
+                  <n-slider v-model:value="localFormData.aiOverriding.talkativity" :min="0" :max="1" :step="0.05" :tooltip="false"
+                    style="width: 50%; max-width: 600px;" />
+                  <span style="margin-left: 12px;">{{ localFormData.aiOverriding.talkativity }}</span>
+                </n-form-item>
+              </n-gi>
+
+              <n-gi v-if="aiOverrideEnabled">
+                <n-form-item label="Override Preferred Voice">
+                  <n-select v-model:value="localFormData.aiOverriding.preferredVoice" 
+                    :options="voiceOptions"
+                    filterable
+                    style="width: 30%; max-width: 300px;" />
+                </n-form-item>
+              </n-gi>
+            </n-grid>
+          </n-form>
+        </n-tab-pane>
         <n-tab-pane name="acl" tab="ACL">
           <AclTable :acl-data="aclData" :loading="aclLoading" />
         </n-tab-pane>
@@ -417,11 +429,13 @@ import {
   RadioStation,
   BrandStatus,
   RadioStationSave,
-  ManagedBy
+  ManagedBy,
+  AiAgentMode
 } from "../../../types/kneoBroadcasterTypes";
 import { useRadioStationStore } from "../../../stores/kneo/radioStationStore";
 import { useAiAgentStore } from "../../../stores/kneo/aiAgentStore";
 import { useProfileStore } from "../../../stores/kneo/profileStore";
+import { useScriptStore } from "../../../stores/kneo/scriptStore";
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 import { handleFormSaveError, getErrorMessage } from '../../../utils/errorHandling';
 import AclTable from '../../common/AclTable.vue';
@@ -462,6 +476,7 @@ export default defineComponent( {
     const store = useRadioStationStore();
     const aiAgentStore = useAiAgentStore();
     const profileStore = useProfileStore();
+    const scriptStore = useScriptStore();
     const referencesStore = useReferencesStore();
     const route = useRoute();
     const activeTab = ref( "properties" );
@@ -499,6 +514,7 @@ export default defineComponent( {
 
 
 
+
     const targetOptions = [
       { value: "default", label: "default" }
     ];
@@ -525,6 +541,7 @@ export default defineComponent( {
       mixplaUrl: "",
       aiAgentId: undefined,
       profileId: undefined,
+      scriptId: undefined,
       timeZone: "",
       managedBy: undefined,
       bitRate: 128000,
@@ -589,6 +606,13 @@ export default defineComponent( {
       return profileStore.getEntries.map( profile => ( {
         label: profile.name,
         value: profile.id
+      } ) );
+    } );
+
+    const scriptOptions = computed( () => {
+      return scriptStore.getEntries.map( script => ( {
+        label: script.name,
+        value: script.id
       } ) );
     } );
 
@@ -657,7 +681,8 @@ export default defineComponent( {
           messagingPolicy: localFormData.messagingPolicy,
           aiOverriding: aiOverrideEnabled.value ? localFormData.aiOverriding : undefined,
           profileOverriding: profileOverrideEnabled.value ? localFormData.profileOverriding : undefined,
-          schedule: localFormData.schedule ? JSON.parse( JSON.stringify( localFormData.schedule ) ) : undefined
+          schedule: localFormData.schedule ? JSON.parse( JSON.stringify( localFormData.schedule ) ) : undefined,
+          scripts: localFormData.scriptId ? [localFormData.scriptId] : undefined
         };
 
 
@@ -821,6 +846,7 @@ export default defineComponent( {
         loadingBar.start();
         await aiAgentStore.fetchAllUnsecured( 1, 100 );
         await profileStore.fetchAllUnsecured( 1, 100 );
+        await scriptStore.fetchAll( 1, 100 );
         await referencesStore.fetchVoices();
         await store.fetch( id );
         await nextTick();
@@ -853,6 +879,9 @@ export default defineComponent( {
         };
         normalizeNumericFields();
 
+        if ((currentData as any).scripts && Array.isArray((currentData as any).scripts) && (currentData as any).scripts.length > 0) {
+          (localFormData as any).scriptId = (currentData as any).scripts[0];
+        }
 
         if ( localFormData.localizedName ) {
           localizedNameArray.value = Object.entries( localFormData.localizedName ).map( ( [language, name] ) => ( {
@@ -911,6 +940,7 @@ export default defineComponent( {
       bitRateOptions: referencesStore.bitRateOptions,
       agentOptions,
       profileOptions,
+      scriptOptions,
       selectedAgent,
       selectedProfile,
       copyToClipboard,

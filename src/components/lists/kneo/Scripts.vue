@@ -25,17 +25,14 @@
 
     <n-gi :span="isMobile ? 1 : 6">
       <n-data-table
-          remote
           :columns="columns"
           :row-key="rowKey"
-          :data="store.getEntries"
-          :pagination="store.getPagination"
+          :data="treeData"
           :bordered="false"
           :row-props="getRowProps"
           :loading="loading"
           v-model:checked-row-keys="checkedRowKeys"
-          @update:page="handlePageChange"
-          @update:page-size="handlePageSizeChange"
+          default-expand-all
       >
         <template #loading>
           <loader-icon/>
@@ -56,12 +53,15 @@ import {
   NGi,
   NGrid,
   NPageHeader,
+  NTag,
   useMessage
 } from 'naive-ui';
 import {useRouter} from 'vue-router';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
-import {Script} from "../../../types/kneoBroadcasterTypes";
+import {Script, ScriptScene} from "../../../types/kneoBroadcasterTypes";
 import {useScriptStore} from "../../../stores/kneo/scriptStore";
+import { useScriptSceneStore } from "../../../stores/kneo/scriptSceneStore";
+import { useReferencesStore } from "../../../stores/kneo/referencesStore";
 
 export default defineComponent({
   components: {NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon},
@@ -69,15 +69,54 @@ export default defineComponent({
     const router = useRouter();
     const message = useMessage();
     const store = useScriptStore();
+    const sceneStore = useScriptSceneStore();
+    const referencesStore = useReferencesStore();
     const isMobile = ref(window.innerWidth < 768);
     const loading = ref(false);
     const intervalId = ref<number | null>(null);
     const checkedRowKeys = ref<(string | number)[]>([]);
+    const treeData = ref<any[]>([]);
+    const scriptLabelOptions = ref<Array<{ label: string; value: string; color?: string; fontColor?: string }>>([]);
+
+    const resolveLabelNames = (labelUuids: string[]): string => {
+      if (!Array.isArray(labelUuids) || labelUuids.length === 0) return '';
+      const labelMap = new Map(scriptLabelOptions.value.map(opt => [opt.value, opt.label]));
+      return labelUuids.map(uuid => labelMap.get(uuid) || uuid).join(', ');
+    };
 
     async function preFetch() {
       try {
         loading.value = true;
-        await store.fetchAll();
+        scriptLabelOptions.value = await referencesStore.fetchLabelsByCategory('script');
+        await store.fetchAll(1, 100);
+        const scripts = store.getEntries || [];
+        const childrenPromises = scripts.map(async (s: Script) => {
+          try {
+            await sceneStore.fetchForScript(s.id as string, 1, 50);
+            const scenes = (sceneStore.apiViewResponse?.viewData?.entries || []) as ScriptScene[];
+            const children = scenes.map(sc => {
+              const map = ['','Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+              const w = (sc as any).weekdays || [];
+              const weekdaysText = Array.isArray(w) && w.length > 0
+                ? w.filter((n: any) => Number.isInteger(n) && n >= 1 && n <= 7).map((n: number) => map[n]).join(', ')
+                : '';
+              return {
+                id: sc.id,
+                name: sc.title || sc.type || '',
+                tags: '',
+                description: '',
+                startTime: sc.startTime || '',
+                weekdays: weekdaysText,
+                oneTimeRun: !!(sc as any).oneTimeRun
+              };
+            });
+            return { id: s.id, name: s.name, tags: resolveLabelNames((s as any).labels || []), labelUuids: (s as any).labels || [], description: s.description || '', children };
+          } catch {
+            return { id: s.id, name: s.name, tags: resolveLabelNames((s as any).labels || []), labelUuids: (s as any).labels || [], description: s.description || '' };
+          }
+        });
+        const rows = await Promise.all(childrenPromises);
+        treeData.value = rows;
       } catch (error) {
         console.error('Failed to fetch initial Script data:', error);
         message.error('Failed to load Scripts.');
@@ -118,25 +157,8 @@ export default defineComponent({
       stopPeriodicRefresh(); // Stop periodic refresh when component is unmounted
     });
 
-    const handlePageChange = async (page: number) => {
-      try {
-        loading.value = true;
-        await store.fetchAll(page, store.getPagination.pageSize);
-        checkedRowKeys.value = [];
-      } finally {
-        loading.value = false;
-      }
-    };
-
-    const handlePageSizeChange = async (pageSize: number) => {
-      try {
-        loading.value = true;
-        await store.fetchAll(1, pageSize);
-        checkedRowKeys.value = [];
-      } finally {
-        loading.value = false;
-      }
-    };
+    const handlePageChange = async (_page: number) => {};
+    const handlePageSizeChange = async (_pageSize: number) => {};
 
     const hasSelection = computed(() => {
       return checkedRowKeys.value.length > 0;
@@ -144,6 +166,10 @@ export default defineComponent({
 
     const handleNewClick = () => {
       router.push('/outline/scripts/new');
+    };
+
+    const handleNewSceneClick = () => {
+      router.push({ name: 'SceneForm', params: { id: 'new' } });
     };
 
     const handleDelete = async () => {
@@ -154,9 +180,16 @@ export default defineComponent({
 
       try {
         loading.value = true;
-        const deletePromises = checkedRowKeys.value.map(id => store.deleteScript(id as string));
+        const topLevelIds = new Set((treeData.value || []).map((r: any) => r.id));
+        const deletePromises = checkedRowKeys.value.map((id) => {
+          const key = id as string;
+          if (topLevelIds.has(key)) {
+            return store.deleteScript(key);
+          }
+          return sceneStore.remove(key);
+        });
         await Promise.all(deletePromises);
-        message.success(`${checkedRowKeys.value.length} Script(s) deleted successfully.`);
+        message.success(`${checkedRowKeys.value.length} item(s) deleted successfully.`);
         checkedRowKeys.value = [];
         await store.fetchAll(store.getPagination.page, store.getPagination.pageSize);
       } catch (error) {
@@ -167,100 +200,81 @@ export default defineComponent({
       }
     };
 
-    const getRowProps = (row: Script) => {
+    const getRowProps = (row: any) => {
       return {
         style: 'cursor: pointer;',
         onClick: (e: MouseEvent) => {
           const target = e.target as HTMLElement;
-          if (target.closest('.n-checkbox') || target.closest('[data-n-checkbox]')) {
+          if (
+            target.closest('.n-checkbox') ||
+            target.closest('[data-n-checkbox]') ||
+            target.closest('.n-data-table-expand-trigger')
+          ) {
             return;
           }
-          const routeTo = {name: 'ScriptForm', params: {id: row.id}};
+          const routeTo = row.children 
+            ? { name: 'ScriptForm', params: { id: row.id } }
+            : { name: 'SceneForm', params: { id: row.id } };
           router.push(routeTo).catch((err) => {
             console.error('Navigation error:', err);
           });
-        },
+        }
       };
     };
 
-    const columns = computed<DataTableColumns<Script>>(() => {
-      const baseColumns: DataTableColumns<Script> = [
-        {
-          type: 'selection',
-          fixed: 'left',
-          width: 50
-        },
-        {title: 'Name', key: 'name', width: 200},
-        {
-          title: 'Description',
-          key: 'description',
-          ellipsis: {tooltip: true},
-          render: (row: Script) => {
-            const maxLength = isMobile.value ? 40 : 100;
-            const text = row.description || '';
-            return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
-          }
-        },
-        {
-          title: 'Labels',
-          key: 'labels',
-          width: 150,
-          render: (row: Script) => {
-            if (!row.labels || row.labels.length === 0) return 'N/A';
-            return row.labels.join(', ');
-          }
+    const labelMap = computed(() => new Map(scriptLabelOptions.value.map(opt => [opt.value, opt])));
+
+    const columns = computed<DataTableColumns<any>>(() => ([
+      { type: 'selection' },
+      { title: 'name', key: 'name' },
+      { 
+        title: 'Tags', 
+        key: 'tags',
+        render: (row: any) => {
+          const labelUuids = (row as any).labelUuids || [];
+          if (!Array.isArray(labelUuids) || labelUuids.length === 0) return null;
+          return labelUuids.map((uuid: string) => {
+            const labelOption = labelMap.value.get(uuid);
+            return h(NTag, {
+              style: labelOption?.color ? {
+                backgroundColor: labelOption.color,
+                color: labelOption.fontColor || '#ffffff'
+              } : undefined
+            }, { default: () => labelOption?.label || uuid });
+          });
         }
-      ];
-
-      if (isMobile.value) {
-        return [
-          {
-            type: 'selection',
-            fixed: 'left',
-            width: 50,
-            renderHeader: () => h(NCheckbox, {
-              indeterminate: checkedRowKeys.value.length > 0 && checkedRowKeys.value.length < store.getEntries.length,
-              checked: checkedRowKeys.value.length === store.getEntries.length && store.getEntries.length > 0,
-              onClick: (e: MouseEvent) => {
-                e.stopPropagation();
-                if (checkedRowKeys.value.length === store.getEntries.length) {
-                  checkedRowKeys.value = [];
-                } else {
-                  checkedRowKeys.value = store.getEntries.map(item => item.id);
-                }
-              }
-            })
-          },
-          {
-            title: 'Script',
-            key: 'combined',
-            render: (row: Script) => {
-              return h('div', {}, [
-                h('div', { style: 'font-weight: bold;' }, row.name),
-                h('div', { style: 'font-size: 0.8rem;' }, row.description || 'No description'),
-                h('div', { style: 'font-size: 0.8rem;' }, `Labels: ${row.labels?.join(', ') || 'None'}`)
-              ]);
-            }
+      },
+      {
+        title: 'Start Time',
+        key: 'startTime',
+        render: (row: any) => {
+          const content: any[] = [];
+          if (row.startTime) content.push(h('span', row.startTime));
+          if (!row.children && row.oneTimeRun) {
+            content.push(h(NTag, { type: 'success', size: 'small', style: 'margin-left:8px;' }, { default: () => 'One-time' }));
           }
-        ];
-      }
-
-      return baseColumns;
-    });
+          return content.length > 0 ? h('div', { style: 'display:flex; align-items:center;' }, content) : null;
+        }
+      },
+      { title: 'Weekdays', key: 'weekdays' },
+      { title: 'Description', key: 'description' }
+    ]));
 
     return {
       store,
       columns,
-      rowKey: (row: Script) => row.id,
+      rowKey: (row: any) => row.id,
       isMobile,
       handleNewClick,
+      handleNewSceneClick,
       handleDelete,
       hasSelection,
       getRowProps,
       handlePageChange,
       handlePageSizeChange,
       loading,
-      checkedRowKeys
+      checkedRowKeys,
+      treeData
     };
   },
 });

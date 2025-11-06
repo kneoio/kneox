@@ -109,8 +109,16 @@ import {
   Moon,
   Calendar,
   User,
-  FileText
+  FileText,
+  Prompt,
+  Ripple,
+  Tent,
+  BuildingSkyscraper,
+  Fall,
+  ToiletPaper,
+  Gauge
 } from '@vicons/tabler';
+import { LayersLinked } from '@vicons/tabler';
 import {useRadioStationStore} from "../stores/kneo/radioStationStore";
 import {RadioStation, BrandStatus} from "../types/kneoBroadcasterTypes";
 import keycloakInst from '../keycloakFactory.js';
@@ -182,8 +190,6 @@ export default defineComponent({
           return '#00aa00';
         case BrandStatus.WARMING_UP:
           return '#ffa500';
-        case BrandStatus.WAITING_FOR_CURATOR:
-          return '#ff69b4';
         case BrandStatus.IDLE:
           return '#bd621c';
         case BrandStatus.SYSTEM_ERROR:
@@ -231,13 +237,13 @@ export default defineComponent({
       const allStationsOption: MenuOption = {
         label: 'All Radiostations',
         key: 'radiostations',
-        icon: () => h(List)
+        icon: () => h(Ripple)
       };
 
       const homeOption: MenuOption = {
         label: 'Home',
         key: 'home',
-        icon: () => h(List)
+        icon: () => h(BuildingSkyscraper)
       };
 
       const profileOption: MenuOption = {
@@ -249,7 +255,7 @@ export default defineComponent({
           }, keycloakInst.tokenParsed?.preferred_username || '')
         ]),
         key: 'profile',
-        icon: () => h(User)
+        icon: () => h(Fall)
       };
 
       const logoutOption: MenuOption = {
@@ -274,6 +280,11 @@ export default defineComponent({
           },
           allStationsOption,
           homeOption,
+          {
+            label: 'Scenes',
+            key: 'scenes',
+            icon: () => h(Gauge)
+          },
           {
             type: 'divider',
             key: 'd1'
@@ -336,7 +347,22 @@ export default defineComponent({
         {
           label: 'Scripts',
           key: 'scripts',
-          icon: () => h(FileText)
+          icon: () => h(LayersLinked)
+        },
+        {
+          label: 'Scenes',
+          key: 'scenes',
+          icon: () => h(Gauge)
+        },
+        {
+          label: 'Prompts',
+          key: 'prompts',
+          icon: () => h(Prompt)
+        },
+        {
+          label: 'Drafts',
+          key: 'drafts',
+          icon: () => h(ToiletPaper)
         },
         {
           type: 'divider',
@@ -375,6 +401,9 @@ export default defineComponent({
       if (route.name === 'Events') return 'events';
       if (route.name === 'AiAgents') return 'ai_agents';
       if (route.name === 'Scripts') return 'scripts';
+      if (route.name === 'Scenes') return 'scenes';
+      if (route.name === 'Prompts') return 'prompts';
+      if (route.name === 'Drafts') return 'drafts';
       if (route.name === 'EnvironmentProfiles') return 'environment_profiles';
       if (route.name === 'Listeners') return 'listeners';
       if (route.name === 'Profile') return 'profile';
@@ -430,6 +459,12 @@ export default defineComponent({
         await router.push({name: 'AiAgents'});
       } else if (key === 'scripts') {
         await router.push({name: 'Scripts'});
+      } else if (key === 'scenes') {
+        await router.push({name: 'Scenes'});
+      } else if (key === 'prompts') {
+        await router.push({name: 'Prompts'});
+      } else if (key === 'drafts') {
+        await router.push({name: 'Drafts'});
       } else if (key === 'environment_profiles') {
         await router.push({name: 'EnvironmentProfiles'});
       }

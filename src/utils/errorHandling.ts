@@ -8,6 +8,15 @@ export interface ErrorResponse {
     errors?: ValidationError[];
 }
 
+interface ProblemJson {
+    type?: string;
+    title?: string;
+    status?: number;
+    detail?: string;
+    instance?: string;
+    errors?: Record<string, string[]>;
+}
+
 export const isErrorWithResponse = (error: unknown): error is { response: { status: number; data: unknown } } => {
     return typeof error === 'object' && error !== null && 'response' in error;
 };
@@ -33,18 +42,22 @@ export const getErrorMessage = (error: unknown): string => {
  * @param fallbackMessage - Default message if no specific error is available
  */
 export const handleFormSaveError = (error: unknown, messageInstance: any): void => {
-    // Prefer structured server validation
     if (isErrorWithResponse(error)) {
         const data: any = error.response?.data;
         if (error.response?.status === 400 && data) {
-            if (Array.isArray((data as ErrorResponse)?.errors) && (data as ErrorResponse).errors!.length) {
-                (data as ErrorResponse).errors!.forEach(err => {
-                    messageInstance.error(`${capitalizeFirstLetter(err.field)}: ${err.message}`);
+            // RFC7807 shape: errors: { [field]: string[] }
+            const pj = data as ProblemJson;
+            if (pj && pj.errors && typeof pj.errors === 'object') {
+                Object.entries(pj.errors).forEach(([field, messages]) => {
+                    if (Array.isArray(messages)) {
+                        messages.forEach(m => messageInstance.error(`${capitalizeFirstLetter(field)}: ${m}`));
+                    }
                 });
+                // If no entries shown, fall through to raw payload below
                 return;
             }
-            if (typeof data.message === 'string' && data.message) {
-                messageInstance.error(data.message);
+            if (typeof (data as any).message === 'string' && (data as any).message) {
+                messageInstance.error((data as any).message);
                 return;
             }
         }
