@@ -93,7 +93,7 @@
     :closable="false"
     :mask-closable="false"
     :close-on-esc="false"
-    :style="{ width: isWideScreen ? '1000px' : '90vw', backgroundColor: themeVars.modalColor }"
+    :style="{ width: isWideScreen ? '1000px' : '90vw', backgroundColor: dialogBackgroundColor }"
   >
     <template #header>
       <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
@@ -139,9 +139,15 @@
       <n-text depth="3">Draft Result</n-text>
       <n-input type="textarea" placeholder="" :value="testDraftResult" :autosize="{ minRows: 6, maxRows: 12 }" style="width: 100%;" readonly />
       <n-text depth="3">Prompt Result</n-text>
-      <div style="width: 100%; max-height: 400px; overflow: auto;">
-        <n-code :code="testPromptResult" language="markdown" word-wrap />
-      </div>
+      <n-input type="textarea" placeholder="" :value="testPromptFixed" :autosize="{ minRows: 4, maxRows: 10 }" style="width: 100%;" readonly />
+      <n-space align="center" size="small">
+        <n-checkbox v-model:checked="showReasoning">Show Reasoning</n-checkbox>
+      </n-space>
+      <n-collapse-transition :show="showReasoning">
+        <div style="width: 100%; max-height: 300px; overflow: auto;">
+          <n-code :code="testPromptReasoning" language="markdown" word-wrap />
+        </div>
+      </n-collapse-transition>
     </n-space>
   </n-modal>
 
@@ -193,6 +199,7 @@ import {
   NCode,
   NCheckbox,
   NIcon,
+  NCollapseTransition,
   useLoadingBar,
   useMessage,
   useThemeVars
@@ -238,6 +245,7 @@ export default defineComponent({
     InfoCircle,
     NRadioGroup,
     NRadioButton,
+    NCollapseTransition,
     CodeMirror,
     AclTable
   },
@@ -273,9 +281,28 @@ export default defineComponent({
     const testLlmType = ref<string | null>(null);
     const testDraftResult = ref('');
     const testPromptResult = ref('');
+    const testPromptFixed = ref('');
+    const testPromptReasoning = ref('');
+    const STORAGE_KEY_SHOW_REASONING = 'promptForm.showReasoning';
+    const getSavedShowReasoning = () => {
+      const saved = localStorage.getItem(STORAGE_KEY_SHOW_REASONING);
+      return saved === 'true';
+    };
+    const showReasoning = ref(getSavedShowReasoning());
     const testLoading = ref(false);
 
     const editorExtensions = computed(() => [handlebarsLanguage, EditorView.lineWrapping]);
+
+    const dialogBackgroundColor = computed(() => {
+      const bodyColor = themeVars.value.bodyColor;
+      // Check if dark theme (dark body color)
+      if (bodyColor && (bodyColor === '#1a1a1a' || bodyColor.includes('1a1a1a'))) {
+        // Use a lighter shade than input fields (#2a2a2a) for better contrast
+        return '#333333';
+      }
+      // Light theme - use light gray background
+      return '#f5f5f5';
+    });
 
     const formTitle = computed(() => (localFormData.id ? 'Edit Prompt' : 'Create New Prompt'));
     const selectedDraftId = ref<string | null>(null);
@@ -385,6 +412,8 @@ export default defineComponent({
       }
       testDraftResult.value = '';
       testPromptResult.value = '';
+      testPromptFixed.value = '';
+      testPromptReasoning.value = '';
       showTestDialog.value = true;
     };
 
@@ -393,6 +422,8 @@ export default defineComponent({
         testLoading.value = true;
         testDraftResult.value = '';
         testPromptResult.value = '';
+        testPromptFixed.value = '';
+        testPromptReasoning.value = '';
 
         // 1) Execute draft first (if a draft is selected and content available)
         let executedDraft: string | null = null;
@@ -427,7 +458,22 @@ export default defineComponent({
           llmType: testLlmType.value || null
         };
         const promptResp = await apiClient.post('/prompts/test', promptPayload, { responseType: 'text' as any });
-        testPromptResult.value = typeof promptResp.data === 'string' ? promptResp.data : String(promptResp.data ?? '');
+        const raw = typeof promptResp.data === 'string' ? promptResp.data : String(promptResp.data ?? '');
+        testPromptResult.value = raw;
+        try {
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            testPromptFixed.value = String(parsed.result ?? '');
+            testPromptReasoning.value = parsed.reasoning ? String(parsed.reasoning) : '';
+          } else {
+            testPromptFixed.value = raw;
+            testPromptReasoning.value = '';
+          }
+        } catch {
+          // Not JSON; fall back to raw
+          testPromptFixed.value = raw;
+          testPromptReasoning.value = '';
+        }
       } catch (error: any) {
         const data = error?.response?.data;
         const opts = { duration: 0, closable: true } as const;
@@ -500,6 +546,10 @@ export default defineComponent({
       }
     });
 
+    watch(showReasoning, (value) => {
+      localStorage.setItem(STORAGE_KEY_SHOW_REASONING, String(value));
+    });
+
     return {
       localFormData,
       formTitle,
@@ -533,7 +583,11 @@ export default defineComponent({
       runPromptTest,
       llmTypeOptions: (referencesStore as any).llmTypeOptions,
       themeVars,
-      isWideScreen
+      isWideScreen,
+      testPromptFixed,
+      testPromptReasoning,
+      showReasoning,
+      dialogBackgroundColor
     };
   }
 });
