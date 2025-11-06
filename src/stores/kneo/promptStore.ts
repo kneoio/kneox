@@ -4,6 +4,24 @@ import apiClient, { setupApiClient } from '../../api/apiClient';
 import { ApiFormResponse, ApiViewPageResponse } from "../../types";
 import { BroadcastPrompt, BroadcastPromptSave } from "../../types/kneoBroadcasterTypes";
 
+interface PromptFilterDTO {
+  languageCode?: string;
+  enabled?: boolean;
+  master?: boolean;
+  locked?: boolean;
+  activated?: boolean;
+}
+
+function buildPromptsUrl(basePath: string, { page = 1, size = 10, filter }: { page?: number; size?: number; filter?: PromptFilterDTO } = {}) {
+  const params = new URLSearchParams();
+  params.set('page', String(page));
+  params.set('size', String(size));
+  if (filter && Object.keys(filter).length > 0) {
+    params.set('filter', encodeURIComponent(JSON.stringify(filter)));
+  }
+  return `${basePath}?${params.toString()}`;
+}
+
 export const usePromptStore = defineStore('promptStore', () => {
   const apiViewResponse = ref<ApiViewPageResponse<BroadcastPrompt> | null>(null);
   const apiFormResponse = ref<ApiFormResponse<BroadcastPrompt> | null>(null);
@@ -49,8 +67,13 @@ export const usePromptStore = defineStore('promptStore', () => {
     };
   });
 
-  const fetchAll = async (page = 1, pageSize = 10) => {
-    const response = await apiClient.get(`/prompts?page=${page}&size=${pageSize}`, {});
+  const fetchAll = async (page = 1, pageSize = 10, filters: PromptFilterDTO = {}) => {
+    const url = buildPromptsUrl('/prompts', {
+      page,
+      size: pageSize,
+      filter: filters && Object.keys(filters).length ? filters : undefined
+    });
+    const response = await apiClient.get(url, {});
     if (response?.data?.payload) apiViewResponse.value = response.data.payload;
     else throw new Error('Invalid API response structure');
   };

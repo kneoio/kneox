@@ -11,16 +11,34 @@
 
     <n-gi :span="isMobile ? 1 : 6">
       <n-button-group>
-        <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
+        <n-button @click="handleNewClick" type="primary" :size="isMobile ? 'medium' : 'large'">New</n-button>
         <n-button
           type="error"
           :disabled="!hasSelection"
           @click="handleDelete"
-          size="large"
+          :size="isMobile ? 'medium' : 'large'"
         >
           Delete ({{ checkedRowKeys.length }})
         </n-button>
       </n-button-group>
+
+      <n-button @click="toggleFilters" type="default" :size="isMobile ? 'medium' : 'large'" class="mr-4">
+        Filter
+      </n-button>
+    </n-gi>
+
+    <n-gi :span="isMobile ? 1 : 6">
+      <n-collapse-transition :show="showFilters">
+        <div :style="{ width: isMobile ? '100%' : '50%' }">
+          <n-space size="small" align="center">
+            <n-select v-model:value="filters.languageCode" :options="langOptions" filterable
+              placeholder="Language" clearable style="width: 200px;" />
+            <n-checkbox v-model:checked="filters.enabled">Enabled</n-checkbox>
+            <n-checkbox v-model:checked="filters.master">Master</n-checkbox>
+            <n-checkbox v-model:checked="filters.locked">Locked</n-checkbox>
+          </n-space>
+        </div>
+      </n-collapse-transition>
     </n-gi>
 
     <n-gi :span="isMobile ? 1 : 6">
@@ -46,28 +64,40 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, h, onMounted, onUnmounted, ref } from 'vue';
-import { DataTableColumns, NButton, NButtonGroup, NCheckbox, NDataTable, NGi, NGrid, NPageHeader, NTag, useMessage } from 'naive-ui';
+import { computed, defineComponent, h, onMounted, onUnmounted, ref, watch } from 'vue';
+import { DataTableColumns, NButton, NButtonGroup, NCheckbox, NDataTable, NGi, NGrid, NPageHeader, NTag, NFormItem, NSelect, NSpace, NCollapseTransition, useMessage } from 'naive-ui';
 import { useRouter } from 'vue-router';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
 import { BroadcastPrompt } from '../../../types/kneoBroadcasterTypes';
 import { usePromptStore } from '../../../stores/kneo/promptStore';
+import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 
 export default defineComponent({
-  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, NTag },
+  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, NTag, NFormItem, NSelect, NSpace, NCollapseTransition, NCheckbox },
   setup() {
     const router = useRouter();
     const message = useMessage();
     const store = usePromptStore();
+    const referencesStore = useReferencesStore();
     const isMobile = ref(window.innerWidth < 768);
     const loading = ref(false);
     const intervalId = ref<number | null>(null);
     const checkedRowKeys = ref<(string | number)[]>([]);
+    const showFilters = ref(false);
+    const filters = ref({
+      languageCode: undefined as string | undefined,
+      enabled: false,
+      master: false,
+      locked: false
+    });
 
     async function preFetch() {
       try {
         loading.value = true;
-        await store.fetchAll();
+        await Promise.all([
+          store.fetchAll(),
+          (referencesStore as any).fetchLanguages?.()
+        ]);
       } catch (error) {
         console.error('Failed to fetch initial Prompt data:', error);
         message.error('Failed to load Prompts.');
@@ -80,11 +110,45 @@ export default defineComponent({
       if (!intervalId.value) {
         intervalId.value = window.setInterval(async () => {
           try {
-            await store.fetchAll(store.getPagination.page, store.getPagination.pageSize);
+            await fetchData(store.getPagination.page, store.getPagination.pageSize);
           } catch (error) {
             console.error('Periodic refresh of Prompts failed:', error);
           }
         }, 30000);
+      }
+    };
+
+    const fetchData = async (page = 1, pageSize = 10) => {
+      try {
+        loading.value = true;
+        let activeFilters: any = {};
+        if (showFilters.value) {
+          const hasFilters = filters.value.languageCode || 
+                            filters.value.enabled || 
+                            filters.value.master || 
+                            filters.value.locked;
+          if (hasFilters) {
+            activeFilters = {
+              languageCode: filters.value.languageCode || undefined,
+              enabled: filters.value.enabled || undefined,
+              master: filters.value.master || undefined,
+              locked: filters.value.locked || undefined,
+              activated: true
+            };
+            // Remove undefined values
+            Object.keys(activeFilters).forEach(key => {
+              if (activeFilters[key] === undefined) {
+                delete activeFilters[key];
+              }
+            });
+          }
+        }
+        await store.fetchAll(page, pageSize, activeFilters);
+      } catch (error) {
+        console.error('Failed to fetch Prompt data:', error);
+        message.error('Failed to load Prompts.');
+      } finally {
+        loading.value = false;
       }
     };
 
@@ -108,24 +172,41 @@ export default defineComponent({
       stopPeriodicRefresh();
     });
 
-    const handlePageChange = async (page: number) => {
-      try {
-        loading.value = true;
-        await store.fetchAll(page, store.getPagination.pageSize);
-        checkedRowKeys.value = [];
-      } finally {
-        loading.value = false;
+    watch(() => filters.value, () => {
+      if (showFilters.value) {
+        fetchData(1, store.getPagination.pageSize);
       }
+    }, { deep: true });
+
+    const toggleFilters = () => {
+      showFilters.value = !showFilters.value;
+      fetchData(1, store.getPagination.pageSize);
+    };
+
+    const clearFilters = () => {
+      filters.value = {
+        languageCode: undefined,
+        enabled: false,
+        master: false,
+        locked: false
+      };
+      applyFilters();
+    };
+
+    const applyFilters = () => {
+      fetchData(1, store.getPagination.pageSize);
+    };
+
+    const langOptions = computed(() => (referencesStore as any).languageOptions || []);
+
+    const handlePageChange = async (page: number) => {
+      await fetchData(page, store.getPagination.pageSize);
+      checkedRowKeys.value = [];
     };
 
     const handlePageSizeChange = async (pageSize: number) => {
-      try {
-        loading.value = true;
-        await store.fetchAll(1, pageSize);
-        checkedRowKeys.value = [];
-      } finally {
-        loading.value = false;
-      }
+      await fetchData(1, pageSize);
+      checkedRowKeys.value = [];
     };
 
     const hasSelection = computed(() => checkedRowKeys.value.length > 0);
@@ -147,7 +228,7 @@ export default defineComponent({
         await Promise.all(deletePromises);
         message.success(`${checkedRowKeys.value.length} Prompt(s) deleted successfully.`);
         checkedRowKeys.value = [];
-        await store.fetchAll(store.getPagination.page, store.getPagination.pageSize);
+        await fetchData(store.getPagination.page, store.getPagination.pageSize);
       } catch (error) {
         console.error('Failed to delete Prompts:', error);
         message.error('Failed to delete Prompts.');
@@ -263,7 +344,13 @@ export default defineComponent({
       handlePageChange,
       handlePageSizeChange,
       loading,
-      checkedRowKeys
+      checkedRowKeys,
+      showFilters,
+      filters,
+      toggleFilters,
+      clearFilters,
+      applyFilters,
+      langOptions
     };
   },
 });
