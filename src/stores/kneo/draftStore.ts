@@ -4,6 +4,25 @@ import apiClient, { setupApiClient } from '../../api/apiClient';
 import { ApiFormResponse, ApiViewPageResponse } from "../../types";
 import { Draft, DraftSave } from "../../types/kneoBroadcasterTypes";
 
+interface DraftFilterDTO {
+  languageCode?: string;
+  archived?: number;
+  enabled?: boolean;
+  isMaster?: boolean;
+  locked?: boolean;
+  activated?: boolean;
+}
+
+function buildDraftsUrl(basePath: string, { page = 1, size = 10, filter }: { page?: number; size?: number; filter?: DraftFilterDTO } = {}) {
+  const params = new URLSearchParams();
+  params.set('page', String(page));
+  params.set('size', String(size));
+  if (filter && Object.keys(filter).length > 0) {
+    params.set('filter', encodeURIComponent(JSON.stringify(filter)));
+  }
+  return `${basePath}?${params.toString()}`;
+}
+
 export const useDraftStore = defineStore('draftStore', () => {
   const apiViewResponse = ref<ApiViewPageResponse<Draft> | null>(null);
   const apiFormResponse = ref<ApiFormResponse<Draft> | null>(null);
@@ -53,8 +72,13 @@ export const useDraftStore = defineStore('draftStore', () => {
     };
   });
 
-  const fetchAll = async (page = 1, pageSize = 10) => {
-    const response = await apiClient.get(`/drafts?page=${page}&size=${pageSize}`, {});
+  const fetchAll = async (page = 1, pageSize = 10, filters: DraftFilterDTO = {}) => {
+    const url = buildDraftsUrl('/drafts', {
+      page,
+      size: pageSize,
+      filter: filters && Object.keys(filters).length ? filters : undefined
+    });
+    const response = await apiClient.get(url, {});
     if (response?.data?.payload) apiViewResponse.value = response.data.payload;
     else throw new Error('Invalid API response structure');
   };

@@ -280,7 +280,7 @@
                     <n-button size="small" @click="showResultModal = true">Open</n-button>
                   </div>
                 </n-form-item>
-                <n-modal v-model:show="showResultModal" preset="card" title="Result" :bordered="false" style="max-width: 900px; width: 90vw;">
+                <n-modal v-model:show="showResultModal" preset="card" title="Result" :bordered="false" :style="{ maxWidth: '900px', width: '90vw', backgroundColor: dialogBackgroundColor }">
                   <n-scrollbar style="max-height: 70vh;">
                     <div style="white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere;">
                       {{ playgroundResult }}
@@ -406,6 +406,7 @@ import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 import AclTable from '../../common/AclTable.vue';
 import { AiAgentSave, AiAgentForm, LanguageCode } from '../../../types/kneoBroadcasterTypes';
 import { getErrorMessage, handleFormSaveError } from '../../../utils/errorHandling';
+import { useDialogBackground } from '../../../composables/useDialogBackground';
 
 export default defineComponent({
   name: "AiAgentForm",
@@ -441,6 +442,7 @@ export default defineComponent({
     const store = useAiAgentStore();
     const referencesStore = useReferencesStore();
     const route = useRoute();
+    const { dialogBackgroundColor } = useDialogBackground();
     const editorExtensions = computed(() => [
       handlebarsLanguage,
       EditorView.lineWrapping
@@ -868,7 +870,8 @@ export default defineComponent({
       insertMiniPodcastVariable,
       // prompts
       promptItems,
-      updatePrompt
+      updatePrompt,
+      dialogBackgroundColor
     };
   }
 });

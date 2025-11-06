@@ -88,7 +88,7 @@
     :closable="false"
     :mask-closable="false"
     :close-on-esc="false"
-    :style="{ backgroundColor: themeVars.modalColor }"
+    :style="{ backgroundColor: dialogBackgroundColor }"
   >
     <template #header>
       <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
@@ -124,7 +124,7 @@
     </n-space>
   </n-modal>
 
-  <n-modal v-model:show="showReplicateDialog" preset="dialog" title="Replicate Draft">
+  <n-modal v-model:show="showReplicateDialog" preset="dialog" title="Replicate Draft" :style="{ backgroundColor: dialogBackgroundColor }">
     <n-space vertical>
       <n-text>Select languages to replicate this draft:</n-text>
       <n-grid :cols="3" x-gap="12" y-gap="8">
@@ -183,6 +183,7 @@ import { useAiAgentStore } from '../../../stores/kneo/aiAgentStore';
 import { useRadioStationStore } from '../../../stores/kneo/radioStationStore';
 import apiClient from '../../../api/apiClient';
 import AclTable from '../../common/AclTable.vue';
+import { useDialogBackground } from '../../../composables/useDialogBackground';
 
 export default defineComponent({
   name: 'DraftForm',
@@ -210,6 +211,7 @@ export default defineComponent({
     const loadingBar = useLoadingBar();
     const themeVars = useThemeVars();
     const message = useMessage();
+    const { dialogBackgroundColor } = useDialogBackground();
     const router = useRouter();
     const store = useDraftStore();
     const referencesStore = useReferencesStore();

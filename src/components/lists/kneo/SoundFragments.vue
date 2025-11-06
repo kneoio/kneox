@@ -68,7 +68,7 @@
   </n-grid>
 
   <!-- Bulk Brand Update Dialog -->
-  <n-modal v-model:show="showBrandUpdateDialog" preset="dialog" title="Bulk Brand Update">
+  <n-modal v-model:show="showBrandUpdateDialog" preset="dialog" title="Bulk Brand Update" :style="{ backgroundColor: dialogBackgroundColor }">
     <n-space vertical>
       <n-form-item label="Operation">
         <n-radio-group v-model:value="brandUpdateOperation">
@@ -137,6 +137,7 @@ import { SoundFragment, FragmentType } from "../../../types/kneoBroadcasterTypes
 import { useSoundFragmentStore } from '../../../stores/kneo/soundFragmentStore';
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 import { useRadioStationStore } from '../../../stores/kneo/radioStationStore';
+import { useDialogBackground } from '../../../composables/useDialogBackground';
 
 export default defineComponent( {
   name: 'SoundFragments',
@@ -152,6 +153,7 @@ export default defineComponent( {
     const store = useSoundFragmentStore();
     const referencesStore = useReferencesStore();
     const radioStationStore = useRadioStationStore();
+    const { dialogBackgroundColor } = useDialogBackground();
     const isMobile = ref( window.innerWidth < 768 );
     const loading = ref( false );
     const intervalId = ref<number | null>( null );
@@ -448,7 +450,8 @@ export default defineComponent( {
       confirmBrandUpdate,
       showBrandUpdateDialog,
       brandUpdateOperation,
-      selectedBrands
+      selectedBrands,
+      dialogBackgroundColor
     };
   }
 } );

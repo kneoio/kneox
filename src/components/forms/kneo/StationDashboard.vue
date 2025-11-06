@@ -182,7 +182,7 @@
     </n-card>
   </n-space>
 
-  <n-modal v-model:show="showBroadcastModal" preset="dialog" title="Broadcast message">
+  <n-modal v-model:show="showBroadcastModal" preset="dialog" title="Broadcast message" :style="{ backgroundColor: dialogBackgroundColor }">
     <n-form :model="broadcastForm" ref="broadcastFormRef">
       <n-form-item label="From" path="from">
         <n-input class="broadcast-input" v-model:value="broadcastForm.from" placeholder="e.g. John" />
@@ -226,6 +226,7 @@ import {
 } from 'naive-ui';
 import { ExternalLink, PlayerPlay, PlayerStop, Activity } from '@vicons/tabler';
 import { MIXPLA_PLAYER_URL } from '../../../constants/config';
+import { useDialogBackground } from '../../../composables/useDialogBackground';
 
 
 
@@ -246,6 +247,7 @@ export default defineComponent( {
     const dashboardStore = useDashboardStore();
     const memoryStore = useMemoryStore();
     const message = useMessage();
+    const { dialogBackgroundColor } = useDialogBackground();
     const isStartingStation = ref( false );
     const isStoppingStation = ref( false );
 
@@ -828,6 +830,7 @@ export default defineComponent( {
       creatingBroadcast,
       handleBroadcast,
       getPlaylistItemType,
+      dialogBackgroundColor,
       formatArtistTitle,
       stationDetails,
       handleStart,

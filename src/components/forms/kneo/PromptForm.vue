@@ -151,7 +151,7 @@
     </n-space>
   </n-modal>
 
-  <n-modal v-model:show="showReplicateDialog" preset="dialog" title="Replicate Prompt">
+  <n-modal v-model:show="showReplicateDialog" preset="dialog" title="Replicate Prompt" :style="{ backgroundColor: dialogBackgroundColor }">
     <n-space vertical>
       <n-text>Select languages to replicate this prompt:</n-text>
       <n-grid :cols="3" x-gap="12" y-gap="8">
@@ -218,6 +218,7 @@ import { useRadioStationStore } from '../../../stores/kneo/radioStationStore';
 import apiClient from '../../../api/apiClient';
 import AclTable from '../../common/AclTable.vue';
 import { InfoCircle } from '@vicons/tabler';
+import { useDialogBackground } from '../../../composables/useDialogBackground';
 
 export default defineComponent({
   name: 'PromptForm',
@@ -253,6 +254,7 @@ export default defineComponent({
     const loadingBar = useLoadingBar();
     const themeVars = useThemeVars();
     const message = useMessage();
+    const { dialogBackgroundColor } = useDialogBackground();
     const router = useRouter();
     const store = usePromptStore();
     const referencesStore = useReferencesStore();
@@ -292,17 +294,6 @@ export default defineComponent({
     const testLoading = ref(false);
 
     const editorExtensions = computed(() => [handlebarsLanguage, EditorView.lineWrapping]);
-
-    const dialogBackgroundColor = computed(() => {
-      const bodyColor = themeVars.value.bodyColor;
-      // Check if dark theme (dark body color)
-      if (bodyColor && (bodyColor === '#1a1a1a' || bodyColor.includes('1a1a1a'))) {
-        // Use a lighter shade than input fields (#2a2a2a) for better contrast
-        return '#333333';
-      }
-      // Light theme - use light gray background
-      return '#f5f5f5';
-    });
 
     const formTitle = computed(() => (localFormData.id ? 'Edit Prompt' : 'Create New Prompt'));
     const selectedDraftId = ref<string | null>(null);

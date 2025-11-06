@@ -50,7 +50,7 @@
     </n-gi>
   </n-grid>
 
-  <n-modal v-model:show="showTriggerEventModal" preset="dialog" title="Create Memory">
+  <n-modal v-model:show="showTriggerEventModal" preset="dialog" title="Create Memory" :style="{ backgroundColor: dialogBackgroundColor }">
     <n-form ref="formRef" :model="eventForm" :rules="eventRules">
       <n-form-item path="brand" label="Brand">
         <n-select 
@@ -119,6 +119,7 @@ import LoaderIcon from '../../helpers/LoaderWrapper.vue';
 import {Memory} from "../../../types/kneoBroadcasterTypes";
 import {useMemoryStore} from "../../../stores/kneo/memoryStore";
 import {useRadioStationStore} from "../../../stores/kneo/radioStationStore";
+import { useDialogBackground } from '../../../composables/useDialogBackground';
 
 export default defineComponent({
   components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, NModal, NForm, NFormItem, NInput, NSelect, CodeMirror },
@@ -127,6 +128,7 @@ export default defineComponent({
     const store = useMemoryStore();
     const radioStationStore = useRadioStationStore();
     const message = useMessage();
+    const { dialogBackgroundColor } = useDialogBackground();
     const isMobile = ref(window.innerWidth < 768);
     const loading = ref(false);
     const intervalId = ref<number | null>(null);
@@ -383,7 +385,8 @@ export default defineComponent({
       memoryTypeOptions,
       editorExtensions,
       updateContentForMemoryType,
-      formRef
+      formRef,
+      dialogBackgroundColor
     };
   }
 });
