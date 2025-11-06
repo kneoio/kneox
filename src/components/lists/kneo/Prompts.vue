@@ -179,7 +179,6 @@ export default defineComponent({
     const columns = computed<DataTableColumns<BroadcastPrompt>>(() => {
       const baseColumns: DataTableColumns<BroadcastPrompt> = [
         { type: 'selection', fixed: 'left', width: 50 },
-        { title: 'Type', key: 'promptType', width: 120, render: (r) => h(NTag as any, { size: 'small' }, { default: () => r.promptType || '' }) },
         { title: 'Lang', key: 'languageCode', width: 100 },
         {
           title: 'Flags',
@@ -235,8 +234,7 @@ export default defineComponent({
               const text = row.prompt || '';
               return h('div', {}, [
                 h('div', { style: 'font-weight: bold; display: flex; align-items: center;' }, [
-                  `${row.languageCode || ''}`,
-                  row.promptType ? h(NTag as any, { size: 'small', style: 'margin-left: 6px;' }, { default: () => row.promptType }) : null
+                  `${row.languageCode || ''}`
                 ]),
                 h('div', { style: 'font-size: 0.8rem; margin: 4px 0;' }, text.length > maxLength ? text.substring(0, maxLength) + '...' : text),
                 h('div', { style: 'display: flex; align-items: center;' }, [
