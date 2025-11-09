@@ -156,19 +156,27 @@
       <n-text>Select languages to replicate this prompt:</n-text>
       <n-grid :cols="3" x-gap="12" y-gap="8">
         <n-gi v-for="lang in langOptions" :key="lang.value">
-          <n-checkbox 
-            :checked="selectedLanguages.includes(lang.value)" 
-            @update:checked="(checked) => toggleLanguage(lang.value, checked)"
-          >
-            {{ lang.label }}
-          </n-checkbox>
+          <div class="lang-row">
+            <GlowDot
+              class="lang-dot"
+              :variant="getDotVariant(lang.value)"
+              :active="selectedLanguages.includes(lang.value) && (isReplicating || hasReplicateError || hasReplicateSuccess)"
+            />
+            <n-checkbox 
+              :checked="selectedLanguages.includes(lang.value)" 
+              @update:checked="(checked) => toggleLanguage(lang.value, checked)"
+            >
+              {{ lang.label }}
+            </n-checkbox>
+          </div>
         </n-gi>
       </n-grid>
     </n-space>
     <template #action>
       <n-space>
-        <n-button @click="showReplicateDialog = false">Cancel</n-button>
-        <n-button type="primary" @click="handleReplicate" :disabled="selectedLanguages.length === 0">Replicate</n-button>
+        <n-button v-if="!allDone" @click="showReplicateDialog = false">Cancel</n-button>
+        <n-button v-if="!allDone" type="primary" @click="handleReplicate" :disabled="selectedLanguages.length === 0 || isReplicating">Replicate</n-button>
+        <n-button v-if="allDone" type="primary" @click="showReplicateDialog = false">Close</n-button>
       </n-space>
     </template>
   </n-modal>
@@ -217,6 +225,7 @@ import { useAiAgentStore } from '../../../stores/kneo/aiAgentStore';
 import { useRadioStationStore } from '../../../stores/kneo/radioStationStore';
 import apiClient from '../../../api/apiClient';
 import AclTable from '../../common/AclTable.vue';
+import GlowDot from '../../common/GlowDot.vue';
 import { InfoCircle } from '@vicons/tabler';
 import { useDialogBackground } from '../../../composables/useDialogBackground';
 
@@ -248,7 +257,8 @@ export default defineComponent({
     NRadioButton,
     NCollapseTransition,
     CodeMirror,
-    AclTable
+    AclTable,
+    GlowDot
   },
   setup() {
     const loadingBar = useLoadingBar();
@@ -276,6 +286,12 @@ export default defineComponent({
     const aclLoading = ref(false);
     const showReplicateDialog = ref(false);
     const selectedLanguages = ref<string[]>([]);
+    const isReplicating = ref(false);
+    const hasReplicateError = ref(false);
+    const hasReplicateSuccess = ref(false);
+    const completedLanguages = ref<Set<string>>(new Set());
+    const allDone = ref(false);
+    let eventSource: EventSource | null = null;
     const showTestDialog = ref(false);
     const testSongId = ref<string | null>(null);
     const testAgentId = ref<string | null>(null);
@@ -366,20 +382,78 @@ export default defineComponent({
 
     const handleReplicateClick = () => {
       selectedLanguages.value = (referencesStore as any).languageOptions.map((lang: any) => lang.value);
+      hasReplicateError.value = false;
+      hasReplicateSuccess.value = false;
+      completedLanguages.value.clear();
+      allDone.value = false;
       showReplicateDialog.value = true;
     };
 
     const handleReplicate = async () => {
       try {
         loadingBar.start();
+        isReplicating.value = true;
+        hasReplicateError.value = false;
+        completedLanguages.value.clear();
+        allDone.value = false;
         message.info(`Replicating prompt to ${selectedLanguages.value.length} language(s)...`);
-        showReplicateDialog.value = false;
+        const payload = selectedLanguages.value.map((lang) => ({
+          toTranslate: localFormData.prompt || '',
+          masterId: localFormData.id,
+          translationType: 'PROMPT',
+          languageCode: lang
+        }));
+        const jobId = crypto.randomUUID();
+        await apiClient.post(`/prompts/replicate/start?jobId=${jobId}`, payload);
+        if (eventSource) {
+          eventSource.close();
+        }
+        const apiServer = import.meta.env.VITE_API_SERVER;
+        eventSource = new EventSource(`${apiServer}/prompts/replicate/stream?jobId=${jobId}`, { withCredentials: true } as any);
+        eventSource.addEventListener('language_done', (e: MessageEvent) => {
+          const data = JSON.parse((e as any).data);
+          if (data.success) {
+            completedLanguages.value.add(data.language);
+          }
+        });
+        eventSource.addEventListener('done', (e: MessageEvent) => {
+          const data = JSON.parse((e as any).data);
+          allDone.value = true;
+          hasReplicateSuccess.value = true;
+          isReplicating.value = false;
+          loadingBar.finish();
+          message.success(`Prompt replicated: ${data.success}/${data.total} succeeded`);
+          if (eventSource) {
+            eventSource.close();
+            eventSource = null;
+          }
+        });
+        eventSource.addEventListener('error', () => {
+          hasReplicateError.value = true;
+          isReplicating.value = false;
+          loadingBar.finish();
+          message.error('Failed to replicate prompt.');
+          if (eventSource) {
+            eventSource.close();
+            eventSource = null;
+          }
+        });
       } catch (error: any) {
         console.error('Failed to replicate prompt:', error);
-        message.error('Failed to replicate prompt.');
-      } finally {
+        hasReplicateError.value = true;
+        isReplicating.value = false;
         loadingBar.finish();
+        message.error('Failed to replicate prompt.');
       }
+    };
+
+    const getDotVariant = (langValue: string): 'yellow' | 'red' | 'green' | 'gray' => {
+      const isSelected = selectedLanguages.value.includes(langValue);
+      if (!isSelected) return 'gray';
+      if (completedLanguages.value.has(langValue)) return 'green';
+      if (hasReplicateError.value) return 'red';
+      if (isReplicating.value) return 'yellow';
+      return 'gray';
     };
 
     const toggleLanguage = (langValue: string, checked: boolean) => {
@@ -558,6 +632,11 @@ export default defineComponent({
       selectedLanguages,
       handleReplicateClick,
       handleReplicate,
+      isReplicating,
+      hasReplicateError,
+      hasReplicateSuccess,
+      allDone,
+      getDotVariant,
       toggleLanguage,
       showTestDialog,
       testSongId,

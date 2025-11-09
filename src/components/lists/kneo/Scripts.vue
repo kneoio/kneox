@@ -227,23 +227,6 @@ export default defineComponent({
     const columns = computed<DataTableColumns<any>>(() => ([
       { type: 'selection' },
       { title: 'name', key: 'name' },
-      { 
-        title: 'Tags', 
-        key: 'tags',
-        render: (row: any) => {
-          const labelUuids = (row as any).labelUuids || [];
-          if (!Array.isArray(labelUuids) || labelUuids.length === 0) return null;
-          return labelUuids.map((uuid: string) => {
-            const labelOption = labelMap.value.get(uuid);
-            return h(NTag, {
-              style: labelOption?.color ? {
-                backgroundColor: labelOption.color,
-                color: labelOption.fontColor || '#ffffff'
-              } : undefined
-            }, { default: () => labelOption?.label || uuid });
-          });
-        }
-      },
       {
         title: 'Start Time',
         key: 'startTime',

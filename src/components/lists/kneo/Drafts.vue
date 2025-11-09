@@ -240,7 +240,22 @@ export default defineComponent({
         message.warning('Please select Drafts to delete.');
         return;
       }
-      message.error("Drafts can't be deleted.");
+      try {
+        loading.value = true;
+        const deletePromises = checkedRowKeys.value.map(id => store.deleteDraft(id as string));
+        await Promise.all(deletePromises);
+        message.success(`${checkedRowKeys.value.length} Draft(s) deleted successfully.`);
+        checkedRowKeys.value = [];
+      } catch (error: any) {
+        const data = error?.response?.data;
+        if (data) {
+          message.error(typeof data === 'string' ? data : JSON.stringify(data));
+        } else {
+          message.error(String(error));
+        }
+      } finally {
+        loading.value = false;
+      }
     };
 
     const getRowProps = (row: Draft) => {
@@ -268,6 +283,16 @@ export default defineComponent({
         { type: 'selection', fixed: 'left', width: 50 },
         { title: 'Lang', key: 'languageCode', width: 100 },
         { title: 'Title', key: 'title', width: 300 },
+        {
+          title: 'Flags', key: 'flags', width: 220,
+          render: (row: Draft) => {
+            const tags: any[] = [];
+            if (row.enabled) tags.push(h(NTag as any, { type: 'info', size: 'small', style: 'margin-right: 6px;' }, { default: () => 'ENABLED' }));
+            if ((row as any).isMaster || (row as any).master) tags.push(h(NTag as any, { type: 'success', size: 'small', style: 'margin-right: 6px;' }, { default: () => 'MASTER' }));
+            if (row.locked) tags.push(h(NTag as any, { type: 'error', size: 'small' }, { default: () => 'LOCKED' }));
+            return h('div', { style: 'display: flex; align-items: center;' }, tags);
+          }
+        },
         {
           title: 'Content',
           key: 'content',

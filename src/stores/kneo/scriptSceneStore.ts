@@ -24,6 +24,15 @@ export const useScriptSceneStore = defineStore('scriptSceneStore', () => {
     };
   });
 
+  const fetchAll = async (page = 1, size = 10) => {
+    const res = await apiClient.get(`/scenes?page=${page}&size=${size}`);
+    if (res?.data?.payload) {
+      apiViewResponse.value = res.data.payload as ApiViewPageResponse<ScriptScene>;
+    } else {
+      throw new Error('Invalid API response structure');
+    }
+  };
+
   const fetchForScript = async (scriptId: string, page = 1, size = 10) => {
     const res = await apiClient.get(`/scripts/${scriptId}/scenes?page=${page}&size=${size}`);
     if (res?.data?.payload) {
@@ -67,6 +76,7 @@ export const useScriptSceneStore = defineStore('scriptSceneStore', () => {
     apiFormResponse,
     getEntries,
     getPagination,
+    fetchAll,
     fetchForScript,
     fetch,
     upsertForScript,
