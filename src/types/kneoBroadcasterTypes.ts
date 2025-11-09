@@ -1,7 +1,9 @@
 import { UploadFileInfo } from "naive-ui/es/upload/src/public-types";
 
 export enum FragmentType {
-    SONG = "SONG"
+    SONG = "SONG",
+    ADVERTISEMENT = "ADVERTISEMENT",
+    JINGLE = "JINGLE"
 }
 
 export enum BrandStatus {
@@ -355,6 +357,7 @@ prompts?: string[];
 startTime?: string;
 oneTimeRun?: boolean;
 weekdays?: number[];
+talkativity?: number;
 }
 
 export interface ScriptSceneViewData {
@@ -372,6 +375,7 @@ prompts?: string[];
 startTime?: string;
 oneTimeRun?: boolean;
 weekdays?: number[];
+talkativity?: number;
 }
 
 // Prompts (Broadcaster)

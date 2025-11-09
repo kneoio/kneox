@@ -226,7 +226,8 @@ export default defineComponent({
 
     const typeOptions = [
       { label: 'Song', value: 'SONG' },
-      { label: 'Advertisement', value: 'ADVERTISEMENT' }
+      { label: 'Advertisement', value: 'ADVERTISEMENT' },
+      { label: 'Jingle', value: 'JINGLE' }
     ];
 
     const sourceDisplayValue = computed(() => store.formatSource(localFormData.source));

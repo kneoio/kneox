@@ -117,7 +117,7 @@
         </n-grid>
       </n-form>
       <n-space>
-        <n-button type="primary" :loading="testLoading" @click="runDraftTest">Run</n-button>
+        <n-button type="primary" :loading="testLoading" @click="runDraftTest">Run (Ctrl+Enter)</n-button>
       </n-space>
       <n-text depth="3">Result</n-text>
       <n-input type="textarea" :value="testResult" :autosize="{ minRows: 6, maxRows: 12 }" style="width: 100%;" readonly />
@@ -140,15 +140,15 @@
     </n-space>
     <template #action>
       <n-space>
-        <n-button @click="showReplicateDialog = false">Cancel</n-button>
-        <n-button type="primary" @click="handleReplicate" :disabled="selectedLanguages.length === 0">Replicate</n-button>
+        <n-button @click="showReplicateDialog = false">Cancel (Esc)</n-button>
+        <n-button type="primary" @click="handleReplicate" :disabled="selectedLanguages.length === 0">Replicate (Ctrl+Enter)</n-button>
       </n-space>
     </template>
   </n-modal>
 </template>
 
 <script lang="ts">
-import {computed, defineComponent, onMounted, reactive, ref, watch} from 'vue';
+import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue';
 import {useRoute, useRouter} from 'vue-router';
 import {
   NButton,
@@ -210,8 +210,7 @@ export default defineComponent({
   setup() {
     const loadingBar = useLoadingBar();
     const themeVars = useThemeVars();
-    const message = useMessage();
-    const { dialogBackgroundColor } = useDialogBackground();
+    const message = useMessage();    
     const router = useRouter();
     const store = useDraftStore();
     const referencesStore = useReferencesStore();
@@ -248,6 +247,24 @@ export default defineComponent({
 
     const showReplicateDialog = ref(false);
     const selectedLanguages = ref<string[]>([]);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === 'Enter') {
+        if (showTestDialog.value) {
+          runDraftTest();
+        } else if (showReplicateDialog.value && selectedLanguages.value.length > 0) {
+          handleReplicate();
+        }
+      }
+    };
+
+    onMounted(() => {
+      window.addEventListener('keydown', handleKeyDown);
+    });
+
+    onUnmounted(() => {
+      window.removeEventListener('keydown', handleKeyDown);
+    });
 
     const promptTypeOptions = (referencesStore as any).promptTypeOptions;
     const songOptions = computed(() => {
@@ -306,7 +323,7 @@ export default defineComponent({
     };
 
     const handleReplicateClick = () => {
-      selectedLanguages.value = [];
+      selectedLanguages.value = (referencesStore as any).languageOptions.map((lang: any) => lang.value);
       showReplicateDialog.value = true;
     };
 
@@ -345,7 +362,7 @@ export default defineComponent({
     const handleSave = async () => {
       try {
         loadingBar.start();
-        const lang = localFormData.languageCode || '';
+        const lang = localFormData.languageCode;
         const hasLangInTitle = lang && (localFormData.title || '').includes(lang);
         const titleToSave = hasLangInTitle || !lang
           ? (localFormData.title || '')

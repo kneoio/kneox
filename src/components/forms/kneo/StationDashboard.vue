@@ -91,7 +91,9 @@
                       <n-text v-if="fragment.duration" depth="3" style="font-size: 0.75rem;">
                         {{ formatDuration(fragment.duration) }}
                       </n-text>
-                      <span v-for="(c, i) in getMergingTypeColors(fragment)" :key="i" class="merge-box" :style="{ backgroundColor: c }"></span>
+                      <n-tag v-if="getMergingTypeText(fragment).text" size="small" :type="getMergingTypeText(fragment).color">
+                        {{ getMergingTypeText(fragment).text }}
+                      </n-tag>
                     </n-space>
                   </template>
                 </n-timeline-item>
@@ -555,49 +557,27 @@ export default defineComponent( {
       }
     };
 
-    const openMixpla = () => {
-      window.open( mixplaUrl.value, '_blank', 'noopener,noreferrer' );
-    };
-
-    
-
     const cleanTitle = ( title: string | undefined | null ): string => {
       if ( !title || typeof title !== 'string' ) return 'N/A';
       return title.replace( /^(#+|--+)\s*/, '' ).replace( /[#-]/g, '|' ).trim();
     };
 
-    const getMergingTypeSymbol = ( fragment: any ): string => {
-      if ( fragment?.mergingType === 'FILLER_SONG' ) {
-        return '■ ';
-      }
-      if ( fragment?.mergingType === 'INTRO_SONG' ) {
-        return '■■ ';
-      }
-      if ( fragment?.mergingType === 'SONG_INTRO_SONG' ) {
-        return '■■■ ';
-      }
-      return '';
-    };
-
-    const getMergingTypeColors = (fragment: any): string[] => {
-      switch (fragment?.mergingType) {
-        case 'FILLER_SONG':
-          return ['#18a058']; // green
+    const getMergingTypeText = (fragment: any): { text: string; color: string } => {
+      if (!fragment) return { text: '', color: 'default' };
+      switch (fragment.mergingType) {
+        case 'FILLER_JINGLE':
+          return { text: 'Filler Jingle', color: 'success' };
         case 'INTRO_SONG':
-          return ['#f0a020', '#f0a020']; // orange x2
+          return { text: 'Intro Song', color: 'warning' };
         case 'SONG_INTRO_SONG':
-          return ['#722ed1', '#722ed1', '#722ed1']; // purple x3
+          return { text: 'Song + Intro Song', color: 'info' };
         case 'INTRO_SONG_INTRO_SONG':
-          return ['#ef4444', '#ef4444', '#ef4444', '#ef4444']; // red x4
+          return { text: 'Intro Song + Intro Song', color: 'error' };
         case 'SONG_CROSSFADE_SONG':
-          return ['#7dd3fc']; // baby blue
+          return { text: 'Song Crossfade', color: 'success' };
         default:
-          return [];
+          return { text: fragment.mergingType || '', color: 'default' };
       }
-    };
-
-    const hasHlsSongStats = (): boolean => {
-      return !!( stationDetails.value?.songStatistics && Object.keys( stationDetails.value.songStatistics ).length > 0 );
     };
 
     const getHlsCurrentTrack = (): string => {
@@ -619,16 +599,6 @@ export default defineComponent( {
       const minutes = Math.floor(seconds / 60);
       const remainingSeconds = seconds % 60;
       return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-    };
-
-    const getHlsCurrentTrackDisplay = (): string => {
-      const songStats = stationDetails.value?.songStatistics as any;
-      if (!songStats) return 'N/A';
-      const title = songStats?.songMetadata?.title ?? songStats?.title;
-      const artist = songStats?.songMetadata?.artist ?? songStats?.artist;
-      if (!title) return 'N/A';
-      const clean = cleanTitle(title);
-      return artist ? `${String(artist).trim()} — ${clean}` : clean;
     };
 
     const formatTimestamp = ( timestamp: string ): string => {
@@ -676,10 +646,6 @@ export default defineComponent( {
       };
 
       return statusMap[status.toUpperCase()] || status;
-    };
-
-    const getHlsListenersCount = (): number => {
-      return currentListeners.value;
     };
 
     const isCurrentSong = ( fragment: any ): boolean => {
@@ -836,11 +802,11 @@ export default defineComponent( {
       handleStart,
       handleStop,
       formatDuration,
-      getMergingTypeColors,
       formatTime,
       formatSceneDuration,
       mapMessageType,
-      calculatePreviousSceneEnd
+      calculatePreviousSceneEnd,
+      getMergingTypeText
     };
   },
 } );

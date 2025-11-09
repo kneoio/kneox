@@ -42,6 +42,13 @@
             </n-form-item>
           </n-gi>
           <n-gi>
+            <n-form-item label="Talkativity">
+              <n-slider v-model:value="localFormData.talkativity" :min="0" :max="1" :step="0.05" :tooltip="false"
+                style="width: 50%; max-width: 600px;" />
+              <span style="margin-left: 12px;">{{ localFormData.talkativity || 0 }}</span>
+            </n-form-item>
+          </n-gi>
+          <n-gi>
             <n-form-item label="Weekdays">
               <n-checkbox-group v-model:value="selectedWeekdays" style="width: 50%; max-width: 600px;">
                 <n-checkbox :value="1" label="Mon" />
@@ -122,6 +129,7 @@ import {
   NTabs,
   NTabPane,
   NIcon,
+  NSlider,
   useLoadingBar,
   useMessage
 } from 'naive-ui';
@@ -151,6 +159,7 @@ export default defineComponent({
     NCheckboxGroup,
     NTabs,
     NTabPane,
+    NSlider,
     NIcon,
     ChevronRight,
     TagOff,
@@ -190,7 +199,8 @@ export default defineComponent({
       id: '',
       scriptId: '',
       prompts: [],
-      startTime: ''
+      startTime: '',
+      talkativity: 0.5
     });
 
     const startTimeMs = ref<number | null>(null);
@@ -233,6 +243,8 @@ export default defineComponent({
             : [];
           const w = (data as any).weekdays || [];
           selectedWeekdays.value = Array.isArray(w) ? (w.filter((n: any) => Number.isInteger(n)) as number[]) : [];
+          // Set talkativity from API response, default to 0.5 if not provided
+          localFormData.talkativity = typeof data.talkativity === 'number' ? data.talkativity : 0.5;
         }
       }
     };
@@ -264,6 +276,7 @@ export default defineComponent({
           startTime: startTimeMs.value != null ? formatTimeFromMs(startTimeMs.value) : undefined,
           oneTimeRun: localFormData.oneTimeRun as any,
           weekdays: selectedWeekdays.value,
+          talkativity: localFormData.talkativity as any,
         };
         const id = route.params.id as string;
         if (!id || id === 'new') {
