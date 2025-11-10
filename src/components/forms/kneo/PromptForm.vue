@@ -4,7 +4,6 @@
       <n-page-header :subtitle="formTitle" @back="goBack">
         <template #title>
           <span>{{ localFormData.id ? 'Prompt' : 'New Prompt' }}</span>
-          <n-tag v-if="localFormData.master" type="success" size="small" class="ml-2">MASTER</n-tag>
         </template>
         <template #footer>
           Registered: {{ localFormData.regDate }}, Last Modified: {{ localFormData.lastModifiedDate }}
@@ -164,6 +163,7 @@
             />
             <n-checkbox 
               :checked="selectedLanguages.includes(lang.value)" 
+              :disabled="lang.value === 'en'"
               @update:checked="(checked) => toggleLanguage(lang.value, checked)"
             >
               {{ lang.label }}
@@ -381,7 +381,7 @@ export default defineComponent({
     };
 
     const handleReplicateClick = () => {
-      selectedLanguages.value = (referencesStore as any).languageOptions.map((lang: any) => lang.value);
+      selectedLanguages.value = ['en'];
       hasReplicateError.value = false;
       hasReplicateSuccess.value = false;
       completedLanguages.value.clear();
@@ -404,12 +404,12 @@ export default defineComponent({
           languageCode: lang
         }));
         const jobId = crypto.randomUUID();
-        await apiClient.post(`/prompts/replicate/start?jobId=${jobId}`, payload);
+        await apiClient.post(`/prompts/translate/start?jobId=${jobId}`, payload);
         if (eventSource) {
           eventSource.close();
         }
         const apiServer = import.meta.env.VITE_API_SERVER;
-        eventSource = new EventSource(`${apiServer}/prompts/replicate/stream?jobId=${jobId}`, { withCredentials: true } as any);
+        eventSource = new EventSource(`${apiServer}/prompts/translate/stream?jobId=${jobId}`, { withCredentials: true } as any);
         eventSource.addEventListener('language_done', (e: MessageEvent) => {
           const data = JSON.parse((e as any).data);
           if (data.success) {
@@ -494,7 +494,7 @@ export default defineComponent({
         let executedDraft: string | null = null;
         try {
           const draftId = selectedDraftId.value;
-          const allDrafts = (draftStore.getEntries || []) as any[];
+          const allDrafts = (draftStore as any).getEntries || [];
           const selectedDraft = allDrafts.find((d: any) => d.id === draftId);
           const draftContent = selectedDraft?.content || null;
           if (draftContent) {
@@ -662,3 +662,14 @@ export default defineComponent({
   }
 });
 </script>
+
+<style scoped>
+.lang-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.lang-dot {
+  margin-left: 2px;
+}
+</style>

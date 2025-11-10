@@ -13,6 +13,7 @@
     <n-gi class="mt-2" span="6">
       <n-button-group>
         <n-button type="primary" @click="handleSave" size="large">Save</n-button>
+        <n-button type="default" @click="openDryRunDialog" size="large">Dry run</n-button>
         <n-button type="default" disabled size="large">Archive</n-button>
       </n-button-group>
     </n-gi>
@@ -73,6 +74,51 @@
       </n-tabs>
     </n-gi>
   </n-grid>
+
+  <n-modal
+    v-model:show="showDryRunDialog"
+    preset="dialog"
+    :closable="false"
+    :mask-closable="false"
+    :close-on-esc="false"
+    :style="{ width: '800px', backgroundColor: dialogBackgroundColor }"
+  >
+    <template #header>
+      <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+        <span>Dry run</span>
+        <button type="button" @click="showDryRunDialog = false" aria-label="Close" style="background:none; border:none; font-size:18px; line-height:1; cursor:pointer;">×</button>
+      </div>
+    </template>
+    <n-space vertical size="small">
+      <n-form label-placement="left" label-width="auto">
+        <n-grid :cols="1" x-gap="12" y-gap="8" class="m-1">
+          <n-gi>
+            <n-form-item label="Station">
+              <n-select v-model:value="dryRunStationId" :options="stationOptions" filterable style="width: 50%; max-width: 600px;" />
+            </n-form-item>
+          </n-gi>
+          <n-gi>
+            <n-form-item label="DJ">
+              <n-select v-model:value="dryRunDjId" :options="agentOptions" filterable style="width: 50%; max-width: 600px;" />
+            </n-form-item>
+          </n-gi>
+        </n-grid>
+      </n-form>
+      <n-text depth="3">Scenes</n-text>
+      <div style="display:flex; flex-direction:column; gap:8px; width: 100%;">
+        <div v-for="sc in sceneStore.getEntries" :key="sceneRowKey(sc)" style="display:flex; align-items:center; gap:8px;">
+          <GlowDot variant="gray" :active="true" />
+          <span>{{ sc.type }} — {{ sc.startTime }} (prompts: {{ Array.isArray(sc.prompts) ? sc.prompts.length : 0 }})</span>
+        </div>
+      </div>
+    </n-space>
+    <template #action>
+      <n-space>
+        <n-button @click="showDryRunDialog = false">Cancel</n-button>
+        <n-button type="primary" @click="runDryRun" :disabled="!dryRunStationId || !dryRunDjId">Run</n-button>
+      </n-space>
+    </template>
+  </n-modal>
 </template>
 
 <script lang="ts">
@@ -92,6 +138,8 @@ import {
   NDataTable,
   NSelect,
   NText,
+  NModal,
+  NSpace,
   useLoadingBar,
   useMessage
 } from 'naive-ui';
@@ -104,6 +152,10 @@ import { EditorView } from "@codemirror/view";
 import { json } from "@codemirror/lang-json";
 import CodeMirror from 'vue-codemirror6';
 import AclTable from '../../common/AclTable.vue';
+import GlowDot from '../../common/GlowDot.vue';
+import { useAiAgentStore } from '../../../stores/kneo/aiAgentStore';
+import { useRadioStationStore } from '../../../stores/kneo/radioStationStore';
+import { useDialogBackground } from '../../../composables/useDialogBackground';
 
 export default defineComponent({
   name: "ScriptForm",
@@ -122,15 +174,21 @@ export default defineComponent({
     NText,
     NDataTable,
     CodeMirror,
-    AclTable
+    AclTable,
+    NModal,
+    NSpace,
+    GlowDot
   },
   setup() {
     const loadingBar = useLoadingBar();
     const message = useMessage();
+    const { dialogBackgroundColor } = useDialogBackground();
     const router = useRouter();
     const store = useScriptStore();
     const referencesStore = useReferencesStore();
     const sceneStore = useScriptSceneStore();
+    const aiAgentStore = useAiAgentStore();
+    const radioStore = useRadioStationStore();
     const scenesLoading = ref(false);
     const scriptLabelOptions = ref<Array<{ label: string; value: string; color?: string; fontColor?: string }>>([]);
     const route = useRoute();
@@ -138,6 +196,9 @@ export default defineComponent({
     const activeTab = ref("properties");
     const aclData = ref<any[]>([]);
     const aclLoading = ref(false);
+    const showDryRunDialog = ref(false);
+    const dryRunStationId = ref<string | null>(null);
+    const dryRunDjId = ref<string | null>(null);
 
     const editorExtensions = computed(() => [
       json(),
@@ -164,6 +225,15 @@ export default defineComponent({
       { title: 'Prompts', key: 'prompts', render: (r: any) => Array.isArray(r.prompts) ? r.prompts.length : 0 }
     ]);
 
+    const agentOptions = computed(() => {
+      const list = (aiAgentStore as any).getEntries || [];
+      return list.map((a: any) => ({ label: a.name || a.id, value: a.id }));
+    });
+    const stationOptions = computed(() => {
+      const list = (radioStore as any).getEntries || [];
+      return list.map((st: any) => ({ label: st.localizedName?.en || st.name || st.slugName || st.id, value: st.id }));
+    });
+
     const fetchScenes = async () => {
       if (!localFormData.id) return;
       try {
@@ -173,7 +243,6 @@ export default defineComponent({
         scenesLoading.value = false;
       }
     };
-
 
     const handleSave = async () => {
       try {
@@ -195,6 +264,25 @@ export default defineComponent({
       } finally {
         loadingBar.finish();
       }
+    };
+
+    const openDryRunDialog = async () => {
+      try {
+        loadingBar.start();
+        try { await aiAgentStore.fetchAllUnsecured?.(1, 100); } catch {}
+        try { await radioStore.fetchAll(1, 100); } catch {}
+        if (localFormData.id && (!sceneStore.getEntries || sceneStore.getEntries.length === 0)) {
+          await fetchScenes();
+        }
+      } finally {
+        loadingBar.finish();
+      }
+      showDryRunDialog.value = true;
+    };
+
+    const runDryRun = async () => {
+      // Placeholder: execute dry run when API is defined
+      showDryRunDialog.value = false;
     };
 
     const goBack = () => {
@@ -285,6 +373,15 @@ export default defineComponent({
       sceneColumns,
       sceneRowKey,
       getSceneRowProps,
+      // dry run
+      showDryRunDialog,
+      openDryRunDialog,
+      runDryRun,
+      dryRunStationId,
+      dryRunDjId,
+      agentOptions,
+      stationOptions,
+      dialogBackgroundColor,
     };
   },
 });
