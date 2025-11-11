@@ -191,7 +191,23 @@ export default defineComponent({
           width: 50
         },
         {title: 'Name', key: 'name', width: 150},
-        {title: 'Preferred Language', key: 'preferredLang', width: 120},
+        {
+          title: 'Preferred Language',
+          key: 'preferredLang',
+          width: 120,
+          render: (row: AiAgent) => {
+            const arr = Array.isArray(row.preferredLang) ? row.preferredLang : [];
+            if (!arr.length) return 'N/A';
+            return arr
+              .map((lp: any) => {
+                const code = lp?.code || '';
+                const w = typeof lp?.weight === 'number' ? `(${Math.round(lp.weight * 100)}%)` : '';
+                return code ? `${code}${w}` : '';
+              })
+              .filter(Boolean)
+              .join(', ');
+          }
+        },
         {
           title: 'Talkativity',
           key: 'talkativity',
@@ -264,9 +280,19 @@ export default defineComponent({
             title: 'Agent',
             key: 'combined',
             render: (row: AiAgent) => {
+              const langs = Array.isArray(row.preferredLang)
+                ? row.preferredLang
+                    .map((lp: any) => {
+                      const code = lp?.code || '';
+                      const w = typeof lp?.weight === 'number' ? `(${Math.round(lp.weight * 100)}%)` : '';
+                      return code ? `${code}${w}` : '';
+                    })
+                    .filter(Boolean)
+                    .join(', ')
+                : '';
               return h('div', {}, [
                 h('div', { style: 'font-weight: bold;' }, row.name),
-                h('div', { style: 'font-size: 0.8rem;' }, `Lang: ${row.preferredLang}`),
+                h('div', { style: 'font-size: 0.8rem;' }, `Lang: ${langs || 'N/A'}`),
                 h('div', { style: 'font-size: 0.8rem;' }, `Tools: ${row.enabledTools?.map(tool => tool.name).join(', ') || 'None'}`)
               ]);
             }

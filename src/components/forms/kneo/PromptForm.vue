@@ -37,6 +37,17 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
+                <n-form-item label="Master prompt">
+                  <n-select
+                    v-model:value="selectedMasterId"
+                    :options="masterPromptOptions"
+                    :disabled="localFormData.master"
+                    filterable
+                    style="width: 25%; max-width: 300px;"
+                  />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
                 <n-form-item label="Draft">
                   <n-select v-model:value="selectedDraftId" :options="draftOptions" style="width: 25%; max-width: 300px;" />
                 </n-form-item>
@@ -158,7 +169,8 @@
           <div class="lang-row">
             <GlowDot
               class="lang-dot"
-              :variant="getDotVariant(lang.value)"
+              :variant="lang.value === 'en' ? 'blue' : getDotVariant(lang.value)"
+              :size="10"
               :active="selectedLanguages.includes(lang.value) && (isReplicating || hasReplicateError || hasReplicateSuccess)"
             />
             <n-checkbox 
@@ -313,8 +325,36 @@ export default defineComponent({
 
     const formTitle = computed(() => (localFormData.id ? 'Edit Prompt' : 'Create New Prompt'));
     const selectedDraftId = ref<string | null>(null);
-    const draftOptions = computed(() =>
-      (draftStore.getEntries || []).map((d: any) => ({ label: d.title || d.id, value: d.id }))
+    const selectedMasterId = ref<string | null>(null);
+    const draftOptions = computed(() => {
+      const lang = String(localFormData.languageCode || '').trim().toLowerCase();
+      const list = (draftStore as any).getEntries || [];
+      const items = list.map((d: any) => {
+        const label = d?.title || d?.name || d?.id;
+        const value = d?.id;
+        const entryLang = String(d?.languageCode || '').trim().toLowerCase();
+        const hasSuffix = lang
+          ? new RegExp(`\\(\\s*${lang}\\s*\\)$`, 'i').test(String(label))
+          : false;
+        const match = !!lang && (entryLang === lang || hasSuffix);
+        return { label, value, match };
+      });
+      items.sort((a: any, b: any) => {
+        if (a.match !== b.match) return a.match ? -1 : 1;
+        return String(a.label).localeCompare(String(b.label));
+      });
+      return items.map(({ label, value, match }: any) => ({
+        label,
+        value,
+        style: match ? { fontWeight: '600', color: '#3b82f6' } : undefined
+      }));
+    });
+
+    const masterPromptOptions = computed(() =>
+      (store.getEntries || [])
+        .filter((p: any) => typeof p.id === 'string' && p.id)
+        .filter((p: any) => p?.master === true)
+        .map((p: any) => ({ label: p.title || p.id, value: p.id as string }))
     );
     const songOptions = computed(() => {
       const list = (soundStore as any).getEntries || [];
@@ -349,10 +389,11 @@ export default defineComponent({
       try {
         loadingBar.start();
         const lang = localFormData.languageCode || '';
-        const hasLangInTitle = lang && (localFormData.title || '').includes(lang);
-        const titleToSave = hasLangInTitle || !lang
+        const suffix = localFormData.master ? '' : lang;
+        const hasSuffixInTitle = suffix && (localFormData.title || '').includes(suffix);
+        const titleToSave = hasSuffixInTitle || !suffix
           ? (localFormData.title || '')
-          : `${(localFormData.title || '').trim()} (${lang})`;
+          : `${(localFormData.title || '').trim()} (${suffix})`;
         const saveData: BroadcastPromptSave = {
           title: titleToSave,
           enabled: localFormData.enabled,
@@ -364,6 +405,7 @@ export default defineComponent({
           podcast: localFormData.podcast,
         };
         (saveData as any).draftId = selectedDraftId.value || null;
+        (saveData as any).masterId = selectedMasterId.value || null;
         const id = localFormData.id ? localFormData.id : null;
         await store.save(saveData, id);
         message.success('Prompt saved successfully');
@@ -540,15 +582,7 @@ export default defineComponent({
           testPromptReasoning.value = '';
         }
       } catch (error: any) {
-        const data = error?.response?.data;
-        const opts = { duration: 0, closable: true } as const;
-        if (typeof data === 'string') {
-          message.error(data, opts);
-        } else if (data) {
-          message.error(JSON.stringify(data), opts);
-        } else {
-          message.error(getErrorMessage(error), opts);
-        }
+        handleFormSaveError(error, message);
       } finally {
         testLoading.value = false;
       }
@@ -559,12 +593,14 @@ export default defineComponent({
         loadingBar.start();
         try { await (referencesStore as any).fetchLanguages?.(); } catch {}
         try { await draftStore.fetchAll(1, 100); } catch {}
+        try { await store.fetchAll(1, 100, { master: true }); } catch {}
         const id = route.params.id as string;
         if (id) {
           await store.fetch(id);
           const data = { ...store.getCurrent } as BroadcastPrompt;
           Object.assign(localFormData, data);
           selectedDraftId.value = (data as any).draftId || null;
+          selectedMasterId.value = (data as any).masterId || null;
         }
       } catch (error: any) {
         console.error('Failed to fetch data:', error);
@@ -625,7 +661,9 @@ export default defineComponent({
       langOptions: (referencesStore as any).languageOptions,
       promptTypeOptions: (referencesStore as any).promptTypeOptions,
       selectedDraftId,
+      selectedMasterId,
       draftOptions,
+      masterPromptOptions,
       aclData,
       aclLoading,
       showReplicateDialog,

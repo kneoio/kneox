@@ -173,6 +173,11 @@ export interface MemorySave {
 
 export type LanguageCode = string;
 
+export interface LanguagePreference {
+    code: string;
+    weight: number;
+}
+
 export interface Voice {
     id: string;
     name: string;
@@ -195,7 +200,7 @@ export interface AiAgent {
     lastModifier: string;
     lastModifiedDate: string;
     name: string;
-    preferredLang: LanguageCode;
+    preferredLang: LanguagePreference[];
     llmType?: string;
     prompts: Prompt[];
     fillerPrompt: string[];
@@ -214,7 +219,7 @@ export interface AiAgent {
 
 export interface AiAgentSave {
     name: string;
-    preferredLang: LanguageCode;
+    preferredLang: LanguagePreference[];
     llmType?: string;
     prompts: Prompt[];
     fillerPrompt?: string[];
@@ -344,7 +349,6 @@ export interface Script {
 export interface ScriptSave {
     name: string;
     description: string;
-    labels: string[];
 }
 
 // Script Scenes
@@ -358,6 +362,7 @@ startTime?: string;
 oneTimeRun?: boolean;
 weekdays?: number[];
 talkativity?: number;
+podcastMode?: number;
 }
 
 export interface ScriptSceneViewData {
@@ -376,23 +381,24 @@ startTime?: string;
 oneTimeRun?: boolean;
 weekdays?: number[];
 talkativity?: number;
+podcastMode?: number;
 }
 
 // Prompts (Broadcaster)
 export interface BroadcastPrompt {
-    id: string;
-    author: string;
-    regDate: string;
-    lastModifier: string;
-    lastModifiedDate: string;
-    enabled: boolean;
-    prompt: string;
-    promptType?: string;
-    languageCode?: string;
-    master?: boolean;
-    locked?: boolean;
-    title?: string;
-    podcast?: boolean;
+  id: string;
+  author: string;
+  regDate: string;
+  lastModifier: string;
+  lastModifiedDate: string;
+  enabled: boolean;
+  prompt: string;
+  promptType?: string;
+  languageCode?: string;
+  master?: boolean;
+  locked?: boolean;
+  title?: string;
+  podcast?: boolean;
 }
 
 export interface BroadcastPromptSave {

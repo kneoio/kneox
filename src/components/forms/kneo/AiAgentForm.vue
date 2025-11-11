@@ -38,9 +38,33 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
-                <n-form-item label="Preferred Language">
-                  <n-select v-model:value="localFormData.preferredLang" :options="langOptions"
-                    style="width: 25%; max-width: 300px;" />
+                <n-form-item label="Preferred Languages">
+                  <n-dynamic-input
+                    v-model:value="localFormData.preferredLang"
+                    :on-create="createLangPrefItem"
+                    style="width: 40%;"
+                  >
+                    <template #default="{ value }">
+                      <n-grid cols="2" x-gap="8">
+                        <n-gi>
+                          <n-select
+                            v-model:value="value.code"
+                            :options="langOptions"
+                            style="width: 100%; max-width: 300px;"
+                          />
+                        </n-gi>
+                        <n-gi>
+                          <n-input-number
+                            v-model:value="value.weight"
+                            :min="0"
+                            :max="1"
+                            :step="0.05"
+                            style="width: 100%; max-width: 100px;"
+                          />
+                        </n-gi>
+                      </n-grid>
+                    </template>
+                  </n-dynamic-input>
                 </n-form-item>
               </n-gi>
               <n-gi>
@@ -49,28 +73,6 @@
                     style="width: 25%; max-width: 300px;" />
                 </n-form-item>
               </n-gi>
-              <n-gi>
-                <n-form-item label="Enabled Tools">
-                  <n-dynamic-input v-model:value="localFormData.enabledTools" :on-create="createToolItem"
-                    style="width: 60%;">
-                    <template #default=" { value, index } ">
-                      <n-grid cols="3" x-gap="12">
-                        <n-gi>
-                          <n-input v-model:value="value.name" />
-                        </n-gi>
-                        <n-gi>
-                          <n-input v-model:value="value.variableName" />
-                        </n-gi>
-                        <n-gi>
-                          <n-input v-model:value="value.description" />
-                        </n-gi>
-                      </n-grid>
-                    </template>
-                  </n-dynamic-input>
-                </n-form-item>
-              </n-gi>
-
-
               
             </n-grid>
           </n-form>
@@ -383,6 +385,7 @@ import {
   NGi,
   NGrid,
   NInput,
+  NInputNumber,
   NPageHeader,
   NSelect,
   NSlider,
@@ -404,7 +407,7 @@ import CodeMirror from 'vue-codemirror6';
 import { useAiAgentStore } from '../../../stores/kneo/aiAgentStore';
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 import AclTable from '../../common/AclTable.vue';
-import { AiAgentSave, AiAgentForm, LanguageCode } from '../../../types/kneoBroadcasterTypes';
+import { AiAgentSave, AiAgentForm } from '../../../types/kneoBroadcasterTypes';
 import { getErrorMessage, handleFormSaveError } from '../../../utils/errorHandling';
 import { useDialogBackground } from '../../../composables/useDialogBackground';
 
@@ -432,6 +435,7 @@ export default defineComponent({
     NModal,
     NScrollbar,
     NSwitch,
+    NInputNumber,
     CodeMirror,
     AclTable
   },
@@ -479,7 +483,7 @@ export default defineComponent({
       lastModifiedDate: "",
       name: "",
       prompts: [],
-      preferredLang: "en" as LanguageCode,
+      preferredLang: [],
       llmType: "",
       fillerPrompt: [],
       preferredVoice: [],
@@ -521,6 +525,8 @@ export default defineComponent({
     });
 
     const createPromptItem = () => ({ id: crypto.randomUUID(), text: "", enabled: true });
+
+    const createLangPrefItem = () => ({ code: 'en', weight: 1 });
 
     const updatePrompt = (index: number, text: string) => {
       const item = promptItems.value[index];
@@ -704,7 +710,7 @@ export default defineComponent({
 
         const saveData: AiAgentSave = {
           name: localFormData.name || '',
-          preferredLang: localFormData.preferredLang as LanguageCode,
+          preferredLang: localFormData.preferredLang || [],
           llmType: localFormData.llmType || '',
           prompts: promptItems.value.map(p => ({ enabled: !!p.enabled, prompt: p.text || '' })),
           messagePrompts: messagePromptItems.value.map(p => p.text || ''),
@@ -835,6 +841,7 @@ export default defineComponent({
       createVoiceItem,
       createToolItem,
       createPromptItem,
+      createLangPrefItem,
       playgroundPrompt,
       playgroundLoading,
       playgroundResult,

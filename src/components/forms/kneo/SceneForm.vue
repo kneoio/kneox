@@ -49,6 +49,13 @@
             </n-form-item>
           </n-gi>
           <n-gi>
+            <n-form-item label="Podcast Mode">
+              <n-slider v-model:value="localFormData.podcastMode" :min="0" :max="1" :step="0.05" :tooltip="false"
+                style="width: 50%; max-width: 600px;" />
+              <span style="margin-left: 12px;">{{ localFormData.podcastMode || 0 }}</span>
+            </n-form-item>
+          </n-gi>
+          <n-gi>
             <n-form-item label="Weekdays">
               <n-checkbox-group v-model:value="selectedWeekdays" style="width: 50%; max-width: 600px;">
                 <n-checkbox :value="1" label="Mon" />
@@ -62,7 +69,7 @@
             </n-form-item>
           </n-gi>
           <n-gi>
-            <n-form-item label="Prompts">
+            <n-form-item label="Master Prompts">
               <n-dynamic-input
                 v-model:value="selectedPromptIds"
                 placeholder=""
@@ -187,6 +194,7 @@ export default defineComponent({
     const promptOptions = computed(() =>
       (promptStore.getEntries || [])
         .filter((p: any) => typeof p.id === 'string' && p.id)
+        .filter((p: any) => p?.master === true)
         .map((p: any) => ({
           label: p.title || p.id,
           value: p.id as string
@@ -200,7 +208,8 @@ export default defineComponent({
       scriptId: '',
       prompts: [],
       startTime: '',
-      talkativity: 0.5
+      talkativity: 0.5,
+      podcastMode: 0.5
     });
 
     const startTimeMs = ref<number | null>(null);
@@ -243,8 +252,9 @@ export default defineComponent({
             : [];
           const w = (data as any).weekdays || [];
           selectedWeekdays.value = Array.isArray(w) ? (w.filter((n: any) => Number.isInteger(n)) as number[]) : [];
-          // Set talkativity from API response, default to 0.5 if not provided
+          // Set talkativity and podcastMode from API response, defaults if not provided
           localFormData.talkativity = typeof data.talkativity === 'number' ? data.talkativity : 0.5;
+          (localFormData as any).podcastMode = typeof (data as any).podcastMode === 'number' ? (data as any).podcastMode : 0.5;
         }
       }
     };
@@ -277,6 +287,7 @@ export default defineComponent({
           oneTimeRun: localFormData.oneTimeRun as any,
           weekdays: selectedWeekdays.value,
           talkativity: localFormData.talkativity as any,
+          podcastMode: (localFormData as any).podcastMode as any,
         };
         const id = route.params.id as string;
         if (!id || id === 'new') {
@@ -313,7 +324,7 @@ export default defineComponent({
     onMounted(async () => {
       try {
         loadingBar.start();
-        await promptStore.fetchAll(1, 100);
+        await promptStore.fetchAll(1, 100, { master: true });
         await load();
       } catch (e) {
         message.error(getErrorMessage(e));

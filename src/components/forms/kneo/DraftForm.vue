@@ -15,7 +15,7 @@
 
     <n-gi class="mt-2" span="6">
       <n-button-group>
-        <n-button type="primary" @click="handleSave" size="large" :disabled="localFormData.locked">Save</n-button>
+        <n-button type="primary" @click="handleSave" size="large">Save</n-button>
         <n-button type="default" @click="openTestDialog" size="large">Test</n-button>
         <n-button type="default" @click="handleReplicateClick" size="large" :disabled="!localFormData.isMaster">Replicate</n-button>
       </n-button-group>
@@ -132,7 +132,8 @@
           <div class="lang-row">
             <GlowDot
               class="lang-dot"
-              :variant="getDotVariant(lang.value)"
+              :variant="lang.value === 'en' ? 'blue' : getDotVariant(lang.value)"
+              :size="10"
               :active="selectedLanguages.includes(lang.value) && (isReplicating || hasReplicateError || hasReplicateSuccess)"
             />
             <n-checkbox 
@@ -429,10 +430,11 @@ export default defineComponent({
       try {
         loadingBar.start();
         const lang = localFormData.languageCode;
-        const hasLangInTitle = lang && (localFormData.title || '').includes(lang);
-        const titleToSave = hasLangInTitle || !lang
+        const suffix = localFormData.isMaster ? '' : lang;
+        const hasSuffixInTitle = suffix && (localFormData.title || '').includes(suffix);
+        const titleToSave = hasSuffixInTitle || !suffix
           ? (localFormData.title || '')
-          : `${(localFormData.title || '').trim()} (${lang})`;
+          : `${(localFormData.title || '').trim()} (${suffix})`;
         const saveData: DraftSave = {
           title: titleToSave,
           content: localFormData.content,
@@ -570,13 +572,7 @@ export default defineComponent({
   gap: 10px;
 }
 .lang-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
   margin-left: 2px;
-  background-color: currentColor;
-  opacity: 0.6;
 }
 .lang-label {
   display: inline-grid;

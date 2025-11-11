@@ -83,6 +83,8 @@ export default defineComponent({
     const loading = ref(false);
     const intervalId = ref<number | null>(null);
     const checkedRowKeys = ref<(string | number)[]>([]);
+    const STORAGE_KEY = 'prompts.list.filters';
+    const STORAGE_SHOW_KEY = 'prompts.list.showFilters';
     const showFilters = ref(false);
     const filters = ref({
       languageCode: undefined as string | undefined,
@@ -91,13 +93,36 @@ export default defineComponent({
       locked: false
     });
 
+    const loadSavedFilters = () => {
+      try {
+        const s = localStorage.getItem(STORAGE_KEY);
+        if (s) {
+          const obj = JSON.parse(s);
+          filters.value = {
+            languageCode: obj.languageCode,
+            enabled: !!obj.enabled,
+            master: !!obj.master,
+            locked: !!obj.locked
+          };
+        }
+        const sh = localStorage.getItem(STORAGE_SHOW_KEY);
+        if (sh === 'true') showFilters.value = true;
+      } catch {}
+    };
+
+    const saveFilters = () => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(filters.value));
+        localStorage.setItem(STORAGE_SHOW_KEY, String(showFilters.value));
+      } catch {}
+    };
+
     async function preFetch() {
       try {
         loading.value = true;
-        await Promise.all([
-          store.fetchAll(),
-          (referencesStore as any).fetchLanguages?.()
-        ]);
+        loadSavedFilters();
+        await (referencesStore as any).fetchLanguages?.();
+        await fetchData(1, store.getPagination.pageSize);
       } catch (error) {
         console.error('Failed to fetch initial Prompt data:', error);
         message.error('Failed to load Prompts.');
@@ -173,13 +198,19 @@ export default defineComponent({
     });
 
     watch(() => filters.value, () => {
+      saveFilters();
       if (showFilters.value) {
         fetchData(1, store.getPagination.pageSize);
       }
     }, { deep: true });
 
+    watch(showFilters, () => {
+      saveFilters();
+    });
+
     const toggleFilters = () => {
       showFilters.value = !showFilters.value;
+      saveFilters();
       fetchData(1, store.getPagination.pageSize);
     };
 

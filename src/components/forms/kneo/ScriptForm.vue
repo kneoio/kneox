@@ -1,4 +1,5 @@
 <template>
+  <div>
   <n-grid cols="6" x-gap="12" y-gap="12" class="m-5">
     <n-gi span="6">
       <n-page-header :subtitle="formTitle" @back="goBack">
@@ -85,8 +86,8 @@
   >
     <template #header>
       <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
-        <span>Dry run</span>
-        <button type="button" @click="showDryRunDialog = false" aria-label="Close" style="background:none; border:none; font-size:18px; line-height:1; cursor:pointer;">×</button>
+        <span>{{ dryRunDialogTitle }}</span>
+        <button type="button" @click="closeDryRunDialog" aria-label="Close" style="background:none; border:none; font-size:18px; line-height:1; cursor:pointer;">×</button>
       </div>
     </template>
     <n-space vertical size="small">
@@ -104,26 +105,59 @@
           </n-gi>
         </n-grid>
       </n-form>
-      <n-text depth="3">Scenes</n-text>
-      <div style="display:flex; flex-direction:column; gap:8px; width: 100%;">
-        <div v-for="sc in sceneStore.getEntries" :key="sceneRowKey(sc)" style="display:flex; align-items:center; gap:8px;">
-          <GlowDot variant="gray" :active="true" />
-          <span>{{ sc.type }} — {{ sc.startTime }} (prompts: {{ Array.isArray(sc.prompts) ? sc.prompts.length : 0 }})</span>
+      <div>
+        <n-text depth="3">Scenes</n-text>
+        <div style="display:flex; flex-direction:column; gap:8px; width: 100%; margin-top: 8px;">
+          <div v-for="(sc, idx) in sceneStore.getEntries" :key="sceneRowKey(sc)" style="display:flex; align-items:center; gap:8px;">
+            <GlowDot :variant="getSceneDotVariant(idx)" :active="getSceneDotActive(idx)" />
+            <span>{{ sc.startTime }} — {{ sc.title || sc.type }}</span>
+          </div>
         </div>
       </div>
     </n-space>
     <template #action>
       <n-space>
-        <n-button @click="showDryRunDialog = false">Cancel</n-button>
-        <n-button type="primary" @click="runDryRun" :disabled="!dryRunStationId || !dryRunDjId">Run</n-button>
+        <n-button v-if="!isDryRunning && !dryRunScenario" @click="closeDryRunDialog">Cancel</n-button>
+        <n-button v-if="!isDryRunning && !dryRunScenario" type="primary" @click="runDryRun" :disabled="!dryRunStationId || !dryRunDjId">Run</n-button>
+        <n-button v-if="isDryRunning" disabled>Running...</n-button>
+        <n-button v-if="dryRunScenario" @click="showScenarioDialog = true">Show Scenario</n-button>
+        <n-button v-if="dryRunScenario" type="primary" @click="downloadScenario">Download</n-button>
+        <n-button v-if="dryRunScenario" @click="closeDryRunDialog">Close</n-button>
       </n-space>
     </template>
   </n-modal>
+
+  <n-modal
+    v-model:show="showScenarioDialog"
+    preset="dialog"
+    :closable="false"
+    :mask-closable="false"
+    :close-on-esc="false"
+    :style="{ width: '900px', backgroundColor: dialogBackgroundColor }"
+  >
+    <template #header>
+      <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+        <span>Dry Run Scenario</span>
+        <button type="button" @click="showScenarioDialog = false" aria-label="Close" style="background:none; border:none; font-size:18px; line-height:1; cursor:pointer;">×</button>
+      </div>
+    </template>
+    <div style="max-height: 600px; overflow-y: auto; padding: 12px; border: 1px solid #ccc; border-radius: 4px; background-color: #f9f9f9;">
+      <div v-html="dryRunScenarioHtml"></div>
+    </div>
+    <template #action>
+      <n-space>
+        <n-button @click="showScenarioDialog = false">Close</n-button>
+      </n-space>
+    </template>
+  </n-modal>
+  </div>
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, onMounted, reactive, ref, watch } from "vue";
+import { computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import MarkdownIt from 'markdown-it';
+import apiClient, { apiServer } from '../../../api/apiClient';
 import {
   NButton,
   NButtonGroup,
@@ -159,6 +193,7 @@ import { useDialogBackground } from '../../../composables/useDialogBackground';
 
 export default defineComponent({
   name: "ScriptForm",
+  inheritAttrs: false,
   components: {
     NPageHeader,
     NButtonGroup,
@@ -197,8 +232,16 @@ export default defineComponent({
     const aclData = ref<any[]>([]);
     const aclLoading = ref(false);
     const showDryRunDialog = ref(false);
+    const showScenarioDialog = ref(false);
     const dryRunStationId = ref<string | null>(null);
     const dryRunDjId = ref<string | null>(null);
+    const isDryRunning = ref(false);
+    const dryRunScenario = ref<string | null>(null);
+    const dryRunCompletedScenes = ref(0);
+    const dryRunTotalScenes = ref(0);
+    const dryRunCurrentSceneTitle = ref('');
+    let dryRunEventSource: EventSource | null = null;
+    const md = new MarkdownIt();
 
     const editorExtensions = computed(() => [
       json(),
@@ -280,9 +323,140 @@ export default defineComponent({
       showDryRunDialog.value = true;
     };
 
-    const runDryRun = async () => {
-      // Placeholder: execute dry run when API is defined
+    const dryRunDialogTitle = computed(() => {
+      if (dryRunScenario.value) {
+        return 'Dry run completed';
+      }
+      if (isDryRunning.value && dryRunCurrentSceneTitle.value) {
+        return `Dry run: ${dryRunCurrentSceneTitle.value} (${dryRunCompletedScenes.value}/${dryRunTotalScenes.value})`;
+      }
+      if (isDryRunning.value) {
+        return `Dry run: Processing... (${dryRunCompletedScenes.value}/${dryRunTotalScenes.value})`;
+      }
+      return 'Dry run';
+    });
+
+    const closeDryRunDialog = () => {
+      if (dryRunEventSource) {
+        dryRunEventSource.close();
+        dryRunEventSource = null;
+      }
       showDryRunDialog.value = false;
+      isDryRunning.value = false;
+      dryRunScenario.value = null;
+      dryRunCompletedScenes.value = 0;
+      dryRunTotalScenes.value = 0;
+      dryRunCurrentSceneTitle.value = '';
+    };
+
+    const runDryRun = async () => {
+      try {
+        loadingBar.start();
+        isDryRunning.value = true;
+        dryRunScenario.value = null;
+        dryRunCompletedScenes.value = 0;
+        dryRunTotalScenes.value = 0;
+        dryRunCurrentSceneTitle.value = '';
+
+        const selectedStation = (radioStore as any).getEntries?.find((st: any) => st.id === dryRunStationId.value);
+        const selectedDj = (aiAgentStore as any).getEntries?.find((a: any) => a.id === dryRunDjId.value);
+        const stationName = selectedStation?.slugName || '';
+        const djName = selectedDj?.name || '';
+
+        const jobId = crypto.randomUUID();
+        const payload = {
+          jobId,
+          stationName,
+          djName
+        };
+
+        await apiClient.post(`/scripts/${localFormData.id}/dry-run`, payload);
+        message.info('Dry run started...');
+
+        if (dryRunEventSource) {
+          dryRunEventSource.close();
+        }
+
+        dryRunEventSource = new EventSource(`${apiServer}/scripts/dry-run/stream?jobId=${jobId}`, { withCredentials: true } as any);
+
+        dryRunEventSource.addEventListener('started', () => {});
+
+        dryRunEventSource.addEventListener('total_scenes', (e: MessageEvent) => {
+          const data = JSON.parse(e.data);
+          dryRunTotalScenes.value = data.total || 0;
+        });
+
+        dryRunEventSource.addEventListener('scene_done', (e: MessageEvent) => {
+          const data = JSON.parse(e.data);
+          dryRunCompletedScenes.value = data.done || 0;
+          dryRunCurrentSceneTitle.value = data.sceneTitle || '';
+        });
+
+        dryRunEventSource.addEventListener('done', (e: MessageEvent) => {
+          const data = JSON.parse(e.data);
+          isDryRunning.value = false;
+          dryRunScenario.value = data.scenario || '';
+          loadingBar.finish();
+          message.success('Dry run completed');
+          if (dryRunEventSource) {
+            dryRunEventSource.close();
+            dryRunEventSource = null;
+          }
+        });
+
+        dryRunEventSource.addEventListener('error', () => {
+          isDryRunning.value = false;
+          loadingBar.finish();
+          message.error('Dry run failed');
+          if (dryRunEventSource) {
+            dryRunEventSource.close();
+            dryRunEventSource = null;
+          }
+        });
+
+        loadingBar.finish();
+      } catch (error: any) {
+        console.error('Failed to start dry run:', error);
+        isDryRunning.value = false;
+        loadingBar.finish();
+        const data = error?.response?.data;
+        if (data?.message) {
+          message.error(String(data.message));
+        } else {
+          message.error('Failed to start dry run');
+        }
+      }
+    };
+
+    const dryRunScenarioHtml = computed(() => {
+      if (!dryRunScenario.value) return '';
+      return md.render(dryRunScenario.value);
+    });
+
+    const getSceneDotVariant = (idx: number): 'yellow' | 'red' | 'green' | 'gray' => {
+      if (!isDryRunning.value && !dryRunScenario.value) return 'gray';
+      if (idx < dryRunCompletedScenes.value) return 'green';
+      if (idx === dryRunCompletedScenes.value && isDryRunning.value) return 'yellow';
+      if (dryRunScenario.value && idx < dryRunCompletedScenes.value) return 'green';
+      return 'gray';
+    };
+
+    const getSceneDotActive = (idx: number): boolean => {
+      if (!isDryRunning.value) return false;
+      return idx === dryRunCompletedScenes.value;
+    };
+
+    const downloadScenario = () => {
+      if (!dryRunScenario.value) return;
+      const blob = new Blob([dryRunScenario.value], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `script-dry-run-${localFormData.name || 'scenario'}.md`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     };
 
     const goBack = () => {
@@ -357,6 +531,13 @@ export default defineComponent({
       };
     };
 
+    onUnmounted(() => {
+      if (dryRunEventSource) {
+        dryRunEventSource.close();
+        dryRunEventSource = null;
+      }
+    });
+
     return {
       localFormData,
       formTitle,
@@ -375,10 +556,19 @@ export default defineComponent({
       getSceneRowProps,
       // dry run
       showDryRunDialog,
+      showScenarioDialog,
       openDryRunDialog,
       runDryRun,
+      closeDryRunDialog,
       dryRunStationId,
       dryRunDjId,
+      isDryRunning,
+      dryRunScenario,
+      dryRunScenarioHtml,
+      dryRunDialogTitle,
+      downloadScenario,
+      getSceneDotVariant,
+      getSceneDotActive,
       agentOptions,
       stationOptions,
       dialogBackgroundColor,
