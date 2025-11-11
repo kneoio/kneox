@@ -123,6 +123,7 @@ export interface StationDetails {
     brandName: string;
     status: string;
     managedBy: string;
+    realTime?: string;
     segmentsSize: number;
     playlistManagerStats: PlaylistManagerStats;
     timeline: {

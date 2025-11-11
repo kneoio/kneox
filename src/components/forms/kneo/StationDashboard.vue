@@ -21,6 +21,13 @@
           <n-text depth="3" style="font-size: 14px;">
             {{ currentListeners }} listeners
           </n-text>
+          <n-text
+            strong
+            depth="3"
+            style="font-size: 16px; margin-left: 8px; font-family: 'Digital Play Italic St', sans-serif; color: #3FB424; text-shadow: 0 0 10px rgba(70, 193, 40, 1), 0 0 18px rgba(70, 193, 40, 0.6); animation: subtle-pulse 2s ease-in-out infinite;"
+          >
+            {{ stationDetails?.realTime }}
+          </n-text>
           <n-text depth="3" style="font-size: 12px; margin-left: 8px;">Updated: {{ lastUpdateTime }}</n-text>
         </n-space>
         <n-space >
@@ -299,6 +306,8 @@ export default defineComponent( {
 
       return combined;
     } );
+
+    
 
     const timelineDisplay = computed( () => {
       const timeline = stationDetails.value?.timeline;
