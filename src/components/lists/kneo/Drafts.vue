@@ -123,7 +123,7 @@ export default defineComponent({
               languageCode: filters.value.languageCode || undefined,
               archived: filters.value.archived ? 1 : undefined,
               enabled: filters.value.enabled || undefined,
-              isMaster: filters.value.isMaster || undefined,
+              master: filters.value.isMaster || undefined,
               locked: filters.value.locked || undefined,
               activated: true
             };

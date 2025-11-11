@@ -36,12 +36,11 @@
                   <n-select v-model:value="localFormData.languageCode" :options="langOptions" style="width: 25%; max-width: 300px;" />
                 </n-form-item>
               </n-gi>
-              <n-gi>
+              <n-gi v-if="!localFormData.master">
                 <n-form-item label="Master prompt">
                   <n-select
                     v-model:value="selectedMasterId"
                     :options="masterPromptOptions"
-                    :disabled="localFormData.master"
                     filterable
                     style="width: 25%; max-width: 300px;"
                   />
@@ -385,6 +384,12 @@ export default defineComponent({
       podcast: false
     });
 
+    watch(() => localFormData.master, (isMaster) => {
+      if (isMaster) {
+        selectedMasterId.value = null;
+      }
+    });
+
     const handleSave = async () => {
       try {
         loadingBar.start();
@@ -405,7 +410,7 @@ export default defineComponent({
           podcast: localFormData.podcast,
         };
         (saveData as any).draftId = selectedDraftId.value || null;
-        (saveData as any).masterId = selectedMasterId.value || null;
+        (saveData as any).masterId = localFormData.master ? null : (selectedMasterId.value || null);
         const id = localFormData.id ? localFormData.id : null;
         await store.save(saveData, id);
         message.success('Prompt saved successfully');

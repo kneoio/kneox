@@ -8,7 +8,7 @@ interface DraftFilterDTO {
   languageCode?: string;
   archived?: number;
   enabled?: boolean;
-  isMaster?: boolean;
+  master?: boolean;
   locked?: boolean;
   activated?: boolean;
 }
