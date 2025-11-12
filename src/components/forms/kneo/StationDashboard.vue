@@ -605,15 +605,15 @@ export default defineComponent( {
       if (!fragment) return { text: '', color: 'default' };
       switch (fragment.mergingType) {
         case 'FILLER_JINGLE':
-          return { text: 'Filler Jingle', color: 'success' };
+          return { text: 'Jingle + Song', color: 'success' };
         case 'INTRO_SONG':
-          return { text: 'Intro Song', color: 'warning' };
+          return { text: 'Intro + Song', color: 'warning' };
         case 'SONG_INTRO_SONG':
-          return { text: 'Song + Intro Song', color: 'info' };
+          return { text: 'Song + Intro + Song', color: 'info' };
         case 'INTRO_SONG_INTRO_SONG':
-          return { text: 'Intro Song + Intro Song', color: 'error' };
+          return { text: 'Intro + Song + Intro + Song', color: 'error' };
         case 'SONG_CROSSFADE_SONG':
-          return { text: 'Song Crossfade', color: 'success' };
+          return { text: 'Song + Crossfade + Song', color: 'success' };
         default:
           return { text: fragment.mergingType || '', color: 'default' };
       }
