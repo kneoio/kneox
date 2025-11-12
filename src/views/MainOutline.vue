@@ -281,11 +281,6 @@ export default defineComponent({
           allStationsOption,
           homeOption,
           {
-            label: 'Scenes',
-            key: 'scenes',
-            icon: () => h(Gauge)
-          },
-          {
             type: 'divider',
             key: 'd1'
           },

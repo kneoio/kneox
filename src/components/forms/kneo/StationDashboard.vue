@@ -1,3 +1,10 @@
+.time-fixed {
+  display: inline-block;
+  width: 8ch;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
 <template>
   <n-space vertical size="large" style="padding: 24px;">
     <n-card>
@@ -26,7 +33,7 @@
             depth="3"
             style="font-size: 16px; margin-left: 8px; font-family: 'Digital Play Italic St', sans-serif; color: #3FB424; text-shadow: 0 0 10px rgba(70, 193, 40, 1), 0 0 18px rgba(70, 193, 40, 0.6); animation: subtle-pulse 2s ease-in-out infinite;"
           >
-            {{ timeWithDot }}
+            <span class="time-fixed">{{ timeWithDot }}</span>
           </n-text>
           <n-text depth="3" style="font-size: 12px; margin-left: 8px;">
             {{ stationDetails?.zoneId }}
