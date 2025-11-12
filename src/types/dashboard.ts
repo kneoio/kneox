@@ -124,6 +124,7 @@ export interface StationDetails {
     status: string;
     managedBy: string;
     realTime?: string;
+    zoneId?: string;
     segmentsSize: number;
     playlistManagerStats: PlaylistManagerStats;
     timeline: {

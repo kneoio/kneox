@@ -202,13 +202,9 @@ export interface AiAgent {
     name: string;
     preferredLang: LanguagePreference[];
     llmType?: string;
-    prompts: Prompt[];
-    fillerPrompt: string[];
-    messagePrompts?: string[];
-    miniPodcastPrompts?: string[];
+    searchEngineType?: string;
     preferredVoice: Voice[];
     copilot?: string;
-    enabledTools: Tool[];
     talkativity: number;
     podcastMode: number;
     merger?: {
@@ -218,28 +214,30 @@ export interface AiAgent {
 }
 
 export interface AiAgentSave {
-    name: string;
-    preferredLang: LanguagePreference[];
-    llmType?: string;
-    prompts: Prompt[];
-    fillerPrompt?: string[];
-    messagePrompts?: string[];
-    miniPodcastPrompts?: string[];
-    preferredVoice: Voice[];
-    copilot?: string;
-    enabledTools: Tool[];
-    talkativity: number;
-    podcastMode: number;
-    merger?: {
-        method: string;
-        gainIntro: number;
-    };
+  name: string;
+  preferredLang: LanguagePreference[];
+  llmType?: string;
+  searchEngineType?: string;
+  preferredVoice: Voice[];
+  copilot?: string;
+  talkativity: number;
+  podcastMode: number;
+  merger?: {
+      method: string;
+      gainIntro: number;
+  };
 }
 
 // Extend the base AiAgent interface to include form-specific fields
 export interface AiAgentForm extends AiAgent {
     preferredVoiceId?: string;
     copilotId?: string;
+    // Legacy, UI-only optional fields retained for compatibility
+    prompts?: Array<{ enabled: boolean; prompt: string }>;
+    messagePrompts?: string[];
+    miniPodcastPrompts?: string[];
+    fillerPrompt?: string[];
+    enabledTools?: any[];
 }
 
 // Types for Listeners Feature

@@ -26,7 +26,10 @@
             depth="3"
             style="font-size: 16px; margin-left: 8px; font-family: 'Digital Play Italic St', sans-serif; color: #3FB424; text-shadow: 0 0 10px rgba(70, 193, 40, 1), 0 0 18px rgba(70, 193, 40, 0.6); animation: subtle-pulse 2s ease-in-out infinite;"
           >
-            {{ stationDetails?.realTime }}
+            {{ timeWithDot }}
+          </n-text>
+          <n-text depth="3" style="font-size: 12px; margin-left: 8px;">
+            {{ stationDetails?.zoneId }}
           </n-text>
           <n-text depth="3" style="font-size: 12px; margin-left: 8px;">Updated: {{ lastUpdateTime }}</n-text>
         </n-space>
@@ -259,6 +262,7 @@ export default defineComponent( {
     const { dialogBackgroundColor } = useDialogBackground();
     const isStartingStation = ref( false );
     const isStoppingStation = ref( false );
+    const now = ref(new Date());
 
     const stationDetails = computed( () => {
       return dashboardStore.getStationDetails( props.brandName );
@@ -306,6 +310,25 @@ export default defineComponent( {
 
       return combined;
     } );
+
+    const formattedTime = computed(() => {
+      return now.value.toLocaleTimeString('en-GB', {
+        timeZone: (stationDetails.value?.zoneId || undefined) as any,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+    });
+
+    const timeWithDot = computed(() => formattedTime.value.split(':').join('_'));
+
+    onMounted(() => {
+      const id = window.setInterval(() => {
+        now.value = new Date();
+      }, 1000);
+      onUnmounted(() => clearInterval(id));
+    });
 
     
 
@@ -815,7 +838,9 @@ export default defineComponent( {
       formatSceneDuration,
       mapMessageType,
       calculatePreviousSceneEnd,
-      getMergingTypeText
+      getMergingTypeText,
+      formattedTime,
+      timeWithDot
     };
   },
 } );
