@@ -106,19 +106,6 @@ export const useAiAgentStore = defineStore('aiAgentStore', () => {
         return response.data;
     };
 
-    // Playground test request
-    const testPrompt = async (payload: { prompt: string; llmType?: string; variables?: Record<string, string> }) => {
-        const body = {
-            prompt: payload.prompt,
-            llmType: payload.llmType,
-            variables: payload.variables || {}
-        };
-        const response = await apiClient.post(`/aiagents/test`, body, {
-            headers: { 'Content-Type': 'application/json' }
-        });
-        return response?.data;
-    };
-
     return {
         apiViewResponse,
         apiFormResponse,
@@ -132,6 +119,5 @@ export const useAiAgentStore = defineStore('aiAgentStore', () => {
         getPagination,
         getCurrent,
         fetchAccessList,
-        testPrompt,
     };
 });

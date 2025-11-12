@@ -232,11 +232,6 @@ export interface AiAgentSave {
 export interface AiAgentForm extends AiAgent {
     preferredVoiceId?: string;
     copilotId?: string;
-    // Legacy, UI-only optional fields retained for compatibility
-    prompts?: Array<{ enabled: boolean; prompt: string }>;
-    messagePrompts?: string[];
-    miniPodcastPrompts?: string[];
-    fillerPrompt?: string[];
     enabledTools?: any[];
 }
 
