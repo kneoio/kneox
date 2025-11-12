@@ -10,12 +10,12 @@
     <n-card>
       <n-space vertical size="medium">
         <n-space align="center" size="medium">
-          <n-h2 style="margin: 0;">{{ brandName }} Dashboard</n-h2>
+          <n-h2 style="margin: 0;">{{ brandName }}</n-h2>
           <span
             class="live-status"
             :class="{ 'live-on-air': isHeartbeatActive }"
             :style="isHeartbeatActive
-              ? 'color: #ef4444 !important; text-shadow: 0 0 10px rgba(239, 68, 68, 1), 0 0 18px rgba(239, 68, 68, 0.6); font-weight: 600 !important; font-size: 18px; animation: subtle-pulse 2s ease-in-out infinite;'
+              ? 'color: #ef4444 !important; text-shadow: 0 0 10px rgba(239, 68, 68, 1), 0 0 18px rgba(239, 68, 68, 0.6); font-weight: 600 !important; font-size: 18px;'
               : 'font-weight: 400; font-size: 18px; color: inherit;'"
           >
             On Air
@@ -31,7 +31,7 @@
           <n-text
             strong
             depth="3"
-            style="font-size: 16px; margin-left: 8px; font-family: 'Digital Play Italic St', sans-serif; color: #3FB424; text-shadow: 0 0 10px rgba(70, 193, 40, 1), 0 0 18px rgba(70, 193, 40, 0.6); animation: subtle-pulse 2s ease-in-out infinite;"
+            style="font-size: 16px; margin-left: 8px; font-family: 'Digital Play Italic St', sans-serif; color: #3FB424; text-shadow: 0 0 10px rgba(70, 193, 40, 1), 0 0 18px rgba(70, 193, 40, 0.6); display: inline-block; width: 9ch; white-space: nowrap;"
           >
             <span class="time-fixed">{{ timeWithDot }}</span>
           </n-text>
@@ -134,7 +134,7 @@
                   <n-space vertical size="small">
                     <n-space justify="space-between">
                       <n-text strong>Current Scene:</n-text>
-                      <n-text>{{ stationDetails.aiDjStats.currentSceneTitle }}</n-text>
+                      <n-text strong style="font-size: 18px;">{{ stationDetails.aiDjStats.currentSceneTitle }}</n-text>
                     </n-space>
                     <n-space justify="space-between" v-if="isDjActive">
                       <n-text depth="3">Time:</n-text>

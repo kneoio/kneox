@@ -21,7 +21,7 @@ function buildSoundFragmentsUrl(basePath: string, { page = 1, size = 10, q, filt
     params.set('size', String(size));
     if (q) params.set('q', q);
     if (filter && Object.keys(filter).length > 0) {
-        params.set('filter', encodeURIComponent(JSON.stringify(filter)));
+        params.set('filter', JSON.stringify(filter));
     }
     return `${basePath}?${params.toString()}`;
 }
