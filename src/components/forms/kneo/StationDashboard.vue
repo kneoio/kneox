@@ -91,9 +91,11 @@
                   v-for="(fragment, index) in combinedPlaylist"
                   :key="index"
                   :type="getPlaylistItemType(fragment)"
-                  :title="formatArtistTitle(fragment)"
                 >
                   <template #default>
+                    <n-marquee style="max-width: 100%; font-weight: 500;">
+                      {{ formatArtistTitle(fragment) }}
+                    </n-marquee>
                     <n-space size="small" align="center">
                       <span v-if="fragment.isPlayingNow" class="playing-indicator" aria-label="Playing now">
                         <svg viewBox="0 0 24 14" width="24" height="14" role="img">
@@ -246,6 +248,7 @@ import {
   NText,
   NTimeline,
   NTimelineItem,
+  NMarquee,
   useMessage,
   NButtonGroup,
   NModal,
