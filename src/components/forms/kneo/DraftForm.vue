@@ -299,6 +299,8 @@ export default defineComponent({
     });
 
     const openTestDialog = async () => {
+      testResult.value = '';
+      showTestDialog.value = true;
       try {
         loadingBar.start();
         try { await soundStore.fetchAll(1, 100); } catch {}
@@ -307,8 +309,6 @@ export default defineComponent({
       } finally {
         loadingBar.finish();
       }
-      testResult.value = '';
-      showTestDialog.value = true;
     };
 
     const runDraftTest = async () => {

@@ -151,6 +151,8 @@
       <n-input type="textarea" placeholder="" :value="testPromptFixed" :autosize="{ minRows: 4, maxRows: 10 }" style="width: 100%;" readonly />
       <n-space align="center" size="small">
         <n-checkbox v-model:checked="showReasoning">Show Reasoning</n-checkbox>
+        <n-text depth="3" style="margin-left: 8px;">Characters:</n-text>
+        <n-number-animation :from="0" :to="promptCharCount" :show-separator="true" />
       </n-space>
       <n-collapse-transition :show="showReasoning">
         <div style="width: 100%; max-height: 300px; overflow: auto;">
@@ -219,6 +221,7 @@ import {
   NCheckbox,
   NIcon,
   NCollapseTransition,
+  NNumberAnimation,
   useLoadingBar,
   useMessage,
   useThemeVars
@@ -267,6 +270,7 @@ export default defineComponent({
     NRadioGroup,
     NRadioButton,
     NCollapseTransition,
+    NNumberAnimation,
     CodeMirror,
     AclTable,
     GlowDot
@@ -319,6 +323,8 @@ export default defineComponent({
     };
     const showReasoning = ref(getSavedShowReasoning());
     const testLoading = ref(false);
+
+    const promptCharCount = computed(() => testPromptFixed.value.length);
 
     const editorExtensions = computed(() => [handlebarsLanguage, EditorView.lineWrapping]);
 
@@ -514,6 +520,11 @@ export default defineComponent({
     };
 
     const openTestDialog = async () => {
+      testDraftResult.value = '';
+      testPromptResult.value = '';
+      testPromptFixed.value = '';
+      testPromptReasoning.value = '';
+      showTestDialog.value = true;
       try {
         loadingBar.start();
         try { await soundStore.fetchAll(1, 10); } catch {}
@@ -522,11 +533,6 @@ export default defineComponent({
       } finally {
         loadingBar.finish();
       }
-      testDraftResult.value = '';
-      testPromptResult.value = '';
-      testPromptFixed.value = '';
-      testPromptReasoning.value = '';
-      showTestDialog.value = true;
     };
 
     const runPromptTest = async () => {
@@ -700,6 +706,7 @@ export default defineComponent({
       testPromptFixed,
       testPromptReasoning,
       showReasoning,
+      promptCharCount,
       dialogBackgroundColor
     };
   }

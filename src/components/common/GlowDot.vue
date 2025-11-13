@@ -21,9 +21,10 @@ const sizePx = computed(() => `${props.size ?? 8}px`);
   width: v-bind(sizePx);
   height: v-bind(sizePx);
   border-radius: 50%;
-  background: radial-gradient(circle at center, currentColor 25%, rgba(255,255,255,0.05) 45%, transparent 100%);
-  opacity: 0.65;
-  transition: box-shadow 0.4s ease-in-out, opacity 0.4s ease-in-out, background 0.4s ease-in-out;
+  /* FIXED: Solid color center, only fade at edges */
+  background: radial-gradient(circle at center, currentColor 0%, currentColor 45%, transparent 70%);
+  opacity: 0.2; /* Dim when off */
+  transition: opacity 0.3s ease, box-shadow 0.3s ease;
 }
 
 .variant-yellow { color: #f59e0b; }
@@ -32,29 +33,24 @@ const sizePx = computed(() => `${props.size ?? 8}px`);
 .variant-blue   { color: #3b82f6; }
 .variant-gray   { color: #9ca3af; }
 
-.active.variant-yellow,
-.active.variant-red,
-.active.variant-green,
-.active.variant-blue {
+/* FIXED: Simpler, more natural animation */
+.active:not(.variant-gray) {
   opacity: 0.95;
-  animation: ledGlow 0.7s ease-out forwards;
+  animation: ledGlow 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
 }
 
 @keyframes ledGlow {
   0% {
+    opacity: 0.2;
     box-shadow: 0 0 0 0 currentColor;
-    background: radial-gradient(circle at center, rgba(255,255,255,0.1) 20%, currentColor 50%, transparent 100%);
-    opacity: 0.6;
-  }
-  40% {
-    box-shadow: 0 0 3px 1px currentColor, 0 0 6px 1.5px currentColor;
-    background: radial-gradient(circle at center, rgba(255,255,255,0.12) 15%, currentColor 50%, transparent 100%);
-    opacity: 0.8;
   }
   100% {
-    box-shadow: 0 0 5px 1px currentColor, 0 0 8px 2px currentColor, inset 0 0 1px 1px rgba(255,255,255,0.15);
-    background: radial-gradient(circle at center, rgba(255,255,255,0.1) 12%, currentColor 50%, transparent 100%);
-    opacity: 0.9;
+    opacity: 0.95;
+    /* Realistic multi-layer glow */
+    box-shadow: 
+      0 0 4px 1px currentColor,
+      0 0 8px 2px currentColor,
+      0 0 16px 4px currentColor;
   }
 }
 </style>

@@ -310,17 +310,17 @@ export default defineComponent({
     };
 
     const openDryRunDialog = async () => {
+      showDryRunDialog.value = true;
       try {
         loadingBar.start();
-        try { await aiAgentStore.fetchAllUnsecured?.(1, 100); } catch {}
-        try { await radioStore.fetchAll(1, 100); } catch {}
-        if (localFormData.id && (!sceneStore.getEntries || sceneStore.getEntries.length === 0)) {
+        if (localFormData.id) {
           await fetchScenes();
         }
+        try { await aiAgentStore.fetchAllUnsecured?.(1, 100); } catch {}
+        try { await radioStore.fetchAll(1, 100); } catch {}
       } finally {
         loadingBar.finish();
       }
-      showDryRunDialog.value = true;
     };
 
     const dryRunDialogTitle = computed(() => {
@@ -432,6 +432,7 @@ export default defineComponent({
       if (!dryRunScenario.value) return '';
       return md.render(dryRunScenario.value);
     });
+
 
     const getSceneDotVariant = (idx: number): 'yellow' | 'red' | 'green' | 'gray' => {
       if (!isDryRunning.value && !dryRunScenario.value) return 'gray';
