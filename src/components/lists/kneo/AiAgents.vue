@@ -238,22 +238,6 @@ export default defineComponent({
           render: (row: AiAgent) => {
             return h('span', {}, row.preferredVoice?.map(voice => voice.name).join(', ') || 'N/A');
           }
-        },
-        {
-          title: 'Prompts',
-          key: 'prompts',
-          ellipsis: {tooltip: true},
-          render: (row: AiAgent) => {
-            if (!row.prompts || row.prompts.length === 0) return 'N/A';
-            const maxLength = isMobile.value ? 40 : 80;
-            return row.prompts
-              .map((p: { enabled: boolean; prompt: string }) => {
-                const text = p?.prompt || '';
-                const short = text.substring(0, maxLength) + (text.length > maxLength ? '...' : '');
-                return (p.enabled === false ? '[off] ' : '') + short;
-              })
-              .join('; ');
-          }
         }
       ];
 

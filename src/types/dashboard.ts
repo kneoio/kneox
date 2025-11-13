@@ -119,6 +119,11 @@ export interface AiDjStats {
     }>;
 }
 
+export interface CountryStats {
+    countryCode: string;
+    accessCount: number;
+}
+
 export interface StationDetails {
     brandName: string;
     status: string;
@@ -142,6 +147,7 @@ export interface StationDetails {
     } | null;
     segmentSizeHistory: number[];
     currentListeners: number;
+    listenersByCountry: CountryStats[];
     statusHistory: {
         timestamp: string;
         status: string;

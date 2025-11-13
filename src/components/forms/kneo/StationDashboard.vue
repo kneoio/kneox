@@ -118,6 +118,16 @@
               <n-text depth="3" v-else>No playlist items available.</n-text>
             </n-card>
 
+            <n-card title="Listeners by Country" size="small" style="flex: 1; min-width: 0;">
+              <n-space vertical v-if="stationDetails?.listenersByCountry && stationDetails.listenersByCountry.length > 0" size="small">
+                <n-space v-for="(c, idx) in stationDetails.listenersByCountry" :key="idx" justify="space-between" align="center">
+                  <n-text strong>{{ c.countryCode }}</n-text>
+                  <n-tag type="info" size="small">{{ c.accessCount }}</n-tag>
+                </n-space>
+              </n-space>
+              <n-text depth="3" v-else>No listener country stats</n-text>
+            </n-card>
+
             <div style="flex-shrink: 0; width: auto;">
               <n-card size="small">
                 <template #header>
