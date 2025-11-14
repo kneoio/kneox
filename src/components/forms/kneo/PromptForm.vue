@@ -36,6 +36,16 @@
                   <n-select v-model:value="localFormData.languageCode" :options="langOptions" style="width: 25%; max-width: 300px;" />
                 </n-form-item>
               </n-gi>
+              <n-gi>
+                <n-form-item label="Version">
+                  <n-input-number
+                    v-model:value="localFormData.version"
+                    :step="0.1"
+                    :precision="1"
+                    style="width: 15%; max-width: 180px;"
+                  />
+                </n-form-item>
+              </n-gi>
               <n-gi v-if="!localFormData.master">
                 <n-form-item label="Master prompt">
                   <n-select
@@ -207,6 +217,7 @@ import {
   NGi,
   NGrid,
   NInput,
+  NInputNumber,
   NPageHeader,
   NTabs,
   NTabPane,
@@ -253,6 +264,7 @@ export default defineComponent({
     NForm,
     NFormItem,
     NInput,
+    NInputNumber,
     NButton,
     NTabs,
     NTabPane,
@@ -388,7 +400,8 @@ export default defineComponent({
       languageCode: '',
       master: false,
       locked: false,
-      podcast: false
+      podcast: false,
+      version: undefined as unknown as number | undefined
     });
 
     watch(() => localFormData.master, (isMaster) => {
@@ -415,6 +428,7 @@ export default defineComponent({
           master: localFormData.master,
           locked: localFormData.locked,
           podcast: localFormData.podcast,
+          version: localFormData.version,
         };
         (saveData as any).draftId = selectedDraftId.value || null;
         (saveData as any).masterId = localFormData.master ? null : (selectedMasterId.value || null);
@@ -455,7 +469,8 @@ export default defineComponent({
           toTranslate: localFormData.prompt || '',
           masterId: localFormData.id,
           translationType: 'PROMPT',
-          languageCode: lang
+          languageCode: lang,
+          version: localFormData.version
         }));
         const jobId = crypto.randomUUID();
         await apiClient.post(`/prompts/translate/start?jobId=${jobId}`, payload);

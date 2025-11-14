@@ -292,6 +292,7 @@ export default defineComponent({
       const baseColumns: DataTableColumns<BroadcastPrompt> = [
         { type: 'selection', fixed: 'left', width: 50 },
         { title: 'Lang', key: 'languageCode', width: 100 },
+        { title: 'Ver', key: 'version', width: 90 },
         {
           title: 'Flags',
           key: 'flags',

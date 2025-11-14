@@ -392,6 +392,7 @@ export interface BroadcastPrompt {
   locked?: boolean;
   title?: string;
   podcast?: boolean;
+  version?: number;
 }
 
 export interface BroadcastPromptSave {
@@ -403,6 +404,7 @@ export interface BroadcastPromptSave {
     locked?: boolean;
     title?: string;
     podcast?: boolean;
+    version?: number;
 }
 
 export interface Draft {
@@ -419,6 +421,7 @@ export interface Draft {
     enabled?: boolean;
     isMaster?: boolean;
     locked?: boolean;
+    version?: number;
 }
 
 export interface DraftSave {
@@ -431,4 +434,5 @@ export interface DraftSave {
     isMaster?: boolean;
     locked?: boolean;
     localizedName?: Record<string, string>;
+    version?: number;
 }

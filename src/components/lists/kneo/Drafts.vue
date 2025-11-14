@@ -282,6 +282,7 @@ export default defineComponent({
       const baseColumns: DataTableColumns<Draft> = [
         { type: 'selection', fixed: 'left', width: 50 },
         { title: 'Lang', key: 'languageCode', width: 100 },
+        { title: 'Ver', key: 'version', width: 90 },
         { title: 'Title', key: 'title', width: 300 },
         {
           title: 'Flags', key: 'flags', width: 220,

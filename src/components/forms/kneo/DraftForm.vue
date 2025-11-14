@@ -39,6 +39,16 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
+                <n-form-item label="Version">
+                  <n-input-number
+                    v-model:value="localFormData.version"
+                    :step="0.1"
+                    :precision="1"
+                    style="width: 15%; max-width: 180px;"
+                  />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
                 <n-form-item label="Options">
                   <div style="display: flex; align-items: center; gap: 16px;">
                     <n-checkbox v-model:checked="localFormData.enabled">Enabled</n-checkbox>
@@ -169,6 +179,7 @@ import {
   NGi,
   NGrid,
   NInput,
+  NInputNumber,
   NPageHeader,
   NTabs,
   NTabPane,
@@ -206,6 +217,7 @@ export default defineComponent({
     NForm,
     NFormItem,
     NInput,
+    NInputNumber,
     NButton,
     NTabs,
     NTabPane,
@@ -248,7 +260,8 @@ export default defineComponent({
       archived: 0,
       enabled: false,
       isMaster: false,
-      locked: false
+      locked: false,
+      version: undefined as unknown as number | undefined
     });
 
     const showTestDialog = ref(false);
@@ -362,7 +375,8 @@ export default defineComponent({
           toTranslate: localFormData.content || '',
           masterId: localFormData.id,
           translationType: 'CODE',
-          languageCode: lang
+          languageCode: lang,
+          version: localFormData.version
         }));
         const jobId = crypto.randomUUID();
         await apiClient.post(`/drafts/translate/start?jobId=${jobId}`, payload);
@@ -443,6 +457,7 @@ export default defineComponent({
           archived: localFormData.archived,
           enabled: localFormData.enabled,
           locked: localFormData.locked,
+          version: localFormData.version,
           localizedName: {
             en: localFormData.title || 'Default Title'
           }
