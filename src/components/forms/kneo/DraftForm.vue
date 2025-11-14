@@ -135,6 +135,7 @@
               :variant="lang.value === 'en' ? 'blue' : getDotVariant(lang.value)"
               :size="10"
               :active="selectedLanguages.includes(lang.value) && (isReplicating || hasReplicateError || hasReplicateSuccess)"
+              :pulse="getDotVariant(lang.value) === 'yellow'"
             />
             <n-checkbox 
               :checked="selectedLanguages.includes(lang.value)" 

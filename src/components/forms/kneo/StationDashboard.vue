@@ -84,18 +84,19 @@
             <n-text depth="3" v-else>No status history available</n-text>
           </n-card>
 
-          <n-space size="medium">
-            <n-card title="Live Playlist" size="small" style="flex: 1; min-width: 0;">
+          <n-space size="medium" style="align-items: flex-start;">
+            <n-card title="Live Playlist" size="small" style="width: 400px; flex-shrink: 0;">
               <n-timeline v-if="combinedPlaylist.length > 0">
                 <n-timeline-item
                   v-for="(fragment, index) in combinedPlaylist"
                   :key="index"
                   :type="getPlaylistItemType(fragment)"
+                  :color="getPlaylistItemColor(fragment)"
                 >
                   <template #default>
-                    <n-marquee style="max-width: 100%; font-weight: 500;">
+                    <div style="max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500;">
                       {{ formatArtistTitle(fragment) }}
-                    </n-marquee>
+                    </div>
                     <n-space size="small" align="center">
                       <span v-if="fragment.isPlayingNow" class="playing-indicator" aria-label="Playing now">
                         <svg viewBox="0 0 24 14" width="24" height="14" role="img">
@@ -104,6 +105,9 @@
                           <rect class="bar b3" x="17" y="2" width="4" height="10" rx="1" />
                         </svg>
                       </span>
+                      <n-tag v-if="!fragment.isQueued" type="warning" size="small">
+                        Live
+                      </n-tag>
                       <n-tag v-if="fragment.isQueued" type="info" size="small">
                         Queued
                       </n-tag>
@@ -254,7 +258,7 @@ import {
   NModal,
   NForm,
   NFormItem,
-  NInput
+  NInput  
 } from 'naive-ui';
 import { ExternalLink, PlayerPlay, PlayerStop, Activity } from '@vicons/tabler';
 import { MIXPLA_PLAYER_URL } from '../../../constants/config';
@@ -267,7 +271,7 @@ export default defineComponent( {
   components: {
     NButton, NCard, NIcon, NTag, NStatistic, NProgress, NSpace, NH2, NText,
     NTimeline, NTimelineItem, NButtonGroup, NModal, NForm, NFormItem, NInput,
-    PlayerPlay, PlayerStop, ExternalLink, Activity
+    NMarquee, PlayerPlay, PlayerStop, ExternalLink, Activity
   },
   props: {
     brandName: {
@@ -716,6 +720,12 @@ export default defineComponent( {
       return 'default';
     };
 
+    const getPlaylistItemColor = (fragment: any): string | undefined => {
+      const t = getPlaylistItemType(fragment);
+      if (t !== 'default') return undefined as any;
+      return fragment?.isQueued ? '#2080f0' : '#f0a020';
+    };
+
     const mapMessageType = (t: any): 'info' | 'warning' | 'error' | 'default' => {
       const v = String(t || '').toUpperCase();
       if (v === 'INFO') return 'info';
@@ -848,6 +858,7 @@ export default defineComponent( {
       creatingBroadcast,
       handleBroadcast,
       getPlaylistItemType,
+      getPlaylistItemColor,
       dialogBackgroundColor,
       formatArtistTitle,
       stationDetails,

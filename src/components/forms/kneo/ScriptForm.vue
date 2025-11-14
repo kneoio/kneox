@@ -98,30 +98,34 @@
               <n-select v-model:value="dryRunStationId" :options="stationOptions" filterable style="width: 50%; max-width: 600px;" />
             </n-form-item>
           </n-gi>
-          <n-gi>
-            <n-form-item label="DJ">
-              <n-select v-model:value="dryRunDjId" :options="agentOptions" filterable style="width: 50%; max-width: 600px;" />
-            </n-form-item>
-          </n-gi>
         </n-grid>
       </n-form>
       <div>
         <n-text depth="3">Scenes</n-text>
         <div style="display:flex; flex-direction:column; gap:8px; width: 100%; margin-top: 8px;">
           <div v-for="(sc, idx) in sceneStore.getEntries" :key="sceneRowKey(sc)" style="display:flex; align-items:center; gap:8px;">
-            <GlowDot :variant="getSceneDotVariant(idx)" :active="getSceneDotActive(idx)" />
+            <GlowDot :variant="getSceneDotVariant(idx)" :active="getSceneDotActive(idx)" :pulse="getSceneDotActive(idx)" />
             <span>{{ sc.startTime }} — {{ sc.title || sc.type }}</span>
           </div>
         </div>
+      </div>
+      <div v-if="dryRunWarnings.length || dryRunErrors.length" style="display:flex; flex-direction:column; gap:8px; margin-top: 8px;">
+        <NAlert v-for="(w, i) in dryRunWarnings" :key="'w-' + i" type="warning" closable>
+          {{ w }}
+        </NAlert>
+        <NAlert v-for="(er, i) in dryRunErrors" :key="'e-' + i" type="error" closable>
+          {{ er }}
+        </NAlert>
       </div>
     </n-space>
     <template #action>
       <n-space>
         <n-button v-if="!isDryRunning && !dryRunScenario" @click="closeDryRunDialog">Cancel</n-button>
-        <n-button v-if="!isDryRunning && !dryRunScenario" type="primary" @click="runDryRun" :disabled="!dryRunStationId || !dryRunDjId">Run</n-button>
+        <n-button v-if="!isDryRunning && !dryRunScenario" type="primary" @click="runDryRun" :disabled="!dryRunStationId">Run</n-button>
         <n-button v-if="isDryRunning" disabled>Running...</n-button>
+        <n-button v-if="dryRunScenario" @click="runDryRun" type="primary">Re-run</n-button>
         <n-button v-if="dryRunScenario" @click="showScenarioDialog = true">Show Scenario</n-button>
-        <n-button v-if="dryRunScenario" type="primary" @click="downloadScenario">Download</n-button>
+        <n-button v-if="dryRunScenario" @click="downloadScenario">Download</n-button>
         <n-button v-if="dryRunScenario" @click="closeDryRunDialog">Close</n-button>
       </n-space>
     </template>
@@ -174,6 +178,7 @@ import {
   NText,
   NModal,
   NSpace,
+  NAlert,
   useLoadingBar,
   useMessage
 } from 'naive-ui';
@@ -187,7 +192,6 @@ import { json } from "@codemirror/lang-json";
 import CodeMirror from 'vue-codemirror6';
 import AclTable from '../../common/AclTable.vue';
 import GlowDot from '../../common/GlowDot.vue';
-import { useAiAgentStore } from '../../../stores/kneo/aiAgentStore';
 import { useRadioStationStore } from '../../../stores/kneo/radioStationStore';
 import { useDialogBackground } from '../../../composables/useDialogBackground';
 
@@ -212,6 +216,7 @@ export default defineComponent({
     AclTable,
     NModal,
     NSpace,
+    NAlert,
     GlowDot
   },
   setup() {
@@ -222,7 +227,6 @@ export default defineComponent({
     const store = useScriptStore();
     const referencesStore = useReferencesStore();
     const sceneStore = useScriptSceneStore();
-    const aiAgentStore = useAiAgentStore();
     const radioStore = useRadioStationStore();
     const scenesLoading = ref(false);
     const scriptLabelOptions = ref<Array<{ label: string; value: string; color?: string; fontColor?: string }>>([]);
@@ -234,8 +238,10 @@ export default defineComponent({
     const showDryRunDialog = ref(false);
     const showScenarioDialog = ref(false);
     const dryRunStationId = ref<string | null>(null);
-    const dryRunDjId = ref<string | null>(null);
+    const dryRunWarnings = ref<string[]>([]);
+    const dryRunErrors = ref<string[]>([]);
     const isDryRunning = ref(false);
+    const failedSceneIndexes = ref<Set<number>>(new Set());
     const dryRunScenario = ref<string | null>(null);
     const dryRunCompletedScenes = ref(0);
     const dryRunTotalScenes = ref(0);
@@ -268,10 +274,6 @@ export default defineComponent({
       { title: 'Prompts', key: 'prompts', render: (r: any) => Array.isArray(r.prompts) ? r.prompts.length : 0 }
     ]);
 
-    const agentOptions = computed(() => {
-      const list = (aiAgentStore as any).getEntries || [];
-      return list.map((a: any) => ({ label: a.name || a.id, value: a.id }));
-    });
     const stationOptions = computed(() => {
       const list = (radioStore as any).getEntries || [];
       return list.map((st: any) => ({ label: st.localizedName?.en || st.name || st.slugName || st.id, value: st.id }));
@@ -313,10 +315,12 @@ export default defineComponent({
       showDryRunDialog.value = true;
       try {
         loadingBar.start();
+        dryRunWarnings.value = [];
+        dryRunErrors.value = [];
+        failedSceneIndexes.value.clear();
         if (localFormData.id) {
           await fetchScenes();
         }
-        try { await aiAgentStore.fetchAllUnsecured?.(1, 100); } catch {}
         try { await radioStore.fetchAll(1, 100); } catch {}
       } finally {
         loadingBar.finish();
@@ -347,6 +351,9 @@ export default defineComponent({
       dryRunCompletedScenes.value = 0;
       dryRunTotalScenes.value = 0;
       dryRunCurrentSceneTitle.value = '';
+      dryRunWarnings.value = [];
+      dryRunErrors.value = [];
+      failedSceneIndexes.value.clear();
     };
 
     const runDryRun = async () => {
@@ -358,16 +365,10 @@ export default defineComponent({
         dryRunTotalScenes.value = 0;
         dryRunCurrentSceneTitle.value = '';
 
-        const selectedStation = (radioStore as any).getEntries?.find((st: any) => st.id === dryRunStationId.value);
-        const selectedDj = (aiAgentStore as any).getEntries?.find((a: any) => a.id === dryRunDjId.value);
-        const stationName = selectedStation?.slugName || '';
-        const djName = selectedDj?.name || '';
-
         const jobId = crypto.randomUUID();
         const payload = {
           jobId,
-          stationName,
-          djName
+          stationId: dryRunStationId.value
         };
 
         await apiClient.post(`/scripts/${localFormData.id}/dry-run`, payload);
@@ -390,6 +391,49 @@ export default defineComponent({
           const data = JSON.parse(e.data);
           dryRunCompletedScenes.value = data.done || 0;
           dryRunCurrentSceneTitle.value = data.sceneTitle || '';
+        });
+
+        // New backend events: warning and prompt_error
+        dryRunEventSource.addEventListener('warning', (e: MessageEvent) => {
+          try {
+            const data = JSON.parse(e.data || '{}');
+            const msgParts = [
+              data.message,
+              data.promptTitle ? `Prompt: ${data.promptTitle}` : null,
+              data.draftTitle ? `Draft: ${data.draftTitle}` : null
+            ].filter(Boolean);
+            if (msgParts.length) message.warning(msgParts.join(' | '), { duration: 7000 });
+            if (msgParts.length) dryRunWarnings.value.push(msgParts.join(' | '));
+          } catch {
+            message.warning('Warning received during dry run');
+            dryRunWarnings.value.push('Warning received during dry run');
+          }
+        });
+
+        dryRunEventSource.addEventListener('prompt_error', (e: MessageEvent) => {
+          try {
+            const data = JSON.parse(e.data || '{}');
+            const msgParts = [
+              data.message,
+              data.promptTitle ? `Prompt: ${data.promptTitle}` : null,
+              data.draftTitle ? `Draft: ${data.draftTitle}` : null,
+              data.llmType ? `LLM: ${data.llmType}` : null
+            ].filter(Boolean);
+            if (msgParts.length) message.error(msgParts.join(' | '), { duration: 8000 });
+            if (msgParts.length) dryRunErrors.value.push(msgParts.join(' | '));
+            // Mark current scene as failed (red) if in progress
+            if (isDryRunning.value) {
+              const currentIdx = dryRunCompletedScenes.value;
+              failedSceneIndexes.value.add(currentIdx);
+            }
+          } catch {
+            message.error('Prompt error during dry run');
+            dryRunErrors.value.push('Prompt error during dry run');
+            if (isDryRunning.value) {
+              const currentIdx = dryRunCompletedScenes.value;
+              failedSceneIndexes.value.add(currentIdx);
+            }
+          }
         });
 
         dryRunEventSource.addEventListener('done', (e: MessageEvent) => {
@@ -436,6 +480,7 @@ export default defineComponent({
 
     const getSceneDotVariant = (idx: number): 'yellow' | 'red' | 'green' | 'gray' => {
       if (!isDryRunning.value && !dryRunScenario.value) return 'gray';
+      if (failedSceneIndexes.value.has(idx)) return 'red';
       if (idx < dryRunCompletedScenes.value) return 'green';
       if (idx === dryRunCompletedScenes.value && isDryRunning.value) return 'yellow';
       if (dryRunScenario.value && idx < dryRunCompletedScenes.value) return 'green';
@@ -461,6 +506,8 @@ export default defineComponent({
     };
 
     const goBack = () => {
+      closeDryRunDialog();
+      showScenarioDialog.value = false;
       router.push("/outline/scripts");
     };
 
@@ -537,6 +584,13 @@ export default defineComponent({
         dryRunEventSource.close();
         dryRunEventSource = null;
       }
+      showDryRunDialog.value = false;
+      showScenarioDialog.value = false;
+      isDryRunning.value = false;
+      dryRunScenario.value = null;
+      dryRunWarnings.value = [];
+      dryRunErrors.value = [];
+      failedSceneIndexes.value.clear();
     });
 
     return {
@@ -562,7 +616,6 @@ export default defineComponent({
       runDryRun,
       closeDryRunDialog,
       dryRunStationId,
-      dryRunDjId,
       isDryRunning,
       dryRunScenario,
       dryRunScenarioHtml,
@@ -570,9 +623,10 @@ export default defineComponent({
       downloadScenario,
       getSceneDotVariant,
       getSceneDotActive,
-      agentOptions,
       stationOptions,
       dialogBackgroundColor,
+      dryRunWarnings,
+      dryRunErrors,
     };
   },
 });

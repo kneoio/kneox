@@ -1,5 +1,5 @@
 <template>
-  <span class="glow-dot" :class="[variantClass, { active }]" />
+  <span class="glow-dot" :class="[variantClass, { active, pulse }]" />
 </template>
 
 <script setup lang="ts">
@@ -8,6 +8,7 @@ import { computed } from 'vue';
 const props = defineProps<{
   variant?: 'yellow' | 'red' | 'green' | 'gray' | 'blue'
   active?: boolean
+  pulse?: boolean
   size?: number
 }>();
 
@@ -33,10 +34,13 @@ const sizePx = computed(() => `${props.size ?? 8}px`);
 .variant-blue   { color: #3b82f6; }
 .variant-gray   { color: #9ca3af; }
 
-/* FIXED: Simpler, more natural animation */
 .active:not(.variant-gray) {
   opacity: 0.95;
   animation: ledGlow 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+
+.pulse:not(.variant-gray) {
+  animation: ledPulse 1.5s ease-in-out infinite;
 }
 
 @keyframes ledGlow {
@@ -46,11 +50,27 @@ const sizePx = computed(() => `${props.size ?? 8}px`);
   }
   100% {
     opacity: 0.95;
-    /* Realistic multi-layer glow */
     box-shadow: 
       0 0 4px 1px currentColor,
       0 0 8px 2px currentColor,
       0 0 16px 4px currentColor;
+  }
+}
+
+@keyframes ledPulse {
+  0%, 100% {
+    opacity: 0.95;
+    box-shadow: 
+      0 0 4px 1px currentColor,
+      0 0 8px 2px currentColor,
+      0 0 16px 4px currentColor;
+  }
+  50% {
+    opacity: 0.5;
+    box-shadow: 
+      0 0 2px 0.5px currentColor,
+      0 0 4px 1px currentColor,
+      0 0 8px 2px currentColor;
   }
 }
 </style>
