@@ -290,22 +290,27 @@ export default defineComponent({
 
     const columns = computed<DataTableColumns<BroadcastPrompt>>(() => {
       const baseColumns: DataTableColumns<BroadcastPrompt> = [
-        { type: 'selection', fixed: 'left', width: 50 },
-        { title: 'Lang', key: 'languageCode', width: 100 },
-        { title: 'Ver', key: 'version', width: 90 },
+        { type: 'selection', fixed: 'left', width: 40 },
+        { title: 'Lang', key: 'languageCode', width: 70 },
+        { title: 'Ver', key: 'version', width: 70 },
         {
           title: 'Flags',
           key: 'flags',
-          width: 220,
+          width: 180,
           render: (r: BroadcastPrompt) => {
-            const tags: any[] = [];
-            if (r.enabled) tags.push(h(NTag as any, { type: 'info', size: 'small', style: 'margin-right: 6px;' }, { default: () => 'ENABLED' }));
-            if (r.master) tags.push(h(NTag as any, { type: 'success', size: 'small', style: 'margin-right: 6px;' }, { default: () => 'MASTER' }));
-            if (r.locked) tags.push(h(NTag as any, { type: 'error', size: 'small' }, { default: () => 'LOCKED' }));
-            return h('div', { style: 'display: flex; align-items: center;' }, tags);
+            const line1: any[] = [];
+            if (r.enabled) line1.push(h(NTag as any, { type: 'info', size: 'small' }, { default: () => 'ENABLED' }));
+            if (r.master) line1.push(h(NTag as any, { type: 'success', size: 'small' }, { default: () => 'MASTER' }));
+            if (r.locked) line1.push(h(NTag as any, { type: 'error', size: 'small' }, { default: () => 'LOCKED' }));
+            const line2: any[] = [];
+            if (r.podcast) line2.push(h(NTag as any, { type: 'warning', size: 'small' }, { default: () => 'MINIPODCAST' }));
+            return h('div', { style: 'display: flex; flex-direction: column; gap: 4px; white-space: normal; max-width: 100%; overflow: hidden;' }, [
+              h('div', { style: 'display: flex; align-items: center; flex-wrap: wrap; gap: 4px; max-width: 100%; overflow: hidden;' }, line1),
+              h('div', { style: 'display: flex; align-items: center; flex-wrap: wrap; gap: 4px; max-width: 100%; overflow: hidden;' }, line2)
+            ]);
           }
         },
-        { title: 'Title', key: 'title', width: 300 },
+        { title: 'Title', key: 'title', width: 250, ellipsis: { tooltip: true } },
         {
           title: 'Prompt',
           key: 'prompt',
@@ -345,15 +350,26 @@ export default defineComponent({
             render: (row: BroadcastPrompt) => {
               const maxLength = 100;
               const text = row.prompt || '';
-              return h('div', {}, [
-                h('div', { style: 'font-weight: bold; display: flex; align-items: center;' }, [
-                  `${row.languageCode || ''}`
+              return h('div', { style: 'display: flex; flex-direction: column; gap: 4px;' }, [
+                h('div', { style: 'display: flex; align-items: center; gap: 8px;' }, [
+                  h('div', { style: 'font-weight: bold;' }, row.languageCode || ''),
+                  h('div', { style: 'font-size: 0.9rem;' }, `v${row.version || '0.0'}`)
                 ]),
-                h('div', { style: 'font-size: 0.8rem; margin: 4px 0;' }, text.length > maxLength ? text.substring(0, maxLength) + '...' : text),
-                h('div', { style: 'display: flex; align-items: center;' }, [
-                  row.enabled ? h(NTag as any, { type: 'info', size: 'small', style: 'margin-right: 6px;' }, { default: () => 'ENABLED' }) : null,
-                  row.master ? h(NTag as any, { type: 'success', size: 'small', style: 'margin-right: 6px;' }, { default: () => 'MASTER' }) : null,
-                  row.locked ? h(NTag as any, { type: 'error', size: 'small' }, { default: () => 'LOCKED' }) : null,
+                h('div', { style: 'font-weight: 500;' }, row.title || 'Untitled'),
+                h('div', { style: 'font-size: 0.85rem; color: #666;' }, 
+                  text.length > maxLength ? text.substring(0, maxLength) + '...' : text
+                ),
+                h('div', { style: 'display: flex; flex-direction: column; gap: 4px; margin-top: 4px;' }, [
+                  h('div', { style: 'display: flex; flex-wrap: wrap; gap: 4px;' }, [
+                    row.enabled ? h(NTag as any, { type: 'info', size: 'small' }, { default: () => 'ENABLED' }) : null,
+                    row.master ? h(NTag as any, { type: 'success', size: 'small' }, { default: () => 'MASTER' }) : null,
+                    row.locked ? h(NTag as any, { type: 'error', size: 'small' }, { default: () => 'LOCKED' }) : null
+                  ]),
+                  row.podcast ? h(NTag as any, { 
+                    type: 'warning', 
+                    size: 'small',
+                    style: 'align-self: flex-start;'
+                  }, { default: () => 'MINIPODCAST' }) : null
                 ])
               ]);
             }

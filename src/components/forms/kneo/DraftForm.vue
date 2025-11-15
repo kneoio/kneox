@@ -128,6 +128,7 @@
       </n-form>
       <n-space>
         <n-button type="primary" :loading="testLoading" @click="runDraftTest">Run (Ctrl+Enter)</n-button>
+        <n-button type="default" :disabled="testLoading" @click="showTestDialog = false">Close</n-button>
       </n-space>
       <n-text depth="3">Result</n-text>
       <n-input type="textarea" :value="testResult" :autosize="{ minRows: 6, maxRows: 12 }" style="width: 100%;" readonly />
