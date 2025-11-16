@@ -86,42 +86,8 @@
                     v-model:value="localFormData.preferredVoiceId" 
                     :options="voiceOptions" 
                     filterable
-
                     style="width: 30%; max-width: 300px;"
                   />
-                </n-form-item>
-              </n-gi>
-              <n-gi>
-              </n-gi>
-              <n-gi>
-                <n-form-item label="Talkativity">
-                  <n-slider v-model:value="localFormData.talkativity" :min="0" :max="1" :step="0.05" :tooltip="false"
-                    style="width: 50%; max-width: 600px;" />
-                  <span style="margin-left: 12px;">{{ localFormData.talkativity }}</span>
-                </n-form-item>
-              </n-gi>
-              <n-gi>
-                <n-form-item label="Podcast Mode">
-                  <n-slider v-model:value="localFormData.podcastMode" :min="0" :max="1" :step="0.05" :tooltip="false"
-                    style="width: 50%; max-width: 600px;" />
-                  <span style="margin-left: 12px;">{{ localFormData.podcastMode }}</span>
-                </n-form-item>
-              </n-gi>
-              <n-gi>
-                <n-form-item label="Merger Method">
-                  <n-select 
-                    v-model:value="localFormData.merger!.method" 
-                    :options="referencesStore.mergerMethodOptions" 
-
-                    style="width: 30%; max-width: 300px;"
-                  />
-                </n-form-item>
-              </n-gi>
-              <n-gi>
-                <n-form-item label="Gain Intro">
-                  <n-slider v-model:value="localFormData.merger!.gainIntro" :min="-5" :max="5" :step="0.1" :tooltip="false"
-                    style="width: 50%; max-width: 600px;" />
-                  <span style="margin-left: 12px;">{{ localFormData.merger!.gainIntro }}</span>
                 </n-form-item>
               </n-gi>
             </n-grid>
@@ -223,14 +189,7 @@ export default defineComponent({
       llmType: "",
       preferredVoice: [],
       preferredVoiceId: "",
-      copilotId: "",
-      enabledTools: [],
-      talkativity: 0.3,
-      podcastMode: 0,
-      merger: {
-        method: "INTRO_SONG",
-        gainIntro: 0
-      }
+      copilotId: ""
     });
 
     const createVoiceItem = () => ({
@@ -255,13 +214,7 @@ export default defineComponent({
           preferredLang: localFormData.preferredLang || [],
           llmType: localFormData.llmType || '',
           searchEngineType: (localFormData as any).searchEngineType || undefined,
-          talkativity: localFormData.talkativity || 0.3,
-          podcastMode: localFormData.podcastMode || 0,
-          preferredVoice: [],
-          merger: localFormData.merger ? {
-            method: localFormData.merger.method,
-            gainIntro: localFormData.merger.gainIntro
-          } : undefined
+          preferredVoice: []
         };
 
         if (localFormData.preferredVoiceId) {
@@ -329,9 +282,6 @@ export default defineComponent({
           const agentData = { ...store.getCurrent } as AiAgentForm;
           if (agentData.preferredVoice && agentData.preferredVoice.length > 0) {
             agentData.preferredVoiceId = agentData.preferredVoice[0]?.id || '';
-          }
-          if (!agentData.merger) {
-            agentData.merger = { method: "INTRO_SONG", gainIntro: 0 } as any;
           }
           if (agentData.copilot) {
             agentData.copilotId = agentData.copilot;

@@ -96,7 +96,15 @@ export default defineComponent({
       { 
         title: 'Nickname', 
         key: 'listener.nickName',
-        render: (row: any) => row.listener?.nickName?.en || 'N/A'
+        render: (row: any) => {
+          const nn = row.listener?.nickName ?? row.listener?.nickname;
+          if (!nn) return 'N/A';
+          if (typeof nn === 'string') return nn;
+          const en = nn.en;
+          if (en) return en;
+          const vals = Object.values(nn || {} as any).filter(Boolean) as string[];
+          return vals[0] || 'N/A';
+        }
       },
       { 
         title: 'Country', 

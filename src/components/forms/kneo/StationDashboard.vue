@@ -160,13 +160,13 @@
                       <n-text depth="3">Duration:</n-text>
                       <n-text>{{ formatSceneDuration(stationDetails.aiDjStats.sceneStartTime, stationDetails.aiDjStats.sceneEndTime) }}</n-text>
                     </n-space>
-                    <n-space justify="space-between" v-if="isDjActive">
-                      <n-text depth="3">Next Scene:</n-text>
-                      <n-text>{{ stationDetails.aiDjStats.nextSceneTitle }}</n-text>
-                    </n-space>
                     <n-space justify="space-between">
                       <n-text depth="3">Prompts:</n-text>
                       <n-text>{{ stationDetails.aiDjStats.promptCount }}</n-text>
+                    </n-space>
+                    <n-space justify="space-between" v-if="isDjActive">
+                      <n-text depth="3">Next Scene:</n-text>
+                      <n-text>{{ stationDetails.aiDjStats.nextSceneTitle }}</n-text>
                     </n-space>
                     <n-space vertical v-if="stationDetails.aiDjStats.messages && stationDetails.aiDjStats.messages.length" size="small">
                       <n-text strong>Messages</n-text>
