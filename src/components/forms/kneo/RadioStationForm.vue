@@ -321,14 +321,7 @@
         <n-tab-pane name="advanced" tab="Advanced">
           <n-form label-placement="left" label-width="150px">
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
-              <n-gi v-if="selectedAgent">
-                <n-form-item label="Talkativity">
-                  <n-slider :value="selectedAgent.talkativity" :min="0" :max="1" :step="0.05" :tooltip="false"
-                    style="width: 50%; max-width: 600px;" disabled />
-                  <span style="margin-left: 12px;">{{ selectedAgent.talkativity?.toFixed(2) || '0.00' }}</span>
-                </n-form-item>
-              </n-gi>
-              <n-gi v-if="selectedAgent">
+<n-gi v-if="selectedAgent">
                 <n-form-item label="Preferred Voice">
                   <n-select :value="selectedAgent.preferredVoice[0]?.name" 
                     :options="voiceOptions"
@@ -364,15 +357,7 @@
                 </n-form-item>
               </n-gi>
 
-              <n-gi v-if="aiOverrideEnabled">
-                <n-form-item label="Override Talkativity">
-                  <n-slider v-model:value="localFormData.aiOverriding.talkativity" :min="0" :max="1" :step="0.05" :tooltip="false"
-                    style="width: 50%; max-width: 600px;" />
-                  <span style="margin-left: 12px;">{{ localFormData.aiOverriding.talkativity }}</span>
-                </n-form-item>
-              </n-gi>
-
-              <n-gi v-if="aiOverrideEnabled">
+<n-gi v-if="aiOverrideEnabled">
                 <n-form-item label="Override Preferred Voice">
                   <n-select v-model:value="localFormData.aiOverriding.preferredVoice" 
                     :options="voiceOptions"
@@ -547,7 +532,7 @@ export default defineComponent( {
       bitRate: 128000,
       submissionPolicy: undefined,
       messagingPolicy: undefined,
-      aiOverriding: { name: "", prompt: "", talkativity: 0, preferredVoice: "" },
+      aiOverriding: { name: "", prompt: "", preferredVoice: "" },
       profileOverriding: { name: "", description: "" },
       schedule: { enabled: false, tasks: [] }
     } );
@@ -576,7 +561,6 @@ export default defineComponent( {
     watch( selectedAgent, ( newAgent ) => {
       if ( newAgent && localFormData.aiOverriding ) {
         localFormData.aiOverriding.name = newAgent.name || "";
-        localFormData.aiOverriding.talkativity = newAgent.talkativity || 0;
         localFormData.aiOverriding.preferredVoice = newAgent.preferredVoice[0]?.id || "";
       }
     } );
@@ -870,13 +854,7 @@ export default defineComponent( {
           // bitRate may arrive as a string from the server
           const br = (localFormData as any).bitRate;
           (localFormData as any).bitRate = typeof br === 'string' ? Number(br) || 128000 : (typeof br === 'number' ? br : 128000);
-
-          // aiOverriding.talkativity may also arrive as a string
-          if (localFormData.aiOverriding) {
-            const t = (localFormData.aiOverriding as any).talkativity;
-            (localFormData.aiOverriding as any).talkativity = typeof t === 'string' ? Number(t) || 0 : (typeof t === 'number' ? t : 0);
-          }
-        };
+        }
         normalizeNumericFields();
 
         if ((currentData as any).scripts && Array.isArray((currentData as any).scripts) && (currentData as any).scripts.length > 0) {
