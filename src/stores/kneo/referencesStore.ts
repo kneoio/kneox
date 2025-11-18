@@ -232,9 +232,13 @@ export const useReferencesStore = defineStore('references', () => {
   ];
 
   const llmTypeOptions = [
-    { label: 'Claude', value: 'CLAUDE' },
-    /*{ label: 'OpenAI', value: 'OPENAI' },*/
-    { label: 'Groq', value: 'GROQ' }
+    { label: 'claude-3-opus-20240229', value: 'CLAUDE' },
+    //{ label: 'OpenAI', value: 'OPENAI' },
+    { label: 'openai/gpt-oss-20b', value: 'GROQ' },
+    //{ label: 'Grok', value: 'GROK' },
+    { label: 'deepseek/deepseek-r1:free', value: 'OPENROUTER' },
+    //{ label: 'kimi-k2-0711-preview', value: 'MOONSHOT' },
+    //{ label: 'deepseek-chat', value: 'DEEPSEEK' }
   ];
 
   const mergerMethodOptions = [
