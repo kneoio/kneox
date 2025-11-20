@@ -56,6 +56,7 @@ import {
   NGi,
   NGrid,
   NPageHeader,
+  NTag,
   useMessage
 } from 'naive-ui';
 import {useRouter} from 'vue-router';
@@ -194,41 +195,38 @@ export default defineComponent({
         {
           title: 'Preferred Language',
           key: 'preferredLang',
-          width: 120,
+          width: 220,
           render: (row: AiAgent) => {
             const arr = Array.isArray(row.preferredLang) ? row.preferredLang : [];
-            if (!arr.length) return 'N/A';
-            return arr
-              .map((lp: any) => {
-                const code = lp?.code || '';
-                const w = typeof lp?.weight === 'number' ? `(${Math.round(lp.weight * 100)}%)` : '';
-                return code ? `${code}${w}` : '';
-              })
-              .filter(Boolean)
-              .join(', ');
-          }
-        },
-        {
-          title: 'Talkativity',
-          key: 'talkativity',
-          width: 100,
-          render: (row) => {
-            const t = typeof row.talkativity === 'number' ? row.talkativity : 0;
-            const threshold = 0.1;
-            if (t <= threshold) {
-              return h('span', { style: 'color: inherit;' }, `${Math.round(t * 100)}%`);
+            if (!arr.length) {
+              return 'N/A';
             }
-            const alpha = Math.min(1, 0.4 + 0.6 * ((t - threshold) / (1 - threshold)));
-            return h('span', { style: `color: rgba(255, 0, 0, ${alpha});` }, `${Math.round(t * 100)}%`);
+            return h(
+              'div',
+              { style: 'display: flex; flex-wrap: wrap; gap: 4px;' },
+              arr.map((lp: any, index: number) => {
+                const code = lp?.code || '';
+                if (!code) return null;
+                const w = typeof lp?.weight === 'number' ? `${Math.round(lp.weight * 100)}%` : '';
+                const label = w ? `${code} (${w})` : code;
+                return h(
+                  NTag,
+                  {
+                    size: 'small',
+                    key: `${code}-${index}`
+                  },
+                  { default: () => label }
+                );
+              })
+            );
           }
         },
         {
-          title: 'Podcast Mode',
-          key: 'podcastMode',
-          width: 100,
-          render: (row) => {
-            const p = typeof row.podcastMode === 'number' ? row.podcastMode : 0;
-            return h('span', { style: 'color: inherit;' }, `${Math.round(p * 100)}%`);
+          title: 'LLM Model',
+          key: 'llmType',
+          width: 140,
+          render: (row: AiAgent) => {
+            return row.llmType || '';
           }
         },
         {

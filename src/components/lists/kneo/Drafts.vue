@@ -84,6 +84,8 @@ export default defineComponent({
     const loading = ref(false);
     const intervalId = ref<number | null>(null);
     const checkedRowKeys = ref<(string | number)[]>([]);
+    const STORAGE_KEY = 'drafts.list.filters';
+    const STORAGE_SHOW_KEY = 'drafts.list.showFilters';
     const showFilters = ref(false);
     const filters = ref({
       languageCode: undefined as string | undefined,
@@ -92,6 +94,31 @@ export default defineComponent({
       isMaster: false,
       locked: false
     });
+
+    const loadSavedFilters = () => {
+      try {
+        const s = localStorage.getItem(STORAGE_KEY);
+        if (s) {
+          const obj = JSON.parse(s);
+          filters.value = {
+            languageCode: obj.languageCode,
+            archived: !!obj.archived,
+            enabled: !!obj.enabled,
+            isMaster: !!obj.isMaster,
+            locked: !!obj.locked
+          };
+        }
+        const sh = localStorage.getItem(STORAGE_SHOW_KEY);
+        if (sh === 'true') showFilters.value = true;
+      } catch {}
+    };
+
+    const saveFilters = () => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(filters.value));
+        localStorage.setItem(STORAGE_SHOW_KEY, String(showFilters.value));
+      } catch {}
+    };
 
     const typeToTagType: Record<string, 'primary' | 'info' | 'success' | 'warning' | 'error' | undefined> = {
       INTRO_DRAFT: 'primary',
@@ -147,10 +174,9 @@ export default defineComponent({
     async function preFetch() {
       try {
         loading.value = true;
-        await Promise.all([
-          store.fetchAll(),
-          (referencesStore as any).fetchLanguages?.()
-        ]);
+        loadSavedFilters();
+        await (referencesStore as any).fetchLanguages?.();
+        await fetchData(1, store.getPagination.pageSize);
       } catch (error) {
         console.error('Failed to fetch initial Draft data:', error);
         message.error('Failed to load Drafts.');
@@ -193,6 +219,7 @@ export default defineComponent({
 
     const toggleFilters = () => {
       showFilters.value = !showFilters.value;
+      saveFilters();
       fetchData(1, store.getPagination.pageSize);
     };
 
@@ -212,10 +239,15 @@ export default defineComponent({
     };
 
     watch(() => filters.value, () => {
+      saveFilters();
       if (showFilters.value) {
         fetchData(1, store.getPagination.pageSize);
       }
     }, { deep: true });
+
+    watch(showFilters, () => {
+      saveFilters();
+    });
 
     const handlePageChange = async (page: number) => {
       await fetchData(page, store.getPagination.pageSize);
