@@ -249,6 +249,7 @@ export interface ListenerEntry {
   lastModifiedDate: string;
   localizedName: LocalizedName;
   userId: number;
+  telegramName: string;
   country: string;
   nickName: LocalizedName;
   slugName: string;
@@ -267,6 +268,7 @@ export interface ListenerSave {
   localizedName?: LocalizedName;
   nickName?: LocalizedName;
   country?: string;
+  telegramName?: string;
   slugName?: string;
   archived?: number;
   userId?: number;

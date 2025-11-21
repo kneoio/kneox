@@ -17,6 +17,7 @@ export const useListenersStore = defineStore('listenersStore', () => {
         lastModifiedDate: '',
         localizedName: { en: '' },
         userId: 0,
+        telegramName: '',
         country: '',
         nickName: { en: '' },
         slugName: '',

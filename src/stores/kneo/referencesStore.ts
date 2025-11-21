@@ -232,7 +232,7 @@ export const useReferencesStore = defineStore('references', () => {
   ];
 
   const llmTypeOptions = [
-    { label: 'claude-3-opus-20240229', value: 'CLAUDE' },
+    { label: 'claude-sonnet-4-5-20250929', value: 'CLAUDE' },
     //{ label: 'OpenAI', value: 'OPENAI' },
     { label: 'openai/gpt-oss-20b', value: 'GROQ' },
     //{ label: 'Grok', value: 'GROK' },
