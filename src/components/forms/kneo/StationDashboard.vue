@@ -74,145 +74,195 @@
           
         </n-space>
 
-        <n-space vertical size="large">
-          <n-card title="Status History" size="small">
-            <n-timeline horizontal v-if=" statusHistoryTimeline.length > 0 ">
-              <n-timeline-item v-for=" ( event, index ) in statusHistoryTimeline " :key="index"
-                :type="getStatusTimelineType( event.status )" :title="formatStatus( event.status )"
-                :content="formatTimestamp( event.timestamp ) + ( event.timeDiff ? ' (' + event.timeDiff + ')' : '' )" />
-            </n-timeline>
-            <n-text depth="3" v-else>No status history available</n-text>
-          </n-card>
+        <n-tabs v-model:value="activeTab" type="line">
+          <n-tab-pane name="dashboard" tab="Dashboard">
+            <n-space vertical size="large">
+              <n-card title="Status History" size="small">
+                <n-timeline horizontal v-if=" statusHistoryTimeline.length > 0 ">
+                  <n-timeline-item v-for=" ( event, index ) in statusHistoryTimeline " :key="index"
+                    :type="getStatusTimelineType( event.status )" :title="formatStatus( event.status )"
+                    :content="formatTimestamp( event.timestamp ) + ( event.timeDiff ? ' (' + event.timeDiff + ')' : '' )" />
+                </n-timeline>
+                <n-text depth="3" v-else>No status history available</n-text>
+              </n-card>
 
-          <n-space size="medium" style="align-items: flex-start;">
-            <n-card title="Live Playlist" size="small" style="width: 400px; flex-shrink: 0;">
-              <n-timeline v-if="combinedPlaylist.length > 0">
-                <n-timeline-item
-                  v-for="(fragment, index) in combinedPlaylist"
-                  :key="index"
-                  :type="getPlaylistItemType(fragment)"
-                  :color="getPlaylistItemColor(fragment)"
-                >
-                  <template #default>
-                    <div style="max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500;">
-                      {{ formatArtistTitle(fragment) }}
-                    </div>
-                    <n-space size="small" align="center">
-                      <span v-if="fragment.isPlayingNow" class="playing-indicator" aria-label="Playing now">
-                        <svg viewBox="0 0 24 14" width="24" height="14" role="img">
-                          <rect class="bar b1" x="1" y="2" width="4" height="10" rx="1" />
-                          <rect class="bar b2" x="9" y="2" width="4" height="10" rx="1" />
-                          <rect class="bar b3" x="17" y="2" width="4" height="10" rx="1" />
-                        </svg>
-                      </span>
-                      <n-tag v-if="!fragment.isQueued" type="warning" size="small">
-                        Live
-                      </n-tag>
-                      <n-tag v-if="fragment.isQueued" type="info" size="small">
-                        Queued
-                      </n-tag>
-                      <n-text v-if="fragment.duration" depth="3" style="font-size: 0.75rem;">
-                        {{ formatDuration(fragment.duration) }}
-                      </n-text>
-                      <n-tag v-if="getMergingTypeText(fragment).text" size="small" :type="getMergingTypeText(fragment).color">
-                        {{ getMergingTypeText(fragment).text }}
-                      </n-tag>
+              <n-space size="medium" style="align-items: flex-start;">
+                <n-card title="Live Playlist" size="small" style="width: 400px; flex-shrink: 0;">
+                  <n-timeline v-if="combinedPlaylist.length > 0">
+                    <n-timeline-item
+                      v-for="(fragment, index) in combinedPlaylist"
+                      :key="index"
+                      :type="getPlaylistItemType(fragment)"
+                      :color="getPlaylistItemColor(fragment)"
+                    >
+                      <template #default>
+                        <div style="max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500;">
+                          {{ formatArtistTitle(fragment) }}
+                        </div>
+                        <n-space size="small" align="center">
+                          <span v-if="fragment.isPlayingNow" class="playing-indicator" aria-label="Playing now">
+                            <svg viewBox="0 0 24 14" width="24" height="14" role="img">
+                              <rect class="bar b1" x="1" y="2" width="4" height="10" rx="1" />
+                              <rect class="bar b2" x="9" y="2" width="4" height="10" rx="1" />
+                              <rect class="bar b3" x="17" y="2" width="4" height="10" rx="1" />
+                            </svg>
+                          </span>
+                          <n-tag v-if="!fragment.isQueued" type="warning" size="small">
+                            Live
+                          </n-tag>
+                          <n-tag v-if="fragment.isQueued" type="info" size="small">
+                            Queued
+                          </n-tag>
+                          <n-text v-if="fragment.duration" depth="3" style="font-size: 0.75rem;">
+                            {{ formatDuration(fragment.duration) }}
+                          </n-text>
+                          <n-tag v-if="getMergingTypeText(fragment).text" size="small" :type="getMergingTypeText(fragment).color">
+                            {{ getMergingTypeText(fragment).text }}
+                          </n-tag>
+                        </n-space>
+                      </template>
+                    </n-timeline-item>
+                  </n-timeline>
+                  <n-text depth="3" v-else>No playlist items available.</n-text>
+                </n-card>
+
+                <n-card title="Listeners Today" size="small" style="flex: 1; min-width: 0;">
+                  <n-space vertical v-if="stationDetails?.listenersByCountry && stationDetails.listenersByCountry.length > 0" size="small">
+                    <n-space v-for="(c, idx) in stationDetails.listenersByCountry" :key="idx" justify="space-between" align="center">
+                      <n-text strong>{{ c.countryCode }}</n-text>
+                      <n-tag type="info" size="small">{{ c.accessCount }}</n-tag>
                     </n-space>
-                  </template>
-                </n-timeline-item>
-              </n-timeline>
-              <n-text depth="3" v-else>No playlist items available.</n-text>
-            </n-card>
-
-            <n-card title="Listeners Today" size="small" style="flex: 1; min-width: 0;">
-              <n-space vertical v-if="stationDetails?.listenersByCountry && stationDetails.listenersByCountry.length > 0" size="small">
-                <n-space v-for="(c, idx) in stationDetails.listenersByCountry" :key="idx" justify="space-between" align="center">
-                  <n-text strong>{{ c.countryCode }}</n-text>
-                  <n-tag type="info" size="small">{{ c.accessCount }}</n-tag>
-                </n-space>
-              </n-space>
-              <n-text depth="3" v-else>No listener country stats</n-text>
-            </n-card>
-
-            <div style="flex-shrink: 0; width: auto;">
-              <n-card size="small">
-                <template #header>
-                  <n-space justify="space-between" align="center">
-                    <span>
-                      DJ
-                      <span v-if="stationDetails?.aiDjStats?.djName"> — {{ stationDetails.aiDjStats.djName }}</span>
-                    </span>
-                    <n-tag v-if="isDjActive" type="info" size="small">Active</n-tag>
-                    <n-tag v-else-if="isDjOffline" type="error" size="small">DJ is offline</n-tag>
                   </n-space>
-                </template>
-                <n-space vertical size="small" v-if="stationDetails?.aiDjStats">
-                  <n-space vertical size="small">
-                    <n-space justify="space-between">
-                      <n-text strong>Current Scene:</n-text>
-                      <n-text strong style="font-size: 18px;">{{ stationDetails.aiDjStats.currentSceneTitle }}</n-text>
-                    </n-space>
-                    <n-space justify="space-between" v-if="isDjActive">
-                      <n-text depth="3">Time:</n-text>
-                      <n-text>{{ formatTime(stationDetails.aiDjStats.sceneStartTime) }} - {{ formatTime(stationDetails.aiDjStats.sceneEndTime) }}</n-text>
-                    </n-space>
-                    <n-space justify="space-between">
-                      <n-text depth="3">Duration:</n-text>
-                      <n-text>{{ formatSceneDuration(stationDetails.aiDjStats.sceneStartTime, stationDetails.aiDjStats.sceneEndTime) }}</n-text>
-                    </n-space>
-                    <n-space justify="space-between">
-                      <n-text depth="3">Prompts:</n-text>
-                      <n-text>{{ stationDetails.aiDjStats.promptCount }}</n-text>
-                    </n-space>
-                    <n-space justify="space-between" v-if="isDjActive">
-                      <n-text depth="3">Next Scene:</n-text>
-                      <n-text>{{ stationDetails.aiDjStats.nextSceneTitle }}</n-text>
-                    </n-space>
-                    <n-space vertical v-if="stationDetails.aiDjStats.messages && stationDetails.aiDjStats.messages.length" size="small">
-                      <n-text strong>Messages</n-text>
+                  <n-text depth="3" v-else>No listener country stats</n-text>
+                </n-card>
+
+                <div style="flex-shrink: 0; width: auto;">
+                  <n-card size="small">
+                    <template #header>
+                      <n-space justify="space-between" align="center">
+                        <span>
+                          DJ
+                          <span v-if="stationDetails?.aiDjStats?.djName">  {{ stationDetails.aiDjStats.djName }}</span>
+                        </span>
+                        <n-tag v-if="isDjActive" type="info" size="small">Active</n-tag>
+                        <n-tag v-else-if="isDjOffline" type="error" size="small">DJ is offline</n-tag>
+                      </n-space>
+                    </template>
+                    <n-space vertical size="small" v-if="stationDetails?.aiDjStats">
                       <n-space vertical size="small">
-                        <n-space v-for="(m, idx) in stationDetails.aiDjStats.messages" :key="idx" align="center" justify="space-between">
-                          <n-tag :type="mapMessageType(m.type)" size="small" :bordered="false">{{ m.type }}</n-tag>
-                          <n-text>{{ m.message }}</n-text>
+                        <n-space justify="space-between">
+                          <n-text strong>Current Scene:</n-text>
+                          <n-text strong style="font-size: 18px;">{{ stationDetails.aiDjStats.currentSceneTitle }}</n-text>
+                        </n-space>
+                        <n-space justify="space-between" v-if="isDjActive">
+                          <n-text depth="3">Time:</n-text>
+                          <n-text>{{ formatTime(stationDetails.aiDjStats.sceneStartTime) }} - {{ formatTime(stationDetails.aiDjStats.sceneEndTime) }}</n-text>
+                        </n-space>
+                        <n-space justify="space-between">
+                          <n-text depth="3">Duration:</n-text>
+                          <n-text>{{ formatSceneDuration(stationDetails.aiDjStats.sceneStartTime, stationDetails.aiDjStats.sceneEndTime, stationDetails.aiDjStats.nextSceneTitle, stationDetails.aiDjStats.currentSceneTitle) }}</n-text>
+                        </n-space>
+                        <n-space justify="space-between">
+                          <n-text depth="3">Prompts:</n-text>
+                          <n-text>{{ stationDetails.aiDjStats.promptCount }}</n-text>
+                        </n-space>
+                        <n-space justify="space-between" v-if="isDjActive">
+                          <n-text depth="3">Next Scene:</n-text>
+                          <n-text>{{ stationDetails.aiDjStats.nextSceneTitle }}</n-text>
+                        </n-space>
+                        <n-space vertical v-if="stationDetails.aiDjStats.messages && stationDetails.aiDjStats.messages.length" size="small">
+                          <n-text strong>Messages:</n-text>
+                          <n-space vertical size="small">
+                            <n-space v-for="(m, idx) in stationDetails.aiDjStats.messages" :key="idx" align="center" justify="space-between">
+                              <n-tag :type="mapMessageType(m.type)" size="small" :bordered="false">{{ m.type }}</n-tag>
+                              <n-text>{{ m.message }}</n-text>
+                            </n-space>
+                          </n-space>
                         </n-space>
                       </n-space>
                     </n-space>
-                  </n-space>
-                </n-space>
-                <n-text v-else depth="3">No DJ information available</n-text>
-              </n-card>
-            </div>
+                    <n-text v-else depth="3">No DJ information available</n-text>
+                  </n-card>
+                </div>
 
-            <div style="flex-shrink: 0; width: auto;">
-              <n-card size="small" title="Scheduled Tasks">
-                <n-space vertical size="small">
-                  <div v-if=" stationDetails?.runningTasks && stationDetails.runningTasks.length > 0 ">
+                <div style="flex-shrink: 0; width: auto;">
+                  <n-card size="small" title="Scheduled Tasks">
                     <n-space vertical size="small">
-                      <div v-for=" ( task, index ) in stationDetails.runningTasks " :key="index"
-                        style="padding: 8px; border: 1px solid var(--n-border-color); border-radius: 4px; font-size: 0.875rem;">
+                      <div v-if=" stationDetails?.runningTasks && stationDetails.runningTasks.length > 0 ">
                         <n-space vertical size="small">
-                          <n-space justify="space-between">
-                            <n-text strong>{{ formatTaskType( task.taskType ) }}</n-text>
-                            <n-tag size="small" type="info">{{ task.target }}</n-tag>
-                          </n-space>
-                          <n-space justify="space-between">
-                            <n-text depth="3">Started:</n-text>
-                            <n-text>{{ formatTimestamp( task.startTime ) }}</n-text>
-                          </n-space>
-                          <n-space justify="space-between">
-                            <n-text depth="3">Duration:</n-text>
-                            <n-text>{{ getTaskDuration( task.startTime ) }}</n-text>
-                          </n-space>
+                          <div v-for=" ( task, index ) in stationDetails.runningTasks " :key="index"
+                            style="padding: 8px; border: 1px solid var(--n-border-color); border-radius: 4px; font-size: 0.875rem;">
+                            <n-space vertical size="small">
+                              <n-space justify="space-between">
+                                <n-text strong>{{ formatTaskType( task.taskType ) }}</n-text>
+                                <n-tag size="small" type="info">{{ task.target }}</n-tag>
+                              </n-space>
+                              <n-space justify="space-between">
+                                <n-text depth="3">Started:</n-text>
+                                <n-text>{{ formatTimestamp( task.startTime ) }}</n-text>
+                              </n-space>
+                              <n-space justify="space-between">
+                                <n-text depth="3">Duration:</n-text>
+                                <n-text>{{ getTaskDuration( task.startTime ) }}</n-text>
+                              </n-space>
+                            </n-space>
+                          </div>
                         </n-space>
                       </div>
+                      <n-text depth="3" v-else>No running tasks</n-text>
                     </n-space>
-                  </div>
-                  <n-text depth="3" v-else>No running tasks</n-text>
-                </n-space>
-              </n-card>
+                  </n-card>
+                </div>
+              </n-space>
+            </n-space>
+          </n-tab-pane>
+          <n-tab-pane name="chat" tab="Chat">
+            <div style="max-width: 800px;">
+              <n-space vertical size="medium">
+                <n-select
+                  v-model:value="selectedModel"
+                  :options="modelOptions"
+                  style="width: 220px;"
+                  size="small"
+                />
+                <n-card size="small" style="height: 500px; display: flex; flex-direction: column;">
+                  <n-scrollbar style="flex: 1; padding-right: 8px; margin-bottom: 12px;">
+                    <div
+                      v-for="m in chatMessages"
+                      :key="m.id"
+                      class="chat-message"
+                      :class="{
+                        'chat-message-user': m.role === 'user',
+                        'chat-message-assistant': m.role === 'assistant',
+                        'chat-message-system': m.role === 'system'
+                      }"
+                    >
+                      <n-text depth="3" style="font-size: 12px; margin-bottom: 2px; display: block;">
+                        {{ m.role === 'user' ? 'You' : (m.role === 'assistant' ? 'Assistant' : 'System') }}
+                      </n-text>
+                      <div class="chat-bubble">
+                        {{ m.text }}
+                      </div>
+                    </div>
+                  </n-scrollbar>
+                  <n-space align="flex-end">
+                    <n-input
+                      v-model:value="chatInput"
+                      type="textarea"
+                      :autosize="{ minRows: 2, maxRows: 4 }"
+                      placeholder="Type a message"
+                      style="width: 600px;"
+                      @keydown.enter.prevent="handleSendChat"
+                    />
+                    <n-button type="primary" :loading="isChatSending" @click="handleSendChat">
+                      Send
+                    </n-button>
+                  </n-space>
+                </n-card>
+              </n-space>
             </div>
-          </n-space>
-        </n-space>
+          </n-tab-pane>
+        </n-tabs>
       </n-space>
     </n-card>
   </n-space>
@@ -240,6 +290,8 @@
 import { computed, defineComponent, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useDashboardStore } from '../../../stores/kneo/dashboardStore';
 import { useMemoryStore } from '../../../stores/kneo/memoryStore';
+import { useStationChatStore } from '../../../stores/kneo/stationChatStore';
+import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 import {
   NButton,
   NCard,
@@ -258,20 +310,22 @@ import {
   NModal,
   NForm,
   NFormItem,
-  NInput  
+  NInput,
+  NTabs,
+  NTabPane,
+  NSelect,
+  NScrollbar
 } from 'naive-ui';
 import { ExternalLink, PlayerPlay, PlayerStop, Activity } from '@vicons/tabler';
 import { MIXPLA_PLAYER_URL } from '../../../constants/config';
 import { useDialogBackground } from '../../../composables/useDialogBackground';
-
-
 
 export default defineComponent( {
   name: 'StationDashboard',
   components: {
     NButton, NCard, NIcon, NTag, NStatistic, NProgress, NSpace, NH2, NText,
     NTimeline, NTimelineItem, NButtonGroup, NModal, NForm, NFormItem, NInput,
-    NMarquee, PlayerPlay, PlayerStop, ExternalLink, Activity
+    NMarquee, NTabs, NTabPane, NSelect, NScrollbar, PlayerPlay, PlayerStop, ExternalLink, Activity
   },
   props: {
     brandName: {
@@ -282,11 +336,21 @@ export default defineComponent( {
   setup( props: { brandName: string } ) {
     const dashboardStore = useDashboardStore();
     const memoryStore = useMemoryStore();
+    const chatStore = useStationChatStore();
+    const referencesStore = useReferencesStore();
     const message = useMessage();
     const { dialogBackgroundColor } = useDialogBackground();
     const isStartingStation = ref( false );
     const isStoppingStation = ref( false );
     const now = ref(new Date());
+
+    const activeTab = ref<'dashboard' | 'chat'>('dashboard');
+    const chatInput = ref('');
+    const selectedModel = ref('CLAUDE');
+    const modelOptions = referencesStore.llmTypeOptions;
+
+    const chatMessages = computed(() => chatStore.getMessages(props.brandName));
+    const isChatSending = computed(() => chatStore.state.isSending);
 
     const stationDetails = computed( () => {
       return dashboardStore.getStationDetails( props.brandName );
@@ -538,7 +602,11 @@ export default defineComponent( {
       return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
     };
 
-    const formatSceneDuration = (startTime: string, endTime: string): string => {
+    const formatSceneDuration = (startTime: string, endTime: string, nextSceneTitle?: string, currentSceneTitle?: string): string => {
+      if (!nextSceneTitle || nextSceneTitle === currentSceneTitle) {
+        return '24 hours rolling';
+      }
+      
       const duration = calculateDuration(startTime, endTime);
       if (duration === '24:00') return 'Full 24-hours';
       
@@ -801,6 +869,19 @@ export default defineComponent( {
       }
     };
 
+    const handleSendChat = async () => {
+      const text = chatInput.value;
+      if (!text || !text.trim()) {
+        return;
+      }
+      await chatStore.sendChat(props.brandName, text, selectedModel.value);
+      chatInput.value = '';
+    };
+
+    const clearChat = () => {
+      chatStore.clearMessages(props.brandName);
+    };
+
     onMounted(() => {
       console.log('StationDetail mounted for brand:', props.brandName);
       dashboardStore.startStationPolling(props.brandName);
@@ -871,7 +952,15 @@ export default defineComponent( {
       calculatePreviousSceneEnd,
       getMergingTypeText,
       formattedTime,
-      timeWithDot
+      timeWithDot,
+      activeTab,
+      chatInput,
+      selectedModel,
+      modelOptions,
+      chatMessages,
+      isChatSending,
+      handleSendChat,
+      clearChat
     };
   },
 } );
@@ -952,5 +1041,38 @@ export default defineComponent( {
   40% { transform: scaleY(0.5); }
   60% { transform: scaleY(1.0); }
   80% { transform: scaleY(0.6); }
+}
+
+.chat-message {
+  margin-bottom: 12px;
+}
+
+.chat-message-user {
+  text-align: right;
+}
+
+.chat-message-assistant {
+  text-align: left;
+}
+
+.chat-message-system {
+  text-align: center;
+}
+
+.chat-bubble {
+  display: inline-block;
+  padding: 8px 12px;
+  border-radius: 12px;
+  max-width: 100%;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.chat-message-user .chat-bubble {
+  background-color: rgba(24, 160, 88, 0.16);
+}
+
+.chat-message-assistant .chat-bubble {
+  background-color: rgba(64, 158, 255, 0.16);
 }
 </style>
