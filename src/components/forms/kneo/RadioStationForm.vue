@@ -822,10 +822,8 @@ export default defineComponent( {
       }
     } );
 
-    onMounted( async () => {
+    const loadFormData = async () => {
       const id = route.params.id as string;
-      startClockUpdate();
-
       try {
         loadingBar.start();
         await aiAgentStore.fetchAllUnsecured( 1, 100 );
@@ -837,11 +835,9 @@ export default defineComponent( {
         const currentData = store.getCurrent;
         Object.assign( localFormData, currentData );
 
-        // Initialize override toggles from payload flags if present
         aiOverrideEnabled.value = toBool((currentData as any).aiOverridingEnabled);
         profileOverrideEnabled.value = toBool((currentData as any).profileOverridingEnabled);
 
-        // Ensure override objects exist if enabled
         if (aiOverrideEnabled.value && !localFormData.aiOverriding) {
           (localFormData as any).aiOverriding = { name: '', prompt: '', talkativity: 0, primaryVoice: '' };
         }
@@ -849,9 +845,7 @@ export default defineComponent( {
           (localFormData as any).profileOverriding = { name: '', description: '' };
         }
 
-        // Normalize numeric fields to ensure sliders receive numbers
         const normalizeNumericFields = () => {
-          // bitRate may arrive as a string from the server
           const br = (localFormData as any).bitRate;
           (localFormData as any).bitRate = typeof br === 'string' ? Number(br) || 128000 : (typeof br === 'number' ? br : 128000);
         }
@@ -886,7 +880,6 @@ export default defineComponent( {
             tasks: []
           };
         }
-        // If schedule exists but lacks enabled flag, default it
         if ( localFormData.schedule && typeof localFormData.schedule.enabled === 'undefined' ) {
           localFormData.schedule.enabled = false;
         }
@@ -896,6 +889,17 @@ export default defineComponent( {
       } finally {
         loadingBar.finish();
       }
+    };
+
+    watch(() => route.params.id, async (newId, oldId) => {
+      if (newId && newId !== oldId) {
+        await loadFormData();
+      }
+    });
+
+    onMounted( async () => {
+      startClockUpdate();
+      await loadFormData();
     } );
 
     onUnmounted( () => {
