@@ -230,11 +230,11 @@ export default defineComponent({
           }
         },
         {
-          title: 'Preferred Voice',
-          key: 'preferredVoice',
+          title: 'Primary Voice',
+          key: 'primaryVoice',
           width: 200,
           render: (row: AiAgent) => {
-            return h('span', {}, row.preferredVoice?.map(voice => voice.name).join(', ') || 'N/A');
+            return h('span', {}, row.primaryVoice?.map(voice => voice.name).join(', ') || 'N/A');
           }
         }
       ];

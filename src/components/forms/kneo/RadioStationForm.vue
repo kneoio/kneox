@@ -322,8 +322,8 @@
           <n-form label-placement="left" label-width="150px">
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
 <n-gi v-if="selectedAgent">
-                <n-form-item label="Preferred Voice">
-                  <n-select :value="selectedAgent.preferredVoice[0]?.name" 
+                <n-form-item label="Primary Voice">
+                  <n-select :value="selectedAgent.primaryVoice[0]?.name" 
                     :options="voiceOptions"
                     filterable
                     style="width: 30%; max-width: 300px;" 
@@ -358,8 +358,8 @@
               </n-gi>
 
 <n-gi v-if="aiOverrideEnabled">
-                <n-form-item label="Override Preferred Voice">
-                  <n-select v-model:value="localFormData.aiOverriding.preferredVoice" 
+                <n-form-item label="Override Primary Voice">
+                  <n-select v-model:value="localFormData.aiOverriding.primaryVoice" 
                     :options="voiceOptions"
                     filterable
                     style="width: 30%; max-width: 300px;" />
@@ -532,7 +532,7 @@ export default defineComponent( {
       bitRate: 128000,
       submissionPolicy: undefined,
       messagingPolicy: undefined,
-      aiOverriding: { name: "", prompt: "", preferredVoice: "" },
+      aiOverriding: { name: "", prompt: "", primaryVoice: "" },
       profileOverriding: { name: "", description: "" },
       schedule: { enabled: false, tasks: [] }
     } );
@@ -561,7 +561,7 @@ export default defineComponent( {
     watch( selectedAgent, ( newAgent ) => {
       if ( newAgent && localFormData.aiOverriding ) {
         localFormData.aiOverriding.name = newAgent.name || "";
-        localFormData.aiOverriding.preferredVoice = newAgent.preferredVoice[0]?.id || "";
+        localFormData.aiOverriding.primaryVoice = newAgent.primaryVoice[0]?.id || "";
       }
     } );
 
@@ -843,7 +843,7 @@ export default defineComponent( {
 
         // Ensure override objects exist if enabled
         if (aiOverrideEnabled.value && !localFormData.aiOverriding) {
-          (localFormData as any).aiOverriding = { name: '', prompt: '', talkativity: 0, preferredVoice: '' };
+          (localFormData as any).aiOverriding = { name: '', prompt: '', talkativity: 0, primaryVoice: '' };
         }
         if (profileOverrideEnabled.value && !localFormData.profileOverriding) {
           (localFormData as any).profileOverriding = { name: '', description: '' };

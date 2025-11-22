@@ -58,7 +58,7 @@ export interface AiOverriding {
     name: string;
     prompt: string;
     talkativity: number;
-    preferredVoice: string;
+    primaryVoice: string;
 }
 
 export interface RadioStation {
@@ -203,7 +203,7 @@ export interface AiAgent {
     preferredLang: LanguagePreference[];
     llmType?: string;
     searchEngineType?: string;
-    preferredVoice: Voice[];
+    primaryVoice: Voice[];
     copilot?: string;
     talkativity: number;
     podcastMode: number;
@@ -218,7 +218,7 @@ export interface AiAgentSave {
   preferredLang: LanguagePreference[];
   llmType?: string;
   searchEngineType?: string;
-  preferredVoice: Voice[];
+  primaryVoice: Voice[];
   copilot?: string;
   talkativity: number;
   podcastMode: number;
@@ -230,7 +230,7 @@ export interface AiAgentSave {
 
 // Extend the base AiAgent interface to include form-specific fields
 export interface AiAgentForm extends AiAgent {
-    preferredVoiceId?: string;
+    primaryVoiceId?: string;
     copilotId?: string;
     enabledTools?: any[];
 }

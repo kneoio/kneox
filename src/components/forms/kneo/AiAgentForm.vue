@@ -81,9 +81,9 @@
           <n-form label-placement="left" label-width="auto">
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
               <n-gi>
-                <n-form-item label="Preferred Voice">
+                <n-form-item label="Primary Voice">
                   <n-select 
-                    v-model:value="localFormData.preferredVoiceId" 
+                    v-model:value="localFormData.primaryVoiceId" 
                     :options="voiceOptions" 
                     filterable
                     style="width: 30%; max-width: 300px;"
@@ -187,8 +187,8 @@ export default defineComponent({
       name: "",
       preferredLang: [],
       llmType: "",
-      preferredVoice: [],
-      preferredVoiceId: "",
+      primaryVoice: [],
+      primaryVoiceId: "",
       copilotId: ""
     });
 
@@ -214,15 +214,17 @@ export default defineComponent({
           preferredLang: localFormData.preferredLang || [],
           llmType: localFormData.llmType || '',
           searchEngineType: (localFormData as any).searchEngineType || undefined,
-          preferredVoice: []
+          primaryVoice: [],
+          talkativity: (localFormData as any).talkativity || 0,
+          podcastMode: (localFormData as any).podcastMode || 0
         };
 
-        if (localFormData.preferredVoiceId) {
+        if (localFormData.primaryVoiceId) {
           const selectedVoice = voiceOptions.value.find(
-            (v: { label: string; value: string }) => v.value === localFormData.preferredVoiceId
+            (v: { label: string; value: string }) => v.value === localFormData.primaryVoiceId
           );
           if (selectedVoice) {
-            saveData.preferredVoice = [{ id: selectedVoice.value, name: selectedVoice.label }];
+            saveData.primaryVoice = [{ id: selectedVoice.value, name: selectedVoice.label }];
           }
         }
 
@@ -280,8 +282,8 @@ export default defineComponent({
         if (id) {
           await store.fetch(id);
           const agentData = { ...store.getCurrent } as AiAgentForm;
-          if (agentData.preferredVoice && agentData.preferredVoice.length > 0) {
-            agentData.preferredVoiceId = agentData.preferredVoice[0]?.id || '';
+          if (agentData.primaryVoice && agentData.primaryVoice.length > 0) {
+            agentData.primaryVoiceId = agentData.primaryVoice[0]?.id || '';
           }
           if (agentData.copilot) {
             agentData.copilotId = agentData.copilot;

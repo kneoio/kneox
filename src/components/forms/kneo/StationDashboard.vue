@@ -142,7 +142,7 @@
                       <n-space justify="space-between" align="center">
                         <span>
                           DJ
-                          <span v-if="stationDetails?.aiDjStats?.djName">  {{ stationDetails.aiDjStats.djName }}</span>
+                          <span v-if="stationDetails?.aiDjStats?.djName"> - {{ stationDetails.aiDjStats.djName }}</span>
                         </span>
                         <n-tag v-if="isDjActive" type="info" size="small">Active</n-tag>
                         <n-tag v-else-if="isDjOffline" type="error" size="small">DJ is offline</n-tag>
