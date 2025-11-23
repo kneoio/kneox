@@ -672,7 +672,11 @@ export default defineComponent( {
 
         await store.save( saveDTO, localFormData.id as string );
         message.success( "Radio Station saved successfully" );
-        await router.push( "/outline/radiostations" );
+        
+        const fromStation = router.options.history.state.back?.toString().includes('/outline/station/');
+        if (!fromStation) {
+          await router.push( "/outline/radiostations" );
+        }
       } catch ( error ) {
         handleFormSaveError(error, message);
       } finally {
