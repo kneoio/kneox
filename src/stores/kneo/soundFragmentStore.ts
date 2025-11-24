@@ -124,7 +124,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         apiFormResponse.value = response.data.payload;
     };
 
-    const startUploadSession = async (id: string, uploadId: string, startTime: number) => {
+    /*const startUploadSession = async (id: string, uploadId: string, startTime: number) => {
         try {
             const response = await apiClient.post(`/soundfragments/files/${id}/start?uploadId=${uploadId}&startTime=${startTime}`);
             return response.data;
@@ -152,7 +152,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
                 throw new Error(`Upload session failed: ${error.message || 'Unknown error'}`);
             }
         }
-    };
+    };*/
 
     const uploadFile = async (
         id: string,
@@ -307,7 +307,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         save,
         delete: deleteSoundFragment,
         uploadFile,
-        startUploadSession,
+        //startUploadSession,
         updateCurrent,
         downloadFile,
         fetchAccessList,

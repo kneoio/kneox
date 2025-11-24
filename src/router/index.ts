@@ -2,6 +2,7 @@ import {createRouter, createWebHistory, RouteRecordRaw} from 'vue-router';
 import MainOutline from '../views/MainOutline.vue';
 import DashboardView from '../views/DashboardView.vue';
 import StationDashboard from '../components/forms/kneo/StationDashboard.vue';
+import ChatForm from '../components/forms/kneo/ChatForm.vue';
 
 import StationPlaylistView from '../components/lists/kneo/StationPlaylist.vue';
 import Listeners from '../components/lists/kneo/Listeners.vue';
@@ -97,6 +98,12 @@ const routes: Array<RouteRecordRaw> = [
                 path: 'station/:brandName/listeners',
                 name: 'StationListeners',
                 component: AvailableListeners,
+                props: true,
+            },
+            {
+                path: 'station/:brandName/chat',
+                name: 'StationChat',
+                component: ChatForm,
                 props: true,
             },           
             {
@@ -327,3 +334,4 @@ export function setupRouterGuard(keycloak: Keycloak) {
 }
 
 export default router;
+

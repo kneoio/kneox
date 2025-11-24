@@ -232,6 +232,10 @@ export default defineComponent({
             key: `station-${station.slugName}-listeners`
           },
           {
+            label: 'Chat',
+            key: `station-${station.slugName}-chat`
+          },
+          {
             label: 'Settings',
             key: `station-${station.slugName}-settings`
           }
@@ -438,6 +442,9 @@ export default defineComponent({
       } else if (key.startsWith('station-') && key.endsWith('-listeners')) {
         const brandName = key.replace('station-', '').replace('-listeners', '');
         await router.push({name: 'StationListeners', params: {brandName: brandName}});
+      } else if (key.startsWith('station-') && key.endsWith('-chat')) {
+        const brandName = key.replace('station-', '').replace('-chat', '');
+        await router.push({name: 'StationChat', params: {brandName: brandName}});
       } else if (key.startsWith('station-') && key.endsWith('-settings')) {
         const brandName = key.replace('station-', '').replace('-settings', '');
         const station = radioStations.value.find((s) => s.slugName === brandName)!;
@@ -633,3 +640,4 @@ export default defineComponent({
   }
 }
 </style>
+

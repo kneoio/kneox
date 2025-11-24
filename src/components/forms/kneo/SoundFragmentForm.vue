@@ -314,7 +314,7 @@ export default defineComponent({
         const entityId = localFormData.id || "temp";
         const uploadId = crypto.randomUUID();
         const originalFileName = file.name;
-        logWithTimestamp(`Start upload session, uploadId: ${uploadId}, originalFileName: ${originalFileName}`);
+      //logWithTimestamp(`Start upload session, uploadId: ${uploadId}, originalFileName: ${originalFileName}`);
         if (!file.file) {
           throw new Error('No file content to upload');
         }
