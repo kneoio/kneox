@@ -3,7 +3,12 @@
     <div class="chat-container">
       <div class="chat-header">
         <h2>Station Chat</h2>
-        <n-select v-model:value="selectedModel" :options="modelOptions" style="width: 280px;" size="medium" />
+        <n-text v-if=" !isConnected " depth="3" type="warning" style="font-size: 12px;">
+          Connecting...
+        </n-text>
+        <n-text v-else depth="3" type="success" style="font-size: 12px;">
+          ● Connected
+        </n-text>
       </div>
 
       <div class="chat-messages">
@@ -12,14 +17,26 @@
             <div v-if=" chatMessages.length === 0 " class="empty-state">
               <n-text depth="3">No messages yet. Start a conversation!</n-text>
             </div>
-            <div v-for=" m in chatMessages " :key="m.id" class="chat-message" :class="`chat-message-${m.role}`">
+            <div v-for=" m in chatMessages " :key="m.id" class="chat-message"
+              :class="m.isBot ? 'chat-message-assistant' : 'chat-message-user'">
               <div class="message-header">
                 <n-text depth="3" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">
-                  {{ m.role === 'user' ? 'You' : ( m.role === 'assistant' ? 'Assistant' : 'System' ) }}
+                  {{ m.isBot ? 'Assistant' : m.username }}
                 </n-text>
               </div>
               <div class="chat-bubble">
-                {{ m.text }}
+                {{ m.content }}
+              </div>
+            </div>
+            <!-- Streaming message -->
+            <div v-if=" isStreaming " class="chat-message chat-message-assistant">
+              <div class="message-header">
+                <n-text depth="3" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">
+                  Assistant
+                </n-text>
+              </div>
+              <div class="chat-bubble streaming">
+                {{ streamingMessage }}<span class="typing-cursor">|</span>
               </div>
             </div>
           </div>
@@ -28,9 +45,10 @@
 
       <div class="chat-input-area">
         <n-input v-model:value="chatInput" type="textarea" :autosize="{ minRows: 1, maxRows: 6 }"
-          placeholder="Type your message..." :disabled="isChatSending" @keydown.enter.exact.prevent="handleSendChat" />
-        <n-button type="primary" :loading="isChatSending" @click="handleSendChat" :disabled="!chatInput.trim()"
-          size="large">
+          placeholder="Type your message..." :disabled="isChatSending || !isConnected"
+          @keydown.enter.exact.prevent="handleSendChat" />
+        <n-button type="primary" :loading="isChatSending" @click="handleSendChat"
+          :disabled="!chatInput.trim() || !isConnected" size="large">
           Send
         </n-button>
       </div>
@@ -39,21 +57,20 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref, nextTick, watch } from 'vue';
-import { useStationChatStore } from '../../../stores/kneo/stationChatStore';
-import { useReferencesStore } from '../../../stores/kneo/referencesStore';
+import { computed, defineComponent, ref, nextTick, watch, onMounted, onUnmounted } from 'vue';
+import { useChatWebSocketStore } from '../../../stores/kneo/chatWebSocketStore';
 import {
   NButton,
   NText,
   NInput,
-  NSelect,
-  NScrollbar
+  NScrollbar,
+  useThemeVars
 } from 'naive-ui';
 
 export default defineComponent( {
   name: 'ChatForm',
   components: {
-    NButton, NText, NInput, NSelect, NScrollbar
+    NButton, NText, NInput, NScrollbar
   },
   props: {
     brandName: {
@@ -62,16 +79,17 @@ export default defineComponent( {
     }
   },
   setup( props ) {
-    const chatStore = useStationChatStore();
-    const referencesStore = useReferencesStore();
+    const chatStore = useChatWebSocketStore();
+    const themeVars = useThemeVars();
 
     const chatInput = ref( '' );
-    const selectedModel = ref( 'CLAUDE' );
     const scrollbarRef = ref();
-    const modelOptions = referencesStore.llmTypeOptions;
 
-    const chatMessages = computed( () => chatStore.getMessages( props.brandName ) );
-    const isChatSending = computed( () => chatStore.state.isSending );
+    const chatMessages = computed( () => chatStore.messages );
+    const isChatSending = computed( () => chatStore.isSending );
+    const isConnected = computed( () => chatStore.isConnected );
+    const streamingMessage = computed( () => chatStore.streamingMessage );
+    const isStreaming = computed( () => chatStore.isStreaming );
 
     const scrollToBottom = async () => {
       await nextTick();
@@ -84,24 +102,39 @@ export default defineComponent( {
       scrollToBottom();
     }, { deep: true } );
 
+    watch( streamingMessage, () => {
+      scrollToBottom();
+    } );
+
     const handleSendChat = async () => {
       const text = chatInput.value;
       if ( !text || !text.trim() ) {
         return;
       }
-      await chatStore.sendChat( props.brandName, text, selectedModel.value );
+      chatStore.sendMessage( text );
       chatInput.value = '';
       scrollToBottom();
     };
 
+    onMounted( () => {
+      chatStore.connect();
+      scrollToBottom();
+    } );
+
+    onUnmounted( () => {
+      chatStore.disconnect();
+    } );
+
     return {
       chatInput,
-      selectedModel,
-      modelOptions,
       chatMessages,
       isChatSending,
+      isConnected,
+      streamingMessage,
+      isStreaming,
       handleSendChat,
-      scrollbarRef
+      scrollbarRef,
+      themeVars
     };
   }
 } );
@@ -187,12 +220,6 @@ export default defineComponent( {
   align-items: flex-start;
 }
 
-.chat-message-system {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
 .chat-bubble {
   padding: 12px 16px;
   border-radius: 16px;
@@ -204,8 +231,8 @@ export default defineComponent( {
 }
 
 .chat-message-user .chat-bubble {
-  background: linear-gradient(135deg, #18a058 0%, #16a34a 100%);
-  color: white;
+  background: v-bind(' themeVars.primaryColor ');
+  color: #ffffff;
   border-bottom-right-radius: 4px;
 }
 
@@ -213,13 +240,6 @@ export default defineComponent( {
   background: rgba(64, 158, 255, 0.15);
   border: 1px solid rgba(64, 158, 255, 0.3);
   border-bottom-left-radius: 4px;
-}
-
-.chat-message-system .chat-bubble {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  font-size: 13px;
-  font-style: italic;
 }
 
 .chat-input-area {
@@ -234,5 +254,27 @@ export default defineComponent( {
 
 .chat-input-area :deep(.n-input) {
   flex: 1;
+}
+
+.typing-cursor {
+  animation: blink 1s infinite;
+  margin-left: 2px;
+}
+
+@keyframes blink {
+
+  0%,
+  49% {
+    opacity: 1;
+  }
+
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.chat-bubble.streaming {
+  opacity: 0.9;
 }
 </style>
