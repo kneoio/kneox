@@ -111,7 +111,7 @@ export default defineComponent( {
       if ( !text || !text.trim() ) {
         return;
       }
-      chatStore.sendMessage( text );
+      chatStore.sendMessage( text, props.brandName );
       chatInput.value = '';
       scrollToBottom();
     };

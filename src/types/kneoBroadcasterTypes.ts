@@ -8,7 +8,7 @@ export enum FragmentType {
 
 export enum BrandStatus {
     OFF_LINE = "OFF_LINE",
-    ON_LINE = "ON_LINE",  
+    ON_LINE = "ON_LINE",
     QUEUE_SATURATED = "QUEUE_SATURATED",
     WARMING_UP = "WARMING_UP",
     IDLE = "IDLE",
@@ -43,7 +43,7 @@ export interface Profile {
     explicitContent: boolean;
 }
 
-export interface ProfileSave {    
+export interface ProfileSave {
     name: string;
     description: string;
     explicitContent: boolean;
@@ -81,6 +81,7 @@ export interface RadioStation {
     mixplaUrl?: string;
     actionUrl: string;
     bitRate?: number;
+    popularityRate?: number;
     aiAgentId?: string;
     aiOverriding?: AiOverriding;
     profileId?: string;
@@ -102,6 +103,7 @@ export interface RadioStationSave {
     description?: string;
     color: string;
     bitRate?: number;
+    popularityRate?: number;
     aiAgentId?: string;
     aiOverriding?: AiOverriding;
     profileId?: string;
@@ -214,18 +216,18 @@ export interface AiAgent {
 }
 
 export interface AiAgentSave {
-  name: string;
-  preferredLang: LanguagePreference[];
-  llmType?: string;
-  searchEngineType?: string;
-  primaryVoice: Voice[];
-  copilot?: string;
-  talkativity: number;
-  podcastMode: number;
-  merger?: {
-      method: string;
-      gainIntro: number;
-  };
+    name: string;
+    preferredLang: LanguagePreference[];
+    llmType?: string;
+    searchEngineType?: string;
+    primaryVoice: Voice[];
+    copilot?: string;
+    talkativity: number;
+    podcastMode: number;
+    merger?: {
+        method: string;
+        gainIntro: number;
+    };
 }
 
 // Extend the base AiAgent interface to include form-specific fields
@@ -238,41 +240,41 @@ export interface AiAgentForm extends AiAgent {
 // Types for Listeners Feature
 
 export interface LocalizedName {
-  [key: string]: string;
+    [key: string]: string;
 }
 
 export interface ListenerEntry {
-  id: string;
-  author: string;
-  regDate: string;
-  lastModifier: string;
-  lastModifiedDate: string;
-  localizedName: LocalizedName;
-  userId: number;
-  telegramName: string;
-  country: string;
-  nickName: LocalizedName;
-  slugName: string;
-  archived: number;
+    id: string;
+    author: string;
+    regDate: string;
+    lastModifier: string;
+    lastModifiedDate: string;
+    localizedName: LocalizedName;
+    userId: number;
+    telegramName: string;
+    country: string;
+    nickName: LocalizedName;
+    slugName: string;
+    archived: number;
 }
 
 export interface ListenerViewData {
-  count: number;
-  pageNum: number;
-  maxPage: number;
-  pageSize: number;
-  entries: ListenerEntry[];
+    count: number;
+    pageNum: number;
+    maxPage: number;
+    pageSize: number;
+    entries: ListenerEntry[];
 }
 
 export interface ListenerSave {
-  localizedName?: LocalizedName;
-  nickName?: LocalizedName;
-  country?: string;
-  telegramName?: string;
-  slugName?: string;
-  archived?: number;
-  userId?: number;
-  listenerOf?: string[];
+    localizedName?: LocalizedName;
+    nickName?: LocalizedName;
+    country?: string;
+    telegramName?: string;
+    slugName?: string;
+    archived?: number;
+    userId?: number;
+    listenerOf?: string[];
 }
 
 export interface Event {
@@ -324,7 +326,7 @@ export interface SubmissionPayload {
     contributorEmail?: string;
     isShareable?: boolean;
     attachedMessage?: string;
-    country?: string; 
+    country?: string;
     agreedAt?: string;
     termsText?: string;
     agreementVersion?: string;
@@ -348,53 +350,53 @@ export interface ScriptSave {
 
 // Script Scenes
 export interface ScriptScene {
-id?: string;
-scriptId?: string;
-type?: string;
-title?: string;
-prompts?: string[];
-startTime?: string;
-oneTimeRun?: boolean;
-weekdays?: number[];
-talkativity?: number;
-podcastMode?: number;
+    id?: string;
+    scriptId?: string;
+    type?: string;
+    title?: string;
+    prompts?: string[];
+    startTime?: string;
+    oneTimeRun?: boolean;
+    weekdays?: number[];
+    talkativity?: number;
+    podcastMode?: number;
 }
 
 export interface ScriptSceneViewData {
-count: number;
-pageNum: number;
-maxPage: number;
-pageSize: number;
-entries: ScriptScene[];
+    count: number;
+    pageNum: number;
+    maxPage: number;
+    pageSize: number;
+    entries: ScriptScene[];
 }
 
 export interface ScriptSceneSave {
-type?: string;
-title?: string;
-prompts?: string[];
-startTime?: string;
-oneTimeRun?: boolean;
-weekdays?: number[];
-talkativity?: number;
-podcastMode?: number;
+    type?: string;
+    title?: string;
+    prompts?: string[];
+    startTime?: string;
+    oneTimeRun?: boolean;
+    weekdays?: number[];
+    talkativity?: number;
+    podcastMode?: number;
 }
 
 // Prompts (Broadcaster)
 export interface BroadcastPrompt {
-  id: string;
-  author: string;
-  regDate: string;
-  lastModifier: string;
-  lastModifiedDate: string;
-  enabled: boolean;
-  prompt: string;
-  promptType?: string;
-  languageCode?: string;
-  master?: boolean;
-  locked?: boolean;
-  title?: string;
-  podcast?: boolean;
-  version?: number;
+    id: string;
+    author: string;
+    regDate: string;
+    lastModifier: string;
+    lastModifiedDate: string;
+    enabled: boolean;
+    prompt: string;
+    promptType?: string;
+    languageCode?: string;
+    master?: boolean;
+    locked?: boolean;
+    title?: string;
+    podcast?: boolean;
+    version?: number;
 }
 
 export interface BroadcastPromptSave {

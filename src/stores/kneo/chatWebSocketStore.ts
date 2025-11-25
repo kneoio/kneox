@@ -52,7 +52,6 @@ export const useChatWebSocketStore = defineStore( 'chatWebSocketStore', () => {
         if ( isWebSocketActive( chatWebsocket.value ) ) return;
 
         username.value = keycloak.tokenParsed?.preferred_username || keycloak.tokenParsed?.email || 'User';
-
         chatWebsocket.value = new WebSocket( buildWebSocketUrl() );
 
         chatWebsocket.value.onopen = () => {
@@ -65,8 +64,7 @@ export const useChatWebSocketStore = defineStore( 'chatWebSocketStore', () => {
         chatWebsocket.value.onmessage = ( event: MessageEvent ) => {
             try {
                 const data: ChatEvent = JSON.parse( event.data );
-                // console.log( 'WS Received:', data.type, data ); // Debug logging
-
+                // console.log('WS Received:', data.type, data);
                 switch ( data.type ) {
                     case 'chunk':
                         if ( data.content ) {
@@ -79,7 +77,6 @@ export const useChatWebSocketStore = defineStore( 'chatWebSocketStore', () => {
                             } );
                         }
                         break;
-
                     case 'message':
                         nextTick( () => {
                             isStreaming.value = false;
@@ -89,7 +86,6 @@ export const useChatWebSocketStore = defineStore( 'chatWebSocketStore', () => {
                             }
                         } );
                         break;
-
                     case 'history':
                         if ( data.messages ) {
                             nextTick( () => {
@@ -97,45 +93,37 @@ export const useChatWebSocketStore = defineStore( 'chatWebSocketStore', () => {
                             } );
                         }
                         break;
-
                     case 'error':
                         console.error( 'Chat error:', data.message );
                         lastError.value = data.message || 'Unknown error';
-
-                        // HACK: If the error message contains a valid message JSON, treat it as a message
-                        // This handles the weird backend behavior seen in logs
                         if ( data.message && data.message.startsWith( '{"type":"message"' ) ) {
                             try {
-                                const innerData = JSON.parse( data.message );
-                                if ( innerData.type === 'message' && innerData.data ) {
-                                    console.log( 'Recovered message from error:', innerData.data );
+                                const inner = JSON.parse( data.message );
+                                if ( inner.type === 'message' && inner.data ) {
+                                    console.log( 'Recovered message from error:', inner.data );
                                     nextTick( () => {
-                                        messages.value.push( innerData.data );
+                                        messages.value.push( inner.data );
                                     } );
                                 }
                             } catch ( e ) {
                                 console.error( 'Failed to recover message from error', e );
                             }
                         }
-
                         isStreaming.value = false;
                         streamingMessage.value = '';
                         break;
                 }
-            } catch ( error ) {
-                console.error( 'Error parsing chat message:', error, event.data );
+            } catch ( err ) {
+                console.error( 'Error parsing chat message:', err, event.data );
             }
         };
 
         chatWebsocket.value.onclose = ( event: CloseEvent ) => {
             console.log( 'Chat WebSocket closed:', event.code, event.reason );
             isConnected.value = false;
-
             if ( [1000, 1001, 1006].includes( event.code ) ) {
                 console.log( 'Reconnecting chat in 3s...' );
-                setTimeout( () => {
-                    connect();
-                }, 3000 );
+                setTimeout( () => connect(), 3000 );
             }
         };
 
@@ -154,28 +142,28 @@ export const useChatWebSocketStore = defineStore( 'chatWebSocketStore', () => {
         }
     };
 
-    const sendMessage = ( content: string ) => {
+    const sendMessage = ( content: string, stationId?: string ) => {
         if ( !isConnected.value || !chatWebsocket.value ) {
             console.error( 'WebSocket not connected' );
             lastError.value = 'Not connected to chat server';
             return;
         }
-
-        if ( !content.trim() ) {
-            return;
-        }
-
+        if ( !content.trim() ) return;
         isSending.value = true;
         lastError.value = null;
-
         try {
-            chatWebsocket.value.send( JSON.stringify( {
+            const payload = {
                 action: 'sendMessage',
                 username: username.value,
-                content: content.trim()
-            } ) );
-        } catch ( error ) {
-            console.error( 'Error sending message:', error );
+                content: content.trim(),
+                stationId: stationId,
+                id: `${Date.now()}-${Math.random().toString( 36 ).substr( 2, 9 )}`,
+                timestamp: Date.now(),
+                isBot: false
+            };
+            chatWebsocket.value.send( JSON.stringify( payload ) );
+        } catch ( err ) {
+            console.error( 'Error sending message:', err );
             lastError.value = 'Failed to send message';
         } finally {
             isSending.value = false;
@@ -187,14 +175,10 @@ export const useChatWebSocketStore = defineStore( 'chatWebSocketStore', () => {
             console.error( 'WebSocket not connected' );
             return;
         }
-
         try {
-            chatWebsocket.value.send( JSON.stringify( {
-                action: 'getHistory',
-                limit
-            } ) );
-        } catch ( error ) {
-            console.error( 'Error requesting history:', error );
+            chatWebsocket.value.send( JSON.stringify( { action: 'getHistory', limit } ) );
+        } catch ( err ) {
+            console.error( 'Error requesting history:', err );
         }
     };
 
@@ -211,7 +195,6 @@ export const useChatWebSocketStore = defineStore( 'chatWebSocketStore', () => {
         username,
         streamingMessage,
         isStreaming,
-
         // Actions
         connect,
         disconnect,
