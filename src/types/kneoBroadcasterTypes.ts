@@ -32,6 +32,15 @@ export enum AiAgentMode {
     SCRIPT_FOLLOWING = "SCRIPT_FOLLOWING"
 }
 
+export enum MessageType {
+    USER = "USER",
+    BOT = "BOT",
+    PROCESSING = "PROCESSING",
+    WAITING = "WAITING",
+    CHUNK = "CHUNK",
+    ERROR = "ERROR"
+}
+
 export interface Profile {
     id: string;
     author?: string;

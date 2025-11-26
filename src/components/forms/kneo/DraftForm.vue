@@ -17,7 +17,6 @@
       <n-button-group>
         <n-button type="primary" @click="handleSave" size="large">Save</n-button>
         <n-button type="default" @click="openTestDialog" size="large">Test</n-button>
-        <n-button type="default" @click="handleReplicateClick" size="large" :disabled="!localFormData.isMaster">Replicate</n-button>
       </n-button-group>
     </n-gi>
 
@@ -135,38 +134,6 @@
     </n-space>
   </n-modal>
 
-  <n-modal v-model:show="showReplicateDialog" preset="dialog" title="Replicate Draft" :style="{ backgroundColor: dialogBackgroundColor }">
-    <n-space vertical>
-      <n-text>Select languages to replicate this draft:</n-text>
-      <n-grid :cols="3" x-gap="12" y-gap="8">
-        <n-gi v-for="lang in langOptions" :key="lang.value">
-          <div class="lang-row">
-            <GlowDot
-              class="lang-dot"
-              :variant="lang.value === 'en' ? 'blue' : getDotVariant(lang.value)"
-              :size="10"
-              :active="selectedLanguages.includes(lang.value) && (isReplicating || hasReplicateError || hasReplicateSuccess)"
-              :pulse="getDotVariant(lang.value) === 'yellow'"
-            />
-            <n-checkbox 
-              :checked="selectedLanguages.includes(lang.value)" 
-              :disabled="lang.value === 'en'"
-              @update:checked="(checked) => toggleLanguage(lang.value, checked)"
-            >
-              {{ lang.label }}
-            </n-checkbox>
-          </div>
-        </n-gi>
-      </n-grid>
-    </n-space>
-    <template #action>
-      <n-space>
-        <n-button v-if="!allDone" @click="showReplicateDialog = false">Cancel (Esc)</n-button>
-        <n-button v-if="!allDone" type="primary" @click="handleReplicate" :disabled="selectedLanguages.length === 0 || isReplicating">Replicate (Ctrl+Enter)</n-button>
-        <n-button v-if="allDone" type="primary" @click="showReplicateDialog = false">Close</n-button>
-      </n-space>
-    </template>
-  </n-modal>
 </template>
 
 <script lang="ts">
@@ -206,7 +173,6 @@ import { useAiAgentStore } from '../../../stores/kneo/aiAgentStore';
 import { useRadioStationStore } from '../../../stores/kneo/radioStationStore';
 import apiClient from '../../../api/apiClient';
 import AclTable from '../../common/AclTable.vue';
-import GlowDot from '../../common/GlowDot.vue';
 import { useDialogBackground } from '../../../composables/useDialogBackground';
 
 export default defineComponent({
@@ -230,8 +196,7 @@ export default defineComponent({
     NText,
     NCheckbox,
     CodeMirror,
-    AclTable,
-    GlowDot
+    AclTable
   },
   setup() {
     const loadingBar = useLoadingBar();
@@ -272,21 +237,11 @@ export default defineComponent({
     const testResult = ref('');
     const testLoading = ref(false);
 
-    const showReplicateDialog = ref(false);
-    const selectedLanguages = ref<string[]>([]);
-    const isReplicating = ref(false);
-    const hasReplicateError = ref(false);
-    const hasReplicateSuccess = ref(false);
-    const completedLanguages = ref<Set<string>>(new Set());
-    const allDone = ref(false);
-    let eventSource: EventSource | null = null;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.key === 'Enter') {
         if (showTestDialog.value) {
           runDraftTest();
-        } else if (showReplicateDialog.value && selectedLanguages.value.length > 0) {
-          handleReplicate();
         }
       }
     };
@@ -355,104 +310,12 @@ export default defineComponent({
       }
     };
 
-    const handleReplicateClick = () => {
-      selectedLanguages.value = ['en'];
-      hasReplicateError.value = false;
-      hasReplicateSuccess.value = false;
-      completedLanguages.value.clear();
-      allDone.value = false;
-      showReplicateDialog.value = true;
-    };
-
-    const handleReplicate = async () => {
-      try {
-        loadingBar.start();
-        isReplicating.value = true;
-        hasReplicateError.value = false;
-        completedLanguages.value.clear();
-        allDone.value = false;
-        message.info(`Replicating draft to ${selectedLanguages.value.length} language(s)...`);
-        const payload = selectedLanguages.value.map((lang) => ({
-          toTranslate: localFormData.content || '',
-          masterId: localFormData.id,
-          translationType: 'CODE',
-          languageCode: lang,
-          version: localFormData.version
-        }));
-        const jobId = crypto.randomUUID();
-        await apiClient.post(`/drafts/translate/start?jobId=${jobId}`, payload);
-        if (eventSource) {
-          eventSource.close();
-        }
-        const apiServer = import.meta.env.VITE_API_SERVER;
-        eventSource = new EventSource(`${apiServer}/drafts/translate/stream?jobId=${jobId}`, { withCredentials: true });
-        eventSource.addEventListener('language_done', (e: MessageEvent) => {
-          const data = JSON.parse(e.data);
-          if (data.success) {
-            completedLanguages.value.add(data.language);
-          }
-        });
-        eventSource.addEventListener('done', (e: MessageEvent) => {
-          const data = JSON.parse(e.data);
-          allDone.value = true;
-          hasReplicateSuccess.value = true;
-          isReplicating.value = false;
-          loadingBar.finish();
-          message.success(`Draft replicated: ${data.success}/${data.total} succeeded`);
-          if (eventSource) {
-            eventSource.close();
-            eventSource = null;
-          }
-        });
-        eventSource.addEventListener('error', () => {
-          hasReplicateError.value = true;
-          isReplicating.value = false;
-          loadingBar.finish();
-          message.error('Failed to replicate draft.');
-          if (eventSource) {
-            eventSource.close();
-            eventSource = null;
-          }
-        });
-      } catch (error: any) {
-        console.error('Failed to replicate draft:', error);
-        hasReplicateError.value = true;
-        isReplicating.value = false;
-        loadingBar.finish();
-        message.error('Failed to replicate draft.');
-      }
-    };
-
-    const toggleLanguage = (langValue: string, checked: boolean) => {
-      if (checked) {
-        if (!selectedLanguages.value.includes(langValue)) {
-          selectedLanguages.value.push(langValue);
-        }
-      } else {
-        selectedLanguages.value = selectedLanguages.value.filter(l => l !== langValue);
-      }
-    };
-
-    const getDotVariant = (langValue: string): 'yellow' | 'red' | 'green' | 'gray' => {
-      const isSelected = selectedLanguages.value.includes(langValue);
-      if (!isSelected) return 'gray';
-      if (completedLanguages.value.has(langValue)) return 'green';
-      if (hasReplicateError.value) return 'red';
-      if (isReplicating.value) return 'yellow';
-      return 'gray';
-    };
 
     const handleSave = async () => {
       try {
         loadingBar.start();
-        const lang = localFormData.languageCode;
-        const suffix = localFormData.isMaster ? '' : lang;
-        const hasSuffixInTitle = suffix && (localFormData.title || '').includes(suffix);
-        const titleToSave = hasSuffixInTitle || !suffix
-          ? (localFormData.title || '')
-          : `${(localFormData.title || '').trim()} (${suffix})`;
         const saveData: DraftSave = {
-          title: titleToSave,
+          title: localFormData.title,
           content: localFormData.content,
           languageCode: localFormData.languageCode,
           archived: localFormData.archived,
@@ -559,11 +422,6 @@ export default defineComponent({
       agentOptions,
       stationOptions,
       runDraftTest,
-      showReplicateDialog,
-      selectedLanguages,
-      handleReplicateClick,
-      handleReplicate,
-      toggleLanguage,
       goBack,
       activeTab,
       editorExtensions,
@@ -571,48 +429,9 @@ export default defineComponent({
       aclData,
       aclLoading,
       themeVars,
-      isReplicating,
-      hasReplicateError,
-      hasReplicateSuccess,
-      getDotVariant,
-      dialogBackgroundColor,
-      allDone
+      dialogBackgroundColor
     };
   }
 });
 </script>
 
-<style scoped>
-.lang-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.lang-dot {
-  margin-left: 2px;
-}
-.lang-label {
-  display: inline-grid;
-  grid-template-columns: 1fr 10px;
-  align-items: center;
-  width: 160px;
-  column-gap: 8px;
-}
-.lang-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.glow-yellow {
-  color: #f59e0b !important;
-  box-shadow: 0 0 8px 2px currentColor, 0 0 14px 6px currentColor;
-}
-.glow-red {
-  color: #ef4444 !important;
-  box-shadow: 0 0 8px 2px currentColor, 0 0 14px 6px currentColor;
-}
-.glow-green {
-  color: #10b981 !important;
-  box-shadow: 0 0 8px 2px currentColor, 0 0 14px 6px currentColor;
-}
-</style>

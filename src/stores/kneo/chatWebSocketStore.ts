@@ -1,24 +1,26 @@
 import { defineStore } from 'pinia';
 import { ref, nextTick } from 'vue';
 import apiClient from '../../api/apiClient';
-import keycloak from '../../keycloakFactory.js'; // Added .js extension
+import keycloak from '../../keycloakFactory.js';
+import { MessageType } from '../../types/kneoBroadcasterTypes';
 
-console.log( 'chatWebSocketStore loaded' ); // Debug log
+console.log( 'chatWebSocketStore loaded' );
 
 export interface ChatMessage {
     id: string;
     username: string;
     content: string;
     timestamp: number;
-    isBot: boolean;
+    type: MessageType;
 }
 
 interface ChatEvent {
-    type: 'message' | 'history' | 'error' | 'chunk';
+    type: 'MESSAGE' | 'message' |'history' | 'error' | 'CHUNK' | 'PROCESSING';
     data?: ChatMessage;
     messages?: ChatMessage[];
     message?: string;
     content?: string;
+    username?: string;
     connectionId?: string;
     timestamp?: number;
 }
@@ -31,7 +33,9 @@ export const useChatWebSocketStore = defineStore( 'chatWebSocketStore', () => {
     const lastError = ref<string | null>( null );
     const username = ref<string>( '' );
     const streamingMessage = ref<string>( '' );
+    const streamingUsername = ref<string | undefined>( undefined );
     const isStreaming = ref( false );
+    const shouldReconnect = ref( true );
 
     const buildWebSocketUrl = (): string => {
         const baseUrl = apiClient.defaults.baseURL || '';
@@ -44,14 +48,23 @@ export const useChatWebSocketStore = defineStore( 'chatWebSocketStore', () => {
     };
 
     const isWebSocketActive = ( ws: WebSocket | null | undefined ): boolean => {
-        return ws !== null && ws !== undefined &&
-            ( ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING );
+        return (
+            ws !== null &&
+            ws !== undefined &&
+            ( ws.readyState === WebSocket.OPEN ||
+                ws.readyState === WebSocket.CONNECTING )
+        );
     };
 
     const connect = () => {
         if ( isWebSocketActive( chatWebsocket.value ) ) return;
 
-        username.value = keycloak.tokenParsed?.preferred_username || keycloak.tokenParsed?.email || 'User';
+        shouldReconnect.value = true;
+        username.value =
+            keycloak.tokenParsed?.preferred_username ||
+            keycloak.tokenParsed?.email ||
+            'User';
+
         chatWebsocket.value = new WebSocket( buildWebSocketUrl() );
 
         chatWebsocket.value.onopen = () => {
@@ -64,56 +77,85 @@ export const useChatWebSocketStore = defineStore( 'chatWebSocketStore', () => {
         chatWebsocket.value.onmessage = ( event: MessageEvent ) => {
             try {
                 const data: ChatEvent = JSON.parse( event.data );
-                // console.log('WS Received:', data.type, data);
+                //console.log( 'WebSocket message received:', data );
+
                 switch ( data.type ) {
-                    case 'chunk':
+                    case 'CHUNK':
                         if ( data.content ) {
                             nextTick( () => {
                                 if ( !isStreaming.value ) {
                                     isStreaming.value = true;
                                     streamingMessage.value = '';
+                                    streamingUsername.value = data.username;
                                 }
                                 streamingMessage.value += data.content;
                             } );
                         }
                         break;
-                    case 'message':
+                    case 'PROCESSING':
+                        console.log( 'WebSocket message received:', data );
+                        nextTick( () => {
+                            // Remove old WAITING/PROCESSING messages
+                            messages.value = messages.value.filter( m =>
+                                m.type !== MessageType.WAITING &&
+                                m.type !== MessageType.PROCESSING
+                            );
+
+                            // Add new PROCESSING message
+                            const processingMsg: ChatMessage = {
+                                id: `processing-${Date.now()}`,
+                                username: data.username || 'System',
+                                content: data.content || 'Processing...',
+                                timestamp: Date.now(),
+                                type: MessageType.PROCESSING
+                            };
+                            messages.value.push( processingMsg );
+                        } );
+                        break;
+                    case 'message':                        
+                    case 'MESSAGE':
                         nextTick( () => {
                             isStreaming.value = false;
                             streamingMessage.value = '';
+
                             if ( data.data ) {
-                                messages.value.push( data.data );
+                                const raw = ( data.data as any ).data || data.data;
+                                console.log( 'Message data:', raw );
+
+                                if ( !raw.type ) {
+                                    raw.type = MessageType.BOT;
+                                }
+
+                                if ( raw.type !== MessageType.PROCESSING && raw.type !== MessageType.WAITING ) {
+                                    messages.value = messages.value.filter( m => m.type !== MessageType.PROCESSING && m.type !== MessageType.WAITING );
+                                }
+                                messages.value.push( raw );
                             }
-                            // message from server means the send round-trip is done
+
                             isSending.value = false;
                         } );
                         break;
+
                     case 'history':
                         if ( data.messages ) {
                             nextTick( () => {
-                                messages.value = data.messages!;
+                                messages.value = data.messages!.map( msg => {
+                                    const raw = ( msg as any ).data || msg;
+                                    if ( !raw.type ) {
+                                        raw.type = MessageType.BOT;
+                                    }
+                                    return raw;
+                                } );
                             } );
                         }
                         break;
+
                     case 'error':
                         console.error( 'Chat error:', data.message );
                         lastError.value = data.message || 'Unknown error';
-                        if ( data.message && data.message.startsWith( '{"type":"message"' ) ) {
-                            try {
-                                const inner = JSON.parse( data.message );
-                                if ( inner.type === 'message' && inner.data ) {
-                                    console.log( 'Recovered message from error:', inner.data );
-                                    nextTick( () => {
-                                        messages.value.push( inner.data );
-                                    } );
-                                }
-                            } catch ( e ) {
-                                console.error( 'Failed to recover message from error', e );
-                            }
-                        }
+
                         isStreaming.value = false;
                         streamingMessage.value = '';
-                        // error also ends the sending state
                         isSending.value = false;
                         break;
                 }
@@ -125,7 +167,8 @@ export const useChatWebSocketStore = defineStore( 'chatWebSocketStore', () => {
         chatWebsocket.value.onclose = ( event: CloseEvent ) => {
             console.log( 'Chat WebSocket closed:', event.code, event.reason );
             isConnected.value = false;
-            if ( [1000, 1001, 1006].includes( event.code ) ) {
+
+            if ( shouldReconnect.value && [1000, 1001, 1006].includes( event.code ) ) {
                 console.log( 'Reconnecting chat in 3s...' );
                 setTimeout( () => connect(), 3000 );
             }
@@ -140,6 +183,7 @@ export const useChatWebSocketStore = defineStore( 'chatWebSocketStore', () => {
     };
 
     const disconnect = () => {
+        shouldReconnect.value = false;
         if ( chatWebsocket.value ) {
             chatWebsocket.value.close();
             chatWebsocket.value = null;
@@ -149,13 +193,23 @@ export const useChatWebSocketStore = defineStore( 'chatWebSocketStore', () => {
 
     const sendMessage = ( content: string, stationId?: string ) => {
         if ( !isConnected.value || !chatWebsocket.value ) {
-            console.error( 'WebSocket not connected' );
             lastError.value = 'Not connected to chat server';
             return;
         }
         if ( !content.trim() ) return;
+
         isSending.value = true;
         lastError.value = null;
+
+        const waitingMessage: ChatMessage = {
+            id: `waiting-${Date.now()}`,
+            username: 'System',
+            content: 'Waiting for response...',
+            timestamp: Date.now(),
+            type: MessageType.WAITING
+        };
+        messages.value.push( waitingMessage );
+
         try {
             const payload = {
                 action: 'sendMessage',
@@ -164,21 +218,19 @@ export const useChatWebSocketStore = defineStore( 'chatWebSocketStore', () => {
                 stationId: stationId,
                 id: `${Date.now()}-${Math.random().toString( 36 ).substr( 2, 9 )}`,
                 timestamp: Date.now(),
-                isBot: false
+                type: MessageType.USER
             };
             chatWebsocket.value.send( JSON.stringify( payload ) );
         } catch ( err ) {
             console.error( 'Error sending message:', err );
             lastError.value = 'Failed to send message';
             isSending.value = false;
+            messages.value = messages.value.filter( m => m.type !== MessageType.PROCESSING );
         }
     };
 
     const getHistory = ( limit: number = 50 ) => {
-        if ( !isConnected.value || !chatWebsocket.value ) {
-            console.error( 'WebSocket not connected' );
-            return;
-        }
+        if ( !isConnected.value || !chatWebsocket.value ) return;
         try {
             chatWebsocket.value.send( JSON.stringify( { action: 'getHistory', limit } ) );
         } catch ( err ) {
@@ -191,15 +243,14 @@ export const useChatWebSocketStore = defineStore( 'chatWebSocketStore', () => {
     };
 
     return {
-        // State
         messages,
         isConnected,
         isSending,
         lastError,
         username,
         streamingMessage,
+        streamingUsername,
         isStreaming,
-        // Actions
         connect,
         disconnect,
         sendMessage,

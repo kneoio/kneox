@@ -60,9 +60,6 @@
               Stop Station
             </n-button>
           </n-button-group>
-          <n-button type="primary" style="margin-left: 8px;" @click="showBroadcastModal = true">
-            Broadcast message
-          </n-button>
           <n-space size="large" style="margin-left: 30px;">
             <a :href="mixplaUrl" target="_blank" rel="noopener noreferrer" class="mixpla-link">
               {{ mixplaUrl }}
@@ -216,82 +213,15 @@
               </n-space>
             </n-space>
           </n-tab-pane>
-          <n-tab-pane name="chat" tab="Chat">
-            <div style="max-width: 800px;">
-              <n-space vertical size="medium">
-                <n-select
-                  v-model:value="selectedModel"
-                  :options="modelOptions"
-                  style="width: 220px;"
-                  size="small"
-                />
-                <n-card size="small" style="height: 500px; display: flex; flex-direction: column;">
-                  <n-scrollbar style="flex: 1; padding-right: 8px; margin-bottom: 12px;">
-                    <div
-                      v-for="m in chatMessages"
-                      :key="m.id"
-                      class="chat-message"
-                      :class="{
-                        'chat-message-user': m.role === 'user',
-                        'chat-message-assistant': m.role === 'assistant',
-                        'chat-message-system': m.role === 'system'
-                      }"
-                    >
-                      <n-text depth="3" style="font-size: 12px; margin-bottom: 2px; display: block;">
-                        {{ m.role === 'user' ? 'You' : (m.role === 'assistant' ? 'Assistant' : 'System') }}
-                      </n-text>
-                      <div class="chat-bubble">
-                        {{ m.text }}
-                      </div>
-                    </div>
-                  </n-scrollbar>
-                  <n-space align="flex-end">
-                    <n-input
-                      v-model:value="chatInput"
-                      type="textarea"
-                      :autosize="{ minRows: 2, maxRows: 4 }"
-                      placeholder="Type a message"
-                      style="width: 600px;"
-                      @keydown.enter.prevent="handleSendChat"
-                    />
-                    <n-button type="primary" :loading="isChatSending" @click="handleSendChat">
-                      Send
-                    </n-button>
-                  </n-space>
-                </n-card>
-              </n-space>
-            </div>
-          </n-tab-pane>
         </n-tabs>
       </n-space>
     </n-card>
   </n-space>
-
-  <n-modal v-model:show="showBroadcastModal" preset="dialog" title="Broadcast message" :style="{ backgroundColor: dialogBackgroundColor }">
-    <n-form :model="broadcastForm" ref="broadcastFormRef">
-      <n-form-item label="From" path="from">
-        <n-input class="broadcast-input" v-model:value="broadcastForm.from" placeholder="e.g. John" />
-      </n-form-item>
-      <n-form-item label="Message" path="content">
-        <n-input class="broadcast-textarea" v-model:value="broadcastForm.content" type="textarea" :autosize="{ minRows: 2, maxRows: 4 }" placeholder="Your message to listeners" />
-      </n-form-item>
-      <n-text depth="3" style="display:block; margin-top: 4px;">
-        Note: Your message will be processed by the DJ if the radio station supports it.
-      </n-text>
-    </n-form>
-    <template #action>
-      <n-button @click="showBroadcastModal = false">Cancel</n-button>
-      <n-button type="primary" :loading="creatingBroadcast" @click="handleBroadcast">Send</n-button>
-    </template>
-  </n-modal>
 </template>
 
 <script lang="ts">
 import { computed, defineComponent, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useDashboardStore } from '../../../stores/kneo/dashboardStore';
-import { useMemoryStore } from '../../../stores/kneo/memoryStore';
-import { useStationChatStore } from '../../../stores/kneo/stationChatStore';
-import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 import {
   NButton,
   NCard,
@@ -307,25 +237,21 @@ import {
   NMarquee,
   useMessage,
   NButtonGroup,
-  NModal,
-  NForm,
-  NFormItem,
-  NInput,
   NTabs,
   NTabPane,
   NSelect,
-  NScrollbar
+  NScrollbar,
+  NInput
 } from 'naive-ui';
 import { ExternalLink, PlayerPlay, PlayerStop, Activity } from '@vicons/tabler';
 import { MIXPLA_PLAYER_URL } from '../../../constants/config';
-import { useDialogBackground } from '../../../composables/useDialogBackground';
 
 export default defineComponent( {
   name: 'StationDashboard',
   components: {
     NButton, NCard, NIcon, NTag, NStatistic, NProgress, NSpace, NH2, NText,
-    NTimeline, NTimelineItem, NButtonGroup, NModal, NForm, NFormItem, NInput,
-    NMarquee, NTabs, NTabPane, NSelect, NScrollbar, PlayerPlay, PlayerStop, ExternalLink, Activity
+    NTimeline, NTimelineItem, NButtonGroup,
+    NMarquee, NTabs, NTabPane, NSelect, NScrollbar, NInput, PlayerPlay, PlayerStop, ExternalLink, Activity
   },
   props: {
     brandName: {
@@ -335,22 +261,12 @@ export default defineComponent( {
   },
   setup( props: { brandName: string } ) {
     const dashboardStore = useDashboardStore();
-    const memoryStore = useMemoryStore();
-    const chatStore = useStationChatStore();
-    const referencesStore = useReferencesStore();
     const message = useMessage();
-    const { dialogBackgroundColor } = useDialogBackground();
     const isStartingStation = ref( false );
     const isStoppingStation = ref( false );
     const now = ref(new Date());
 
-    const activeTab = ref<'dashboard' | 'chat'>('dashboard');
-    const chatInput = ref('');
-    const selectedModel = ref('CLAUDE');
-    const modelOptions = referencesStore.llmTypeOptions;
-
-    const chatMessages = computed(() => chatStore.getMessages(props.brandName));
-    const isChatSending = computed(() => chatStore.state.isSending);
+    const activeTab = ref<'dashboard'>('dashboard');
 
     const stationDetails = computed( () => {
       return dashboardStore.getStationDetails( props.brandName );
@@ -417,8 +333,6 @@ export default defineComponent( {
       }, 1000);
       onUnmounted(() => clearInterval(id));
     });
-
-    
 
     const timelineDisplay = computed( () => {
       const timeline = stationDetails.value?.timeline;
@@ -643,8 +557,6 @@ export default defineComponent( {
       return stationDetails.value?.heartbeat === true;
     } );
 
-    
-
     const sendCommand = async ( brandName: string, command: string ) => {
       try {
         const success = await dashboardStore.triggerBroadcastAction( brandName, command );
@@ -658,8 +570,6 @@ export default defineComponent( {
         message.error( `Error sending ${command} command` );
       }
     };
-
-    
 
     const handleStart = async () => {
       if ( isStartingStation.value ) return;
@@ -802,7 +712,6 @@ export default defineComponent( {
       return 'default';
     };
 
-
     const getStatusTimelineType = ( status: string | null | undefined ): 'success' | 'warning' | 'error' | 'default' => {
       if ( !status ) return 'default';
       switch ( status.toUpperCase() ) {
@@ -844,43 +753,6 @@ export default defineComponent( {
 
     const isDestroyed = ref( false );
 
-    const showBroadcastModal = ref(false);
-    const creatingBroadcast = ref(false);
-    const broadcastFormRef = ref();
-    const broadcastForm = ref({ from: '', content: '' });
-
-    const handleBroadcast = async () => {
-      const from = (broadcastForm.value.from || '').trim();
-      const content = (broadcastForm.value.content || '').trim();
-      if (!from || !content) {
-        message.error('Enter both From and Message');
-        return;
-      }
-      try {
-        creatingBroadcast.value = true;
-        await memoryStore.createMemory(props.brandName, [{ from, content }], 'MESSAGE');
-        message.success('Broadcast sent');
-        showBroadcastModal.value = false;
-        broadcastForm.value = { from: '', content: '' };
-      } catch (e) {
-        message.error('Failed to send broadcast');
-      } finally {
-        creatingBroadcast.value = false;
-      }
-    };
-
-    const handleSendChat = async () => {
-      const text = chatInput.value;
-      if (!text || !text.trim()) {
-        return;
-      }
-      await chatStore.sendChat(props.brandName, text, selectedModel.value);
-      chatInput.value = '';
-    };
-
-    const clearChat = () => {
-      chatStore.clearMessages(props.brandName);
-    };
 
     onMounted(() => {
       console.log('StationDetail mounted for brand:', props.brandName);
@@ -908,7 +780,6 @@ export default defineComponent( {
     watch( () => stationDetails.value?.timeline, () => {
     }, { deep: true } );
 
-
     return {
       dashboardStore,
       isStartingStation,
@@ -933,14 +804,8 @@ export default defineComponent( {
       formatTimestamp,
       formatTaskType,
       getTaskDuration,
-      showBroadcastModal,
-      broadcastForm,
-      broadcastFormRef,
-      creatingBroadcast,
-      handleBroadcast,
       getPlaylistItemType,
       getPlaylistItemColor,
-      dialogBackgroundColor,
       formatArtistTitle,
       stationDetails,
       handleStart,
@@ -953,14 +818,7 @@ export default defineComponent( {
       getMergingTypeText,
       formattedTime,
       timeWithDot,
-      activeTab,
-      chatInput,
-      selectedModel,
-      modelOptions,
-      chatMessages,
-      isChatSending,
-      handleSendChat,
-      clearChat
+      activeTab
     };
   },
 } );
@@ -982,23 +840,6 @@ export default defineComponent( {
     transform: scale(1);
     opacity: 1;
   }
-}
-
-:deep(.broadcast-input .n-input),
-:deep(.broadcast-textarea .n-input) {
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25);
-  border-radius: 6px;
-  background-color: var(--n-color);
-}
-
-:deep(.broadcast-input .n-input:hover),
-:deep(.broadcast-textarea .n-input:hover) {
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35);
-}
-
-:deep(.broadcast-input .n-input.n-input--focus),
-:deep(.broadcast-textarea .n-input.n-input--focus) {
-  box-shadow: 0 0 0 2px rgba(24, 160, 88, 0.45);
 }
 
 .merge-box {
@@ -1041,38 +882,5 @@ export default defineComponent( {
   40% { transform: scaleY(0.5); }
   60% { transform: scaleY(1.0); }
   80% { transform: scaleY(0.6); }
-}
-
-.chat-message {
-  margin-bottom: 12px;
-}
-
-.chat-message-user {
-  text-align: right;
-}
-
-.chat-message-assistant {
-  text-align: left;
-}
-
-.chat-message-system {
-  text-align: center;
-}
-
-.chat-bubble {
-  display: inline-block;
-  padding: 8px 12px;
-  border-radius: 12px;
-  max-width: 100%;
-  word-wrap: break-word;
-  white-space: pre-wrap;
-}
-
-.chat-message-user .chat-bubble {
-  background-color: rgba(24, 160, 88, 0.16);
-}
-
-.chat-message-assistant .chat-bubble {
-  background-color: rgba(64, 158, 255, 0.16);
 }
 </style>

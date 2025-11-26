@@ -3,7 +3,7 @@
     <div class="chat-container">
       <div class="chat-header">
         <h2>Station Chat for {{ brandName }}</h2>
-        <n-text v-if=" !isConnected " depth="3" type="warning" style="font-size: 12px;">
+        <n-text v-if="!isConnected" depth="3" type="warning" style="font-size: 12px;">
           Connecting...
         </n-text>
         <n-text v-else depth="3" type="success" style="font-size: 12px;">
@@ -14,49 +14,65 @@
       <div class="chat-messages">
         <n-scrollbar ref="scrollbarRef">
           <div class="messages-inner">
-            <div v-if=" chatMessages.length === 0 " class="empty-state">
+            <div v-if="chatMessages.length === 0" class="empty-state">
               <n-text depth="3">No messages yet. Start a conversation!</n-text>
             </div>
-            <div v-for=" m in chatMessages " :key="m.id" class="chat-message"
-              :class="m.isBot ? 'chat-message-assistant' : 'chat-message-user'">
+
+            <div
+              v-for="m in chatMessages.filter(msg => msg.type !== 'PROCESSING')"
+              :key="m.id"
+              class="chat-message"
+              :class="m.type === 'BOT'
+                       ? 'chat-message-assistant'
+                       : m.type === 'WAITING'
+                           ? 'chat-message-waiting'
+                           : 'chat-message-user'"
+            >
               <div class="message-header">
                 <n-text depth="3" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">
-                  {{ m.username }}
+                  {{ m.type === 'WAITING' ? 'Waiting…' : m.username }}
                 </n-text>
               </div>
               <div class="chat-bubble">
                 {{ m.content }}
               </div>
             </div>
-            <!-- Streaming message -->
-            <div v-if=" isStreaming " class="chat-message chat-message-assistant">
+
+            <div v-if="isStreaming" class="chat-message chat-message-assistant">
               <div class="message-header">
                 <n-text depth="3" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">
-                  Assistant
+                  {{ streamingUsername }}
                 </n-text>
               </div>
               <div class="chat-bubble streaming">
                 {{ streamingMessage }}<span class="typing-cursor">|</span>
               </div>
             </div>
-
-            <div v-if=" isChatSending " class="chat-message chat-message-user">
-              <n-spin :show="true" size="small" class="chat-bubble">
-                <template #icon>
-                  <GridDots />
-                </template>
-              </n-spin>
-            </div>
           </div>
         </n-scrollbar>
       </div>
 
       <div class="chat-input-area">
-        <n-input v-model:value="chatInput" type="textarea" :autosize="{ minRows: 1, maxRows: 6 }"
-          placeholder="Type your message..." :disabled="!isConnected"
-          @keydown.enter.exact.prevent="handleSendChat" />
-        <n-button type="primary" :loading="isChatSending" @click="handleSendChat"
-          :disabled="!chatInput.trim() || !isConnected" size="large">
+        <transition name="processing-fade">
+          <n-text v-if="processingMessage" depth="3" style="font-size: 12px; margin-bottom: 8px; display: block;">
+            {{ processingMessage }}
+          </n-text>
+        </transition>
+        <n-input
+          v-model:value="chatInput"
+          type="textarea"
+          :autosize="{ minRows: 1, maxRows: 6 }"
+          placeholder="Type your message..."
+          :disabled="!isConnected"
+          @keydown.enter.exact.prevent="handleSendChat"
+        />
+        <n-button
+          type="primary"
+          :loading="isChatSending"
+          @click="handleSendChat"
+          :disabled="!chatInput.trim() || !isConnected"
+          size="large"
+        >
           Send
         </n-button>
       </div>
@@ -67,20 +83,18 @@
 <script lang="ts">
 import { computed, defineComponent, ref, nextTick, watch, onMounted, onUnmounted } from 'vue';
 import { useChatWebSocketStore } from '../../../stores/kneo/chatWebSocketStore';
-import {
-  NButton,
-  NText,
-  NInput,
-  NScrollbar,
-  NSpin,
-  useThemeVars
-} from 'naive-ui';
+import { NButton, NText, NInput, NScrollbar, NSpin, useThemeVars } from 'naive-ui';
 import { GridDots } from '@vicons/tabler';
 
 export default defineComponent({
   name: 'ChatForm',
   components: {
-    NButton, NText, NInput, NScrollbar, NSpin, GridDots
+    NButton,
+    NText,
+    NInput,
+    NScrollbar,
+    NSpin,
+    GridDots
   },
   props: {
     brandName: {
@@ -88,57 +102,56 @@ export default defineComponent({
       required: true
     }
   },
-  setup( props ) {
+  setup(props) {
     const chatStore = useChatWebSocketStore();
     const themeVars = useThemeVars();
 
-    const chatInput = ref( '' );
+    const chatInput = ref('');
     const scrollbarRef = ref();
 
-    const chatMessages = computed( () => chatStore.messages );
-    const isChatSending = computed( () => chatStore.isSending );
-    const isConnected = computed( () => chatStore.isConnected );
-    const streamingMessage = computed( () => chatStore.streamingMessage );
-    const isStreaming = computed( () => chatStore.isStreaming );
+    const chatMessages = computed(() => chatStore.messages);
+    const isChatSending = computed(() => chatStore.isSending);
+    const isConnected = computed(() => chatStore.isConnected);
+    const streamingMessage = computed(() => chatStore.streamingMessage);
+    const streamingUsername = computed(() => chatStore.streamingUsername);
+    const isStreaming = computed(() => chatStore.isStreaming);
+    const processingMessage = computed(() => {
+      const processingMsg = chatStore.messages.find(m => m.type === 'PROCESSING');
+      return processingMsg ? processingMsg.content : '';
+    });
 
     const scrollToBottom = async () => {
       await nextTick();
-      if ( scrollbarRef.value ) {
-        scrollbarRef.value.scrollTo( { top: 999999, behavior: 'smooth' } );
+      if (scrollbarRef.value) {
+        scrollbarRef.value.scrollTo({ top: 999999, behavior: 'smooth' });
       }
     };
 
-    watch( chatMessages, () => {
-      scrollToBottom();
-    }, { deep: true } );
+    watch(chatMessages, scrollToBottom, { deep: true });
+    watch(streamingMessage, scrollToBottom);
 
-    watch( streamingMessage, () => {
-      scrollToBottom();
-    } );
-
-    watch( () => props.brandName, () => {
+    watch(() => props.brandName, () => {
       chatStore.clearMessages();
       scrollToBottom();
-    } );
+    });
 
-    const handleSendChat = async () => {
+    const handleSendChat = () => {
       const text = chatInput.value;
-      if ( !text || !text.trim() ) {
-        return;
-      }
-      chatStore.sendMessage( text, props.brandName );
+      if (!text || !text.trim()) return;
+
+      chatStore.sendMessage(text, props.brandName);
       chatInput.value = '';
       scrollToBottom();
     };
 
-    onMounted( () => {
+    onMounted(() => {
       chatStore.connect();
       scrollToBottom();
-    } );
+    });
 
-    onUnmounted( () => {
+    onUnmounted(() => {
       chatStore.disconnect();
-    } );
+    });
 
     return {
       chatInput,
@@ -146,13 +159,15 @@ export default defineComponent({
       isChatSending,
       isConnected,
       streamingMessage,
+      streamingUsername,
       isStreaming,
+      processingMessage,
       handleSendChat,
       scrollbarRef,
       themeVars
     };
   }
-} );
+});
 </script>
 
 <style scoped>
@@ -167,7 +182,6 @@ export default defineComponent({
   height: 100%;
   max-width: 1200px;
 }
-
 
 .chat-header {
   padding: 20px 24px;
@@ -213,7 +227,6 @@ export default defineComponent({
     opacity: 0;
     transform: translateY(10px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -236,6 +249,12 @@ export default defineComponent({
   align-items: flex-start;
 }
 
+.chat-message-processing {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
 .chat-bubble {
   padding: 12px 16px;
   border-radius: 16px;
@@ -247,14 +266,21 @@ export default defineComponent({
 }
 
 .chat-message-user .chat-bubble {
-  background: v-bind(' themeVars.primaryColor ');
-  color: #ffffff;
+  background: v-bind('themeVars.primaryColor');
+  color: #fff;
   border-bottom-right-radius: 4px;
 }
 
 .chat-message-assistant .chat-bubble {
   background: rgba(64, 158, 255, 0.15);
   border: 1px solid rgba(64, 158, 255, 0.3);
+  border-bottom-left-radius: 4px;
+}
+
+.chat-message-processing .chat-bubble {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.6);
+  border: 1px dashed rgba(255, 255, 255, 0.15);
   border-bottom-left-radius: 4px;
 }
 
@@ -278,16 +304,23 @@ export default defineComponent({
 }
 
 @keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
 
-  0%,
-  49% {
-    opacity: 1;
-  }
+.processing-fade-enter-active,
+.processing-fade-leave-active {
+  transition: all 0.3s ease;
+}
 
-  50%,
-  100% {
-    opacity: 0;
-  }
+.processing-fade-enter-from {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.processing-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 
 .chat-bubble.streaming {
