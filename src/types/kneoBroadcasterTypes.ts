@@ -82,6 +82,7 @@ export interface RadioStation {
     actionUrl: string;
     bitRate?: number;
     popularityRate?: number;
+    nRate?: number;
     aiAgentId?: string;
     aiOverriding?: AiOverriding;
     profileId?: string;
@@ -104,6 +105,7 @@ export interface RadioStationSave {
     color: string;
     bitRate?: number;
     popularityRate?: number;
+    nRate?: number;
     aiAgentId?: string;
     aiOverriding?: AiOverriding;
     profileId?: string;

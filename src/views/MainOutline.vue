@@ -421,6 +421,9 @@ export default defineComponent({
       if (route.name === 'StationListeners' && route.params.brandName) {
         return `station-${route.params.brandName}-listeners`;
       }
+      if (route.name === 'StationChat' && route.params.brandName) {
+        return `station-${route.params.brandName}-chat`;
+      }
       if (route.name === 'RadioStation' && route.params.id) {
         const station = radioStations.value.find((s) => s.id === route.params.id);
         if (station) {

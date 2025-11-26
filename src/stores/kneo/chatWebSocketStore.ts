@@ -84,6 +84,8 @@ export const useChatWebSocketStore = defineStore( 'chatWebSocketStore', () => {
                             if ( data.data ) {
                                 messages.value.push( data.data );
                             }
+                            // message from server means the send round-trip is done
+                            isSending.value = false;
                         } );
                         break;
                     case 'history':
@@ -111,6 +113,8 @@ export const useChatWebSocketStore = defineStore( 'chatWebSocketStore', () => {
                         }
                         isStreaming.value = false;
                         streamingMessage.value = '';
+                        // error also ends the sending state
+                        isSending.value = false;
                         break;
                 }
             } catch ( err ) {
@@ -131,6 +135,7 @@ export const useChatWebSocketStore = defineStore( 'chatWebSocketStore', () => {
             console.error( 'Chat WebSocket error:', error );
             isConnected.value = false;
             lastError.value = 'WebSocket connection error';
+            isSending.value = false;
         };
     };
 
@@ -165,7 +170,6 @@ export const useChatWebSocketStore = defineStore( 'chatWebSocketStore', () => {
         } catch ( err ) {
             console.error( 'Error sending message:', err );
             lastError.value = 'Failed to send message';
-        } finally {
             isSending.value = false;
         }
     };

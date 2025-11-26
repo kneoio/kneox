@@ -8,6 +8,19 @@
             style="margin-left: 16px; font-weight: normal; color: #666;">
             {{ getCurrentTimeInTimezone }}
           </span>
+          <span style="margin-left: 16px; display: inline-flex; align-items: center;">
+            <n-rate
+              v-model:value="localFormData.nRate"
+              :count="5"
+              allow-half
+            >
+              <template #character>
+                <n-icon>
+                  <HandRock />
+                </n-icon>
+              </template>
+            </n-rate>
+          </span>
         </template>
         <template #footer>
           Registered: {{ store.getCurrent.regDate }}, Last Modified: {{ store.getCurrent.lastModifiedDate }}
@@ -394,6 +407,7 @@ import {
   NInput,
   NInputNumber,
   NPageHeader,
+  NRate,
   NSelect,
   NSlider,
   NSpace,
@@ -406,7 +420,7 @@ import {
   useLoadingBar,
   useMessage
 } from "naive-ui";
-import { Copy } from '@vicons/tabler';
+import { Copy, HandRock } from '@vicons/tabler';
 import { html } from '@codemirror/lang-html';
 import { EditorView } from '@codemirror/view';
 import CodeMirror from 'vue-codemirror6';
@@ -438,6 +452,7 @@ export default defineComponent( {
     NForm,
     NFormItem,
     NInput,
+    NRate,
     NInputNumber,
     NButton,
     NSlider,
@@ -451,6 +466,7 @@ export default defineComponent( {
     NSelect,
     NIcon,
     Copy,
+    HandRock,
     CodeMirror,
     AclTable
   },
@@ -661,6 +677,7 @@ export default defineComponent( {
           timeZone: localFormData.timeZone,
           managedBy: localFormData.managedBy,
           bitRate: localFormData.bitRate,
+          nRate: localFormData.nRate,
           submissionPolicy: localFormData.submissionPolicy,
           messagingPolicy: localFormData.messagingPolicy,
           aiOverriding: aiOverrideEnabled.value ? localFormData.aiOverriding : undefined,
@@ -852,6 +869,7 @@ export default defineComponent( {
         const normalizeNumericFields = () => {
           const br = (localFormData as any).bitRate;
           (localFormData as any).bitRate = typeof br === 'string' ? Number(br) || 128000 : (typeof br === 'number' ? br : 128000);
+          (localFormData as any).nRate = (currentData as any).popularityRate / 2;
         }
         normalizeNumericFields();
 

@@ -2,7 +2,7 @@
   <div class="chat-wrapper">
     <div class="chat-container">
       <div class="chat-header">
-        <h2>Station Chat</h2>
+        <h2>Station Chat for {{ brandName }}</h2>
         <n-text v-if=" !isConnected " depth="3" type="warning" style="font-size: 12px;">
           Connecting...
         </n-text>
@@ -21,7 +21,7 @@
               :class="m.isBot ? 'chat-message-assistant' : 'chat-message-user'">
               <div class="message-header">
                 <n-text depth="3" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">
-                  {{ m.isBot ? 'Assistant' : m.username }}
+                  {{ m.username }}
                 </n-text>
               </div>
               <div class="chat-bubble">
@@ -39,13 +39,21 @@
                 {{ streamingMessage }}<span class="typing-cursor">|</span>
               </div>
             </div>
+
+            <div v-if=" isChatSending " class="chat-message chat-message-user">
+              <n-spin :show="true" size="small" class="chat-bubble">
+                <template #icon>
+                  <GridDots />
+                </template>
+              </n-spin>
+            </div>
           </div>
         </n-scrollbar>
       </div>
 
       <div class="chat-input-area">
         <n-input v-model:value="chatInput" type="textarea" :autosize="{ minRows: 1, maxRows: 6 }"
-          placeholder="Type your message..." :disabled="isChatSending || !isConnected"
+          placeholder="Type your message..." :disabled="!isConnected"
           @keydown.enter.exact.prevent="handleSendChat" />
         <n-button type="primary" :loading="isChatSending" @click="handleSendChat"
           :disabled="!chatInput.trim() || !isConnected" size="large">
@@ -64,13 +72,15 @@ import {
   NText,
   NInput,
   NScrollbar,
+  NSpin,
   useThemeVars
 } from 'naive-ui';
+import { GridDots } from '@vicons/tabler';
 
-export default defineComponent( {
+export default defineComponent({
   name: 'ChatForm',
   components: {
-    NButton, NText, NInput, NScrollbar
+    NButton, NText, NInput, NScrollbar, NSpin, GridDots
   },
   props: {
     brandName: {
@@ -103,6 +113,11 @@ export default defineComponent( {
     }, { deep: true } );
 
     watch( streamingMessage, () => {
+      scrollToBottom();
+    } );
+
+    watch( () => props.brandName, () => {
+      chatStore.clearMessages();
       scrollToBottom();
     } );
 
@@ -153,6 +168,7 @@ export default defineComponent( {
   max-width: 1200px;
 }
 
+
 .chat-header {
   padding: 20px 24px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -164,7 +180,7 @@ export default defineComponent( {
 
 .chat-header h2 {
   margin: 0;
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 600;
 }
 
