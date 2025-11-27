@@ -160,13 +160,6 @@
                     style="width: 50%; max-width: 600px;" />
                 </n-form-item>
               </n-gi>
-              <n-gi v-if="selectedAgent">
-                <n-form-item label="Preferred Language">
-                  <n-input :value="selectedAgent.preferredLang"
-                    style="width: 50%; max-width: 600px; cursor: not-allowed;" readonly
-                    disabled />
-                </n-form-item>
-              </n-gi>
             </n-grid>
           </n-form>
         </n-tab-pane>
