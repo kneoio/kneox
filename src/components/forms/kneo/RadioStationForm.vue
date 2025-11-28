@@ -307,20 +307,10 @@
         <n-tab-pane name="advanced" tab="Advanced">
           <n-form label-placement="left" label-width="150px">
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
-<n-gi v-if="selectedAgent">
-                <n-form-item label="Primary Voice">
-                  <n-select :value="selectedAgent.primaryVoice[0]?.name" 
-                    :options="voiceOptions"
-                    filterable
-                    style="width: 30%; max-width: 300px;" 
-                    disabled />
-                </n-form-item>
-              </n-gi>
-
-              <n-gi>
+<n-gi>
                 <n-form-item label="Override AI Agent">
                   <n-checkbox v-model:checked="aiOverrideEnabled">
-                    Enable AI agent override
+                    Enable
                   </n-checkbox>
                 </n-form-item>
               </n-gi>
@@ -355,7 +345,7 @@
               <n-gi>
                 <n-form-item label="Override Profile">
                   <n-checkbox v-model:checked="profileOverrideEnabled">
-                    Enable profile override
+                    Enable
                   </n-checkbox>
                 </n-form-item>
               </n-gi>

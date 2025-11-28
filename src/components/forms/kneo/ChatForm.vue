@@ -145,6 +145,7 @@ export default defineComponent({
     };
 
     onMounted(() => {
+      chatStore.clearMessages();
       chatStore.connect();
       scrollToBottom();
     });
