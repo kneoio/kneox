@@ -148,6 +148,7 @@ export interface SoundFragment {
     representedInBrands: string[];
     uploadedFiles: UploadFileInfo[];
     source?: string;
+    length?: string | number;
 }
 
 export interface SoundFragmentSave {
@@ -161,6 +162,7 @@ export interface SoundFragmentSave {
     representedInBrands: string[];
     newlyUploaded: string[] | null;
     tempFileIds?: string[];
+    length?: string;
 }
 
 export interface Memory {

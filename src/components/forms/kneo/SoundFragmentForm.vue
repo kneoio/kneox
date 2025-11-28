@@ -38,6 +38,7 @@
                 <n-form-item label="Type">
                   <n-select v-model:value="localFormData.type" :options="typeOptions"
                             style="width: 25%; max-width: 300px;"/>
+                  <n-text v-if="localFormData.length" style="margin-left: 12px;">{{ formatDuration(localFormData.length) }}</n-text>
                 </n-form-item>
               </n-gi>
               <n-gi>
@@ -146,6 +147,7 @@ import {
   NTag,
   NTabPane,
   NTabs,
+  NText,
   NUpload,
   useLoadingBar,
   useMessage,
@@ -176,6 +178,7 @@ export default defineComponent({
     NGi,
     NSelect,
     NTag,
+    NText,
     NDataTable,
     NIcon,
     AclTable,
@@ -234,6 +237,26 @@ export default defineComponent({
 
     const formTitle = computed(() => localFormData.id ? 'Edit Sound Fragment' : 'Create New Sound Fragment');
 
+    const formatDuration = (duration: string | number | undefined): string => {
+      if (!duration) return '';
+      if (typeof duration === 'number') {
+        const m = Math.floor(duration / 60);
+        const s = duration % 60;
+        return `${m}:${String(s).padStart(2, '0')}`;
+      }
+      const parts = duration.split(':');
+      if (parts.length === 3) {
+        const h = parseInt(parts[0]);
+        const m = parseInt(parts[1]);
+        const s = parseInt(parts[2]);
+        if (h > 0) {
+          return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+        return `${m}:${String(s).padStart(2, '0')}`;
+      }
+      return duration;
+    };
+
     watch(
         () => store.getCurrent?.uploadedFiles,
         (files) => {
@@ -286,6 +309,9 @@ export default defineComponent({
       }
       if (metadata.album && !localFormData.album) {
         localFormData.album = metadata.album;
+      }
+      if (metadata.length && !localFormData.length) {
+        localFormData.length = metadata.length;
       }
       const normalizeToArray = (value: any): string[] => {
         if (!value) return [];
@@ -419,6 +445,10 @@ export default defineComponent({
         loadingBar.start();
         const filesToSend = uploadedFileNames.value;
 
+        const lengthValue = typeof localFormData.length === 'number' 
+          ? formatDuration(localFormData.length) 
+          : localFormData.length;
+
         const saveDTO: SoundFragmentSave = {
           type: localFormData.type,
           title: localFormData.title,
@@ -428,7 +458,8 @@ export default defineComponent({
           album: localFormData.album,
           description: localFormData.description,
           representedInBrands: localFormData.representedInBrands,
-          newlyUploaded: filesToSend.length > 0 ? filesToSend : null
+          newlyUploaded: filesToSend.length > 0 ? filesToSend : null,
+          length: lengthValue
         };
 
         await store.save(saveDTO, localFormData.id as string );
@@ -585,7 +616,8 @@ export default defineComponent({
       aclLoading,
       renderLabelTag,
       renderLabel,
-      originalUploadedFileNames // Add this to the return
+      originalUploadedFileNames,
+      formatDuration
     };
   },
 });

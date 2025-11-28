@@ -152,6 +152,9 @@
                   <n-select v-model:value="localFormData.aiAgentId" :options="agentOptions"
                     :disabled="aiOverrideEnabled"
                     style="width: 50%; max-width: 600px;" />
+                  <n-text v-if="aiOverrideEnabled" depth="3" style="font-size: 12px; margin-top: 4px; display: block;">
+                    ⚠️ AI agent values are overridden
+                  </n-text>
                 </n-form-item>
               </n-gi>
               <n-gi>
@@ -172,38 +175,15 @@
                   <n-select v-model:value="localFormData.profileId" :options="profileOptions"
                     :disabled="profileOverrideEnabled"
                     style="width: 50%; max-width: 600px;" />
+                  <n-text v-if="profileOverrideEnabled" depth="3" style="font-size: 12px; margin-top: 4px; display: block;">
+                    ⚠️ Profile values are overridden
+                  </n-text>
                 </n-form-item>
               </n-gi>
               <n-gi v-if="selectedProfile">
                 <n-form-item label="Description">
                   <n-input :value="selectedProfile.description" type="textarea" :autosize="{ minRows: 3, maxRows: 5 }"
                     style="width: 50%; max-width: 600px; cursor: not-allowed;" disabled />
-                </n-form-item>
-              </n-gi>
-
-              <n-gi>
-                <n-form-item label="Override Profile">
-                  <n-checkbox v-model:checked="profileOverrideEnabled">
-                    Enable profile override
-                  </n-checkbox>
-                </n-form-item>
-              </n-gi>
-
-              <n-gi v-if="profileOverrideEnabled">
-                <n-form-item label="Override Name">
-                  <n-input v-model:value="localFormData.profileOverriding!.name" 
-                    placeholder=""
-                    style="width: 50%; max-width: 600px;" />
-                </n-form-item>
-              </n-gi>
-
-              <n-gi v-if="profileOverrideEnabled">
-                <n-form-item label="Override Description">
-                  <n-input v-model:value="localFormData.profileOverriding!.description" 
-                    type="textarea" 
-                    placeholder=""
-                    :autosize="{ minRows: 3, maxRows: 5 }"
-                    style="width: 50%; max-width: 600px;" />
                 </n-form-item>
               </n-gi>
             </n-grid>
@@ -369,6 +349,32 @@
                     :options="voiceOptions"
                     filterable
                     style="width: 30%; max-width: 300px;" />
+                </n-form-item>
+              </n-gi>
+
+              <n-gi>
+                <n-form-item label="Override Profile">
+                  <n-checkbox v-model:checked="profileOverrideEnabled">
+                    Enable profile override
+                  </n-checkbox>
+                </n-form-item>
+              </n-gi>
+
+              <n-gi v-if="profileOverrideEnabled">
+                <n-form-item label="Override Name">
+                  <n-input v-model:value="localFormData.profileOverriding!.name" 
+                    placeholder=""
+                    style="width: 50%; max-width: 600px;" />
+                </n-form-item>
+              </n-gi>
+
+              <n-gi v-if="profileOverrideEnabled">
+                <n-form-item label="Override Description">
+                  <n-input v-model:value="localFormData.profileOverriding!.description" 
+                    type="textarea" 
+                    placeholder=""
+                    :autosize="{ minRows: 3, maxRows: 5 }"
+                    style="width: 50%; max-width: 600px;" />
                 </n-form-item>
               </n-gi>
             </n-grid>
@@ -568,7 +574,7 @@ export default defineComponent( {
     } );
 
     watch( selectedAgent, ( newAgent ) => {
-      if ( newAgent && localFormData.aiOverriding ) {
+      if ( newAgent && localFormData.aiOverriding && !aiOverrideEnabled.value ) {
         localFormData.aiOverriding.name = newAgent.name || "";
         localFormData.aiOverriding.primaryVoice = newAgent.primaryVoice[0]?.id || "";
       }

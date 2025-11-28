@@ -183,6 +183,7 @@ const form = ref({
   email: '',
   description: '',
   album: '',
+  length: '',
   agree: false,
   confirmationCode: '',
   isShareable: false,
@@ -330,6 +331,7 @@ function applyMetadataFromUpload(res: any) {
     if (!form.value.title && md.title) form.value.title = String(md.title)
     if (!form.value.artist && md.artist) form.value.artist = String(md.artist)
     if (!form.value.album && md.album) form.value.album = String(md.album)
+    if (!form.value.length && md.length) form.value.length = String(md.length)
 
     const incomingGenre = md.genre
     if (Array.isArray(form.value.genres) && (!form.value.genres.length) && incomingGenre) {
@@ -438,6 +440,7 @@ function reset() {
     email: '',
     description: '',
     album: '',
+    length: '',
     agree: false,
     confirmationCode: '',
     isShareable: false,
