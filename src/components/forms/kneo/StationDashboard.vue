@@ -105,7 +105,7 @@
                             </svg>
                           </span>
                           <n-tag v-if="!fragment.isQueued" type="warning" size="small">
-                            Live
+                            Pending
                           </n-tag>
                           <n-tag v-if="fragment.isQueued" type="info" size="small">
                             Queued

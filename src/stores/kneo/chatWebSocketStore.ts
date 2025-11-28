@@ -141,9 +141,6 @@ export const useChatWebSocketStore = defineStore( 'chatWebSocketStore', () => {
                             nextTick( () => {
                                 messages.value = data.messages!.map( msg => {
                                     const raw = ( msg as any ).data || msg;
-                                    if ( !raw.type ) {
-                                        raw.type = MessageType.BOT;
-                                    }
                                     return raw;
                                 } );
                             } );
