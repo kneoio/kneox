@@ -12,6 +12,7 @@
     <n-gi>
       <n-button-group>
         <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
+        <n-button @click="handleBulkUploadClick" type="info" size="large">Bulk Upload</n-button>
         <n-button
             type="error"
             :disabled="!hasSelection"
@@ -43,16 +44,23 @@
       </n-data-table>
     </n-gi>
   </n-grid>
+  
+  <bulk-upload-dialog
+    v-model:show="showBulkUploadDialog"
+    :entity-id="brandName"
+    @upload-complete="handleUploadComplete"
+  />
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, watch, computed } from 'vue';
+import { defineComponent, ref, watch, computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
 import { NPageHeader, NDataTable, NEmpty, useMessage, DataTableColumns, NPagination, NButtonGroup, NButton, NGi, NGrid } from 'naive-ui';
 import { useSoundFragmentStore } from '../../../stores/kneo/soundFragmentStore';
 import { SoundFragment } from '../../../types/kneoBroadcasterTypes';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
+import BulkUploadDialog from '../../dialogs/BulkUploadDialog.vue';
 
 // columns moved into setup to access store for formatting
 
@@ -68,6 +76,7 @@ export default defineComponent({
     NGi,
     NGrid,
     LoaderIcon,
+    BulkUploadDialog,
   },
   props: {
     brandName: {
@@ -84,6 +93,7 @@ export default defineComponent({
     const loading = ref(true);
     const checkedRowKeys = ref<Array<string | number>>([]);
     const hasSelection = computed(() => checkedRowKeys.value.length > 0);
+    const showBulkUploadDialog = ref(false);
 
     const rowKey = (row: SoundFragment) => row.id ?? row.slugName;
 
@@ -156,6 +166,14 @@ export default defineComponent({
       }
     };
 
+    const handleBulkUploadClick = () => {
+      showBulkUploadDialog.value = true;
+    };
+
+    const handleUploadComplete = () => {
+      fetchAvailableFragments(getAvailablePagination.value?.page, getAvailablePagination.value?.pageSize);
+    };
+
     const columns = computed<DataTableColumns<any>>(() => [
       { type: 'selection' },
       { title: 'Title', key: 'soundfragment.title', width: 300 },
@@ -180,6 +198,9 @@ export default defineComponent({
       handlePageSizeChange,
       handleNewClick,
       handleDelete,
+      showBulkUploadDialog,
+      handleBulkUploadClick,
+      handleUploadComplete,
     };
   },
 });
