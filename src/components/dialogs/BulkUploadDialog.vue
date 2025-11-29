@@ -104,8 +104,8 @@ export default defineComponent({
     const formatStatus = (s: string) => {
       const map: Record<string, string> = {
         processing: 'Processing',
-        metadata_extracted: 'Processing',
-        creating_entity: 'Processing',
+        metadata_extracted: 'Metadata extracted',
+        creating_entity: 'Processing ...',
         finished: 'Finished',
         error: 'Error'
       }
@@ -122,7 +122,7 @@ export default defineComponent({
       {
         title: 'Upload',
         key: 'upload',
-        width: 200,
+        width: 50,
         render(row: any) {
           if (row.status === 'uploading') {
             return h(NProgress, {
@@ -140,14 +140,14 @@ export default defineComponent({
       {
         title: 'Processing',
         key: 'processing',
-        width: 200,
+        width: 50,
         render(row: any) {
           const st = fileStatuses.value[row.id]
           if (!st) return null
           return h(
             NText,
             {
-              style: 'font-size:12px;color:#999;',
+              style: 'font-size:12px;color:#52a113',
               class: st.status === 'creating_entity' ? 'status-blink' : ''
             },
             `${formatStatus(st.status)}${st.errorMessage ? ' - ' + st.errorMessage : ''}`
