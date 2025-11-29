@@ -1,5 +1,5 @@
 <template>
-  <n-modal v-model:show="showDialog" preset="dialog" title="Bulk Upload Sound Fragments" style="width: 700px;">
+  <n-modal v-model:show="showDialog" preset="dialog" :title="modalTitle" style="width: 700px;">
     <n-space vertical>
       <n-upload
         ref="uploadRef"
@@ -165,6 +165,16 @@ export default defineComponent({
       }))
     )
 
+    const uploadingCount = computed(() =>
+      fileList.value.filter(f => f.status === 'uploading').length
+    )
+
+    const modalTitle = computed(() =>
+      uploadingCount.value > 0
+        ? `Bulk Upload Sound Fragments (${uploadingCount.value} uploading)`
+        : 'Bulk Upload Sound Fragments'
+    )
+
     const handleCancel = () => {
       if (eventSource.value) {
         eventSource.value.close()
@@ -173,21 +183,12 @@ export default defineComponent({
       showDialog.value = false
     }
 
-    const handleFileUpload = async ({ file, onProgress, onFinish, onError }) => {
-      if (!file.file) {
-        onError?.()
-        return
-      }
+    const startSSE = () => {
+      if (eventSource.value) return
+      
+      eventSource.value = new EventSource(`${apiClient.defaults.baseURL}/soundfragments-bulk/status/${batchId.value}/stream`)
 
-      if (!isUploading.value) {
-        isUploading.value = true
-        batchId.value = `batch-${Date.now()}`
-        totalFiles.value = fileList.value.length
-        fileStatuses.value = {}
-
-        eventSource.value = new EventSource(`${apiClient.defaults.baseURL}/soundfragments-bulk/status/${batchId.value}/stream`)
-
-        eventSource.value.onmessage = (event) => {
+      eventSource.value.onmessage = (event) => {
           const data = JSON.parse(event.data)
           const next = { ...fileStatuses.value }
           for (const [id, fd] of Object.entries(data)) {
@@ -220,6 +221,19 @@ export default defineComponent({
           message.error('Connection to server lost')
           isUploading.value = false
         }
+    }
+
+    const handleFileUpload = async ({ file, onProgress, onFinish, onError }) => {
+      if (!file.file) {
+        onError?.()
+        return
+      }
+
+      if (!isUploading.value) {
+        isUploading.value = true
+        batchId.value = `batch-${Date.now()}`
+        totalFiles.value = fileList.value.length
+        fileStatuses.value = {}
       }
 
       try {
@@ -239,6 +253,7 @@ export default defineComponent({
         )
 
         onFinish?.()
+        startSSE()
       } catch (err: any) {
         message.error(err.response?.data?.detail || `Upload failed: ${file.name}`)
         onError?.()
@@ -261,7 +276,8 @@ export default defineComponent({
       formatStatus,
       handleCancel,
       handleUpload,
-      handleFileUpload
+      handleFileUpload,
+      modalTitle
     }
   }
 })
