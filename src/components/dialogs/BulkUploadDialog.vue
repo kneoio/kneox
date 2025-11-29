@@ -216,10 +216,14 @@ export default defineComponent({
         }
 
         eventSource.value.onerror = () => {
-          eventSource.value?.close()
-          eventSource.value = null
-          message.error('Connection to server lost')
-          isUploading.value = false
+          if (eventSource.value) {
+            eventSource.value.close()
+            eventSource.value = null
+            if (isUploading.value) {
+              message.error('Connection to server lost')
+            }
+            isUploading.value = false
+          }
         }
     }
 
