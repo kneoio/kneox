@@ -19,7 +19,9 @@
         :bordered="false"
         :pagination="false"
         size="small"
-      />
+      >
+        <template #empty></template>
+      </n-data-table>
     </n-space>
 
     <template #action>
@@ -47,6 +49,7 @@
 <script lang="ts">
 import { defineComponent, ref, watch, computed, h } from 'vue'
 import { NModal, NUpload, NButton, NSpace, NText, NProgress, NDataTable, useMessage } from 'naive-ui'
+import type { UploadCustomRequestOptions } from 'naive-ui'
 import apiClient from '../../api/apiClient'
 
 export default defineComponent({
@@ -68,18 +71,21 @@ export default defineComponent({
   setup(props, { emit }) {
     const message = useMessage()
     const showDialog = ref(props.show)
-    const fileList = ref([])
+    const fileList = ref<any[]>([])
     const fileStatuses = ref({})
     const isUploading = ref(false)
     const uploadRef = ref()
     const totalFiles = ref(0)
-    const eventSource = ref(null)
+    const eventSource = ref<EventSource | null>(null)
     const batchId = ref('')
     const uploadCompleted = ref(false)
 
     watch(() => props.show, (v) => {
       showDialog.value = v
       if (!v) {
+        if (uploadCompleted.value) {
+          emit('upload-complete')
+        }
         fileList.value = []
         fileStatuses.value = {}
         isUploading.value = false
@@ -128,7 +134,9 @@ export default defineComponent({
             return h(NProgress, {
               type: 'line',
               percentage: row.percentage || 0,
-              showIndicator: true
+              showIndicator: true,
+              borderRadius: 0,
+              railBorderRadius: 0
             })
           }
           if (row.status === 'finished') {
@@ -147,7 +155,7 @@ export default defineComponent({
           return h(
             NText,
             {
-              style: 'font-size:12px;color:#52a113',
+              style: 'font-size:12px;color:#1E88E5',
               class: st.status === 'creating_entity' ? 'status-blink' : ''
             },
             `${formatStatus(st.status)}${st.errorMessage ? ' - ' + st.errorMessage : ''}`
@@ -175,6 +183,8 @@ export default defineComponent({
         : 'Bulk Upload Sound Fragments'
     )
 
+    const renderEmpty = () => null
+
     const handleCancel = () => {
       if (eventSource.value) {
         eventSource.value.close()
@@ -186,9 +196,10 @@ export default defineComponent({
     const startSSE = () => {
       if (eventSource.value) return
       
-      eventSource.value = new EventSource(`${apiClient.defaults.baseURL}/soundfragments-bulk/status/${batchId.value}/stream`)
+      const es = new EventSource(`${apiClient.defaults.baseURL}/soundfragments-bulk/status/${batchId.value}/stream`)
+      eventSource.value = es
 
-      eventSource.value.onmessage = (event) => {
+      es.onmessage = (event) => {
           const data = JSON.parse(event.data)
           const next = { ...fileStatuses.value }
           for (const [id, fd] of Object.entries(data)) {
@@ -211,11 +222,10 @@ export default defineComponent({
             else message.success(`All ${ok} files processed successfully`)
             isUploading.value = false
             uploadCompleted.value = true
-            emit('upload-complete')
           }
         }
 
-        eventSource.value.onerror = () => {
+        es.onerror = () => {
           if (eventSource.value) {
             eventSource.value.close()
             eventSource.value = null
@@ -227,7 +237,7 @@ export default defineComponent({
         }
     }
 
-    const handleFileUpload = async ({ file, onProgress, onFinish, onError }) => {
+    const handleFileUpload = async ({ file, onProgress, onFinish, onError }: UploadCustomRequestOptions) => {
       if (!file.file) {
         onError?.()
         return
@@ -281,7 +291,8 @@ export default defineComponent({
       handleCancel,
       handleUpload,
       handleFileUpload,
-      modalTitle
+      modalTitle,
+      renderEmpty
     }
   }
 })
