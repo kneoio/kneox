@@ -47,7 +47,7 @@
   
   <bulk-upload-dialog
     v-model:show="showBulkUploadDialog"
-    :entity-id="brandName"
+    :slugName="brandName"
     @upload-complete="handleUploadComplete"
   />
 </template>
