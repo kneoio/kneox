@@ -23,6 +23,7 @@
       </n-button-group>
 
       <n-button @click="toggleFilters" type="default" size="large" class="mr-4">
+        <red-led :active="hasActiveFilters" :size="16" style="margin-right: 8px;" />
         Filter
       </n-button>
 
@@ -97,13 +98,14 @@ import {
 } from 'naive-ui';
 import { useRouter } from 'vue-router';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
+import RedLed from '../../common/RedLed.vue';
 import { ListenerEntry } from "../../../types/kneoBroadcasterTypes";
 import { useListenersStore } from '../../../stores/kneo/listenersStore';
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 
 export default defineComponent({
   name: 'Listeners',
-  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, NIcon, NInput, NCollapseTransition, NFormItem, NSelect },
+  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, RedLed, NIcon, NInput, NCollapseTransition, NFormItem, NSelect },
   props: {
     brandName: {
       type: String,
@@ -126,6 +128,8 @@ export default defineComponent({
     const filters = ref({
       country: undefined
     });
+
+    const hasActiveFilters = computed(() => !!(filters.value.country || searchQuery.value));
 
     const columns: DataTableColumns<ListenerEntry> = [
       { type: 'selection' },
@@ -305,6 +309,7 @@ export default defineComponent({
       loading,
       checkedRowKeys,
       hasSelection,
+      hasActiveFilters,
       toggleFilters,
       showFilters,
       filters

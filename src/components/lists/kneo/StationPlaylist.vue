@@ -243,6 +243,16 @@ export default defineComponent({
       fetchAvailableFragments(1, newPageSize);
     };
 
+    const initializeData = async () => {
+      try {
+        await referencesStore.fetchGenres();
+      } catch (error) {
+        console.error('Failed to fetch genres:', error);
+      }
+    };
+
+    initializeData();
+
     watch(() => props.brandName, (newBrandName) => {
       if (newBrandName) {
         loadSavedFilters();

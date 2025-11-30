@@ -23,6 +23,7 @@
       </n-button-group>
 
       <n-button @click="toggleFilters" type="default" :size="isMobile ? 'medium' : 'large'" class="mr-4">
+        <red-led :active="hasActiveFilters" :size="16" style="margin-right: 8px;" />
         Filter
       </n-button>
     </n-gi>
@@ -69,12 +70,13 @@ import { computed, defineComponent, h, onMounted, onUnmounted, ref, watch } from
 import { DataTableColumns, NButton, NButtonGroup, NCheckbox, NDataTable, NGi, NGrid, NPageHeader, NTag, NFormItem, NSelect, NSpace, NCollapseTransition, useMessage } from 'naive-ui';
 import { useRouter } from 'vue-router';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
+import RedLed from '../../common/RedLed.vue';
 import { Draft } from '../../../types/kneoBroadcasterTypes';
 import { useDraftStore } from '../../../stores/kneo/draftStore';
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 
 export default defineComponent({
-  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, NTag, NFormItem, NSelect, NSpace, NCollapseTransition, NCheckbox },
+  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, RedLed, NTag, NFormItem, NSelect, NSpace, NCollapseTransition, NCheckbox },
   setup() {
     const router = useRouter();
     const message = useMessage();
@@ -94,6 +96,10 @@ export default defineComponent({
       isMaster: false,
       locked: false
     });
+
+    const hasActiveFilters = computed(() => 
+      !!(filters.value.languageCode || filters.value.archived || filters.value.enabled || filters.value.isMaster || filters.value.locked)
+    );
 
     const loadSavedFilters = () => {
       try {
@@ -389,6 +395,7 @@ export default defineComponent({
       handleNewClick,
       handleDelete,
       hasSelection,
+      hasActiveFilters,
       getRowProps,
       handlePageChange,
       handlePageSizeChange,
