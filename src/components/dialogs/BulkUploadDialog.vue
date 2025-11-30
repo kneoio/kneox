@@ -51,6 +51,8 @@ import { defineComponent, ref, watch, computed, h } from 'vue'
 import { NModal, NUpload, NButton, NSpace, NText, NProgress, NDataTable, useMessage } from 'naive-ui'
 import type { UploadCustomRequestOptions } from 'naive-ui'
 import apiClient from '../../api/apiClient'
+import GreenLed from '../common/GreenLed.vue'
+import YellowLed from '../common/YellowLed.vue'
 
 export default defineComponent({
   name: 'BulkUploadDialog',
@@ -61,7 +63,9 @@ export default defineComponent({
     NSpace,
     NText,
     NProgress,
-    NDataTable
+    NDataTable,
+    GreenLed,
+    YellowLed
   },
   props: {
     show: Boolean,
@@ -128,37 +132,26 @@ export default defineComponent({
       {
         title: 'Upload',
         key: 'upload',
-        width: 50,
-        render(row: any) {
-          if (row.status === 'uploading') {
-            return h(NProgress, {
-              type: 'line',
-              percentage: row.percentage || 0,
-              showIndicator: true,
-              borderRadius: 0,
-              railBorderRadius: 0
-            })
-          }
-          if (row.status === 'finished') {
-            return h(NText, { type: 'info' }, 'Uploaded')
-          }
-          return null
-        }
-      },
-      {
-        title: 'Processing',
-        key: 'processing',
-        width: 50,
+        width: 120,
         render(row: any) {
           const st = fileStatuses.value[row.id]
-          if (!st) return null
+          const hasProcessing = !!st
+          const isProcessing = hasProcessing && st.status !== 'finished' && st.status !== 'error'
+
           return h(
-            NText,
-            {
-              style: 'font-size:12px;color:#1E88E5',
-              class: st.status === 'creating_entity' ? 'status-blink' : ''
-            },
-            `${formatStatus(st.status)}${st.errorMessage ? ' - ' + st.errorMessage : ''}`
+            'div',
+            { style: 'display:flex;align-items:center;gap:6px;' },
+            [
+              h(NProgress, {
+                type: 'line',
+                percentage: row.percentage || 0,
+                showIndicator: true,
+                borderRadius: 2,
+                railBorderRadius: 2
+              }),
+              h(GreenLed, { active: row.status === 'finished' }),
+              h(YellowLed, { active: hasProcessing, pulse: isProcessing })
+            ]
           )
         }
       }
