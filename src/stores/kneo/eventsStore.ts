@@ -73,6 +73,12 @@ export const useEventsStore = defineStore('eventsStore', () => {
         return await apiClient.delete(`/events/${id}`);
     };
 
+    const fetchAccessList = async (id: string) => {
+        const response = await apiClient.get(`/events/${id}/access`);
+        if (!response?.data) throw new Error('Invalid API response');
+        return response.data;
+    };
+
     return {
         apiViewResponse,
         apiFormResponse,
@@ -82,6 +88,7 @@ export const useEventsStore = defineStore('eventsStore', () => {
         fetchEvents,
         fetchEvent,
         saveEvent,
-        deleteEvent
+        deleteEvent,
+        fetchAccessList,
     };
 });

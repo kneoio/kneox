@@ -24,8 +24,15 @@
         Filter
       </n-button>
 
-      <n-input v-model:value="searchQuery" placeholder="Search..." clearable :size="isMobile ? 'medium' : 'large'" :style="{ width: isMobile ? '100%' : '250px' }"
-        @keydown.enter="handleSearch" @clear="handleSearch" />
+      <n-input
+        v-model:value="searchQuery"
+        placeholder="Search..."
+        clearable
+        :size="isMobile ? 'medium' : 'large'"
+        :style="{ width: isMobile ? '100%' : '250px', marginLeft: '16px' }"
+        @keydown.enter="handleSearch"
+        @clear="handleSearch"
+      />
     </n-gi>
 
     <n-gi :span="isMobile ? 1 : 6">

@@ -179,9 +179,8 @@
       <n-grid :cols="3" x-gap="12" y-gap="8">
         <n-gi v-for="lang in langOptions" :key="lang.value">
           <div class="lang-row">
-            <GlowDot
+            <GreenLed
               class="lang-dot"
-              :variant="lang.value === 'en' ? 'blue' : getDotVariant(lang.value)"
               :size="10"
               :active="selectedLanguages.includes(lang.value) && (isReplicating || hasReplicateError || hasReplicateSuccess)"
               :pulse="getDotVariant(lang.value) === 'yellow'"
@@ -252,7 +251,7 @@ import { useAiAgentStore } from '../../../stores/kneo/aiAgentStore';
 import { useRadioStationStore } from '../../../stores/kneo/radioStationStore';
 import apiClient from '../../../api/apiClient';
 import AclTable from '../../common/AclTable.vue';
-import GlowDot from '../../common/GlowDot.vue';
+import GreenLed from '../../common/GreenLed.vue';
 import { InfoCircle } from '@vicons/tabler';
 import { useDialogBackground } from '../../../composables/useDialogBackground';
 
@@ -287,7 +286,7 @@ export default defineComponent({
     NNumberAnimation,
     CodeMirror,
     AclTable,
-    GlowDot
+    GreenLed
   },
   setup() {
     const loadingBar = useLoadingBar();

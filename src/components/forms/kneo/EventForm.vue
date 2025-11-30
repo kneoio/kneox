@@ -203,6 +203,9 @@
             </n-grid>
           </n-form>
         </n-tab-pane>
+        <n-tab-pane name="acl" tab="ACL">
+          <acl-table :acl-data="aclData" :loading="aclLoading" />
+        </n-tab-pane>
       </n-tabs>
     </n-gi>
   </n-grid>
@@ -221,7 +224,8 @@ import { useEventsStore } from '../../../stores/kneo/eventsStore';
 import { useRadioStationStore } from '../../../stores/kneo/radioStationStore';
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 import type { Event, EventSave } from "../../../types/kneoBroadcasterTypes";
-import { handleFormSaveError } from '../../../utils/errorHandling';
+import { handleFormSaveError, getErrorMessage } from '../../../utils/errorHandling';
+import AclTable from '../../common/AclTable.vue';
 
 interface LocalEventFormData extends Event {
   triggerType?: string;
@@ -260,8 +264,9 @@ const localFormData = reactive<LocalEventFormData>({
   }
 });
 
-
 const scheduleTasksArray = ref<any[]>([]);
+const aclData = ref<any[]>([]);
+const aclLoading = ref(false);
 
 const triggerTypeOptions = [
   { label: 'Once', value: 'ONCE' },
@@ -399,6 +404,26 @@ const loadFormData = () => {
   }
 };
 
+const fetchAclData = async () => {
+  const id = route.params.id as string;
+  if (!id || id === 'new') {
+    aclData.value = [];
+    return;
+  }
+
+  try {
+    aclLoading.value = true;
+    const response = await eventsStore.fetchAccessList(id as string);
+    aclData.value = (response as any).accessList || [];
+  } catch (error: any) {
+    console.error('Failed to fetch ACL data:', error);
+    message.error(getErrorMessage(error));
+    aclData.value = [];
+  } finally {
+    aclLoading.value = false;
+  }
+};
+
 const handleSave = async () => {
   try {
     if (!localFormData.brandId) {
@@ -472,8 +497,6 @@ const handleDelete = async () => {
   }
 };
 
-
-
 watch(scheduleTasksArray, (newValue) => {
   if (!localFormData.schedule) {
     localFormData.schedule = { enabled: false, tasks: [] };
@@ -500,6 +523,12 @@ watch(scheduleTasksArray, (newValue) => {
     }
   });
 }, { deep: true });
+
+watch(activeTab, (newTab) => {
+  if (newTab === 'acl') {
+    fetchAclData();
+  }
+});
 
 onMounted(async () => {
   startClockUpdate();
