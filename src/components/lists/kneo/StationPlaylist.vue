@@ -159,6 +159,8 @@ export default defineComponent({
       !!(filters.value.searchTerm || filters.value.genre?.length > 0 || filters.value.type || filters.value.source)
     );
     const showBulkUploadDialog = ref(false);
+    const STORAGE_KEY = `stationplaylist.${props.brandName}.filters`;
+    const STORAGE_SHOW_KEY = `stationplaylist.${props.brandName}.showFilters`;
 
     const showFilters = ref(false);
     const filters = ref<{ searchTerm: string; genre: string[]; type?: string; source?: string }>({
@@ -167,6 +169,30 @@ export default defineComponent({
       type: undefined,
       source: undefined,
     });
+
+    const loadSavedFilters = () => {
+      try {
+        const s = localStorage.getItem(STORAGE_KEY);
+        if (s) {
+          const obj = JSON.parse(s);
+          filters.value = {
+            searchTerm: obj.searchTerm || '',
+            genre: obj.genre || [],
+            type: obj.type,
+            source: obj.source
+          };
+        }
+        const sh = localStorage.getItem(STORAGE_SHOW_KEY);
+        if (sh === 'true') showFilters.value = true;
+      } catch {}
+    };
+
+    const saveFilters = () => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(filters.value));
+        localStorage.setItem(STORAGE_SHOW_KEY, String(showFilters.value));
+      } catch {}
+    };
 
 
     const rowKey = (row: SoundFragment) => row.id ?? row.slugName;
@@ -219,13 +245,19 @@ export default defineComponent({
 
     watch(() => props.brandName, (newBrandName) => {
       if (newBrandName) {
+        loadSavedFilters();
         fetchAvailableFragments(1);
       }
     }, { immediate: true });
 
     watch(() => filters.value, () => {
+      saveFilters();
       fetchAvailableFragments(1, getAvailablePagination.value?.pageSize);
     }, { deep: true });
+
+    watch(showFilters, () => {
+      saveFilters();
+    });
 
 
     const handleCheckedRowKeysChange = (keys: Array<string | number>) => {
@@ -272,6 +304,7 @@ export default defineComponent({
           source: undefined
         };
       }
+      saveFilters();
       fetchAvailableFragments(1, getAvailablePagination.value?.pageSize);
     };
 

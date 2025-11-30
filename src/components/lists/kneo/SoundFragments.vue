@@ -169,6 +169,8 @@ export default defineComponent( {
     const hasSelection = computed( () => checkedRowKeys.value.length > 0 );
     const hasActiveFilters = computed( () => !!(filters.value.searchTerm || filters.value.genre?.length > 0 || filters.value.type || filters.value.source) );
     const message = useMessage();
+    const STORAGE_KEY = 'soundfragments.list.filters';
+    const STORAGE_SHOW_KEY = 'soundfragments.list.showFilters';
     const showFilters = ref( false );
     const filters = ref( {
       searchTerm: '',
@@ -176,6 +178,30 @@ export default defineComponent( {
       type: undefined,
       source: undefined
     } );
+
+    const loadSavedFilters = () => {
+      try {
+        const s = localStorage.getItem(STORAGE_KEY);
+        if (s) {
+          const obj = JSON.parse(s);
+          filters.value = {
+            searchTerm: obj.searchTerm || '',
+            genre: obj.genre || [],
+            type: obj.type,
+            source: obj.source
+          };
+        }
+        const sh = localStorage.getItem(STORAGE_SHOW_KEY);
+        if (sh === 'true') showFilters.value = true;
+      } catch {}
+    };
+
+    const saveFilters = () => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(filters.value));
+        localStorage.setItem(STORAGE_SHOW_KEY, String(showFilters.value));
+      } catch {}
+    };
 
     const showBrandUpdateDialog = ref(false);
     const brandUpdateOperation = ref<'SET' | 'UNSET'>('SET');
@@ -223,6 +249,7 @@ export default defineComponent( {
     async function preFetch() {
       try {
         loading.value = true;
+        loadSavedFilters();
         await Promise.all( [
           store.fetchAll(),
           referencesStore.fetchGenres(),
@@ -353,6 +380,7 @@ export default defineComponent( {
           source: undefined
         };
       }
+      saveFilters();
       fetchData( 1, store.getPagination.pageSize );
     };
 
@@ -371,8 +399,13 @@ export default defineComponent( {
     };
 
     watch( () => filters.value, () => {
+      saveFilters();
       fetchData( 1, store.getPagination.pageSize );
     }, { deep: true } );
+
+    watch(showFilters, () => {
+      saveFilters();
+    });
 
     const handlePageChange = async ( page: number ) => {
       await fetchData( page, store.getPagination.pageSize );
