@@ -13,6 +13,7 @@ interface SoundFragmentFilterDTO {
     sources?: SourceType[];
     types?: PlaylistItemType[];
     activated?: boolean;
+    searchTerm?: string;
 }
 
 function buildSoundFragmentsUrl(basePath: string, { page = 1, size = 10, q, filter }: { page?: number; size?: number; q?: string; filter?: SoundFragmentFilterDTO } = {}) {
@@ -91,11 +92,9 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
     });
 
     const fetchSoundFragments = async (page = 1, pageSize = 10, searchQuery = '', filters: SoundFragmentFilterDTO = {}) => {
-        const baseUrl = searchQuery ? '/soundfragments/search' : '/soundfragments';
-        const url = buildSoundFragmentsUrl(baseUrl, {
+        const url = buildSoundFragmentsUrl('/soundfragments', {
             page,
             size: pageSize,
-            q: searchQuery || undefined,
             filter: filters && Object.keys(filters).length ? filters : undefined
         });
         const response = await apiClient.get(url);
@@ -103,14 +102,11 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         apiViewResponse.value = response.data.payload;
     };
 
-    const fetchAvailableSoundFragments = async (brandName: string, page = 1, pageSize = 10, filters: SoundFragmentFilterDTO = {}, searchQuery = '') => {
+    const fetchAvailableSoundFragments = async (brandName: string, page = 1, pageSize = 10, filters: SoundFragmentFilterDTO = {}) => {
         const params = new URLSearchParams();
         params.set('page', String(page));
         params.set('size', String(pageSize));
         params.set('brand', brandName);
-        if (searchQuery) {
-            params.set('q', searchQuery);
-        }
         if (filters && Object.keys(filters).length > 0) {
             params.set('filter', JSON.stringify(filters));
         }

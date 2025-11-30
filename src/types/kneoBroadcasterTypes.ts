@@ -165,27 +165,6 @@ export interface SoundFragmentSave {
     length?: string;
 }
 
-export interface Memory {
-    id: string;
-    author: number;
-    regDate: string;
-    lastModUser: number;
-    lastModifiedDate: string;
-    brand: string;
-    color?: string;
-    memoryType: 'LISTENERS' | 'AUDIENCE_CONTEXT' | 'CONVERSATION_HISTORY' | string;
-    content: Record<string, any>;
-    archived: boolean;
-}
-
-export interface MemorySave {
-    brand: string;
-    color?: string;
-    memoryType: string;
-    content: Record<string, any>;
-    archived?: boolean;
-}
-
 export type LanguageCode = string;
 
 export interface LanguagePreference {

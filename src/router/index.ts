@@ -12,8 +12,6 @@ import RadioStations from '../components/lists/kneo/RadioStations.vue';
 import RadioStation from '../components/forms/kneo/RadioStationForm.vue';
 import SoundFragments from '../components/lists/kneo/SoundFragments.vue';
 import SoundFragment from '../components/forms/kneo/SoundFragmentForm.vue';
-import Memories from '../components/lists/kneo/Memories.vue';
-import MemoryForm from '../components/forms/kneo/MemoryForm.vue';
 import AiAgents from '../components/lists/kneo/AiAgents.vue';
 import AiAgentForm from '../components/forms/kneo/AiAgentForm.vue';
 import Scripts from '../components/lists/kneo/Scripts.vue';
@@ -154,17 +152,6 @@ const routes: Array<RouteRecordRaw> = [
                 path: 'soundfragments/:id',
                 name: 'SoundFragment',
                 component: SoundFragment,
-                props: true
-            },
-            {
-                path: 'memories',
-                name: 'Memories',
-                component: Memories
-            },
-            {
-                path: 'memories/:id',
-                name: 'MemoryForm',
-                component: MemoryForm,
                 props: true
             },
             {

@@ -21,38 +21,38 @@
       </n-button-group>
 
       <n-button @click="toggleFilters" type="default" :size="isMobile ? 'medium' : 'large'" class="mr-4">
+        <red-led :active="hasActiveFilters" :size="16" style="margin-right: 8px;" />
         Filter
       </n-button>
-
-      <n-input
-        v-model:value="searchQuery"
-        placeholder="Search..."
-        clearable
-        :size="isMobile ? 'medium' : 'large'"
-        :style="{ width: isMobile ? '100%' : '250px', marginLeft: '16px' }"
-        @keydown.enter="handleSearch"
-        @clear="handleSearch"
-      />
     </n-gi>
 
     <n-gi :span="isMobile ? 1 : 6">
       <n-collapse-transition :show="showFilters">
         <div :style="{ width: isMobile ? '100%' : '50%' }">
           <n-grid :cols="isMobile ? 1 : 3" x-gap="12" y-gap="0">
+            <n-gi :span="isMobile ? 1 : 3">
+              <n-form-item label="Search" :show-feedback="false">
+                <n-input
+                  v-model:value="filters.searchTerm"
+                  placeholder="Search..."
+                  clearable
+                />
+              </n-form-item>
+            </n-gi>
             <n-gi>
-              <n-form-item label="Genre" size="small" :show-feedback="false">
+              <n-form-item label="Genre" :show-feedback="false">
                 <n-select v-model:value="filters.genre" :options="referencesStore.genreOptions" multiple filterable
                   placeholder="Select genres" clearable />
               </n-form-item>
             </n-gi>
             <n-gi>
-              <n-form-item label="Type" size="small" :show-feedback="false">
-                <n-select v-model:value="filters.type" :options="typeOptions" placeholder="Select type" clearable />
+              <n-form-item label="Type" :show-feedback="false">
+                <n-select v-model:value="filters.type" :options="referencesStore.fragmentTypeOptions" placeholder="" clearable />
               </n-form-item>
             </n-gi>
             <n-gi>
-              <n-form-item label="Source" size="small" :show-feedback="false">
-                <n-select v-model:value="filters.source" :options="sourceOptions" placeholder="Select source"
+              <n-form-item label="Source" :show-feedback="false">
+                <n-select v-model:value="filters.source" :options="referencesStore.fragmentSourceOptions" placeholder=""
                   clearable />
               </n-form-item>
             </n-gi>
@@ -140,6 +140,7 @@ import {
 } from 'naive-ui';
 import { useRouter } from 'vue-router';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
+import RedLed from '../../common/RedLed.vue';
 import { SoundFragment, FragmentType } from "../../../types/kneoBroadcasterTypes";
 import { useSoundFragmentStore } from '../../../stores/kneo/soundFragmentStore';
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
@@ -148,7 +149,7 @@ import { useDialogBackground } from '../../../composables/useDialogBackground';
 
 export default defineComponent( {
   name: 'SoundFragments',
-  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, NIcon, NInput, NCard, NFormItem, NSelect, NCollapseTransition, NSpace, NModal, NRadio, NRadioGroup, NText },
+  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, RedLed, NIcon, NInput, NCard, NFormItem, NSelect, NCollapseTransition, NSpace, NModal, NRadio, NRadioGroup, NText },
   props: {
     brandName: {
       type: String,
@@ -166,11 +167,11 @@ export default defineComponent( {
     const intervalId = ref<number | null>( null );
     const checkedRowKeys = ref<( string | number )[]>( [] );
     const hasSelection = computed( () => checkedRowKeys.value.length > 0 );
+    const hasActiveFilters = computed( () => !!(filters.value.searchTerm || filters.value.genre?.length > 0 || filters.value.type || filters.value.source) );
     const message = useMessage();
-    const searchQuery = ref( '' );
-    const debounceTimer = ref<number | null>( null );
     const showFilters = ref( false );
     const filters = ref( {
+      searchTerm: '',
       genre: [],
       type: undefined,
       source: undefined
@@ -179,18 +180,6 @@ export default defineComponent( {
     const showBrandUpdateDialog = ref(false);
     const brandUpdateOperation = ref<'SET' | 'UNSET'>('SET');
     const selectedBrands = ref<string[]>([]);
-
-    const typeOptions = [
-      { label: 'Song', value: FragmentType.SONG }
-    ];
-
-    const sourceOptions = [
-      { label: 'Users Upload', value: 'USER_UPLOAD' },
-      { label: 'Recovered', value: 'RECOVERED_FROM_SPACES' },
-      { label: 'Recovered', value: 'ORPHAN_RECOVERY' },
-      { label: 'Generative prompt', value: 'SUNO_PROMPT' },
-      { label: 'Text to Speach', value: 'TEXT_FOR_TTS' }
-    ];
 
     const brandOptions = computed(() => radioStationStore.getEntries.map(brand => ({
       label: brand.slugName,
@@ -339,14 +328,14 @@ export default defineComponent( {
         loading.value = true;
         let activeFilters = {};
         if ( showFilters.value ) {
-          const hasFilters = filters.value.genre?.length > 0 || filters.value.type || filters.value.source;
+          const hasFilters = filters.value.searchTerm || filters.value.genre?.length > 0 || filters.value.type || filters.value.source;
           if ( hasFilters ) {
             activeFilters = filters.value;
           } else {
             return;
           }
         }
-        await store.fetchAll( page, pageSize, searchQuery.value, activeFilters );
+        await store.fetchAll( page, pageSize, '', activeFilters );
       } catch ( error ) {
         console.error( 'Failed to fetch data:', error );
       } finally {
@@ -354,17 +343,22 @@ export default defineComponent( {
       }
     };
 
-    const handleSearch = () => {
-      fetchData( 1, store.getPagination.pageSize );
-    };
-
     const toggleFilters = () => {
       showFilters.value = !showFilters.value;
+      if (!showFilters.value) {
+        filters.value = {
+          searchTerm: '',
+          genre: [],
+          type: undefined,
+          source: undefined
+        };
+      }
       fetchData( 1, store.getPagination.pageSize );
     };
 
     const clearFilters = () => {
       filters.value = {
+        searchTerm: '',
         genre: [],
         type: undefined,
         source: undefined
@@ -375,17 +369,6 @@ export default defineComponent( {
     const applyFilters = () => {
       fetchData( 1, store.getPagination.pageSize );
     };
-
-    watch( searchQuery, ( newVal, oldVal ) => {
-      if ( newVal !== oldVal ) {
-        if ( debounceTimer.value ) {
-          clearTimeout( debounceTimer.value );
-        }
-        debounceTimer.value = window.setTimeout( () => {
-          handleSearch();
-        }, 500 );
-      }
-    } );
 
     watch( () => filters.value, () => {
       fetchData( 1, store.getPagination.pageSize );
@@ -434,8 +417,6 @@ export default defineComponent( {
       rowKey,
       fetchData,
       isMobile,
-      searchQuery,
-      handleSearch,
       handleNewClick,
       handleDelete,
       getRowProps,
@@ -447,8 +428,7 @@ export default defineComponent( {
       brandName: props.brandName,
       showFilters,
       filters,
-      typeOptions,
-      sourceOptions,
+      hasActiveFilters,
       toggleFilters,
       clearFilters,
       applyFilters,

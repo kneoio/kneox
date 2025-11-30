@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{ active?: boolean; pulse?: boolean; size?: number }>();
+defineProps<{ active?: boolean; pulse?: boolean; size?: number }>();
 </script>
 
 <style scoped>

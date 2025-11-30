@@ -98,7 +98,7 @@ export const useReferencesStore = defineStore('references', () => {
   ].join(',');
 
   const fetchGenres = async () => {
-    const response = await apiClient.get('/dictionary/genres?page=1&size=100');
+    const response = await apiClient.get('/dictionary/genres?page=1&size=1000');
     if (!response?.data?.payload) throw new Error('Invalid API response');
 
     genreOptions.value = response.data.payload.viewData.entries
@@ -277,6 +277,19 @@ export const useReferencesStore = defineStore('references', () => {
     { label: 'No Restrictions', value: 'NO_RESTRICTIONS' }
   ];
 
+  const fragmentTypeOptions = [
+    { label: 'Song', value: 'SONG' }
+  ];
+
+  const fragmentSourceOptions = [
+    { label: 'Users Upload', value: 'USER_UPLOAD' },
+    { label: 'Recovered', value: 'RECOVERED_FROM_SPACES' },
+    { label: 'Recovered', value: 'ORPHAN_RECOVERY' },
+    { label: 'Generative prompt', value: 'SUNO_PROMPT' },
+    { label: 'Text to Speach', value: 'TEXT_FOR_TTS' },
+    { label: 'Contribution', value: 'CONTRIBUTION' }
+  ];
+
   const getLocalThemeOverrides = (isDark: boolean) => {
     return isDark
       ? {
@@ -323,6 +336,8 @@ export const useReferencesStore = defineStore('references', () => {
     bitRateOptions,
     submissionPolicyOptions,
     messagingPolicyOptions,
+    fragmentTypeOptions,
+    fragmentSourceOptions,
     audioAcceptTypes,
     musicUploadAgreement,
     messagePostingAgreement,

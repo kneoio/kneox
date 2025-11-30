@@ -333,11 +333,6 @@ export default defineComponent({
           icon: () => h(BrandAirtable)
         },
         {
-          label: 'Memories',
-          key: 'memories',
-          icon: () => h(Grain)
-        },
-        {
           label: 'Events',
           key: 'events',
           icon: () => h(Calendar)
@@ -400,7 +395,6 @@ export default defineComponent({
       if (route.name === 'Player') return 'player';
       if (route.name === 'RadioStations') return 'radiostations';
       if (route.name === 'SoundFragments') return 'fragments';
-      if (route.name === 'Memories') return 'memories';
       if (route.name === 'Events') return 'events';
       if (route.name === 'AiAgents') return 'ai_agents';
       if (route.name === 'Scripts') return 'scripts';
@@ -470,8 +464,6 @@ export default defineComponent({
         await router.push({name: 'Player'});
       } else if (key === 'fragments') {
         await router.push({name: 'SoundFragments'});
-      } else if (key === 'memories') {
-        await router.push({name: 'Memories'});
       } else if (key === 'events') {
         await router.push({name: 'Events'});
       } else if (key === 'ai_agents') {
