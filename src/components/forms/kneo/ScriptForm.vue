@@ -107,9 +107,9 @@
       </n-form>
       <div>
         <n-text depth="3">Scenes</n-text>
-        <div style="display:flex; flex-direction:column; gap:8px; width: 100%; margin-top: 8px;">
+        <div style="display:flex; flex-direction:column; gap:2px; width: 100%; margin-top: 8px;">
           <div v-for="(sc, idx) in sceneStore.getEntries" :key="sceneRowKey(sc)" style="display:flex; align-items:center; gap:8px;">
-            <GlowDot :variant="getSceneDotVariant(idx)" :active="getSceneDotActive(idx)" :pulse="getSceneDotActive(idx)" />
+            <GreenLed :active="getSceneDotActive(idx)" :pulse="getSceneDotActive(idx)" />
             <span>{{ sc.startTime }} — {{ sc.title || sc.type }}</span>
           </div>
         </div>
@@ -197,7 +197,7 @@ import { EditorView } from "@codemirror/view";
 import { json } from "@codemirror/lang-json";
 import CodeMirror from 'vue-codemirror6';
 import AclTable from '../../common/AclTable.vue';
-import GlowDot from '../../common/GlowDot.vue';
+import GreenLed from '../../common/GreenLed.vue';
 import { useRadioStationStore } from '../../../stores/kneo/radioStationStore';
 import { useDialogBackground } from '../../../composables/useDialogBackground';
 
@@ -224,7 +224,7 @@ export default defineComponent({
     NModal,
     NSpace,
     NAlert,
-    GlowDot
+    GreenLed
   },
   setup() {
     const loadingBar = useLoadingBar();

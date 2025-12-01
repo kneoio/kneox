@@ -7,6 +7,7 @@ import ChatForm from '../components/forms/kneo/ChatForm.vue';
 import StationPlaylistView from '../components/lists/kneo/StationPlaylist.vue';
 import Listeners from '../components/lists/kneo/Listeners.vue';
 import AvailableListeners from '../components/lists/kneo/AvailableListeners.vue';
+import AvailableScripts from '../components/lists/kneo/AvailableScripts.vue';
 import ListenerForm from '../components/forms/kneo/ListenerForm.vue';
 import RadioStations from '../components/lists/kneo/RadioStations.vue';
 import RadioStation from '../components/forms/kneo/RadioStationForm.vue';
@@ -96,6 +97,12 @@ const routes: Array<RouteRecordRaw> = [
                 path: 'station/:brandName/listeners',
                 name: 'StationListeners',
                 component: AvailableListeners,
+                props: true,
+            },
+            {
+                path: 'station/:brandName/scripts',
+                name: 'StationScripts',
+                component: AvailableScripts,
                 props: true,
             },
             {

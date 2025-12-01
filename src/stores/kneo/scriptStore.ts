@@ -102,6 +102,15 @@ export const useScriptStore = defineStore('scriptStore', () => {
         await apiClient.delete(`/scripts/${id}`);
     };
 
+    const fetchAvailableScripts = async (brandName: string, page = 1, pageSize = 10) => {
+        const response = await apiClient.get(`/scripts/available-scripts?brand=${brandName}&page=${page}&size=${pageSize}`);
+        if (response?.data?.payload) {
+            apiViewResponse.value = response.data.payload;
+        } else {
+            throw new Error('Invalid API response structure');
+        }
+    };
+
     const fetchAccessList = async (id: string) => {
         const response = await apiClient.get(`/scripts/${id}/access`);
         if (!response?.data) throw new Error('Invalid API response');
@@ -114,6 +123,7 @@ export const useScriptStore = defineStore('scriptStore', () => {
         setupApiClient,
         fetchAll: fetchScripts,
         fetchAllShared: fetchSharedScripts,
+        fetchAvailableScripts,
         fetch: fetchScript,
         save,
         deleteScript,
