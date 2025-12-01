@@ -181,7 +181,6 @@
           <div class="lang-row">
             <GreenLed
               class="lang-dot"
-              :size="10"
               :active="selectedLanguages.includes(lang.value) && (isReplicating || hasReplicateError || hasReplicateSuccess)"
               :pulse="getDotVariant(lang.value) === 'yellow'"
             />
