@@ -18,12 +18,12 @@
         <n-button type="primary" :disabled="!hasSelection" @click="handleBulkBrandUpdate" :size="isMobile ? 'medium' : 'large'">
           Update Brands ({{ checkedRowKeys.length }})
         </n-button>
-      </n-button-group>
-
-      <n-button @click="toggleFilters" type="default" :size="isMobile ? 'medium' : 'large'" class="mr-4">
-        <red-led :active="hasActiveFilters" :size="16" style="margin-right: 8px;" />
+         <n-button @click="toggleFilters" type="default" :size="isMobile ? 'medium' : 'large'" class="mr-4">
+        <red-led :active="hasActiveFilters" style="margin-right: 8px;" />
         Filter
       </n-button>
+      </n-button-group>
+     
     </n-gi>
 
     <n-gi :span="isMobile ? 1 : 6">

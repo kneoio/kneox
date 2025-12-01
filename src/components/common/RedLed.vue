@@ -9,7 +9,7 @@ defineProps<{ active?: boolean; pulse?: boolean; size?: number }>();
 <style scoped>
 .led {
   font-family: 'Share Tech Mono', monospace;
-  font-size: v-bind("`${size ?? 28}px`");
+  font-size: v-bind("`${size ?? 25}px`");
   color: #FF1A1A;
   opacity: 0.2;
   transition: opacity .3s, text-shadow .3s;

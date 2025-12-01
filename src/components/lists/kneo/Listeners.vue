@@ -23,7 +23,7 @@
       </n-button-group>
 
       <n-button @click="toggleFilters" type="default" size="large" class="mr-4">
-        <red-led :active="hasActiveFilters" :size="16" style="margin-right: 8px;" />
+        <red-led :active="hasActiveFilters" style="margin-right: 8px;" />
         Filter
       </n-button>
 

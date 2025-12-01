@@ -278,15 +278,14 @@ export const useReferencesStore = defineStore('references', () => {
   ];
 
   const fragmentTypeOptions = [
-    { label: 'Song', value: 'SONG' }
+    { label: 'Song', value: 'SONG' },
+    { label: 'Advertisiment', value: 'ADVERTISEMENT' },
+    { label: 'Jingle', value: 'JINGLE' }
   ];
 
+
   const fragmentSourceOptions = [
-    { label: 'Users Upload', value: 'USER_UPLOAD' },
-    { label: 'Recovered', value: 'RECOVERED_FROM_SPACES' },
-    { label: 'Recovered', value: 'ORPHAN_RECOVERY' },
-    { label: 'Generative prompt', value: 'SUNO_PROMPT' },
-    { label: 'Text to Speach', value: 'TEXT_FOR_TTS' },
+    { label: 'Users Upload', value: 'USER_UPLOAD' },    
     { label: 'Contribution', value: 'CONTRIBUTION' }
   ];
 
