@@ -49,13 +49,6 @@
             </n-form-item>
           </n-gi>
           <n-gi>
-            <n-form-item label="Podcast Mode">
-              <n-slider v-model:value="localFormData.podcastMode" :min="0" :max="1" :step="0.05" :tooltip="false"
-                style="width: 50%; max-width: 600px;" />
-              <span style="margin-left: 12px;">{{ localFormData.podcastMode || 0 }}</span>
-            </n-form-item>
-          </n-gi>
-          <n-gi>
             <n-form-item label="Weekdays">
               <n-checkbox-group v-model:value="selectedWeekdays" style="width: 50%; max-width: 600px;">
                 <n-checkbox :value="1" label="Mon" />
@@ -69,37 +62,29 @@
             </n-form-item>
           </n-gi>
           <n-gi>
-            <n-form-item label="Master Prompts">
+            <n-form-item label="Actions">
               <n-dynamic-input
-                v-model:value="selectedPromptIds"
+                v-model:value="scenePrompts"
+                :on-create="createScenePrompt"
                 placeholder=""
                 style="width: 50%; max-width: 600px;"
               >
                 <template #default="{ index }">
-                  <div style="display: flex;">
+                  <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;">
+                    <span>Main instruction</span>
                     <n-select
-                      v-model:value="selectedPromptIds[index]"
+                      v-model:value="scenePrompts[index].promptId"
                       :options="promptOptions"
                       placeholder=""
-                      style="margin-right: 10px; min-width: 450px;"
+                      style="min-width: 600px;"
                     />
-                    <n-button
-                      :disabled="!selectedPromptIds[index]"
-                      @click="detachPrompt(index)"
-                      style="margin-right: 10px;"
-                    >
-                      <n-icon>
-                        <TagOff />
-                      </n-icon>
-                    </n-button>
-                    <n-button
-                      :disabled="!selectedPromptIds[index]"
-                      @click="goToPrompt(selectedPromptIds[index])"
-                    >
-                      <n-icon>
-                        <ChevronRight />
-                      </n-icon>
-                    </n-button>
+                    <span>Additional instruction</span>
+                    <n-input
+                      v-model:value="scenePrompts[index].extraInstructions"
+                      type="textarea"
+                      rows="1"
+                      placeholder="Additional instruction"
+                    />
                   </div>
                 </template>
               </n-dynamic-input>
@@ -140,8 +125,8 @@ import {
   useLoadingBar,
   useMessage
 } from 'naive-ui';
-import { ChevronRight, TagOff } from '@vicons/tabler';
-import { ScriptScene, ScriptSceneSave } from '../../../types/kneoBroadcasterTypes';
+import { ChevronRight } from '@vicons/tabler';
+import { ScriptScene, ScriptSceneSave, ScenePromptDTO } from '../../../types/kneoBroadcasterTypes';
 import { useScriptSceneStore } from '../../../stores/kneo/scriptSceneStore';
 import { useScriptStore } from '../../../stores/kneo/scriptStore';
 import { usePromptStore } from '../../../stores/kneo/promptStore';
@@ -169,7 +154,6 @@ export default defineComponent({
     NSlider,
     NIcon,
     ChevronRight,
-    TagOff,
     AclTable
   },
   setup() {
@@ -184,7 +168,7 @@ export default defineComponent({
     const activeTab = ref('properties');
     const aclData = ref<any[]>([]);
     const aclLoading = ref(false);
-    const selectedPromptIds = ref<string[]>([]);
+    const scenePrompts = ref<ScenePromptDTO[]>([]);
     const selectedWeekdays = ref<number[]>([]);
     const scriptOptions = computed(() =>
       (scriptsStore.getEntries || [])
@@ -208,8 +192,7 @@ export default defineComponent({
       scriptId: '',
       prompts: [],
       startTime: '',
-      talkativity: 0.5,
-      podcastMode: 0.5
+      talkativity: 0.5
     });
 
     const startTimeMs = ref<number | null>(null);
@@ -247,14 +230,12 @@ export default defineComponent({
           selectedScriptId.value = data.scriptId || selectedScriptId.value;
           startTimeMs.value = parseTimeToMs(data.startTime);
           const arr = (data as any).prompts || [];
-          selectedPromptIds.value = Array.isArray(arr)
-            ? (arr.filter((v: any) => typeof v === 'string' && v) as string[])
+          scenePrompts.value = Array.isArray(arr)
+            ? (arr as ScenePromptDTO[])
             : [];
           const w = (data as any).weekdays || [];
           selectedWeekdays.value = Array.isArray(w) ? (w.filter((n: any) => Number.isInteger(n)) as number[]) : [];
-          // Set talkativity and podcastMode from API response, defaults if not provided
           localFormData.talkativity = typeof data.talkativity === 'number' ? data.talkativity : 0.5;
-          (localFormData as any).podcastMode = typeof (data as any).podcastMode === 'number' ? (data as any).podcastMode : 0.5;
         }
       }
     };
@@ -282,12 +263,11 @@ export default defineComponent({
         loadingBar.start();
         const saveData: ScriptSceneSave = {
           title: localFormData.title as any,
-          prompts: selectedPromptIds.value,
+          prompts: scenePrompts.value,
           startTime: startTimeMs.value != null ? formatTimeFromMs(startTimeMs.value) : undefined,
           oneTimeRun: localFormData.oneTimeRun as any,
           weekdays: selectedWeekdays.value,
           talkativity: localFormData.talkativity as any,
-          podcastMode: (localFormData as any).podcastMode as any,
         };
         const id = route.params.id as string;
         if (!id || id === 'new') {
@@ -313,9 +293,13 @@ export default defineComponent({
       if (promptId) router.push({ name: 'PromptForm', params: { id: promptId } });
     };
 
-    const detachPrompt = (index: number) => {
-      selectedPromptIds.value[index] = '';
-    };
+    const createScenePrompt = (): ScenePromptDTO => ({
+      promptId: '',
+      extraInstructions: '',
+      active: true,
+      rank: 0,
+      weight: 0.5
+    });
 
     const goBack = () => {
       router.push({ name: 'Scripts' });
@@ -344,12 +328,12 @@ export default defineComponent({
       goBack,
       selectedScriptId,
       startTimeMs,
-      selectedPromptIds,
+      scenePrompts,
       selectedWeekdays,
       promptOptions,
       scriptOptions,
       goToPrompt,
-      detachPrompt,
+      createScenePrompt,
       activeTab,
       aclData,
       aclLoading

@@ -54,7 +54,7 @@ export const useScriptStore = defineStore('scriptStore', () => {
     });
 
     const fetchScripts = async (page = 1, pageSize = 10) => {
-        const response = await apiClient.get(`/scripts/shared?page=${page}&size=${pageSize}`, {});
+        const response = await apiClient.get(`/scripts?page=${page}&size=${pageSize}`, {});
         if (response?.data?.payload) {
             apiViewResponse.value = response.data.payload;
         } else {

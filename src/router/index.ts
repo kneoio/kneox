@@ -291,7 +291,7 @@ export function setupRouterGuard(keycloak: Keycloak) {
             try {
                 if (!keycloak.authenticated) {
                     return keycloak.login({
-                        redirectUri: window.location.origin + to.fullPath 
+                        redirectUri: window.location.origin + '/outline'
                     });
                 }
 
@@ -302,17 +302,17 @@ export function setupRouterGuard(keycloak: Keycloak) {
                     } catch (error) {
                         console.error('Token refresh failed:', error);
                         return keycloak.login({
-                            redirectUri: window.location.origin + to.path
+                            redirectUri: window.location.origin + '/outline'
                         });
                     }
                 }
                 return keycloak.login({
-                    redirectUri: window.location.origin + to.path
+                    redirectUri: window.location.origin + '/outline'
                 });
             } catch (error) {
                 console.error('Authentication failed:', error);
                 return keycloak.login({
-                    redirectUri: window.location.origin + to.path
+                    redirectUri: window.location.origin + '/outline'
                 });
             }
         }

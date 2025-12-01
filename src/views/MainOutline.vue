@@ -126,6 +126,7 @@ import SoundFragments from '../components/lists/kneo/SoundFragments.vue';
 import StationPlaylist from "../components/lists/kneo/StationPlaylist.vue";
 import Listeners from "../components/lists/kneo/Listeners.vue";
 import DashboardView from "./DashboardView.vue";
+import StatusLed from '../components/common/StatusLed.vue';
 
 export default defineComponent({
   components: {
@@ -146,7 +147,8 @@ export default defineComponent({
     Listeners,
     DashboardView,
     Moon,
-    Sun
+    Sun,
+    StatusLed
   },
   setup() {
     const themeVars = useThemeVars();
@@ -182,23 +184,6 @@ export default defineComponent({
       }
     };
 
-    const getStatusColor = (status: BrandStatus) => {
-      switch (status) {
-        case BrandStatus.ON_LINE:
-          return '#00aa00';
-        case BrandStatus.QUEUE_SATURATED:
-          return '#00aa00';
-        case BrandStatus.WARMING_UP:
-          return '#ffa500';
-        case BrandStatus.IDLE:
-          return '#bd621c';
-        case BrandStatus.SYSTEM_ERROR:
-          return '#ff0000';
-        case BrandStatus.OFF_LINE:
-        default:
-          return '#5a5a5a';
-      }
-    };
 
     const dynamicMenuOptions = computed<MenuOption[]>(() => {
       const userRoles = keycloakInst.tokenParsed?.realm_access?.roles || [];
@@ -208,8 +193,10 @@ export default defineComponent({
         label: () => h('div', {
           style: 'display: flex; align-items: center; gap: 8px;'
         }, [
-          h('div', {
-            style: `width: 8px; height: 8px; border-radius: 50%; background-color: ${getStatusColor(station.status)};`
+          h(StatusLed, {
+            status: station.status,
+            active: true,
+            size: 12
           }),
           h('span', {}, station.localizedName.en),
           h('span', {

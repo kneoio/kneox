@@ -51,6 +51,11 @@
                   />
                 </n-form-item>
               </n-gi>
+              <n-gi>
+                <n-form-item>
+                  <n-checkbox v-model:checked="isPublic">Public</n-checkbox>
+                </n-form-item>
+              </n-gi>
             </n-grid>
           </n-form>
         </n-tab-pane>
@@ -179,6 +184,7 @@ import {
   NModal,
   NSpace,
   NAlert,
+  NCheckbox,
   useLoadingBar,
   useMessage
 } from 'naive-ui';
@@ -212,6 +218,7 @@ export default defineComponent({
     NSelect,
     NText,
     NDataTable,
+    NCheckbox,
     CodeMirror,
     AclTable,
     NModal,
@@ -264,8 +271,11 @@ export default defineComponent({
       lastModifiedDate: "",
       name: "",
       description: "",
-      labels: []
+      labels: [],
+      accessLevel: 0
     });
+
+    const isPublic = ref(false);
 
     const sceneRowKey = (row: any) => row.id || `${row.type || 'scene'}-${row.startTime || ''}`;
     const sceneColumns = computed(() => [
@@ -296,7 +306,8 @@ export default defineComponent({
         const saveData: ScriptSave = {
           name: localFormData.name || '',
           description: localFormData.description || '',
-          labels: localFormData.labels || []
+          labels: localFormData.labels || [],
+          accessLevel: isPublic.value ? 1 : 0
         };
 
         const id = localFormData.id ? localFormData.id : null;
@@ -522,6 +533,7 @@ export default defineComponent({
           await store.fetch(id);
           const scriptData = { ...store.getCurrent } as Script;
           Object.assign(localFormData, scriptData);
+          isPublic.value = (scriptData.accessLevel === 1);
           if (activeTab.value === 'scenes') {
             await fetchScenes();
           }
@@ -599,6 +611,7 @@ export default defineComponent({
       handleSave,
       goBack,
       activeTab,
+      isPublic,
       referencesStore,
       editorExtensions,
       aclData,

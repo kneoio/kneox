@@ -110,9 +110,24 @@ export default defineComponent({
                 oneTimeRun: !!(sc as any).oneTimeRun
               };
             });
-            return { id: s.id, name: s.name, tags: resolveLabelNames((s as any).labels || []), labelUuids: (s as any).labels || [], description: s.description || '', children };
+            return {
+              id: s.id,
+              name: s.name,
+              tags: resolveLabelNames((s as any).labels || []),
+              labelUuids: (s as any).labels || [],
+              description: s.description || '',
+              accessLevel: (s as any).accessLevel,
+              children
+            };
           } catch {
-            return { id: s.id, name: s.name, tags: resolveLabelNames((s as any).labels || []), labelUuids: (s as any).labels || [], description: s.description || '' };
+            return {
+              id: s.id,
+              name: s.name,
+              tags: resolveLabelNames((s as any).labels || []),
+              labelUuids: (s as any).labels || [],
+              description: s.description || '',
+              accessLevel: (s as any).accessLevel
+            };
           }
         });
         const rows = await Promise.all(childrenPromises);
@@ -237,6 +252,19 @@ export default defineComponent({
             content.push(h(NTag, { type: 'success', size: 'small', style: 'margin-left:8px;' }, { default: () => 'One-time' }));
           }
           return content.length > 0 ? h('div', { style: 'display:flex; align-items:center;' }, content) : null;
+        }
+      },
+      {
+        title: 'Flags',
+        key: 'accessLevel',
+        render: (row: any) => {
+          if (row.children) {
+            const isPublic = row.accessLevel === 1;
+            return isPublic
+              ? h(NTag, { type: 'success', size: 'small' }, { default: () => 'Public' })
+              : null;
+          }
+          return null;
         }
       },
       { title: 'Weekdays', key: 'weekdays' },

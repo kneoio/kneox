@@ -159,8 +159,14 @@
               </n-gi>
               <n-gi>
                 <n-form-item label="Script">
-                  <n-select v-model:value="localFormData.scriptId" :options="scriptOptions"
+                  <n-select v-model:value="localFormData.scriptId" :options="scriptOptions" :render-label="renderScriptLabel"
                     style="width: 50%; max-width: 600px;" />
+                </n-form-item>
+              </n-gi>
+              <n-gi v-if="selectedScript">
+                <n-form-item label="Description">
+                  <n-input :value="selectedScript.description" type="textarea" :autosize="{ minRows: 3, maxRows: 5 }"
+                    style="width: 50%; max-width: 600px; cursor: not-allowed;" disabled />
                 </n-form-item>
               </n-gi>
             </n-grid>
@@ -379,7 +385,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, onUnmounted, reactive, ref, computed, watch, nextTick } from "vue";
+import { defineComponent, onMounted, onUnmounted, reactive, ref, computed, watch, nextTick, h } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
   NButton,
@@ -405,6 +411,7 @@ import {
   NText,
   NUpload,
   NIcon,
+  NTag,
   UploadFileInfo,
   useLoadingBar,
   useMessage
@@ -453,6 +460,7 @@ export default defineComponent( {
     NGrid,
     NGi,
     NSelect,
+    NTag,
     NIcon,
     Copy,
     HandRock,
@@ -575,6 +583,11 @@ export default defineComponent( {
       return profileStore.getEntries.find( p => p.id === localFormData.profileId );
     } );
 
+    const selectedScript = computed( () => {
+      if ( !localFormData.scriptId ) return null;
+      return scriptStore.getEntries.find( s => s.id === localFormData.scriptId );
+    } );
+
     const voiceOptions = computed(() => 
       (referencesStore.voiceOptions || []).map(voice => ({
         label: voice.label,
@@ -601,9 +614,18 @@ export default defineComponent( {
     const scriptOptions = computed( () => {
       return scriptStore.getEntries.map( script => ( {
         label: script.name,
-        value: script.id
+        value: script.id,
+        accessLevel: (script as any).accessLevel
       } ) );
     } );
+
+    const renderScriptLabel = (option: any) => {
+      const isPublic = option.accessLevel === 1;
+      return h('span', { style: 'display: flex; align-items: center; gap: 8px;' }, [
+        isPublic ? h(NTag, { type: 'success', size: 'small' }, { default: () => 'Public' }) : null,
+        h('span', option.label)
+      ]);
+    };
 
     const startClockUpdate = () => {
       if ( !clockIntervalId.value ) {
@@ -838,7 +860,7 @@ export default defineComponent( {
         loadingBar.start();
         await aiAgentStore.fetchAllUnsecured( 1, 100 );
         await profileStore.fetchAllUnsecured( 1, 100 );
-        await scriptStore.fetchAll( 1, 100 );
+        await scriptStore.fetchAllShared( 1, 100 );
         await referencesStore.fetchVoices();
         await store.fetch( id );
         await nextTick();
@@ -934,8 +956,10 @@ export default defineComponent( {
       agentOptions,
       profileOptions,
       scriptOptions,
+      renderScriptLabel,
       selectedAgent,
       selectedProfile,
+      selectedScript,
       copyToClipboard,
       openUrl,
       goBack,

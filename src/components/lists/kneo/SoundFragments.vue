@@ -362,7 +362,7 @@ export default defineComponent( {
             return;
           }
         }
-        await store.fetchAll( page, pageSize, '', activeFilters );
+        await store.fetchAll( page, pageSize, activeFilters );
       } catch ( error ) {
         console.error( 'Failed to fetch data:', error );
       } finally {

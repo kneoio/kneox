@@ -20,28 +20,30 @@
         >
           Delete ({{ checkedRowKeys.length }})
         </n-button>
+        <n-button @click="toggleFilters" type="default" size="large" class="mr-4">
+          <red-led :active="hasActiveFilters" style="margin-right: 8px;" />
+          Filter
+        </n-button>
       </n-button-group>
-
-      <n-button @click="toggleFilters" type="default" size="large" class="mr-4">
-        <red-led :active="hasActiveFilters" style="margin-right: 8px;" />
-        Filter
-      </n-button>
-
-      <n-input
-          v-model:value="searchQuery"
-          placeholder="Search..."
-          clearable
-          size="large"
-          style="width: 250px"
-          @keydown.enter="handleSearch"
-          @clear="handleSearch"
-      />
     </n-gi>
 
     <n-gi :span="isMobile ? 1 : 6">
       <n-collapse-transition :show="showFilters">
         <div style="width: 50%;">
           <n-grid :cols="1" x-gap="12" y-gap="0">
+            <n-gi>
+              <n-form-item label="Search" size="small" :show-feedback="false">
+                <n-input
+                    v-model:value="searchQuery"
+                    placeholder="Search..."
+                    clearable
+                    size="large"
+                    style="width: 250px"
+                    @keydown.enter="handleSearch"
+                    @clear="handleSearch"
+                />
+              </n-form-item>
+            </n-gi>
             <n-gi>
               <n-form-item label="Country" size="small" :show-feedback="false">
                 <n-select

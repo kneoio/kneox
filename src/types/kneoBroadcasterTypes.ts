@@ -333,25 +333,34 @@ export interface Script {
     name: string;
     description: string;
     labels: string[];
+    accessLevel?: number;
 }
 
 export interface ScriptSave {
     name: string;
     description: string;
+    labels: string[];
+    accessLevel?: number;
 }
 
-// Script Scenes
+export interface ScenePromptDTO {
+    promptId?: string;
+    extraInstructions?: string;
+    active?: boolean;
+    rank?: number;
+    weight?: number;
+}
+
 export interface ScriptScene {
     id?: string;
     scriptId?: string;
     type?: string;
     title?: string;
-    prompts?: string[];
+    prompts?: ScenePromptDTO[];
     startTime?: string;
     oneTimeRun?: boolean;
     weekdays?: number[];
     talkativity?: number;
-    podcastMode?: number;
 }
 
 export interface ScriptSceneViewData {
@@ -365,12 +374,11 @@ export interface ScriptSceneViewData {
 export interface ScriptSceneSave {
     type?: string;
     title?: string;
-    prompts?: string[];
+    prompts?: ScenePromptDTO[];
     startTime?: string;
     oneTimeRun?: boolean;
     weekdays?: number[];
     talkativity?: number;
-    podcastMode?: number;
 }
 
 // Prompts (Broadcaster)

@@ -91,7 +91,7 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         };
     });
 
-    const fetchSoundFragments = async (page = 1, pageSize = 10, searchQuery = '', filters: SoundFragmentFilterDTO = {}) => {
+    const fetchSoundFragments = async (page = 1, pageSize = 10, filters: SoundFragmentFilterDTO = {}) => {
         const url = buildSoundFragmentsUrl('/soundfragments', {
             page,
             size: pageSize,
@@ -129,36 +129,6 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         if (!response?.data?.payload) throw new Error('Invalid API response');
         apiFormResponse.value = response.data.payload;
     };
-
-    /*const startUploadSession = async (id: string, uploadId: string, startTime: number) => {
-        try {
-            const response = await apiClient.post(`/soundfragments/files/${id}/start?uploadId=${uploadId}&startTime=${startTime}`);
-            return response.data;
-        } catch (error: any) {
-            if (error.response) {
-                const status = error.response.status;
-                const errorData = error.response.data;
-
-                switch (status) {
-                    case 400:
-                        const message = typeof errorData === 'string' ? errorData :
-                            (errorData?.error?.message || errorData?.message || 'Invalid upload session request');
-                        throw new Error(message);
-                    case 403:
-                        throw new Error('You do not have permission to upload files');
-                    case 500:
-                        throw new Error('Server error occurred. Please try again.');
-                    default:
-                        throw new Error(`Upload session failed: ${errorData?.error?.message || errorData?.message || `HTTP ${status}`}`);
-                }
-            } else if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
-                throw new Error('Request timeout. Please try again.');
-            } else if (error.message.includes('Network Error')) {
-                throw new Error('Network error. Please check your connection and try again.');
-                throw new Error(`Upload session failed: ${error.message || 'Unknown error'}`);
-            }
-        }
-    };*/
 
     const uploadFile = async (
         id: string,
