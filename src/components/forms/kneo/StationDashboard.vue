@@ -127,7 +127,7 @@
                   <n-space vertical v-if="stationDetails?.listenersByCountry && stationDetails.listenersByCountry.length > 0" size="small">
                     <n-space v-for="(c, idx) in stationDetails.listenersByCountry" :key="idx" justify="space-between" align="center">
                       <n-text strong>{{ c.countryCode }}</n-text>
-                      <n-tag type="info" size="small">{{ c.accessCount }}</n-tag>
+                      <n-badge :value="c.accessCount" type="info" />
                     </n-space>
                   </n-space>
                   <n-text depth="3" v-else>No listener country stats</n-text>
@@ -241,7 +241,8 @@ import {
   NTabPane,
   NSelect,
   NScrollbar,
-  NInput
+  NInput,
+  NBadge
 } from 'naive-ui';
 import { ExternalLink, PlayerPlay, PlayerStop, Activity } from '@vicons/tabler';
 import { MIXPLA_PLAYER_URL } from '../../../constants/config';
@@ -251,7 +252,7 @@ export default defineComponent( {
   components: {
     NButton, NCard, NIcon, NTag, NStatistic, NProgress, NSpace, NH2, NText,
     NTimeline, NTimelineItem, NButtonGroup,
-    NMarquee, NTabs, NTabPane, NSelect, NScrollbar, NInput, PlayerPlay, PlayerStop, ExternalLink, Activity
+    NMarquee, NTabs, NTabPane, NSelect, NScrollbar, NInput, NBadge, PlayerPlay, PlayerStop, ExternalLink, Activity
   },
   props: {
     brandName: {
