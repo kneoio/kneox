@@ -20,6 +20,15 @@
         >
           Delete ({{ checkedRowKeys.length }})
         </n-button>
+        <n-button @click="handleImport" type="default" size="large">Import</n-button>
+        <n-button
+            type="default"
+            :disabled="!hasSelection"
+            @click="handleExport"
+            size="large"
+        >
+          Export ({{ checkedRowKeys.length }})
+        </n-button>
       </n-button-group>
     </n-gi>
 
@@ -61,6 +70,8 @@ import {
 import { useRouter } from 'vue-router';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
 import { useScriptStore } from '../../../stores/kneo/scriptStore';
+import { handleFormSaveError } from '../../../utils/errorHandling';
+import apiClient from '../../../api/apiClient';
 
 export default defineComponent({
   name: 'AvailableScripts',
@@ -215,6 +226,69 @@ export default defineComponent({
       }
     };
 
+    const handleImport = () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'application/json';
+      input.onchange = async (e: any) => {
+        const file = e.target?.files?.[0];
+        if (!file) return;
+        
+        try {
+          loading.value = true;
+          
+          const fileContent = await file.text();
+          const jsonData = JSON.parse(fileContent);
+          
+          await apiClient.post('/scripts/import', jsonData, {
+            headers: { 'Content-Type': 'application/json' }
+          });
+          
+          message.success('Script imported successfully');
+          await fetchData(store.getPagination.page, store.getPagination.pageSize);
+        } catch (error) {
+          console.error('Failed to import script:', error);
+          handleFormSaveError(error, message);
+        } finally {
+          loading.value = false;
+        }
+      };
+      input.click();
+    };
+
+    const handleExport = async () => {
+      if (checkedRowKeys.value.length === 0) {
+        message.warning('Please select scripts to export.');
+        return;
+      }
+
+      try {
+        loading.value = true;
+        
+        for (const scriptId of checkedRowKeys.value) {
+          const response = await apiClient.get(`/scripts/${scriptId}/export`, {
+            responseType: 'blob'
+          });
+          
+          const url = URL.createObjectURL(response.data);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `script-${scriptId}.json`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }
+        
+        message.success(`${checkedRowKeys.value.length} script(s) exported successfully`);
+      } catch (error) {
+        console.error('Failed to export scripts:', error);
+        message.error('Failed to export scripts');
+      } finally {
+        loading.value = false;
+      }
+    };
+
     onMounted(() => {
       window.addEventListener('resize', handleResize);
     });
@@ -235,6 +309,8 @@ export default defineComponent({
       isMobile,
       handleNewClick,
       handleDelete,
+      handleImport,
+      handleExport,
       getRowProps,
       handlePageChange,
       handlePageSizeChange,

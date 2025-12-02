@@ -3,7 +3,13 @@
   <n-grid cols="6" x-gap="12" y-gap="12" class="m-5">
     <n-gi span="6">
       <n-page-header :subtitle="formTitle" @back="goBack">
-        <template #title>{{ localFormData.name || 'New Script' }}</template>
+        <template #title>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span>{{ localFormData.name || 'New Script' }}</span>
+            <n-tag size="small" type="warning" v-if="isPublic">Public</n-tag>
+            <n-tag size="small" type="default" v-else>Private</n-tag>
+          </div>
+        </template>
         <template #footer>
           Registered: {{ localFormData.regDate }}, Last Modified: {{ localFormData.lastModifiedDate }}
           <br>
@@ -51,11 +57,7 @@
                   />
                 </n-form-item>
               </n-gi>
-              <n-gi>
-                <n-form-item>
-                  <n-checkbox v-model:checked="isPublic">Public</n-checkbox>
-                </n-form-item>
-              </n-gi>
+              
             </n-grid>
           </n-form>
         </n-tab-pane>
@@ -308,6 +310,7 @@ export default defineComponent({
     NDynamicInput,
     NCheckboxGroup,
     NSlider,
+    NTag,
     CodeMirror,
     AclTable,
     NModal,
@@ -624,11 +627,10 @@ export default defineComponent({
     });
 
 
-    const getSceneDotVariant = (idx: number): 'yellow' | 'red' | 'green' | 'gray' => {
+    const getSceneDotVariant = (idx: number): 'red' | 'green' | 'gray' => {
       if (!isDryRunning.value && !dryRunScenario.value) return 'gray';
       if (failedSceneIndexes.value.has(idx)) return 'red';
       if (idx < dryRunCompletedScenes.value) return 'green';
-      if (idx === dryRunCompletedScenes.value && isDryRunning.value) return 'yellow';
       if (dryRunScenario.value && idx < dryRunCompletedScenes.value) return 'green';
       return 'gray';
     };

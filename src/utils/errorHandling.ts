@@ -61,6 +61,24 @@ export const handleFormSaveError = (error: unknown, messageInstance: any): void 
                 return;
             }
         }
+
+        // Non-400 responses: try to show a clear message field first (e.g. `error`, `detail`, or `title`)
+        if (data) {
+            const anyData: any = data as any;
+            if (typeof anyData.error === 'string' && anyData.error) {
+                messageInstance.error(anyData.error);
+                return;
+            }
+            if (typeof anyData.detail === 'string' && anyData.detail) {
+                messageInstance.error(anyData.detail);
+                return;
+            }
+            if (typeof anyData.title === 'string' && anyData.title) {
+                messageInstance.error(anyData.title);
+                return;
+            }
+        }
+
         // Show raw server payload if available
         if (typeof data !== 'undefined') {
             try {

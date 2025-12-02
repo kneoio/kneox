@@ -20,6 +20,23 @@
         >
           Delete ({{ checkedRowKeys.length }})
         </n-button>
+        <n-button @click="handleImport" type="default" size="large">Import</n-button>
+        <n-button
+            type="default"
+            :disabled="!hasSelection"
+            @click="handleExport"
+            size="large"
+        >
+          Export ({{ checkedRowKeys.length }})
+        </n-button>
+        <n-button
+            type="default"
+            :disabled="!hasSelection"
+            @click="handleExportExtended"
+            size="large"
+        >
+          Export Extended ({{ checkedRowKeys.length }})
+        </n-button>
       </n-button-group>
     </n-gi>
 
@@ -62,6 +79,8 @@ import {Script, ScriptScene} from "../../../types/kneoBroadcasterTypes";
 import {useScriptStore} from "../../../stores/kneo/scriptStore";
 import { useScriptSceneStore } from "../../../stores/kneo/scriptSceneStore";
 import { useReferencesStore } from "../../../stores/kneo/referencesStore";
+import { handleFormSaveError } from '../../../utils/errorHandling';
+import apiClient from '../../../api/apiClient';
 
 export default defineComponent({
   components: {NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon},
@@ -206,10 +225,120 @@ export default defineComponent({
         await Promise.all(deletePromises);
         message.success(`${checkedRowKeys.value.length} item(s) deleted successfully.`);
         checkedRowKeys.value = [];
-        await store.fetchAll(store.getPagination.page, store.getPagination.pageSize);
+        await preFetch();
       } catch (error) {
         console.error('Failed to delete Scripts:', error);
         message.error('Failed to delete Scripts.');
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    const handleImport = () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'application/json';
+      input.onchange = async (e: any) => {
+        const file = e.target?.files?.[0];
+        if (!file) return;
+        
+        try {
+          loading.value = true;
+          
+          const fileContent = await file.text();
+          const jsonData = JSON.parse(fileContent);
+          
+          await apiClient.post('/scripts/import', jsonData, {
+            headers: { 'Content-Type': 'application/json' }
+          });
+          
+          message.success('Script imported successfully');
+          await preFetch();
+        } catch (error) {
+          console.error('Failed to import script:', error);
+          handleFormSaveError(error, message);
+        } finally {
+          loading.value = false;
+        }
+      };
+      input.click();
+    };
+
+    const handleExport = async () => {
+      if (checkedRowKeys.value.length === 0) {
+        message.warning('Please select scripts to export.');
+        return;
+      }
+
+      try {
+        loading.value = true;
+        const topLevelIds = new Set((treeData.value || []).map((r: any) => r.id));
+        const scriptIds = checkedRowKeys.value.filter((id) => topLevelIds.has(id as string));
+        
+        if (scriptIds.length === 0) {
+          message.warning('Please select scripts (not scenes) to export.');
+          return;
+        }
+
+        for (const scriptId of scriptIds) {
+          const response = await apiClient.get(`/scripts/${scriptId}/export`, {
+            responseType: 'blob'
+          });
+          
+          const url = URL.createObjectURL(response.data);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `script-${scriptId}.json`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }
+        
+        message.success(`${scriptIds.length} script(s) exported successfully`);
+      } catch (error) {
+        console.error('Failed to export scripts:', error);
+        message.error('Failed to export scripts');
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    const handleExportExtended = async () => {
+      if (checkedRowKeys.value.length === 0) {
+        message.warning('Please select scripts to export.');
+        return;
+      }
+
+      try {
+        loading.value = true;
+        const topLevelIds = new Set((treeData.value || []).map((r: any) => r.id));
+        const scriptIds = checkedRowKeys.value.filter((id) => topLevelIds.has(id as string));
+        
+        if (scriptIds.length === 0) {
+          message.warning('Please select scripts (not scenes) to export.');
+          return;
+        }
+
+        for (const scriptId of scriptIds) {
+          const response = await apiClient.get(`/scripts/${scriptId}/export?extended=true`, {
+            responseType: 'blob'
+          });
+          
+          const url = URL.createObjectURL(response.data);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `script-${scriptId}-extended.json`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }
+        
+        message.success(`${scriptIds.length} script(s) exported (extended) successfully`);
+      } catch (error) {
+        console.error('Failed to export scripts (extended):', error);
+        message.error('Failed to export scripts (extended)');
       } finally {
         loading.value = false;
       }
@@ -279,6 +408,9 @@ export default defineComponent({
       handleNewClick,
       handleNewSceneClick,
       handleDelete,
+      handleImport,
+      handleExport,
+      handleExportExtended,
       hasSelection,
       getRowProps,
       handlePageChange,
