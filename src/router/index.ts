@@ -106,6 +106,12 @@ const routes: Array<RouteRecordRaw> = [
                 props: true,
             },
             {
+                path: 'station/:brandName/scripts/:id',
+                name: 'StationScriptForm',
+                component: ScriptForm,
+                props: true,
+            },
+            {
                 path: 'station/:brandName/chat',
                 name: 'StationChat',
                 component: ChatForm,

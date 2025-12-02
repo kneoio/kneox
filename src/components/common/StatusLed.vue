@@ -1,5 +1,11 @@
 <template>
-  <span class="led" :class="{ active, pulse }" :style="{ color: ledColor }">▬</span>
+  <span
+    class="led"
+    :class="{ active, pulse }"
+    :style="{ color: effectiveColor }"
+  >
+    ▬
+  </span>
 </template>
 
 <script setup lang="ts">
@@ -30,6 +36,13 @@ const ledColor = computed(() => {
       return '#5a5a5a';
   }
 });
+
+const effectiveColor = computed(() => {
+  if (props.active || props.pulse) {
+    return ledColor.value;
+  }
+  return '#9ca3af';
+});
 </script>
 
 <style scoped>
@@ -38,7 +51,8 @@ const ledColor = computed(() => {
   font-size: v-bind("`${size ?? 12}px`");
   display: inline-block;
   transform: translateY(1px);
-  opacity: 0.2;
+  opacity: 0.6;
+  text-shadow: none;
   transition: opacity .3s, text-shadow .3s;
 }
 

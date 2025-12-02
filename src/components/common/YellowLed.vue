@@ -1,5 +1,11 @@
 <template>
-  <span class="led" :class="{ active, pulse }">▬</span>
+  <span
+    class="led"
+    :class="{ active, pulse }"
+    :style="{ color: (active || pulse) ? '#FFC400' : '#9ca3af' }"
+  >
+    ▬
+  </span>
 </template>
 
 <script setup lang="ts">
@@ -10,9 +16,8 @@ const props = defineProps<{ active?: boolean; pulse?: boolean; size?: number }>(
 .led {
   font-family: 'Share Tech Mono', monospace;
   font-size: v-bind("`${size ?? 25}px`");
-  color: #FFC400
-;
-  opacity: 0.2;
+  opacity: 0.6;
+  text-shadow: none;
   transition: opacity .3s, text-shadow .3s;
 }
 

@@ -174,7 +174,7 @@ export default defineComponent({
     };
 
     const handleNewClick = () => {
-      router.push('/outline/scripts/new');
+      router.push(`/outline/station/${props.brandName}/scripts/new`);
     };
 
     const getRowProps = (row: any) => {
@@ -192,12 +192,7 @@ export default defineComponent({
             return;
           }
           
-          router.push({ 
-            name: 'ScriptForm', 
-            params: { 
-              id: scriptId 
-            } 
-          });
+          router.push(`/outline/station/${props.brandName}/scripts/${scriptId}`);
         }
       };
     };

@@ -334,6 +334,7 @@ export interface Script {
     description: string;
     labels: string[];
     accessLevel?: number;
+    scenes?: ScriptScene[];
 }
 
 export interface ScriptSave {
@@ -341,6 +342,7 @@ export interface ScriptSave {
     description: string;
     labels: string[];
     accessLevel?: number;
+    scenes?: ScriptScene[];
 }
 
 export interface ScenePromptDTO {
@@ -361,6 +363,11 @@ export interface ScriptScene {
     oneTimeRun?: boolean;
     weekdays?: number[];
     talkativity?: number;
+    podcastMode?: number;
+    author?: string;
+    regDate?: string;
+    lastModifier?: string;
+    lastModifiedDate?: string;
 }
 
 export interface ScriptSceneViewData {

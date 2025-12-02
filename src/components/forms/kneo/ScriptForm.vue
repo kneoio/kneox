@@ -60,11 +60,13 @@
           </n-form>
         </n-tab-pane>
         <n-tab-pane name="scenes" tab="Scenes">
+          <div style="margin-bottom: 12px;">
+            <n-button type="primary" @click="addNewScene" size="small">New Scene</n-button>
+          </div>
           <n-data-table
-            remote
             :columns="sceneColumns"
             :row-key="sceneRowKey"
-            :data="sceneStore.getEntries"
+            :data="localScenes"
             :pagination="false"
             :bordered="false"
             :loading="scenesLoading"
@@ -108,7 +110,7 @@
       <div>
         <n-text depth="3">Scenes</n-text>
         <div style="display:flex; flex-direction:column; gap:2px; width: 100%; margin-top: 8px;">
-          <div v-for="(sc, idx) in sceneStore.getEntries" :key="sceneRowKey(sc)" style="display:flex; align-items:center; gap:8px;">
+          <div v-for="(sc, idx) in localScenes" :key="sceneRowKey(sc)" style="display:flex; align-items:center; gap:8px;">
             <GreenLed :active="getSceneDotActive(idx)" :pulse="getSceneDotActive(idx)" />
             <span>{{ sc.startTime }} — {{ sc.title || sc.type }}</span>
           </div>
@@ -159,11 +161,88 @@
       </n-space>
     </template>
   </n-modal>
+
+  <n-modal
+    v-model:show="showSceneDialog"
+    preset="dialog"
+    :closable="false"
+    :mask-closable="false"
+    :close-on-esc="false"
+    :style="{ width: '800px', backgroundColor: dialogBackgroundColor }"
+  >
+    <template #header>
+      <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+        <span>{{ selectedScene?.title || 'Scene' }}</span>
+        <button type="button" @click="closeSceneDialog" aria-label="Close" style="background:none; border:none; font-size:18px; line-height:1; cursor:pointer;">×</button>
+      </div>
+    </template>
+    <n-form v-if="selectedScene" label-placement="left" label-width="140">
+      <n-form-item label="Title">
+        <n-input v-model:value="selectedScene.title" placeholder="" />
+      </n-form-item>
+      <n-form-item label="Start time">
+        <div style="display: flex; align-items: center; gap: 24px;">
+          <n-time-picker v-model:value="sceneStartTimeMs" format="HH:mm:ss" style="width: 200px;" />
+          <n-checkbox v-model:checked="selectedScene.oneTimeRun">One-time run</n-checkbox>
+        </div>
+      </n-form-item>
+      <n-form-item label="Talkativity">
+        <n-slider v-model:value="selectedScene.talkativity" :min="0" :max="1" :step="0.05" :tooltip="false" style="flex: 1; max-width: 400px;" />
+        <span style="margin-left: 12px; min-width: 40px;">{{ selectedScene.talkativity || 0 }}</span>
+      </n-form-item>
+    
+      <n-form-item label="Weekdays">
+        <n-checkbox-group v-model:value="selectedWeekdays">
+          <n-checkbox :value="1" label="Mon" />
+          <n-checkbox :value="2" label="Tue" />
+          <n-checkbox :value="3" label="Wed" />
+          <n-checkbox :value="4" label="Thu" />
+          <n-checkbox :value="5" label="Fri" />
+          <n-checkbox :value="6" label="Sat" />
+          <n-checkbox :value="7" label="Sun" />
+        </n-checkbox-group>
+      </n-form-item>
+      <n-form-item label="Actions">
+        <div style="width: 100%; max-height: 260px; overflow-y: auto; padding-right: 4px;">
+          <n-dynamic-input
+            v-model:value="scenePrompts"
+            :on-create="createScenePrompt"
+            placeholder=""              
+          >
+            <template #default="{ index }">
+              <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
+                <n-select
+                  v-model:value="scenePrompts[index].promptId"
+                  :options="promptOptions"
+                  placeholder="Main instruction"
+                />
+                <n-input
+                  v-model:value="scenePrompts[index].extraInstructions"
+                  type="textarea"
+                  rows="3"
+                  placeholder="Additional instruction"
+                />
+              </div>
+            </template>
+          </n-dynamic-input>
+        </div>
+      </n-form-item>
+    </n-form>
+    <template #action>
+      <n-space justify="space-between" style="width: 100%;">
+        <n-button v-if="selectedScene?.id" type="error" @click="deleteSceneFromDialog">Delete</n-button>
+        <n-space>
+          <n-button @click="closeSceneDialog">Cancel</n-button>
+          <n-button type="primary" @click="saveSceneDialog">Save</n-button>
+        </n-space>
+      </n-space>
+    </template>
+  </n-modal>
   </div>
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch } from "vue";
+import { computed, defineComponent, h, onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import MarkdownIt from 'markdown-it';
 import apiClient, { apiServer } from '../../../api/apiClient';
@@ -185,13 +264,19 @@ import {
   NSpace,
   NAlert,
   NCheckbox,
+  NTimePicker,
+  NDynamicInput,
+  NCheckboxGroup,
+  NSlider,
+  NTag,
   useLoadingBar,
   useMessage
 } from 'naive-ui';
 import { useScriptStore } from '../../../stores/kneo/scriptStore';
 import { useScriptSceneStore } from '../../../stores/kneo/scriptSceneStore';
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
-import { Script, ScriptSave, ScriptScene } from '../../../types/kneoBroadcasterTypes';
+import { usePromptStore } from '../../../stores/kneo/promptStore';
+import { Script, ScriptSave, ScriptScene, ScenePromptDTO } from '../../../types/kneoBroadcasterTypes';
 import { getErrorMessage, handleFormSaveError } from '../../../utils/errorHandling';
 import { EditorView } from "@codemirror/view";
 import { json } from "@codemirror/lang-json";
@@ -219,6 +304,10 @@ export default defineComponent({
     NText,
     NDataTable,
     NCheckbox,
+    NTimePicker,
+    NDynamicInput,
+    NCheckboxGroup,
+    NSlider,
     CodeMirror,
     AclTable,
     NModal,
@@ -235,6 +324,7 @@ export default defineComponent({
     const referencesStore = useReferencesStore();
     const sceneStore = useScriptSceneStore();
     const radioStore = useRadioStationStore();
+    const promptStore = usePromptStore();
     const scenesLoading = ref(false);
     const scriptLabelOptions = ref<Array<{ label: string; value: string; color?: string; fontColor?: string }>>([]);
     const route = useRoute();
@@ -272,16 +362,50 @@ export default defineComponent({
       name: "",
       description: "",
       labels: [],
-      accessLevel: 0
+      accessLevel: 0,
+      scenes: []
     });
 
     const isPublic = ref(false);
 
-    const sceneRowKey = (row: any) => row.id || `${row.type || 'scene'}-${row.startTime || ''}`;
+    const sceneRowKey = (row: any) => row.id || `temp-${row.startTime || Math.random()}`;
     const sceneColumns = computed(() => [
-      { title: 'Type', key: 'type', width: 140 },
-      { title: 'Start', key: 'startTime', width: 140 },
-      { title: 'Prompts', key: 'prompts', render: (r: any) => Array.isArray(r.prompts) ? r.prompts.length : 0 }
+      { title: 'Title', key: 'title', width: 200 },
+      {
+        title: 'Start',
+        key: 'startTime',
+        width: 200,
+        render: (row: any) => {
+          const content: any[] = [];
+          if (row.startTime) content.push(h('span', row.startTime));
+          if (row.oneTimeRun) {
+            content.push(
+              h(
+                NTag,
+                { type: 'success', size: 'small', style: 'margin-left:8px;' },
+                { default: () => 'One-time' }
+              )
+            );
+          }
+          return content.length > 0
+            ? h('div', { style: 'display:flex; align-items:center;' }, content)
+            : null;
+        }
+      },
+      { title: 'Prompts', key: 'prompts', render: (r: any) => Array.isArray(r.prompts) ? r.prompts.length : 0 },
+      {
+        title: 'Additional instructions',
+        key: 'additionalInstructions',
+        render: (row: any) => {
+          const arr = Array.isArray(row.prompts) ? row.prompts : [];
+          const texts = arr
+            .map((p: any) => (p && typeof p.extraInstructions === 'string' ? p.extraInstructions.trim() : ''))
+            .filter((t: string) => t.length > 0);
+          if (!texts.length) return '';
+          const joined = texts.join(' | ');
+          return joined.length > 120 ? `${joined.slice(0, 117)}...` : joined;
+        }
+      }
     ]);
 
     const stationOptions = computed(() => {
@@ -289,31 +413,35 @@ export default defineComponent({
       return list.map((st: any) => ({ label: st.localizedName?.en || st.name || st.slugName || st.id, value: st.id }));
     });
 
-    const fetchScenes = async () => {
-      if (!localFormData.id) return;
-      try {
-        scenesLoading.value = true;
-        await sceneStore.fetchForScript(localFormData.id, 1, 50);
-      } finally {
-        scenesLoading.value = false;
-      }
-    };
+    const localScenes = computed(() => localFormData.scenes || []);
 
     const handleSave = async () => {
       try {
         loadingBar.start();
 
+        const cleanedScenes = (localFormData.scenes || []).map(scene => ({
+          id: scene.id,
+          title: scene.title,
+          talkativity: scene.talkativity,
+          podcastMode: scene.podcastMode,
+          prompts: scene.prompts,
+          startTime: scene.startTime,
+          oneTimeRun: scene.oneTimeRun,
+          weekdays: scene.weekdays
+        }));
+
         const saveData: ScriptSave = {
           name: localFormData.name || '',
           description: localFormData.description || '',
           labels: localFormData.labels || [],
-          accessLevel: isPublic.value ? 1 : 0
+          accessLevel: isPublic.value ? 1 : 0,
+          scenes: cleanedScenes
         };
 
         const id = localFormData.id ? localFormData.id : null;
         await store.save(saveData, id);
         message.success("Script saved successfully");
-        await router.push("/outline/scripts");
+        await navigateBack();
       } catch (error: any) {
         console.error('Failed to save Script:', error);
         handleFormSaveError(error, message);
@@ -329,10 +457,17 @@ export default defineComponent({
         dryRunWarnings.value = [];
         dryRunErrors.value = [];
         failedSceneIndexes.value.clear();
-        if (localFormData.id) {
-          await fetchScenes();
-        }
         try { await radioStore.fetchAll(1, 100); } catch {}
+        
+        // Pre-select station from query parameter or brandName route param
+        const slugName = route.query.stationId || route.params.brandName;
+        if (slugName && typeof slugName === 'string') {
+          const list = (radioStore as any).getEntries || [];
+          const station = list.find((st: any) => st.slugName === slugName);
+          if (station) {
+            dryRunStationId.value = station.id;
+          }
+        }
       } finally {
         loadingBar.finish();
       }
@@ -516,17 +651,27 @@ export default defineComponent({
       URL.revokeObjectURL(url);
     };
 
+    const navigateBack = async () => {
+      if (route.query.returnTo) {
+        await router.push({ name: route.query.returnTo as string });
+      } else if (route.params.brandName) {
+        await router.push(`/outline/station/${route.params.brandName}/scripts`);
+      } else {
+        await router.push("/outline/scripts");
+      }
+    };
+
     const goBack = () => {
       closeDryRunDialog();
       showScenarioDialog.value = false;
-      router.push("/outline/scripts");
+      navigateBack();
     };
 
     onMounted(async () => {
       try {
         loadingBar.start();
-        // Load category-specific label options for scripts
         scriptLabelOptions.value = await referencesStore.fetchLabelsByCategory('script');
+        await promptStore.fetchAll(1, 100, { master: true });
         
         const id = route.params.id as string;
         if (id && id !== 'new') {
@@ -534,9 +679,6 @@ export default defineComponent({
           const scriptData = { ...store.getCurrent } as Script;
           Object.assign(localFormData, scriptData);
           isPublic.value = (scriptData.accessLevel === 1);
-          if (activeTab.value === 'scenes') {
-            await fetchScenes();
-          }
         }
       } catch (error: any) {
         console.error("Failed to fetch data:", error);
@@ -577,16 +719,121 @@ export default defineComponent({
       if (tab === 'acl') {
         await fetchAclData();
       }
-      if (tab === 'scenes') {
-        await fetchScenes();
-      }
     });
+
+    const showSceneDialog = ref(false);
+    const selectedScene = ref<ScriptScene | null>(null);
+    const scenePrompts = ref<ScenePromptDTO[]>([]);
+    const selectedWeekdays = ref<number[]>([]);
+    const sceneStartTimeMs = ref<number | null>(null);
+
+    const parseTimeToMs = (timeStr: string | undefined | null): number | null => {
+      if (!timeStr) return null;
+      const timeOnly = timeStr.includes('T') ? timeStr.split('T')[1] : timeStr;
+      const parts = timeOnly.split(':');
+      const hh = Number(parts[0] || 0);
+      const mm = Number(parts[1] || 0);
+      const ss = Number(parts[2] || 0);
+      const d = new Date(1970, 0, 1, hh, mm, ss);
+      const ms = d.getTime();
+      return Number.isNaN(ms) ? null : ms;
+    };
+
+    const formatTimeFromMs = (ms: number): string => {
+      const d = new Date(ms);
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mm = String(d.getMinutes()).padStart(2, '0');
+      const ss = String(d.getSeconds()).padStart(2, '0');
+      return `${hh}:${mm}:${ss}`;
+    };
+
+    const promptOptions = computed(() =>
+      (promptStore.getEntries || [])
+        .filter((p: any) => typeof p.id === 'string' && p.id)
+        .filter((p: any) => p?.master === true)
+        .map((p: any) => ({
+          label: p.title || p.id,
+          value: p.id as string
+        }))
+    );
+
+    const createScenePrompt = (): ScenePromptDTO => ({
+      promptId: '',
+      extraInstructions: '',
+      active: true,
+      rank: 0,
+      weight: 0.5
+    });
+
+    const openSceneDialog = (scene: ScriptScene) => {
+      selectedScene.value = { ...scene };
+      scenePrompts.value = scene.prompts ? [...scene.prompts] : [];
+      selectedWeekdays.value = scene.weekdays ? [...scene.weekdays] : [];
+      sceneStartTimeMs.value = parseTimeToMs(scene.startTime);
+      showSceneDialog.value = true;
+    };
+
+    const closeSceneDialog = () => {
+      showSceneDialog.value = false;
+      selectedScene.value = null;
+      scenePrompts.value = [];
+      selectedWeekdays.value = [];
+      sceneStartTimeMs.value = null;
+    };
+
+    const addNewScene = () => {
+      const newScene: ScriptScene = {
+        id: null as any,
+        title: '',
+        talkativity: 0.5,
+        podcastMode: 0,
+        prompts: [],
+        startTime: '09:00:00',
+        oneTimeRun: false,
+        weekdays: [1, 2, 3, 4, 5, 6, 7]
+      };
+      if (!localFormData.scenes) localFormData.scenes = [];
+      localFormData.scenes.push(newScene);
+      openSceneDialog(newScene);
+    };
+
+    const deleteScene = (scene: ScriptScene) => {
+      if (!localFormData.scenes) return;
+      const index = localFormData.scenes.findIndex(s => 
+        s.id ? s.id === scene.id : s === scene
+      );
+      if (index !== -1) {
+        localFormData.scenes.splice(index, 1);
+      }
+    };
+
+    const deleteSceneFromDialog = () => {
+      if (!selectedScene.value) return;
+      deleteScene(selectedScene.value);
+      closeSceneDialog();
+    };
+
+    const saveSceneDialog = () => {
+      if (!selectedScene.value) return;
+      const sceneIndex = localFormData.scenes?.findIndex(s => 
+        s.id ? s.id === selectedScene.value?.id : s === selectedScene.value
+      );
+      if (sceneIndex !== undefined && sceneIndex !== -1 && localFormData.scenes) {
+        localFormData.scenes[sceneIndex] = {
+          ...selectedScene.value,
+          prompts: scenePrompts.value,
+          weekdays: selectedWeekdays.value,
+          startTime: sceneStartTimeMs.value != null ? formatTimeFromMs(sceneStartTimeMs.value) : selectedScene.value.startTime
+        };
+      }
+      closeSceneDialog();
+    };
 
     const getSceneRowProps = (row: ScriptScene) => {
       return {
         style: 'cursor: pointer;',
         onClick: () => {
-          router.push({ name: 'SceneForm', params: { id: row.id } });
+          openSceneDialog(row);
         }
       };
     };
@@ -622,6 +869,19 @@ export default defineComponent({
       sceneColumns,
       sceneRowKey,
       getSceneRowProps,
+      localScenes,
+      showSceneDialog,
+      selectedScene,
+      closeSceneDialog,
+      saveSceneDialog,
+      addNewScene,
+      deleteScene,
+      deleteSceneFromDialog,
+      scenePrompts,
+      selectedWeekdays,
+      sceneStartTimeMs,
+      promptOptions,
+      createScenePrompt,
       // dry run
       showDryRunDialog,
       showScenarioDialog,

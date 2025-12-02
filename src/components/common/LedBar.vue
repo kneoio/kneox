@@ -40,7 +40,7 @@ const segmentHeight = computed(() => props.height ?? 10);
 .led {
   width: 8px;
   border-radius: 2px;
-  opacity: 0.25;
+  opacity: 0.4;
   transition: opacity 0.25s, box-shadow 0.25s;
 }
 

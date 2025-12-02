@@ -22,9 +22,8 @@ const sizePx = computed(() => `${props.size ?? 8}px`);
   width: v-bind(sizePx);
   height: v-bind(sizePx);
   border-radius: 50%;
-  /* FIXED: Solid color center, only fade at edges */
-  background: radial-gradient(circle at center, currentColor 0%, currentColor 45%, transparent 70%);
-  opacity: 0.2; /* Dim when off */
+  background: currentColor;
+  opacity: 0.3;
   transition: opacity 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -32,7 +31,12 @@ const sizePx = computed(() => `${props.size ?? 8}px`);
 .variant-red    { color: #ef4444; }
 .variant-green  { color: #0bc511; }
 .variant-blue   { color: #3b82f6; }
-.variant-gray   { color: #9ca3af; }
+.variant-gray {
+  color: #9ca3af;
+  background: #9ca3af;
+  opacity: 0.6;
+  box-shadow: none;
+}
 
 .active:not(.variant-gray) {
   opacity: 0.95;
