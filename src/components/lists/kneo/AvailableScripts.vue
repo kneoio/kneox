@@ -46,7 +46,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref, onUnmounted, watch } from 'vue';
+import { computed, defineComponent, h, onMounted, ref, onUnmounted, watch } from 'vue';
 import {
   DataTableColumns,
   NButton,
@@ -55,6 +55,7 @@ import {
   NGi,
   NGrid,
   NPageHeader,
+  NTag,
   useMessage
 } from 'naive-ui';
 import { useRouter } from 'vue-router';
@@ -63,7 +64,7 @@ import { useScriptStore } from '../../../stores/kneo/scriptStore';
 
 export default defineComponent({
   name: 'AvailableScripts',
-  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon },
+  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, NTag },
   props: {
     brandName: {
       type: String,
@@ -86,6 +87,16 @@ export default defineComponent({
         title: 'Name', 
         key: 'script.name',
         render: (row: any) => row.script?.name || 'N/A'
+      },
+      {
+        title: 'Flags',
+        key: 'script.accessLevel',
+        render: (row: any) => {
+          const isPublic = row.script?.accessLevel === 1;
+          return isPublic
+            ? h(NTag, { type: 'success', size: 'small' }, { default: () => 'Public' })
+            : null;
+        }
       },
       { 
         title: 'Description', 
