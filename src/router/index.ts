@@ -285,11 +285,6 @@ const routes: Array<RouteRecordRaw> = [
     }
 ];
 
-function getThemeFromCookie() {
-    const match = document.cookie.split('; ').find((row) => row.startsWith('theme='));
-    return match ? match.split('=')[1] : null;
-}
-
 const router = createRouter({
     history: createWebHistory(),
     routes
@@ -308,11 +303,7 @@ export function setupRouterGuard(keycloak: Keycloak) {
         if (to.matched.some(record => record.meta.requiresAuth)) {
             try {
                 if (!keycloak.authenticated) {
-                    const theme = getThemeFromCookie();
-                    return keycloak.login(theme ? {
-                        redirectUri: window.location.origin + '/outline',
-                        theme
-                    } : {
+                    return keycloak.login({
                         redirectUri: window.location.origin + '/outline'
                     });
                 }
@@ -323,29 +314,17 @@ export function setupRouterGuard(keycloak: Keycloak) {
                         return true;
                     } catch (error) {
                         console.error('Token refresh failed:', error);
-                        const theme = getThemeFromCookie();
-                        return keycloak.login(theme ? {
-                            redirectUri: window.location.origin + '/outline',
-                            theme
-                        } : {
+                        return keycloak.login({
                             redirectUri: window.location.origin + '/outline'
                         });
                     }
                 }
-                const theme = getThemeFromCookie();
-                return keycloak.login(theme ? {
-                    redirectUri: window.location.origin + '/outline',
-                    theme
-                } : {
+                return keycloak.login({
                     redirectUri: window.location.origin + '/outline'
                 });
             } catch (error) {
                 console.error('Authentication failed:', error);
-                const theme = getThemeFromCookie();
-                return keycloak.login(theme ? {
-                    redirectUri: window.location.origin + '/outline',
-                    theme
-                } : {
+                return keycloak.login({
                     redirectUri: window.location.origin + '/outline'
                 });
             }

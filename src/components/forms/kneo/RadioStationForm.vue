@@ -78,12 +78,6 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
-                <n-form-item label="Managed By">
-                  <n-select v-model:value="localFormData.managedBy" :options="managedByOptions"
-                    style="width: 25%; max-width: 300px;" />
-                </n-form-item>
-              </n-gi>
-              <n-gi>
                 <n-form-item label="Bit Rate">
                   <n-slider v-model:value="localFormData.bitRate" 
                     :marks="{ 128000: '128 kbps', 192000: '192 kbps', 256000: '256 kbps', 320000: '320 kbps' }"
@@ -144,7 +138,7 @@
           </n-form>
         </n-tab-pane>
 
-        <n-tab-pane name="aiAgent" tab="AI Agent">
+        <n-tab-pane name="aiAgent" tab="DJ">
           <n-form label-placement="left" label-width="150px">
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
               <n-gi>
@@ -157,6 +151,48 @@
                   </n-text>
                 </n-form-item>
               </n-gi>
+
+              <n-gi>
+                <n-form-item label="Override DJ Properties">
+                  <n-checkbox v-model:checked="aiOverrideEnabled">
+                    Enable
+                  </n-checkbox>
+                </n-form-item>
+              </n-gi>
+
+              <n-gi v-if="aiOverrideEnabled">
+                <n-form-item label="Override Name">
+                  <n-input v-model:value="localFormData.aiOverriding.name" 
+                    placeholder=""
+                    style="width: 50%; max-width: 600px;" />
+                </n-form-item>
+              </n-gi>
+
+              <n-gi v-if="aiOverrideEnabled">
+                <n-form-item label="Additional Instructions">
+                  <n-input v-model:value="localFormData.aiOverriding.prompt" 
+                    type="textarea" 
+                    placeholder=""
+                    :autosize="{ minRows: 3, maxRows: 5 }"
+                    style="width: 50%; max-width: 600px;" />
+                </n-form-item>
+              </n-gi>
+
+              <n-gi v-if="aiOverrideEnabled">
+                <n-form-item label="Override Voice">
+                  <n-select v-model:value="localFormData.aiOverriding.primaryVoice" 
+                    :options="voiceOptions"
+                    filterable
+                    style="width: 30%; max-width: 300px;" />
+                </n-form-item>
+              </n-gi>
+            </n-grid>
+          </n-form>
+        </n-tab-pane>
+
+        <n-tab-pane name="script" tab="Script">
+          <n-form label-placement="left" label-width="150px">
+            <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
               <n-gi>
                 <n-form-item label="Script">
                   <n-select v-model:value="localFormData.scriptId" :options="scriptOptions" :render-label="renderScriptLabel"
@@ -173,17 +209,13 @@
           </n-form>
         </n-tab-pane>
 
-        <n-tab-pane name="profile" tab="Profile">
+        <n-tab-pane name="profile" tab="Audience">
           <n-form label-placement="left" label-width="150px">
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
               <n-gi>
-                <n-form-item label="Name">
+                <n-form-item label="Audience Type">
                   <n-select v-model:value="localFormData.profileId" :options="profileOptions"
-                    :disabled="profileOverrideEnabled"
                     style="width: 50%; max-width: 600px;" />
-                  <n-text v-if="profileOverrideEnabled" depth="3" style="font-size: 12px; margin-top: 4px; display: block;">
-                    ⚠️ Profile values are overridden
-                  </n-text>
                 </n-form-item>
               </n-gi>
               <n-gi v-if="selectedProfile">
@@ -192,101 +224,22 @@
                     style="width: 50%; max-width: 600px; cursor: not-allowed;" disabled />
                 </n-form-item>
               </n-gi>
-            </n-grid>
-          </n-form>
-        </n-tab-pane>
-        <n-tab-pane name="schedule" tab="Schedule">
-          <n-form label-placement="left" label-width="auto">
-            <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
-              <n-gi>
-                <n-form-item>
-                  <n-checkbox v-model:checked="localFormData.schedule.enabled">
-                    Enable
-                  </n-checkbox>
+
+              <n-gi v-if="profileOverrideEnabled">
+                <n-form-item label="Name">
+                  <n-input v-model:value="localFormData.profileOverriding!.name" 
+                    placeholder=""
+                    style="width: 50%; max-width: 600px;" />
                 </n-form-item>
               </n-gi>
-              <n-gi>
-                <n-form-item label="Scheduled Tasks">
-                  <n-dynamic-input v-model:value="scheduleTasksArray" :on-create="createScheduleTask"
-                    style="max-width: 800px;">
-                    <template #default=" { value, index } ">
-                      <n-card size="small" class="mb-3">
-                        <template #header>
-                          <n-text strong>Task {{ index + 1 }}</n-text>
-                        </template>
 
-                        <!-- Task Type and Target -->
-                        <n-space vertical size="medium">
-                          <n-space>
-                            <n-form-item label="Type" style="margin-bottom: 0;">
-                              <n-select v-model:value="value.type" :options="taskTypeOptions" style="width: 150px;" />
-                            </n-form-item>
-                            <n-form-item label="Target" style="margin-bottom: 0;">
-                              <n-select v-model:value="value.target" :options="targetOptions" filterable tag
-                                style="width: 150px;" />
-                            </n-form-item>
-                          </n-space>
-
-                          <!-- Start Time Slider -->
-                          <n-form-item label="Start Time" style="margin-bottom: 0;">
-                            <n-space vertical style="width: 100%;">
-                              <n-space align="center">
-                                <n-button-group style="align-self: center;">
-                                  <n-button size="small" @click="value.startTime = Math.max(0, value.startTime - 1)" style="margin-bottom: 16px;">
-                                    -
-                                  </n-button>
-                                  <n-button size="small" @click="value.startTime = Math.min(1440, value.startTime + 1)" style="margin-bottom: 16px;">
-                                    +
-                                  </n-button>
-                                </n-button-group>
-                                <n-slider v-model:value="value.startTime" :marks="timeMarks" :step="15" :min="0"
-                                  :max="1440" style="width: 400px;" :tooltip="false" :format-tooltip="(value) => formatMinutesToTime(value)" />
-                              </n-space>
-                              <n-space>
-                                <n-text depth="3" style="font-size: 12px;">{{ formatMinutesToTime( value.startTime ) }}</n-text>
-                              </n-space>
-                            </n-space>
-                          </n-form-item>
-
-                          <!-- End Time Slider -->
-                          <n-form-item label="End Time" style="margin-bottom: 0;">
-                            <n-space vertical style="width: 100%;">
-                              <n-space align="center">
-                                <n-button-group style="align-self: center;">
-                                  <n-button size="small" @click="value.endTime = Math.max(0, value.endTime - 1)" style="margin-bottom: 16px;">
-                                    -
-                                  </n-button>
-                                  <n-button size="small" @click="value.endTime = Math.min(1440, value.endTime + 1)" style="margin-bottom: 16px;">
-                                    +
-                                  </n-button>
-                                </n-button-group>
-                                <n-slider v-model:value="value.endTime" :marks="timeMarks" :step="15" :min="0"
-                                  :max="1440" style="width: 400px;" :tooltip="false" :format-tooltip="(value) => formatMinutesToTime(value)" />
-                              </n-space>
-                              <n-space>
-                                <n-text depth="3" style="font-size: 12px;">{{ formatMinutesToTime( value.endTime ) }}</n-text>
-                              </n-space>
-                            </n-space>
-                          </n-form-item>
-
-                          <!-- Weekdays Checkboxes -->
-                          <n-form-item label="Days" style="margin-bottom: 0;">
-                            <n-checkbox-group v-model:value="value.weekdays">
-                              <n-space>
-                                <n-checkbox value="MONDAY" label="Mon" />
-                                <n-checkbox value="TUESDAY" label="Tue" />
-                                <n-checkbox value="WEDNESDAY" label="Wed" />
-                                <n-checkbox value="THURSDAY" label="Thu" />
-                                <n-checkbox value="FRIDAY" label="Fri" />
-                                <n-checkbox value="SATURDAY" label="Sat" />
-                                <n-checkbox value="SUNDAY" label="Sun" />
-                              </n-space>
-                            </n-checkbox-group>
-                          </n-form-item>
-                        </n-space>
-                      </n-card>
-                    </template>
-                  </n-dynamic-input>
+              <n-gi v-if="profileOverrideEnabled">
+                <n-form-item label="Additional Information">
+                  <n-input v-model:value="localFormData.profileOverriding!.description" 
+                    type="textarea" 
+                    placeholder=""
+                    :autosize="{ minRows: 3, maxRows: 5 }"
+                    style="width: 50%; max-width: 600px;" />
                 </n-form-item>
               </n-gi>
             </n-grid>
@@ -305,72 +258,6 @@
                 <n-form-item label="Song Submission Allowed">
                   <n-select v-model:value="localFormData.submissionPolicy" :options="referencesStore.submissionPolicyOptions"
                     style="width: 25%; max-width: 300px;" />
-                </n-form-item>
-              </n-gi>
-            </n-grid>
-          </n-form>
-        </n-tab-pane>
-        <n-tab-pane name="advanced" tab="Advanced">
-          <n-form label-placement="left" label-width="150px">
-            <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
-<n-gi>
-                <n-form-item label="Override AI Agent">
-                  <n-checkbox v-model:checked="aiOverrideEnabled">
-                    Enable
-                  </n-checkbox>
-                </n-form-item>
-              </n-gi>
-
-              <n-gi v-if="aiOverrideEnabled">
-                <n-form-item label="Override Name">
-                  <n-input v-model:value="localFormData.aiOverriding.name" 
-                    placeholder=""
-                    style="width: 50%; max-width: 600px;" />
-                </n-form-item>
-              </n-gi>
-
-              <n-gi v-if="aiOverrideEnabled">
-                <n-form-item label="Override Prompt">
-                  <n-input v-model:value="localFormData.aiOverriding.prompt" 
-                    type="textarea" 
-                    placeholder=""
-                    :autosize="{ minRows: 3, maxRows: 5 }"
-                    style="width: 50%; max-width: 600px;" />
-                </n-form-item>
-              </n-gi>
-
-<n-gi v-if="aiOverrideEnabled">
-                <n-form-item label="Override Primary Voice">
-                  <n-select v-model:value="localFormData.aiOverriding.primaryVoice" 
-                    :options="voiceOptions"
-                    filterable
-                    style="width: 30%; max-width: 300px;" />
-                </n-form-item>
-              </n-gi>
-
-              <n-gi>
-                <n-form-item label="Override Profile">
-                  <n-checkbox v-model:checked="profileOverrideEnabled">
-                    Enable
-                  </n-checkbox>
-                </n-form-item>
-              </n-gi>
-
-              <n-gi v-if="profileOverrideEnabled">
-                <n-form-item label="Override Name">
-                  <n-input v-model:value="localFormData.profileOverriding!.name" 
-                    placeholder=""
-                    style="width: 50%; max-width: 600px;" />
-                </n-form-item>
-              </n-gi>
-
-              <n-gi v-if="profileOverrideEnabled">
-                <n-form-item label="Override Description">
-                  <n-input v-model:value="localFormData.profileOverriding!.description" 
-                    type="textarea" 
-                    placeholder=""
-                    :autosize="{ minRows: 3, maxRows: 5 }"
-                    style="width: 50%; max-width: 600px;" />
                 </n-form-item>
               </n-gi>
             </n-grid>
@@ -541,7 +428,7 @@ export default defineComponent( {
       profileId: undefined,
       scriptId: undefined,
       timeZone: "",
-      managedBy: undefined,
+      managedBy: ManagedBy.MIX,
       bitRate: 128000,
       submissionPolicy: undefined,
       messagingPolicy: undefined,
@@ -866,9 +753,10 @@ export default defineComponent( {
         await nextTick();
         const currentData = store.getCurrent;
         Object.assign( localFormData, currentData );
+        (localFormData as any).managedBy = ManagedBy.MIX;
 
         aiOverrideEnabled.value = toBool((currentData as any).aiOverridingEnabled);
-        profileOverrideEnabled.value = toBool((currentData as any).profileOverridingEnabled);
+        profileOverrideEnabled.value = true;
 
         if (aiOverrideEnabled.value && !localFormData.aiOverriding) {
           (localFormData as any).aiOverriding = { name: '', prompt: '', talkativity: 0, primaryVoice: '' };
