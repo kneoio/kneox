@@ -61,7 +61,7 @@
                               <n-button size="tiny" dashed :color="s.color">Submit song</n-button>
                             </router-link>
                             <router-link v-if="s.messagingPolicy !== 'NOT_ALLOWED'" :to="{ name: 'PostMessage', query: { brand: s.slugName } }" style="text-decoration:none;" @click.stop>
-                              <n-button size="tiny" :color="s.color" dashed>Post message</n-button>
+                              <n-button size="tiny" :color="s.color" dashed>Chat with DJ</n-button>
                             </router-link>
                           </n-space>
                         </n-gi>
