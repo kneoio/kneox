@@ -35,6 +35,11 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
+                <n-form-item label="Language">
+                  <n-select v-model:value="localFormData.languageCode" :options="langOptions" style="width: 25%; max-width: 300px;" />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
                 <n-form-item label="Description">
                   <n-input
                     v-model:value="localFormData.description"
@@ -216,13 +221,7 @@
                 <n-select
                   v-model:value="scenePrompts[index].promptId"
                   :options="promptOptions"
-                  placeholder="Main instruction"
-                />
-                <n-input
-                  v-model:value="scenePrompts[index].extraInstructions"
-                  type="textarea"
-                  rows="3"
-                  placeholder="Additional instruction"
+                  placeholder=""
                 />
               </div>
             </template>
@@ -364,6 +363,7 @@ export default defineComponent({
       lastModifiedDate: "",
       name: "",
       description: "",
+      languageCode: "",
       labels: [],
       accessLevel: 0,
       scenes: []
@@ -395,20 +395,7 @@ export default defineComponent({
             : null;
         }
       },
-      { title: 'Prompts', key: 'prompts', render: (r: any) => Array.isArray(r.prompts) ? r.prompts.length : 0 },
-      {
-        title: 'Additional instructions',
-        key: 'additionalInstructions',
-        render: (row: any) => {
-          const arr = Array.isArray(row.prompts) ? row.prompts : [];
-          const texts = arr
-            .map((p: any) => (p && typeof p.extraInstructions === 'string' ? p.extraInstructions.trim() : ''))
-            .filter((t: string) => t.length > 0);
-          if (!texts.length) return '';
-          const joined = texts.join(' | ');
-          return joined.length > 120 ? `${joined.slice(0, 117)}...` : joined;
-        }
-      }
+      { title: 'Prompts', key: 'prompts', render: (r: any) => Array.isArray(r.prompts) ? r.prompts.length : 0 }
     ]);
 
     const stationOptions = computed(() => {
@@ -436,6 +423,7 @@ export default defineComponent({
         const saveData: ScriptSave = {
           name: localFormData.name || '',
           description: localFormData.description || '',
+          languageCode: localFormData.languageCode,
           labels: localFormData.labels || [],
           accessLevel: isPublic.value ? 1 : 0,
           scenes: cleanedScenes
@@ -761,7 +749,6 @@ export default defineComponent({
 
     const createScenePrompt = (): ScenePromptDTO => ({
       promptId: '',
-      extraInstructions: '',
       active: true,
       rank: 0,
       weight: 0.5
@@ -862,6 +849,7 @@ export default defineComponent({
       activeTab,
       isPublic,
       referencesStore,
+      langOptions: (referencesStore as any).languageOptions,
       editorExtensions,
       aclData,
       aclLoading,

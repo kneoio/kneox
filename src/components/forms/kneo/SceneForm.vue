@@ -71,19 +71,11 @@
               >
                 <template #default="{ index }">
                   <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;">
-                    <span>Main instruction</span>
                     <n-select
                       v-model:value="scenePrompts[index].promptId"
                       :options="promptOptions"
                       placeholder=""
                       style="min-width: 600px;"
-                    />
-                    <span>Additional instruction</span>
-                    <n-input
-                      v-model:value="scenePrompts[index].extraInstructions"
-                      type="textarea"
-                      rows="1"
-                      placeholder="Additional instruction"
                     />
                   </div>
                 </template>
@@ -295,7 +287,6 @@ export default defineComponent({
 
     const createScenePrompt = (): ScenePromptDTO => ({
       promptId: '',
-      extraInstructions: '',
       active: true,
       rank: 0,
       weight: 0.5

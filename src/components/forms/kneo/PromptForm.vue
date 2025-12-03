@@ -32,6 +32,17 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
+                <n-form-item label="Description">
+                  <n-input
+                    v-model:value="localFormData.description"
+                    type="textarea"
+                    :autosize="{ minRows: 3, maxRows: 6 }"
+                    style="width: 50%; max-width: 600px;"
+                    placeholder="Enter prompt description..."
+                  />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
                 <n-form-item label="Language">
                   <n-select v-model:value="localFormData.languageCode" :options="langOptions" style="width: 25%; max-width: 300px;" />
                 </n-form-item>
@@ -48,12 +59,18 @@
               </n-gi>
               <n-gi v-if="!localFormData.master">
                 <n-form-item label="Master prompt">
-                  <n-select
-                    v-model:value="selectedMasterId"
-                    :options="masterPromptOptions"
-                    filterable
-                    style="width: 25%; max-width: 300px;"
-                  />
+                  <div style="display: flex; align-items: center; gap: 16px;">
+                    <n-select
+                      v-model:value="selectedMasterId"
+                      :options="masterPromptOptions"
+                      filterable
+                      style="width: 25%; max-width: 300px;"
+                    />
+                    <n-button size="small" type="default" @click="detachMaster" :disabled="!selectedMasterId">
+                      <n-icon style="margin-right: 4px;"><InfoCircle /></n-icon>
+                      Deattach
+                    </n-button>
+                  </div>
                 </n-form-item>
               </n-gi>
               <n-gi>
@@ -66,7 +83,7 @@
                   <div style="display: flex; align-items: center; gap: 16px;">
                     <n-checkbox v-model:checked="localFormData.enabled">Enabled</n-checkbox>
                     <n-checkbox v-model:checked="localFormData.master">Master</n-checkbox>
-                    <n-checkbox v-model:checked="localFormData.locked">Locked</n-checkbox>
+                    <n-checkbox :checked="localFormData.locked" disabled>Locked</n-checkbox>
                     <n-checkbox v-model:checked="localFormData.podcast">Podcast</n-checkbox>
                   </div>
                 </n-form-item>
@@ -393,6 +410,7 @@ export default defineComponent({
       lastModifier: '',
       lastModifiedDate: '',
       title: '',
+      description: '',
       enabled: false,
       prompt: '',
       promptType: '',
@@ -409,6 +427,10 @@ export default defineComponent({
       }
     });
 
+    watch(selectedMasterId, (val) => {
+      localFormData.locked = !!val;
+    });
+
     const handleSave = async () => {
       try {
         loadingBar.start();
@@ -420,6 +442,7 @@ export default defineComponent({
           : `${(localFormData.title || '').trim()} (${suffix})`;
         const saveData: BroadcastPromptSave = {
           title: titleToSave,
+          description: localFormData.description,
           enabled: localFormData.enabled,
           prompt: localFormData.prompt,
           promptType: localFormData.promptType,
@@ -532,6 +555,10 @@ export default defineComponent({
       } else {
         selectedLanguages.value = selectedLanguages.value.filter(l => l !== langValue);
       }
+    };
+
+    const detachMaster = () => {
+      selectedMasterId.value = null;
     };
 
     const openTestDialog = async () => {
@@ -690,6 +717,7 @@ export default defineComponent({
       selectedMasterId,
       draftOptions,
       masterPromptOptions,
+      detachMaster,
       aclData,
       aclLoading,
       showReplicateDialog,

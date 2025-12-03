@@ -332,6 +332,7 @@ export interface Script {
     lastModifiedDate: string;
     name: string;
     description: string;
+    languageCode?: string;
     labels: string[];
     accessLevel?: number;
     scenes?: ScriptScene[];
@@ -340,6 +341,7 @@ export interface Script {
 export interface ScriptSave {
     name: string;
     description: string;
+    languageCode?: string;
     labels: string[];
     accessLevel?: number;
     scenes?: ScriptScene[];
@@ -347,7 +349,6 @@ export interface ScriptSave {
 
 export interface ScenePromptDTO {
     promptId?: string;
-    extraInstructions?: string;
     active?: boolean;
     rank?: number;
     weight?: number;
@@ -398,6 +399,7 @@ export interface BroadcastPrompt {
     enabled: boolean;
     prompt: string;
     promptType?: string;
+    description?: string;
     languageCode?: string;
     master?: boolean;
     locked?: boolean;
@@ -410,6 +412,7 @@ export interface BroadcastPromptSave {
     enabled?: boolean;
     prompt?: string;
     promptType?: string;
+    description?: string;
     languageCode?: string;
     master?: boolean;
     locked?: boolean;
