@@ -32,6 +32,7 @@ import Welcome from '../views/Welcome.vue';
 import AboutM from '../views/AboutM.vue';
 import SubmitSongM from '../views/SubmitSongM.vue';
 import Chat from '../views/Chat.vue';
+import StationPage from '../views/StationPage.vue';
 import Keycloak from "keycloak-js";
 import apiClient from "../api/apiClient";
 
@@ -63,6 +64,12 @@ const routes: Array<RouteRecordRaw> = [
         path: '/chat',
         name: 'PostMessage',
         component: Chat,
+        meta: { requiresAuth: false }
+    },
+    {
+        path: '/:brand',
+        name: 'StationPage',
+        component: StationPage,
         meta: { requiresAuth: false }
     },
     {

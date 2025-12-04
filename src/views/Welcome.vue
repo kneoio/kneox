@@ -57,18 +57,12 @@
                         </n-gi>
                         <n-gi :span="6" class="actions" style="display:flex; justify-content:flex-end; min-width: 0;">
                           <n-space size="small" :wrap="false" style="white-space: nowrap;">
-                            <router-link v-if="s.submissionPolicy !== 'NOT_ALLOWED'" :to="{ name: 'SubmitSong', query: { brand: s.slugName } }" style="text-decoration:none;" @click.stop>
-                              <n-button size="tiny" dashed :color="s.color">Submit song</n-button>
-                            </router-link>
-                            <router-link v-if="s.messagingPolicy !== 'NOT_ALLOWED'" :to="{ name: 'PostMessage', query: { brand: s.slugName } }" style="text-decoration:none;" @click.stop>
-                              <n-button size="tiny" :color="s.color" dashed>Chat with DJ</n-button>
+                            <router-link :to="`/${s.slugName}`" style="text-decoration:none;" @click.stop>
+                              <n-button size="tiny" dashed :color="s.color">More...</n-button>
                             </router-link>
                           </n-space>
                         </n-gi>
                       </n-grid>
-                    </template>
-                    <template #description>
-                      <div style="font-size:14px; opacity:.85;">{{ s.description }}</div>
                     </template>
                     <n-divider />
                   </n-thing>
