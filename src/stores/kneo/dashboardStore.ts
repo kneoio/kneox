@@ -18,7 +18,8 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
         const baseUrl = apiClient.defaults.baseURL || '';
         const urlObject = new URL(baseUrl);
         const host = urlObject.host;
-        const wsUrl = `ws://${host}/api/ws/${endpoint}`;
+        const wsProtocol = urlObject.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${wsProtocol}//${host}/api/ws/${endpoint}`;
         const token = keycloak.token;
         return token ? `${wsUrl}?token=${token}` : wsUrl;
     };
