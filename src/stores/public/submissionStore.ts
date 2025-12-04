@@ -48,7 +48,7 @@ export const useSubmissionStore = defineStore( 'submissionStore', () => {
   }
 
   async function sendCode( email: string ): Promise<void> {
-    const url = `/messaging/send-code/${encodeURIComponent( email )}`
+    const url = `/chat/send-code/${encodeURIComponent( email )}`
     console.debug( '[submissionStore.sendCode] POST', url )
     try {
       const res = await unsecuredClient.post( url )
