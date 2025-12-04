@@ -24,7 +24,7 @@
               <n-space vertical size="small" align="center" justify="center">
                 <n-thing>
                   <template #header>
-                    <n-h1 style="font-size:30px; font-weight:bold; font-family: 'Kaylon', sans-serif; margin-top: 0; margin-bottom: 0px;">{{ station.name }}</n-h1>
+                    <n-h1 style="font-size:30px; font-weight:bold; margin-top: 0; margin-bottom: 0px;">{{ station.name }}</n-h1>
                   </template>
                   <template #description>
                     <span style="font-size:16px; opacity:.9;">{{ station.description }}</span>
@@ -156,14 +156,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-@font-face {
-  font-family: 'Kaylon';
-  src: url('/src/assets/fonts/kaylonbold.otf') format('opentype');
-  font-weight: 800;
-  font-style: normal;
-  font-display: swap;
-}
-
 .online {
   color: #16a34a !important;
   text-shadow: 0 0 6px rgba(34, 197, 94, 0.6) !important;
