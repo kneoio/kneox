@@ -97,6 +97,16 @@
                             multiple style="width: 50%; max-width: 600px;" />
                 </n-form-item>
               </n-gi>
+              <n-gi>
+                <n-form-item label="Listener type">
+                  <n-input
+                      v-model:value="localFormData.listenerType"
+                      placeholder=""
+                      style="width: 25%; max-width: 300px;"
+                      disabled
+                  />
+                </n-form-item>
+              </n-gi>
             </n-grid>
           </n-form>
         </n-tab-pane>
@@ -148,6 +158,7 @@ interface LocalListenerFormData {
   telegramName: string;
   archived: number;
   listenerOf: string[];
+  listenerType?: string;
 }
 
 export default defineComponent({
@@ -191,6 +202,7 @@ export default defineComponent({
       telegramName: "",
       archived: 0,
       listenerOf: [],
+      listenerType: "",
     });
 
     const formTitle = computed(() => localFormData.id ? 'Edit Listener' : 'Create New Listener');

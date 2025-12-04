@@ -33,10 +33,23 @@ export const usePublicChatStore = defineStore('publicChatStore', () => {
     return res.data
   }
 
+  async function validateToken(token: string): Promise<{
+    success: boolean
+    valid: boolean
+    registered: boolean
+    userId?: number
+    username?: string
+  }> {
+    const url = `/chat/validate-token`
+    const res = await unsecuredClient.post(url, { token })
+    return res.data
+  }
+
   return {
     sendCode,
     verifyCode,
     registerListener,
-    refreshToken
+    refreshToken,
+    validateToken
   }
 })

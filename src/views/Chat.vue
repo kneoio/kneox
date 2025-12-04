@@ -8,43 +8,41 @@
         :color="stationColor"
       />
 
-      <n-card v-if="!isAuthenticated" title="Join Chat">
-        <n-form :model="form" label-placement="top">
-          <n-grid cols="12" x-gap="16" y-gap="8">
-            <n-grid-item :span="12">
-              <n-form-item label="Nickname (optional)">
-                <n-input v-model:value="form.nickname" placeholder="Your display name" />
-              </n-form-item>
-            </n-grid-item>
+      <n-form v-if="!isAuthenticated" :model="form" label-placement="top">
+        <n-grid cols="12" x-gap="16" y-gap="8">
+          <n-grid-item :span="12">
+            <n-form-item label="Nickname (optional)">
+              <n-input v-model:value="form.nickname" placeholder="Your display name" />
+            </n-form-item>
+          </n-grid-item>
 
-            <n-grid-item :span="12">
-              <EmailVerifyFields
-                :email="form.email"
-                :confirmation-code="form.confirmationCode"
-                :sending-code="sendingCode"
-                :code-sent="codeSent"
-                :can-send="isValidEmail(form.email)"
-                @update:email="v => (form.email = v)"
-                @update:confirmationCode="v => (form.confirmationCode = v)"
-                @send-code="handleSendCode"
-              />
-            </n-grid-item>
+          <n-grid-item :span="12">
+            <EmailVerifyFields
+              :email="form.email"
+              :confirmation-code="form.confirmationCode"
+              :sending-code="sendingCode"
+              :code-sent="codeSent"
+              :can-send="isValidEmail(form.email)"
+              @update:email="v => (form.email = v)"
+              @update:confirmationCode="v => (form.confirmationCode = v)"
+              @send-code="handleSendCode"
+            />
+          </n-grid-item>
 
-            <n-grid-item :span="12">
-              <n-space justify="end">
-                <n-button
-                  type="primary"
-                  :loading="registering"
-                  :disabled="!canRegister"
-                  @click="handleRegister"
-                >
-                  Join Chat
-                </n-button>
-              </n-space>
-            </n-grid-item>
-          </n-grid>
-        </n-form>
-      </n-card>
+          <n-grid-item :span="12">
+            <n-space justify="end">
+              <n-button
+                type="primary"
+                :loading="registering"
+                :disabled="!canRegister"
+                @click="handleRegister"
+              >
+                Join Chat
+              </n-button>
+            </n-space>
+          </n-grid-item>
+        </n-grid>
+      </n-form>
 
       <PublicChatForm
         v-else
@@ -61,7 +59,6 @@ import { onMounted, ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import {
   NButton,
-  NCard,
   NConfigProvider,
   NForm,
   NFormItem,
@@ -123,6 +120,24 @@ onMounted(async () => {
   } catch (_) {
     brandName.value = stationSlug.value || ''
   }
+
+  try {
+    const savedToken = window.localStorage.getItem('chatToken')
+    if (savedToken) {
+      const result = await publicChatStore.validateToken(savedToken)
+      console.debug('[Chat] validateToken result for saved chatToken:', result)
+      if (result && result.success && result.valid && result.registered) {
+        userToken.value = savedToken
+        displayNickname.value = result.username || form.value.nickname || form.value.email
+        isAuthenticated.value = true
+      } else if (result && !result.valid) {
+        console.warn('[Chat] saved chatToken is not valid, removing from storage')
+        window.localStorage.removeItem('chatToken')
+      }
+    }
+  } catch (_) {
+    // ignore token validation errors on load
+  }
 })
 
 function isValidEmail(email: string): boolean {
@@ -183,6 +198,9 @@ async function handleRegister() {
       userToken.value = result.userToken
       displayNickname.value = form.value.nickname || form.value.email
       isAuthenticated.value = true
+      try {
+        window.localStorage.setItem('chatToken', result.userToken)
+      } catch (_) { /* ignore */ }
       nMessage.success('Joined chat successfully')
     } else {
       nMessage.error(result.message || 'Registration failed')

@@ -22,6 +22,7 @@ export const useListenersStore = defineStore('listenersStore', () => {
         nickName: { en: '' },
         slugName: '',
         archived: 0,
+        listenerType: '',
     } as ListenerEntry);
 
     const getPagination = computed(() => {

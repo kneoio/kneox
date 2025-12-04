@@ -248,6 +248,7 @@ export interface ListenerEntry {
     nickName: LocalizedName;
     slugName: string;
     archived: number;
+    listenerType?: string;
 }
 
 export interface ListenerViewData {
