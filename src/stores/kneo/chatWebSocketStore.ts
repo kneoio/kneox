@@ -39,10 +39,9 @@ export const useChatWebSocketStore = defineStore( 'chatWebSocketStore', () => {
 
     const buildWebSocketUrl = (): string => {
         const baseUrl = apiClient.defaults.baseURL || '';
-        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const urlObject = new URL( baseUrl );
         const host = urlObject.host;
-        const wsUrl = `${wsProtocol}//${host}/api/ws/chat`;
+        const wsUrl = `ws://${host}/api/ws/chat`;
         const token = keycloak.token;
         return token ? `${wsUrl}?token=${token}` : wsUrl;
     };

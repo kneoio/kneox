@@ -1,6 +1,6 @@
 <template>
   <n-config-provider>
-    <n-space vertical :style="{ maxWidth: '1200px', margin: '0 auto', padding: '16px' }">
+    <n-space vertical :style="{ maxWidth: '720px', margin: '0 auto', padding: '16px' }">
       <StationHeaderMini
         :brand="brandName"
         :description="stationDescription"

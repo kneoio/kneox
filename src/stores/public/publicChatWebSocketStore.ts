@@ -34,11 +34,9 @@ export const usePublicChatWebSocketStore = defineStore('publicChatWebSocketStore
   const shouldReconnect = ref(true)
 
   const buildWebSocketUrl = (userToken: string): string => {
-    // Follow same pattern as internal chatWebSocketStore:
-    // baseURL (e.g. http://localhost:8080/api) -> ws://localhost:8080/api/ws/public-chat
+    // Use backend host from apiServer and per-user token from registration flow
     const httpUrl = new URL(apiServer)
-    const wsProtocol = httpUrl.protocol === 'https:' ? 'wss:' : 'ws:'
-    const wsUrl = `${wsProtocol}//${httpUrl.host}/api/ws/public-chat`
+    const wsUrl = `ws://${httpUrl.host}/api/ws/public-chat`
     return `${wsUrl}?token=${encodeURIComponent(userToken)}`
   }
 

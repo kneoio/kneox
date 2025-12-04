@@ -16,10 +16,9 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
 
     const buildWebSocketUrl = (endpoint: string): string => {
         const baseUrl = apiClient.defaults.baseURL || '';
-        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const urlObject = new URL(baseUrl);
         const host = urlObject.host;
-        const wsUrl = `${wsProtocol}//${host}/api/ws/${endpoint}`;
+        const wsUrl = `ws://${host}/api/ws/${endpoint}`;
         const token = keycloak.token;
         return token ? `${wsUrl}?token=${token}` : wsUrl;
     };
