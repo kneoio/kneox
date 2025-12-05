@@ -82,6 +82,7 @@ import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 import { SoundFragment } from '../../../types/kneoBroadcasterTypes';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
 import RedLed from '../../common/RedLed.vue';
+import RatingBar from '../../common/RatingBar.vue';
 import BulkUploadDialog from '../../dialogs/BulkUploadDialog.vue';
 
 // columns moved into setup to access store for formatting
@@ -99,6 +100,7 @@ export default defineComponent( {
     NGrid,
     LoaderIcon,
     RedLed,
+    RatingBar,
     BulkUploadDialog,
     NCollapseTransition,
     NFormItem,
@@ -291,6 +293,19 @@ export default defineComponent( {
       { title: 'Album', key: 'soundfragment.album', width: 300 },
       { title: 'Source', key: 'soundfragment.source', width: 140, render: ( row: any ) => store.formatSource( row.soundfragment?.source ) },
       { title: 'Played Count', key: 'playedByBrandCount', width: 120, render: ( row: any ) => row.playedByBrandCount ?? 0 },
+      { 
+        title: 'Rating', 
+        key: 'ratedByBrandCount', 
+        width: 280, 
+        render: ( row: any ) => {
+          const ratedByBrandCount = row.ratedByBrandCount ?? 100;
+          const rating = ratedByBrandCount - 100;
+          const ratingText = rating > 0 ? `+${rating}` : `${rating}`;
+          return h( 'div', { style: 'display: flex; align-items: center;', title: ratingText }, [
+            h( RatingBar, { value: rating, segments: 10, height: 8 } )
+          ] );
+        }
+      },
       { title: 'Description', key: 'soundfragment.description', ellipsis: { tooltip: true }, minWidth: 200 }
     ] );
 

@@ -1,11 +1,11 @@
 <template>
   <div class="led-bar" :style="{ height: `${segmentHeight}px` }">
     <span
-      v-for="(_, index) in segments"
+      v-for="index in totalSegments"
       :key="index"
       class="led"
-      :class="{ active: index < activeSegments, pulse }"
-      :style="{ backgroundColor: ledColor }"
+      :class="{ active: index <= activeSegments, pulse }"
+      :style="{ backgroundColor: ledColor, height: `${segmentHeight}px`, '--led-color': ledColor }"
     />
   </div>
 </template>
@@ -38,18 +38,18 @@ const segmentHeight = computed(() => props.height ?? 10);
 }
 
 .led {
-  width: 8px;
-  border-radius: 2px;
-  opacity: 0.4;
+  width: 4px;
+  border-radius: 1px;
+  opacity: 0.5;
   transition: opacity 0.25s, box-shadow 0.25s;
 }
 
 .active {
   opacity: 1;
   box-shadow:
-    0 0 4px currentColor,
-    0 0 10px currentColor,
-    0 0 16px currentColor;
+    0 0 2px var(--led-color),
+    0 0 5px var(--led-color),
+    0 0 8px var(--led-color);
 }
 
 .pulse {
