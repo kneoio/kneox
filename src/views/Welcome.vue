@@ -7,7 +7,7 @@
         filter: 'brightness(125%) saturate(150%)'
       }">
         <n-space align="center" justify="space-between" :wrap="false" :style="{ maxWidth: '720px', margin: '0 auto', padding: '12px 16px' }">
-          <img src="/pwa-192x192.png" alt="Mixpla" style="width:32px;height:32px;" />
+          <n-icon size="32"><Alien /></n-icon>
         </n-space>
       </n-layout-header>
 
@@ -132,7 +132,7 @@ import {
   NThing,
   darkTheme
 } from 'naive-ui'
-import {Plus} from '@vicons/tabler'
+import {Plus, Alien} from '@vicons/tabler'
 import {useReferencesStore} from '../stores/kneo/referencesStore'
 
 interface Station {

@@ -11,7 +11,7 @@
             <n-icon size="16"><ArrowLeft /></n-icon>
             Back
           </n-button>
-          <img src="/pwa-192x192.png" alt="Mixpla" style="width:32px;height:32px;" />
+          <n-icon size="32"><Alien /></n-icon>
         </n-space>
       </n-layout-header>
 
@@ -84,7 +84,7 @@ import {
   useMessage,
   darkTheme
 } from 'naive-ui'
-import { ArrowLeft } from '@vicons/tabler'
+import { ArrowLeft, Alien } from '@vicons/tabler'
 
 import EmailVerifyFields from '../components/public/EmailVerifyFields.vue'
 import PublicChatForm from '../components/forms/public/PublicChatForm.vue'

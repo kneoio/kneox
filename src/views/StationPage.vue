@@ -11,7 +11,7 @@
             <n-icon size="16"><ArrowLeft /></n-icon>
             Home
           </n-button>
-          <img src="/pwa-192x192.png" alt="Mixpla" style="width:32px;height:32px;" />
+          <n-icon size="32"><Alien /></n-icon>
         </n-space>
       </n-layout-header>
 
@@ -155,7 +155,7 @@ import {
   NThing,
   darkTheme
 } from 'naive-ui'
-import { ArrowLeft, MessageCircle, Music, PlayerPlay } from '@vicons/tabler'
+import { ArrowLeft, Alien, MessageCircle, Music, PlayerPlay } from '@vicons/tabler'
 import { useReferencesStore } from '../stores/kneo/referencesStore'
 import { MIXPLA_PLAYER_URL } from '../constants/config'
 
