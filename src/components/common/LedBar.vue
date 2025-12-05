@@ -26,7 +26,7 @@ const activeSegments = computed(() =>
   Math.round((props.value / 100) * totalSegments.value)
 );
 
-const ledColor = computed(() => props.color ?? '#ca7d30');
+const ledColor = computed(() => props.color ?? '#9c6821');
 const segmentHeight = computed(() => props.height ?? 10);
 </script>
 

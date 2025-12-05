@@ -37,7 +37,7 @@ const isSegmentActive = (index: number): boolean => {
 };
 
 const getSegmentStyle = (index: number) => {
-  const color = index <= midpoint.value ? '#ff3c00' : '#00ff00';
+  const color = index <= midpoint.value ? '#e67210' : '#00FF3C';
   return {
     backgroundColor: color,
     height: `${props.height ?? 8}px`,
