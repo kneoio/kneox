@@ -55,11 +55,12 @@
                   <n-grid-item v-for="s in stations" :key="s.name">
                     <n-card 
                       class="station-card"
+                      :class="{ 'is-dimmed': hoveredStation && hoveredStation !== s.name }"
                       :segmented="{ content: true }" 
                       content-style="padding: 16px;"
                       @click="goToStation(s)"
-                      @mouseenter="hoveredColor = s.color"
-                      @mouseleave="hoveredColor = '#2196F3'"
+                      @mouseenter="hoveredColor = s.color; hoveredStation = s.name"
+                      @mouseleave="hoveredColor = '#2196F3'; hoveredStation = null"
                       :style="{
                         cursor: 'pointer',
                         height: '100%',
@@ -170,6 +171,7 @@ const loading = ref(true)
 const error = ref<unknown | null>(null)
 const hoveredColor = ref('#2196F3')
 const onlineOnly = ref(false)
+const hoveredStation = ref<string | null>(null)
 
 function hexToRgba(hex: string, alpha: number) {
   const r = parseInt(hex.slice(1, 3), 16)
@@ -235,7 +237,11 @@ onMounted(() => {
 
 .station-card {
   border: 1px solid var(--station-color);
-  transition: box-shadow 0.3s ease, filter 0.3s ease;
+  transition: box-shadow 0.3s ease, filter 0.3s ease, border-color 0.3s ease;
+}
+
+.station-card.is-dimmed {
+  border-color: #9ca3af !important;
 }
 
 .station-card:hover {
