@@ -54,20 +54,24 @@
                 <n-grid cols="1 s:2 m:3" responsive="screen" x-gap="12" y-gap="12">
                   <n-grid-item v-for="s in stations" :key="s.name">
                     <n-card 
+                      class="station-card"
                       :segmented="{ content: true }" 
                       content-style="padding: 16px;"
-                      hoverable
                       @click="goToStation(s)"
                       @mouseenter="hoveredColor = s.color"
-                      @mouseleave="hoveredColor = '#00ffff'"
-                      style="cursor: pointer; height: 100%;"
+                      @mouseleave="hoveredColor = '#2196F3'"
+                      :style="{
+                        cursor: 'pointer',
+                        height: '100%',
+                        '--station-color': s.color
+                      }"
                     >
                       <n-space vertical size="small">
                         <n-ellipsis :style="{ fontSize: '16px', fontWeight: 'bold' }">{{ s.name }}</n-ellipsis>
-                        <n-space align="center" justify="space-between" :wrap="false" style="min-height: 20px;">
-                          <n-space align="center" size="small" :wrap="false" style="min-width: 0; flex: 1;">
-                            <n-ellipsis style="font-size:13px; opacity: 0.7; max-width: 100%;">{{ s.djName }}</n-ellipsis>
-                            <span style="font-size:13px; opacity: 0.7;">{{ s.countryCode }}</span>
+                        <n-space align="center" justify="space-between">
+                          <n-space vertical size="small" style="min-width: 0; flex: 1;">
+                            <n-ellipsis style="font-size:14px; opacity: 0.7;">{{ s.djName }}</n-ellipsis>
+                            <span style="font-size:14px; opacity: 0.7;">{{ s.countryCode }}</span>
                           </n-space>
                           <span :class="{ 'status-online': ['ON_LINE','WARMING_UP','IDLE'].includes(s.currentStatus as any) }"
                                  style="font-weight: 400; font-size: 12px; white-space: nowrap;"
@@ -76,9 +80,16 @@
                           </span>
                         </n-space>
                         <n-divider style="margin: 4px 0;" />
-                        <router-link :to="`/${s.slugName}`" style="text-decoration:none;" @click.stop>
-                          <n-button size="small" dashed :color="s.color" block>More...</n-button>
-                        </router-link>
+                        <n-space align="center">
+                          <router-link :to="`/${s.slugName}`" style="text-decoration:none;" @click.stop>
+                            <n-button >
+                              <n-icon size="20" ><InfoSquare /></n-icon>
+                            </n-button>
+                          </router-link>
+                          <n-button  @click.stop="openPlayer(s.slugName)">
+                            <n-icon size="20"><PlayerPlay /></n-icon>
+                          </n-button>
+                        </n-space>
                       </n-space>
                     </n-card>
                   </n-grid-item>
@@ -95,7 +106,7 @@
                           <n-icon size="48" style="opacity: 0.5;">
                             <Plus />
                           </n-icon>
-                          <n-text depth="3" style="font-size: 13px;">Add Station</n-text>
+                          <n-text depth="3" style="font-size: 13px;">Add Your Vibe...</n-text>
                         </n-space>
                       </n-card>
                     </router-link>
@@ -138,7 +149,7 @@ import {
   NThing,
   darkTheme
 } from 'naive-ui'
-import {Plus, Alien} from '@vicons/tabler'
+import {Plus, Alien, InfoSquare, PlayerPlay} from '@vicons/tabler'
 import {useReferencesStore} from '../stores/kneo/referencesStore'
 
 interface Station {
@@ -179,6 +190,11 @@ function goToStation(s: Station) {
   window.location.href = `/${s.slugName}`
 }
 
+function openPlayer(slugName: string) {
+  const url = `https://player.mixpla.io?radio=${encodeURIComponent(slugName.toLowerCase())}`
+  window.open(url, '_blank', 'noopener,noreferrer')
+}
+
 async function fetchStations() {
   try {
     loading.value = true
@@ -215,6 +231,16 @@ onMounted(() => {
 <style scoped>
 .neon-header {
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.station-card {
+  border: 1px solid var(--station-color);
+  transition: box-shadow 0.3s ease, filter 0.3s ease;
+}
+
+.station-card:hover {
+  box-shadow: inset 0 0 4px color-mix(in srgb, var(--station-color) 50%, transparent), 0 0 4px color-mix(in srgb, var(--station-color) 80%, transparent), 0 0 8px color-mix(in srgb, var(--station-color) 60%, transparent) !important;
+  filter: brightness(125%) saturate(150%);
 }
 
 .status-online {
