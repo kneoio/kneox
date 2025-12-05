@@ -164,11 +164,17 @@ export const useReferencesStore = defineStore('references', () => {
     }
   };
 
-  const fetchRadioStations = async () => {
+  const fetchRadioStations = async (online?: boolean) => {
     try {
       // Build absolute URL without trailing /api to avoid /api prefix for this endpoint
       const baseWithoutApi = apiServer.replace(/\/api\/?$/, '');
-      const response = await unsecuredClient.get(`${baseWithoutApi}/radio/all-stations`);
+      const params: any = {};
+      if (online === true) {
+        params.online = true;
+      } else if (online === false) {
+        params.online = false;
+      }
+      const response = await unsecuredClient.get(`${baseWithoutApi}/radio/all-stations`, { params });
       return response.data;
     } catch (error) {
       console.error('Error fetching radio stations:', error);

@@ -11,7 +11,7 @@
         </n-space>
       </n-layout-header>
 
-      <n-layout-content :style="{ padding: '0 16px 24px' }">
+      <n-layout-content :style="{ padding: '16px 16px 24px' }">
         <n-space vertical class="root" :style="{ maxWidth: '720px', margin: '0 auto' }">
           <n-space vertical size="large">
             <n-space vertical size="small" align="center" justify="center">
@@ -20,13 +20,18 @@
                   <n-h1 style="font-size:30px; font-weight:bold; font-family: 'Kaylon', sans-serif; margin-top: 0; margin-bottom: 0px;">MIXPLA</n-h1>
                 </template>
                 <template #description>
-                  <span style="font-size:20px; opacity:.9;">Build your radio station. Let AI DJ handle the flow.</span>
+                  <span style="font-size:20px; opacity:.9;">You choose the vibe. AI keeps it live.</span>
                 </template>
               </n-thing>
             </n-space>
 
             <n-space vertical size="small">
-              <strong style="font-size: 16px;">Featured Stations</strong>
+              <n-space align="center">
+                <strong style="font-size: 16px;">Featured Stations</strong>
+                <n-checkbox v-model:checked="onlineOnly" @update:checked="fetchStations">
+                  Online Only
+                </n-checkbox>
+              </n-space>
               
               <template v-if="loading">
                 <n-grid cols="1 s:2 m:3" responsive="screen" x-gap="12" y-gap="12">
@@ -58,7 +63,7 @@
                       style="cursor: pointer; height: 100%;"
                     >
                       <n-space vertical size="small">
-                        <n-ellipsis :style="{ fontSize: '16px', fontWeight: 'bold', fontFamily: stationFonts[s.name] }">{{ s.name }}</n-ellipsis>
+                        <n-ellipsis :style="{ fontSize: '16px', fontWeight: 'bold' }">{{ s.name }}</n-ellipsis>
                         <n-space align="center" justify="space-between" :wrap="false" style="min-height: 20px;">
                           <n-space align="center" size="small" :wrap="false" style="min-width: 0; flex: 1;">
                             <n-ellipsis style="font-size:13px; opacity: 0.7; max-width: 100%;">{{ s.djName }}</n-ellipsis>
@@ -128,6 +133,7 @@ import {
   NLayoutHeader,
   NSkeleton,
   NSpace,
+  NCheckbox,
   NText,
   NThing,
   darkTheme
@@ -151,54 +157,14 @@ const referencesStore = useReferencesStore()
 const stations = ref<Station[]>([])
 const loading = ref(true)
 const error = ref<unknown | null>(null)
-const stationFonts = ref<Record<string, string | undefined>>({})
 const hoveredColor = ref('#2196F3')
+const onlineOnly = ref(false)
 
 function hexToRgba(hex: string, alpha: number) {
   const r = parseInt(hex.slice(1, 3), 16)
   const g = parseInt(hex.slice(3, 5), 16)
   const b = parseInt(hex.slice(5, 7), 16)
   return `rgba(${r},${g},${b},${alpha})`
-}
-
-const fonts = [
-  'Airborne',
-  'AncientGod',
-  'Apollo',
-  'Cubic',
-  'DigitalPlay',
-  'Drexs',
-  'Elias',
-  'FutureSallow',
-  'Goodtime',
-  'GameOfSquids',
-  'Glypic',
-  'Goldman',
-  'Icklips',
-  'Moto',
-  'MontereyPopsicle',
-  'PolenticalNeon',
-  'Venta',
-  'Conthrax',
-  'Kaylon',
-  'Nsecthin',
-  'Yonder'
-]
-
-function hasCyrillic(text: string) {
-  return /[\u0400-\u04FF]/.test(text)
-}
-
-function assignFonts() {
-  const fontMap: Record<string, string | undefined> = {}
-  stations.value.forEach(s => {
-    if (hasCyrillic(s.name)) {
-      fontMap[s.name] = undefined
-    } else {
-      fontMap[s.name] = fonts[Math.floor(Math.random() * fonts.length)]
-    }
-  })
-  stationFonts.value = fontMap
 }
 
 function statusText(s?: Station['currentStatus']) {
@@ -216,9 +182,8 @@ function goToStation(s: Station) {
 async function fetchStations() {
   try {
     loading.value = true
-    const result = await referencesStore.fetchRadioStations()
+    const result = await referencesStore.fetchRadioStations(onlineOnly.value)
     stations.value = result || []
-    assignFonts()
   } catch (e) {
     error.value = e
   } finally {
