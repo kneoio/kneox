@@ -3,7 +3,7 @@
     <n-layout>
       <n-layout-header :style="{ 
         borderBottom: `3px solid ${station?.color || '#2196F3'}`,
-        boxShadow: `inset 0 0 8px rgba(33,150,243,0.5), 0 0 8px rgba(33,150,243,0.8), 0 0 16px rgba(33,150,243,0.6)`,
+        boxShadow: `inset 0 0 8px ${hexToRgba(station?.color || '#2196F3', 0.5)}, 0 0 8px ${hexToRgba(station?.color || '#2196F3', 0.8)}, 0 0 16px ${hexToRgba(station?.color || '#2196F3', 0.6)}`,
         filter: 'brightness(125%) saturate(150%)'
       }">
         <n-space align="center" justify="space-between" :wrap="false" :style="{ maxWidth: '720px', margin: '0 auto', padding: '12px 16px' }">
@@ -64,10 +64,9 @@
                   <n-text strong>Station Info</n-text>
                   <n-space align="center">
                     <n-text depth="3">Status:</n-text>
-                    <span :class="{ online: ['ON_LINE','WARMING_UP','IDLE'].includes(station.currentStatus as any) }"
-                           :style="(['ON_LINE','WARMING_UP','IDLE'].includes(station.currentStatus as any))
-                           ? 'color: #84cc16 !important; text-shadow: 0 0 14px rgba(132, 204, 22, 1), 0 0 24px rgba(132, 204, 22, 0.75); font-weight: 400 !important; font-size: 14px;'
-                           : 'font-weight: 400; font-size: 14px;'"
+                    <span
+                      :class="{ 'status-online': ['ON_LINE','WARMING_UP','IDLE'].includes(station.currentStatus as any) }"
+                      style="font-weight: 400; font-size: 14px;"
                     >
                       {{ statusText(station.currentStatus) }}
                     </span>
@@ -78,14 +77,21 @@
               <n-grid cols="1 s:2" responsive="screen" x-gap="12" y-gap="12">
                 <n-grid-item>
                   <n-card 
+                    class="station-action-card"
+                    :class="{ 'is-dimmed': hoveredAction && hoveredAction !== 'player' }"
                     :segmented="{ content: true }" 
                     content-style="padding: 16px;"
-                    hoverable
                     @click="openPlayer"
-                    style="cursor: pointer; height: 100%;"
+                    @mouseenter="hoveredAction = 'player'"
+                    @mouseleave="hoveredAction = null"
+                    :style="{
+                      cursor: 'pointer',
+                      height: '100%',
+                      '--station-color': station.color
+                    }"
                   >
                     <n-space vertical align="center" justify="center" size="small">
-                      <n-icon size="32" :color="station.color">
+                      <n-icon size="32" color="#666666">
                         <PlayerPlay />
                       </n-icon>
                       <n-text strong>Open Player</n-text>
@@ -95,14 +101,21 @@
 
                 <n-grid-item v-if="station.messagingPolicy !== 'NOT_ALLOWED'">
                   <n-card 
+                    class="station-action-card"
+                    :class="{ 'is-dimmed': hoveredAction && hoveredAction !== 'chat' }"
                     :segmented="{ content: true }" 
                     content-style="padding: 16px;"
-                    hoverable
                     @click="goToChat"
-                    style="cursor: pointer; height: 100%;"
+                    @mouseenter="hoveredAction = 'chat'"
+                    @mouseleave="hoveredAction = null"
+                    :style="{
+                      cursor: 'pointer',
+                      height: '100%',
+                      '--station-color': station.color
+                    }"
                   >
                     <n-space vertical align="center" justify="center" size="small">
-                      <n-icon size="32" :color="station.color">
+                      <n-icon size="32" color="#666666">
                         <MessageCircle />
                       </n-icon>
                       <n-text strong>Chat with DJ</n-text>
@@ -112,14 +125,21 @@
 
                 <n-grid-item v-if="station.submissionPolicy !== 'NOT_ALLOWED'">
                   <n-card 
+                    class="station-action-card"
+                    :class="{ 'is-dimmed': hoveredAction && hoveredAction !== 'submit' }"
                     :segmented="{ content: true }" 
                     content-style="padding: 16px;"
-                    hoverable
                     @click="goToSubmitSong"
-                    style="cursor: pointer; height: 100%;"
+                    @mouseenter="hoveredAction = 'submit'"
+                    @mouseleave="hoveredAction = null"
+                    :style="{
+                      cursor: 'pointer',
+                      height: '100%',
+                      '--station-color': station.color
+                    }"
                   >
                     <n-space vertical align="center" justify="center" size="small">
-                      <n-icon size="32" :color="station.color">
+                      <n-icon size="32" color="#666666">
                         <Music />
                       </n-icon>
                       <n-text strong>Submit Song</n-text>
@@ -177,6 +197,14 @@ const brandSlug = ref(route.params.brand as string)
 const station = ref<Station | null>(null)
 const loading = ref(true)
 const error = ref<unknown | null>(null)
+const hoveredAction = ref<string | null>(null)
+
+function hexToRgba(hex: string, alpha: number) {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  return `rgba(${r},${g},${b},${alpha})`
+}
 
 function statusText(s?: Station['currentStatus']) {
   if (s === 'ON_LINE') return 'Online'
@@ -225,5 +253,27 @@ onMounted(() => {
 .online {
   color: #16a34a !important;
   text-shadow: 0 0 6px rgba(34, 197, 94, 0.6) !important;
+}
+
+.status-online {
+  color: #84cc16 !important;
+  text-shadow:
+    0 0 5px currentColor,
+    0 0 15px currentColor,
+    0 0 30px currentColor;
+}
+
+.station-action-card {
+  border: 1px solid var(--station-color);
+  transition: box-shadow 0.3s ease, filter 0.3s ease, border-color 0.3s ease;
+}
+
+.station-action-card.is-dimmed {
+  border-color: #9ca3af !important;
+}
+
+.station-action-card:hover {
+  box-shadow: inset 0 0 4px color-mix(in srgb, var(--station-color) 50%, transparent), 0 0 4px color-mix(in srgb, var(--station-color) 80%, transparent), 0 0 8px color-mix(in srgb, var(--station-color) 60%, transparent) !important;
+  filter: brightness(125%) saturate(150%);
 }
 </style>

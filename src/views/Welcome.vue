@@ -26,7 +26,7 @@
             <n-space vertical size="small">
               <n-space align="center">
                 <strong style="font-size: 16px;">Featured Stations</strong>
-                <n-checkbox v-model:checked="onlineOnly" @update:checked="fetchStations">
+                <n-checkbox v-model:checked="onlineOnly" @update:checked="handleOnlineOnlyUpdate">
                   Online Only
                 </n-checkbox>
               </n-space>
@@ -168,7 +168,7 @@ const stations = ref<Station[]>([])
 const loading = ref(true)
 const error = ref<unknown | null>(null)
 const hoveredColor = ref('#2196F3')
-const onlineOnly = ref(false)
+const onlineOnly = ref(localStorage.getItem('mixplaOnlineOnly') === 'true')
 const hoveredStation = ref<string | null>(null)
 
 function hexToRgba(hex: string, alpha: number) {
@@ -193,6 +193,12 @@ function goToStation(s: Station) {
 function openPlayer(slugName: string) {
   const url = `https://player.mixpla.io?radio=${encodeURIComponent(slugName.toLowerCase())}`
   window.open(url, '_blank', 'noopener,noreferrer')
+}
+
+function handleOnlineOnlyUpdate(value: boolean) {
+  onlineOnly.value = value
+  localStorage.setItem('mixplaOnlineOnly', value ? 'true' : 'false')
+  fetchStations()
 }
 
 async function fetchStations() {
