@@ -25,7 +25,18 @@
               <strong style="font-size: 16px;">Featured Stations</strong>
               
               <template v-if="loading">
-                <n-skeleton text :repeat="3" />
+                <n-grid cols="1 s:2 m:3" responsive="screen" x-gap="12" y-gap="12">
+                  <n-grid-item v-for="i in 6" :key="i">
+                    <n-card :segmented="{ content: true }" content-style="padding: 16px;">
+                      <n-space vertical size="small">
+                        <n-skeleton text />
+                        <n-skeleton text width="60%" />
+                        <n-divider style="margin: 4px 0;" />
+                        <n-skeleton height="28px" />
+                      </n-space>
+                    </n-card>
+                  </n-grid-item>
+                </n-grid>
               </template>
               <template v-else-if="error">
                 <n-text type="error" style="font-size:14px;">Failed to load stations</n-text>
@@ -41,16 +52,14 @@
                       style="cursor: pointer; height: 100%;"
                     >
                       <n-space vertical size="small">
-                        <n-ellipsis style="font-size:16px; font-weight: bold;">{{ s.name }}</n-ellipsis>
+                        <n-ellipsis :style="{ fontSize: '16px', fontWeight: 'bold', fontFamily: stationFonts[s.name] }">{{ s.name }}</n-ellipsis>
                         <n-space align="center" justify="space-between" :wrap="false" style="min-height: 20px;">
                           <n-space align="center" size="small" :wrap="false" style="min-width: 0; flex: 1;">
                             <n-ellipsis style="font-size:13px; opacity: 0.7; max-width: 100%;">{{ s.djName }}</n-ellipsis>
                             <span style="font-size:13px; opacity: 0.7;">{{ s.countryCode }}</span>
                           </n-space>
-                          <span :class="{ online: ['ON_LINE','WARMING_UP','IDLE'].includes(s.currentStatus as any) }"
-                                 :style="(['ON_LINE','WARMING_UP','IDLE'].includes(s.currentStatus as any))
-                                 ? 'color: #84cc16 !important; text-shadow: 0 0 14px rgba(132, 204, 22, 1), 0 0 24px rgba(132, 204, 22, 0.75); font-weight: 400 !important; font-size: 12px; white-space: nowrap;'
-                                 : 'font-weight: 400; font-size: 12px; white-space: nowrap;'"
+                          <span :class="{ 'status-online': ['ON_LINE','WARMING_UP','IDLE'].includes(s.currentStatus as any) }"
+                                 style="font-weight: 400; font-size: 12px; white-space: nowrap;"
                           >
                             {{ statusText(s.currentStatus) }}
                           </span>
@@ -136,6 +145,48 @@ const referencesStore = useReferencesStore()
 const stations = ref<Station[]>([])
 const loading = ref(true)
 const error = ref<unknown | null>(null)
+const stationFonts = ref<Record<string, string | undefined>>({})
+
+const fonts = [
+  'Laitos',
+  'Airborne',
+  'AncientGod',
+  'Apollo',
+  'Cubic',
+  'DigitalPlay',
+  'Drexs',
+  'Elias',
+  'FutureSallow',
+  'Goodtime',
+  'GameOfSquids',
+  'Glypic',
+  'Goldman',
+  'Icklips',
+  'Moto',
+  'MontereyPopsicle',
+  'PolenticalNeon',
+  'Venta',
+  'Conthrax',
+  'Kaylon',
+  'Nsecthin',
+  'Yonder'
+]
+
+function hasCyrillic(text: string) {
+  return /[\u0400-\u04FF]/.test(text)
+}
+
+function assignFonts() {
+  const fontMap: Record<string, string | undefined> = {}
+  stations.value.forEach(s => {
+    if (hasCyrillic(s.name)) {
+      fontMap[s.name] = undefined
+    } else {
+      fontMap[s.name] = fonts[Math.floor(Math.random() * fonts.length)]
+    }
+  })
+  stationFonts.value = fontMap
+}
 
 function statusText(s?: Station['currentStatus']) {
   if (s === 'ON_LINE') return 'Online'
@@ -152,8 +203,9 @@ function goToStation(s: Station) {
 async function fetchStations() {
   try {
     loading.value = true
-    stations.value = await referencesStore.fetchRadioStations()
-    error.value = null
+    const result = await referencesStore.fetchRadioStations()
+    stations.value = result || []
+    assignFonts()
   } catch (e) {
     error.value = e
   } finally {
@@ -183,9 +235,12 @@ onMounted(() => {
 }
 </style>
 <style scoped>
-.online {
-  color: #16a34a !important;
-  text-shadow: 0 0 6px rgba(34, 197, 94, 0.6) !important;
+.status-online {
+  color: #84cc16 !important;
+  text-shadow: 
+    0 0 5px currentColor,
+    0 0 15px currentColor,
+    0 0 30px currentColor;
 }
 
 @media (max-width: 640px) {

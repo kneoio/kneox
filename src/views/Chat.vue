@@ -1,14 +1,19 @@
 <template>
   <n-config-provider :theme="darkTheme">
-    <n-space vertical :style="{ maxWidth: '720px', margin: '0 auto', padding: '16px' }">
-      <StationHeaderMini
-        :brand="brandName"
-        :description="stationDescription"
-        :available-songs="stationAvailableSongs"
-        :color="stationColor"
-      />
+    <n-layout>
+      <n-layout-header bordered>
+        <n-space align="center" justify="space-between" :wrap="false" :style="{ maxWidth: '720px', margin: '0 auto', padding: '12px 16px' }">
+          <n-button quaternary size="small" @click="goBack" :focusable="false">
+            <n-icon size="16"><ArrowLeft /></n-icon>
+            Back
+          </n-button>
+          <img src="/pwa-192x192.png" alt="Mixpla" style="width:32px;height:32px;" />
+        </n-space>
+      </n-layout-header>
 
-      <n-form v-if="!isAuthenticated" :model="form" label-placement="top">
+      <n-layout-content :style="{ padding: '16px 16px 24px' }">
+        <n-space vertical :style="{ maxWidth: '720px', margin: '0 auto' }">
+          <n-form v-if="!isAuthenticated" :model="form" label-placement="top">
         <n-grid cols="12" x-gap="16" y-gap="8">
           <n-grid-item :span="12">
             <n-form-item label="Nickname (optional)">
@@ -50,13 +55,15 @@
         :user-token="userToken"
         :nickname="displayNickname"
       />
-    </n-space>
+        </n-space>
+      </n-layout-content>
+    </n-layout>
   </n-config-provider>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import {
   NButton,
   NConfigProvider,
@@ -64,22 +71,25 @@ import {
   NFormItem,
   NGrid,
   NGridItem,
+  NIcon,
   NInput,
+  NLayout,
+  NLayoutContent,
+  NLayoutHeader,
   NSpace,
   useMessage,
   darkTheme
 } from 'naive-ui'
+import { ArrowLeft } from '@vicons/tabler'
 
-import StationHeaderMini from '../components/public/StationHeaderMini.vue'
 import EmailVerifyFields from '../components/public/EmailVerifyFields.vue'
 import PublicChatForm from '../components/forms/public/PublicChatForm.vue'
-import { useSubmissionStore } from '../stores/public/submissionStore'
 import { usePublicChatStore } from '../stores/public/publicChatStore'
 
-const submissionStore = useSubmissionStore()
 const publicChatStore = usePublicChatStore()
 const nMessage = useMessage()
 const route = useRoute()
+const router = useRouter()
 
 const form = ref({
   email: '',
@@ -95,11 +105,6 @@ const userToken = ref('')
 const isAuthenticated = ref(false)
 const displayNickname = ref('')
 
-const brandName = ref('')
-const stationDescription = ref('')
-const stationColor = ref('')
-const stationAvailableSongs = ref<number | null>(null)
-
 const stationSlug = computed(() => (route.query.brand as string) || '')
 
 const canRegister = computed(() => {
@@ -110,18 +115,6 @@ const canRegister = computed(() => {
 })
 
 onMounted(async () => {
-  try {
-    if (stationSlug.value) {
-      const station = await submissionStore.getStation(stationSlug.value)
-      brandName.value = (station as any)?.name || stationSlug.value
-      stationDescription.value = (station as any)?.description || ''
-      stationColor.value = (station as any)?.color || ''
-      stationAvailableSongs.value = (station as any)?.availableSongs ?? 0
-    }
-  } catch (_) {
-    brandName.value = stationSlug.value || ''
-  }
-
   try {
     const savedToken = window.localStorage.getItem('chatToken')
     if (savedToken) {
@@ -142,8 +135,11 @@ onMounted(async () => {
 })
 
 function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  return emailRegex.test(email || '')
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+}
+
+function goBack() {
+  router.push(`/${stationSlug.value}`)
 }
 
 async function handleSendCode() {

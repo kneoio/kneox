@@ -1,14 +1,19 @@
 <template>
   <n-config-provider :theme="darkTheme">
-  <n-space vertical :style="{ maxWidth: '720px', margin: '0 auto', padding: '16px' }">
-    <StationHeaderMini
-      :brand="form.brand"
-      :description="stationDescription"
-      :available-songs="stationAvailableSongs"
-      :color="stationColor"
-    />
+    <n-layout>
+      <n-layout-header bordered>
+        <n-space align="center" justify="space-between" :wrap="false" :style="{ maxWidth: '720px', margin: '0 auto', padding: '12px 16px' }">
+          <n-button quaternary size="small" @click="goBack" :focusable="false">
+            <n-icon size="16"><ArrowLeft /></n-icon>
+            Back
+          </n-button>
+          <img src="/pwa-192x192.png" alt="Mixpla" style="width:32px;height:32px;" />
+        </n-space>
+      </n-layout-header>
 
-    <n-form :model="form" ref="formRef" label-placement="top">
+      <n-layout-content :style="{ padding: '16px 16px 24px' }">
+        <n-space vertical :style="{ maxWidth: '720px', margin: '0 auto' }">
+          <n-form :model="form" ref="formRef" label-placement="top">
       <n-grid cols="12" x-gap="16" y-gap="8">
         <n-grid-item :span="12">
           <n-grid cols="1 s:2" responsive="screen" x-gap="16" y-gap="8">
@@ -134,14 +139,16 @@
       <n-alert v-if="message && messageType === 'error'" type="error" closable @close="message = ''" style="margin-top: 12px;">
         {{ message }}
       </n-alert>
-    </n-form>
-  </n-space>
+          </n-form>
+        </n-space>
+      </n-layout-content>
+    </n-layout>
   </n-config-provider>
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, nextTick, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import type { UploadCustomRequestOptions, UploadFileInfo } from 'naive-ui'
 import {
   NAlert,
@@ -154,18 +161,22 @@ import {
   NFormItem,
   NGrid,
   NGridItem,
+  NIcon,
   NInput,
+  NLayout,
+  NLayoutContent,
+  NLayoutHeader,
   NSelect,
+  NSpace,
   NUpload,
   useMessage,
-  NSpace,
   darkTheme
 } from 'naive-ui'
+import { ArrowLeft } from '@vicons/tabler'
 import { useSubmissionStore } from '../stores/public/submissionStore'
 import { useReferencesStore } from '../stores/kneo/referencesStore'
 import MarkdownIt from 'markdown-it'
  
-import StationHeaderMini from '../components/public/StationHeaderMini.vue'
 import EmailVerifyFields from '../components/public/EmailVerifyFields.vue'
 
 const formRef = ref<any | null>(null)
@@ -173,6 +184,7 @@ const submissionStore = useSubmissionStore()
 const referencesStore = useReferencesStore()
 const nMessage = useMessage()
 const route = useRoute()
+const router = useRouter()
 
  
 
@@ -205,10 +217,6 @@ const artistInputRef = ref<any | null>(null)
 const sendingCode = ref(false)
 const codeSent = ref(false)
 const policy = ref<string>('')
-const stationDescription = ref<string>('')
-const stationColor = ref<string>('')
-const stationAvailableSongs = ref<number | null>(null)
-const flashSongs = ref(false)
 const stationSlug = route.query.brand as string
 
 const agreeHighlightStyle = computed(() => {
@@ -231,18 +239,14 @@ const policyText = computed(() => {
   return ''
 })
 
-watch(() => stationAvailableSongs.value, async (newVal, oldVal) => {
-  if (newVal != null && oldVal != null && newVal !== oldVal) {
-    flashSongs.value = false
-    await nextTick()
-    flashSongs.value = true
-  }
-})
-
 const isUploading = computed(() => {
   const file = fileList.value[0]
   return file && file.status === 'uploading'
 })
+
+function goBack() {
+  router.push(`/${stationSlug}`)
+}
 
 onMounted(async () => {
   try {
@@ -250,9 +254,6 @@ onMounted(async () => {
       const station = await submissionStore.getStation(stationSlug)
       form.value.brand = station?.name || stationSlug
       policy.value = station?.submissionPolicy || ''
-      stationDescription.value = (station as any)?.description || ''
-      stationColor.value = (station as any)?.color || ''
-      stationAvailableSongs.value = (station as any)?.availableSongs ?? 0
     } else {
       form.value.brand = ''
     }
@@ -264,9 +265,6 @@ onMounted(async () => {
   } catch (_) {
     form.value.brand = stationSlug || ''
     policy.value = ''
-    stationDescription.value = ''
-    stationColor.value = ''
-    stationAvailableSongs.value = null
   }
 
   try {

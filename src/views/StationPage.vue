@@ -11,10 +11,33 @@
         </n-space>
       </n-layout-header>
 
-      <n-layout-content :style="{ padding: '0 16px 24px' }">
+      <n-layout-content :style="{ padding: '16px 16px 24px' }">
         <n-space vertical class="root" :style="{ maxWidth: '720px', margin: '0 auto' }">
           <template v-if="loading">
-            <n-skeleton text :repeat="5" />
+            <n-space vertical size="large">
+              <n-space vertical size="small">
+                <n-skeleton text width="200px" style="height: 30px;" />
+                <n-skeleton text :repeat="3" />
+              </n-space>
+
+              <n-card :segmented="{ content: true }" content-style="padding: 16px;">
+                <n-space vertical size="small">
+                  <n-skeleton text width="100px" />
+                  <n-skeleton text width="150px" />
+                </n-space>
+              </n-card>
+
+              <n-grid cols="1 s:2" responsive="screen" x-gap="12" y-gap="12">
+                <n-grid-item>
+                  <n-card :segmented="{ content: true }" content-style="padding: 16px;">
+                    <n-space vertical align="center" justify="center" size="small">
+                      <n-skeleton circle width="32px" height="32px" />
+                      <n-skeleton text width="100px" />
+                    </n-space>
+                  </n-card>
+                </n-grid-item>
+              </n-grid>
+            </n-space>
           </template>
           <template v-else-if="error">
             <n-text type="error" style="font-size:14px;">Failed to load station</n-text>
@@ -35,10 +58,6 @@
               <n-card :segmented="{ content: true }" content-style="padding: 16px;">
                 <n-space vertical size="small">
                   <n-text strong>Station Info</n-text>
-                  <n-space align="center">
-                    <n-text depth="3">Songs:</n-text>
-                    <n-text :style="`color: ${station.color}; font-weight: 600;`">{{ station.availableSongs ?? 0 }}</n-text>
-                  </n-space>
                   <n-space align="center">
                     <n-text depth="3">Status:</n-text>
                     <span :class="{ online: ['ON_LINE','WARMING_UP','IDLE'].includes(station.currentStatus as any) }"
