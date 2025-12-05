@@ -14,16 +14,14 @@
       <n-layout-content :style="{ padding: '16px 16px 24px' }">
         <n-space vertical class="root" :style="{ maxWidth: '720px', margin: '0 auto' }">
           <n-space vertical size="large">
-            <n-space vertical size="small" align="center" justify="center">
-              <n-thing>
-                <template #header>
-                  <n-h1 style="font-size:30px; font-weight:bold; font-family: 'Kaylon', sans-serif; margin-top: 0; margin-bottom: 0px;">MIXPLA</n-h1>
-                </template>
-                <template #description>
-                  <span style="font-size:20px; opacity:.9;">You choose the vibe. AI keeps it live.</span>
-                </template>
-              </n-thing>
-            </n-space>
+            <n-thing style="margin-bottom: 8px;">
+              <template #header>
+                <n-h1 style="font-size:32px; font-weight:bold; font-family: 'Kaylon', sans-serif; margin-top: 0; margin-bottom: 0px;">MIXPLA</n-h1>
+              </template>
+              <template #description>
+                <span style="font-size:20px; opacity:.9;">You choose the vibe. AI keeps it live.</span>
+              </template>
+            </n-thing>
 
             <n-space vertical size="small">
               <n-space align="center">
@@ -83,11 +81,11 @@
                         <n-divider style="margin: 4px 0;" />
                         <n-space align="center">
                           <router-link :to="`/${s.slugName}`" style="text-decoration:none;" @click.stop>
-                            <n-button >
+                            <n-button ghost color="#666">
                               <n-icon size="20" ><InfoSquare /></n-icon>
                             </n-button>
                           </router-link>
-                          <n-button  @click.stop="openPlayer(s.slugName)">
+                          <n-button ghost color="#666"  @click.stop="openPlayer(s.slugName)">
                             <n-icon size="20"><PlayerPlay /></n-icon>
                           </n-button>
                         </n-space>
