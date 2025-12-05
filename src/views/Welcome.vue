@@ -1,7 +1,11 @@
 <template>
   <n-config-provider :theme="darkTheme">
     <n-layout>
-      <n-layout-header bordered>
+      <n-layout-header class="neon-header" :style="{ 
+        borderBottom: `3px solid ${hoveredColor}`,
+        boxShadow: `inset 0 0 8px ${hexToRgba(hoveredColor, 0.5)}, 0 0 8px ${hexToRgba(hoveredColor, 0.8)}, 0 0 16px ${hexToRgba(hoveredColor, 0.6)}`,
+        filter: 'brightness(125%) saturate(150%)'
+      }">
         <n-space align="center" justify="space-between" :wrap="false" :style="{ maxWidth: '720px', margin: '0 auto', padding: '12px 16px' }">
           <img src="/pwa-192x192.png" alt="Mixpla" style="width:32px;height:32px;" />
         </n-space>
@@ -49,6 +53,8 @@
                       content-style="padding: 16px;"
                       hoverable
                       @click="goToStation(s)"
+                      @mouseenter="hoveredColor = s.color"
+                      @mouseleave="hoveredColor = '#00ffff'"
                       style="cursor: pointer; height: 100%;"
                     >
                       <n-space vertical size="small">
@@ -146,9 +152,16 @@ const stations = ref<Station[]>([])
 const loading = ref(true)
 const error = ref<unknown | null>(null)
 const stationFonts = ref<Record<string, string | undefined>>({})
+const hoveredColor = ref('#00ffff')
+
+function hexToRgba(hex: string, alpha: number) {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  return `rgba(${r},${g},${b},${alpha})`
+}
 
 const fonts = [
-  'Laitos',
   'Airborne',
   'AncientGod',
   'Apollo',
@@ -235,6 +248,10 @@ onMounted(() => {
 }
 </style>
 <style scoped>
+.neon-header {
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
 .status-online {
   color: #84cc16 !important;
   text-shadow: 

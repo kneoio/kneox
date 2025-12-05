@@ -1,7 +1,11 @@
 <template>
   <n-config-provider :theme="darkTheme">
     <n-layout>
-      <n-layout-header bordered>
+      <n-layout-header :style="{ 
+        borderBottom: `3px solid ${stationColor}`,
+        boxShadow: `inset 0 0 8px ${hexToRgba(stationColor, 0.5)}, 0 0 8px ${hexToRgba(stationColor, 0.8)}, 0 0 16px ${hexToRgba(stationColor, 0.6)}`,
+        filter: 'brightness(125%) saturate(150%)'
+      }">
         <n-space align="center" justify="space-between" :wrap="false" :style="{ maxWidth: '720px', margin: '0 auto', padding: '12px 16px' }">
           <n-button quaternary size="small" @click="goBack" :focusable="false">
             <n-icon size="16"><ArrowLeft /></n-icon>
@@ -85,8 +89,10 @@ import { ArrowLeft } from '@vicons/tabler'
 import EmailVerifyFields from '../components/public/EmailVerifyFields.vue'
 import PublicChatForm from '../components/forms/public/PublicChatForm.vue'
 import { usePublicChatStore } from '../stores/public/publicChatStore'
+import { useSubmissionStore } from '../stores/public/submissionStore'
 
 const publicChatStore = usePublicChatStore()
+const submissionStore = useSubmissionStore()
 const nMessage = useMessage()
 const route = useRoute()
 const router = useRouter()
@@ -104,8 +110,16 @@ const sessionToken = ref('')
 const userToken = ref('')
 const isAuthenticated = ref(false)
 const displayNickname = ref('')
+const stationColor = ref('#00ffff')
 
 const stationSlug = computed(() => (route.query.brand as string) || '')
+
+function hexToRgba(hex: string, alpha: number) {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  return `rgba(${r},${g},${b},${alpha})`
+}
 
 const canRegister = computed(() => {
   return (
@@ -115,6 +129,15 @@ const canRegister = computed(() => {
 })
 
 onMounted(async () => {
+  if (stationSlug.value) {
+    try {
+      const station = await submissionStore.getStation(stationSlug.value)
+      stationColor.value = (station as any)?.color || '#00ffff'
+    } catch (_) {
+      stationColor.value = '#00ffff'
+    }
+  }
+
   try {
     const savedToken = window.localStorage.getItem('chatToken')
     if (savedToken) {

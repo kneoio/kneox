@@ -1,7 +1,11 @@
 <template>
   <n-config-provider :theme="darkTheme">
     <n-layout>
-      <n-layout-header bordered>
+      <n-layout-header :style="{ 
+        borderBottom: `3px solid ${stationColor}`,
+        boxShadow: `inset 0 0 8px ${hexToRgba(stationColor, 0.5)}, 0 0 8px ${hexToRgba(stationColor, 0.8)}, 0 0 16px ${hexToRgba(stationColor, 0.6)}`,
+        filter: 'brightness(125%) saturate(150%)'
+      }">
         <n-space align="center" justify="space-between" :wrap="false" :style="{ maxWidth: '720px', margin: '0 auto', padding: '12px 16px' }">
           <n-button quaternary size="small" @click="goBack" :focusable="false">
             <n-icon size="16"><ArrowLeft /></n-icon>
@@ -185,6 +189,14 @@ const referencesStore = useReferencesStore()
 const nMessage = useMessage()
 const route = useRoute()
 const router = useRouter()
+const stationColor = ref('#00ffff')
+
+function hexToRgba(hex: string, alpha: number) {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  return `rgba(${r},${g},${b},${alpha})`
+}
 
  
 
@@ -254,6 +266,7 @@ onMounted(async () => {
       const station = await submissionStore.getStation(stationSlug)
       form.value.brand = station?.name || stationSlug
       policy.value = station?.submissionPolicy || ''
+      stationColor.value = (station as any)?.color || '#00ffff'
     } else {
       form.value.brand = ''
     }
