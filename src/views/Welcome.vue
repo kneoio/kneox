@@ -152,7 +152,7 @@ const stations = ref<Station[]>([])
 const loading = ref(true)
 const error = ref<unknown | null>(null)
 const stationFonts = ref<Record<string, string | undefined>>({})
-const hoveredColor = ref('#00ffff')
+const hoveredColor = ref('#2196F3')
 
 function hexToRgba(hex: string, alpha: number) {
   const r = parseInt(hex.slice(1, 3), 16)

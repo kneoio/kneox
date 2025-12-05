@@ -110,7 +110,7 @@ const sessionToken = ref('')
 const userToken = ref('')
 const isAuthenticated = ref(false)
 const displayNickname = ref('')
-const stationColor = ref('#00ffff')
+const stationColor = ref('#2196F3')
 
 const stationSlug = computed(() => (route.query.brand as string) || '')
 
@@ -132,9 +132,9 @@ onMounted(async () => {
   if (stationSlug.value) {
     try {
       const station = await submissionStore.getStation(stationSlug.value)
-      stationColor.value = (station as any)?.color || '#00ffff'
+      stationColor.value = (station as any)?.color || '#2196F3'
     } catch (_) {
-      stationColor.value = '#00ffff'
+      stationColor.value = '#2196F3'
     }
   }
 

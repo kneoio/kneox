@@ -189,7 +189,7 @@ const referencesStore = useReferencesStore()
 const nMessage = useMessage()
 const route = useRoute()
 const router = useRouter()
-const stationColor = ref('#00ffff')
+const stationColor = ref('#2196F3')
 
 function hexToRgba(hex: string, alpha: number) {
   const r = parseInt(hex.slice(1, 3), 16)
@@ -266,7 +266,7 @@ onMounted(async () => {
       const station = await submissionStore.getStation(stationSlug)
       form.value.brand = station?.name || stationSlug
       policy.value = station?.submissionPolicy || ''
-      stationColor.value = (station as any)?.color || '#00ffff'
+      stationColor.value = (station as any)?.color || '#2196F3'
     } else {
       form.value.brand = ''
     }

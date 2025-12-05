@@ -2,8 +2,8 @@
   <n-config-provider :theme="darkTheme">
     <n-layout>
       <n-layout-header :style="{ 
-        borderBottom: `3px solid ${station?.color || '#00ffff'}`,
-        boxShadow: `inset 0 0 8px rgba(0,255,255,0.5), 0 0 8px rgba(0,255,255,0.8), 0 0 16px rgba(0,255,255,0.6)`,
+        borderBottom: `3px solid ${station?.color || '#2196F3'}`,
+        boxShadow: `inset 0 0 8px rgba(33,150,243,0.5), 0 0 8px rgba(33,150,243,0.8), 0 0 16px rgba(33,150,243,0.6)`,
         filter: 'brightness(125%) saturate(150%)'
       }">
         <n-space align="center" justify="space-between" :wrap="false" :style="{ maxWidth: '720px', margin: '0 auto', padding: '12px 16px' }">
