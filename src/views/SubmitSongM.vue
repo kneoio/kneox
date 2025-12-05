@@ -1,5 +1,5 @@
 <template>
-  <n-config-provider>
+  <n-config-provider :theme="darkTheme">
   <n-space vertical :style="{ maxWidth: '720px', margin: '0 auto', padding: '16px' }">
     <StationHeaderMini
       :brand="form.brand"
@@ -158,7 +158,8 @@ import {
   NSelect,
   NUpload,
   useMessage,
-  NSpace
+  NSpace,
+  darkTheme
 } from 'naive-ui'
 import { useSubmissionStore } from '../stores/public/submissionStore'
 import { useReferencesStore } from '../stores/kneo/referencesStore'

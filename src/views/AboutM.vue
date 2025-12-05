@@ -1,5 +1,5 @@
 <template>
-  <n-config-provider>
+  <n-config-provider :theme="darkTheme">
     <n-layout :style="{ minHeight: '100vh'}">
       <n-layout-header bordered :style="{ background: 'transparent' }">
         <n-space align="center" justify="space-between" :wrap="false" :style="{ maxWidth: '720px', margin: '0 auto', padding: '12px 16px' }">
@@ -74,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-import { NConfigProvider, NLayout, NLayoutHeader, NLayoutContent, NSpace, NCard, NText, NButton } from 'naive-ui'
+import { NConfigProvider, NLayout, NLayoutHeader, NLayoutContent, NSpace, NCard, NText, NButton, darkTheme } from 'naive-ui'
 
 </script>
 

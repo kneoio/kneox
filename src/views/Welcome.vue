@@ -1,5 +1,5 @@
 <template>
-  <n-config-provider>
+  <n-config-provider :theme="darkTheme">
     <n-layout>
       <n-layout-header bordered>
         <n-space align="center" justify="space-between" :wrap="false" :style="{ maxWidth: '720px', margin: '0 auto', padding: '12px 16px' }">
@@ -21,13 +21,9 @@
               </n-thing>
             </n-space>
 
-            <n-card :segmented="{ content: true }" content-style="padding: 8px 12px;">
-              <template #header>
-                <n-space align="center" justify="space-between" :wrap="false" style="width:100%">
-                  <strong>Featured Stations</strong>
-                </n-space>
-              </template>
-
+            <n-space vertical size="small">
+              <strong style="font-size: 16px;">Featured Stations</strong>
+              
               <template v-if="loading">
                 <n-skeleton text :repeat="3" />
               </template>
@@ -35,54 +31,64 @@
                 <n-text type="error" style="font-size:14px;">Failed to load stations</n-text>
               </template>
               <template v-else>
-                <n-space vertical size="small">
-                  <n-thing v-for="s in stations" :key="s.name" @click="openPlayer(s)"
-                          style="cursor:pointer;">
-                    <template #avatar>
-                      <div :style="{ width:'6px', height:'100%', borderRadius:'9999px', background: s.color }"></div>
-                    </template>
-                    <template #header>
-                      <n-grid :cols="24" :x-gap="8" :y-gap="0" style="width: 100%">
-                        <n-gi :span="18">
-                          <n-space align="center" :wrap="false" style="min-width: 0;">
-                            <strong style="font-size:15px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ s.name }}</strong>
-                            <span :class="{ online: ['ON_LINE','WARMING_UP','IDLE'].includes(s.currentStatus as any) }"
-                                   :style="(['ON_LINE','WARMING_UP','IDLE'].includes(s.currentStatus as any))
-                                   ? 'color: #84cc16 !important; text-shadow: 0 0 14px rgba(132, 204, 22, 1), 0 0 24px rgba(132, 204, 22, 0.75); font-weight: 400 !important; font-size: 12px;'
-                                   : 'font-weight: 400; font-size: 12px;'"
-                            >
-                              {{ statusText(s.currentStatus) }}
-                            </span>
+                <n-grid cols="1 s:2 m:3" responsive="screen" x-gap="12" y-gap="12">
+                  <n-grid-item v-for="s in stations" :key="s.name">
+                    <n-card 
+                      :segmented="{ content: true }" 
+                      content-style="padding: 16px;"
+                      hoverable
+                      @click="goToStation(s)"
+                      style="cursor: pointer; height: 100%;"
+                    >
+                      <n-space vertical size="small">
+                        <n-ellipsis style="font-size:16px; font-weight: bold;">{{ s.name }}</n-ellipsis>
+                        <n-space align="center" justify="space-between" :wrap="false" style="min-height: 20px;">
+                          <n-space align="center" size="small" :wrap="false" style="min-width: 0; flex: 1;">
+                            <n-ellipsis style="font-size:13px; opacity: 0.7; max-width: 100%;">{{ s.djName }}</n-ellipsis>
+                            <span style="font-size:13px; opacity: 0.7;">{{ s.countryCode }}</span>
                           </n-space>
-                        </n-gi>
-                        <n-gi :span="6" class="actions" style="display:flex; justify-content:flex-end; min-width: 0;">
-                          <n-space size="small" :wrap="false" style="white-space: nowrap;">
-                            <router-link :to="`/${s.slugName}`" style="text-decoration:none;" @click.stop>
-                              <n-button size="tiny" dashed :color="s.color">More...</n-button>
-                            </router-link>
-                          </n-space>
-                        </n-gi>
-                      </n-grid>
-                    </template>
-                    <n-divider />
-                  </n-thing>
-                </n-space>
+                          <span :class="{ online: ['ON_LINE','WARMING_UP','IDLE'].includes(s.currentStatus as any) }"
+                                 :style="(['ON_LINE','WARMING_UP','IDLE'].includes(s.currentStatus as any))
+                                 ? 'color: #84cc16 !important; text-shadow: 0 0 14px rgba(132, 204, 22, 1), 0 0 24px rgba(132, 204, 22, 0.75); font-weight: 400 !important; font-size: 12px; white-space: nowrap;'
+                                 : 'font-weight: 400; font-size: 12px; white-space: nowrap;'"
+                          >
+                            {{ statusText(s.currentStatus) }}
+                          </span>
+                        </n-space>
+                        <n-divider style="margin: 4px 0;" />
+                        <router-link :to="`/${s.slugName}`" style="text-decoration:none;" @click.stop>
+                          <n-button size="small" dashed :color="s.color" block>More...</n-button>
+                        </router-link>
+                      </n-space>
+                    </n-card>
+                  </n-grid-item>
+                  
+                  <n-grid-item>
+                    <router-link to="/outline/radiostations" style="text-decoration:none;">
+                      <n-card 
+                        :segmented="{ content: true }" 
+                        content-style="padding: 16px;"
+                        hoverable
+                        style="cursor: pointer; height: 100%; display: flex; align-items: center; justify-content: center; min-height: 120px;"
+                      >
+                        <n-space vertical align="center" justify="center" size="small">
+                          <n-icon size="48" style="opacity: 0.5;">
+                            <Plus />
+                          </n-icon>
+                          <n-text depth="3" style="font-size: 13px;">Add Station</n-text>
+                        </n-space>
+                      </n-card>
+                    </router-link>
+                  </n-grid-item>
+                </n-grid>
               </template>
-            </n-card>
+            </n-space>
 
             <n-space vertical size="small" align="center">
               <a href="https://discord.com/channels/1395012925512613998/1395012926154346538" target="_blank" rel="noopener noreferrer" style="font-size:13px; text-decoration: underline;">Discord</a>
               <router-link to="/about" style="font-size:13px; text-decoration: underline;">About</router-link>
             </n-space>
 
-            <n-space align="center" justify="center">
-              <router-link to="/outline/radiostations" style="text-decoration:none;">
-                <n-button size="large" style="width: 220px;">
-                  Manage Radiostations
-                  <template #icon><n-icon><ArrowRight /></n-icon></template>
-                </n-button>
-              </router-link>
-            </n-space>
           </n-space>
         </n-space>
       </n-layout-content>
@@ -91,14 +97,15 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onMounted, ref} from 'vue'
+import {onMounted, ref} from 'vue'
 import {
   NButton,
   NCard,
   NConfigProvider,
   NDivider,
-  NGi,
+  NEllipsis,
   NGrid,
+  NGridItem,
   NH1,
   NIcon,
   NLayout,
@@ -107,17 +114,19 @@ import {
   NSkeleton,
   NSpace,
   NText,
-  NThing
+  NThing,
+  darkTheme
 } from 'naive-ui'
-import {ArrowRight} from '@vicons/tabler'
+import {Plus} from '@vicons/tabler'
 import {useReferencesStore} from '../stores/kneo/referencesStore'
-import {MIXPLA_PLAYER_URL} from '../constants/config'
 
 interface Station {
   name: string;
   slugName: string;
   color: string;
   description: string;
+  djName?: string;
+  countryCode?: string;
   currentStatus?: 'ON_LINE' | 'OFF_LINE' | 'WARMING_UP' | 'IDLE';
   submissionPolicy?: 'NO_RESTRICTIONS' | 'REVIEW_REQUIRED' | 'NOT_ALLOWED';
   messagingPolicy?: 'NO_RESTRICTIONS' | 'REVIEW_REQUIRED' | 'NOT_ALLOWED';
@@ -128,8 +137,6 @@ const stations = ref<Station[]>([])
 const loading = ref(true)
 const error = ref<unknown | null>(null)
 
-const playerBase = computed(() => MIXPLA_PLAYER_URL)
-
 function statusText(s?: Station['currentStatus']) {
   if (s === 'ON_LINE') return 'Online'
   if (s === 'WARMING_UP') return 'Online'
@@ -138,9 +145,8 @@ function statusText(s?: Station['currentStatus']) {
   return 'Unknown'
 }
 
-function openPlayer(s: Station) {
-  const url = `${playerBase.value}?radio=${encodeURIComponent(s.slugName.toLowerCase())}`
-  window.open(url, '_blank', 'noopener,noreferrer')
+function goToStation(s: Station) {
+  window.location.href = `/${s.slugName}`
 }
 
 async function fetchStations() {

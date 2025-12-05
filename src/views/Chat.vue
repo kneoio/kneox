@@ -1,5 +1,5 @@
 <template>
-  <n-config-provider>
+  <n-config-provider :theme="darkTheme">
     <n-space vertical :style="{ maxWidth: '720px', margin: '0 auto', padding: '16px' }">
       <StationHeaderMini
         :brand="brandName"
@@ -66,7 +66,8 @@ import {
   NGridItem,
   NInput,
   NSpace,
-  useMessage
+  useMessage,
+  darkTheme
 } from 'naive-ui'
 
 import StationHeaderMini from '../components/public/StationHeaderMini.vue'

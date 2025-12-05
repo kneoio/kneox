@@ -1,5 +1,5 @@
 <template>
-  <n-config-provider>
+  <n-config-provider :theme="darkTheme">
     <n-layout>
       <n-layout-header bordered>
         <n-space align="center" justify="space-between" :wrap="false" :style="{ maxWidth: '720px', margin: '0 auto', padding: '12px 16px' }">
@@ -33,48 +33,82 @@
               </n-space>
 
               <n-card :segmented="{ content: true }" content-style="padding: 16px;">
-                <n-space vertical size="large">
-                  <n-space vertical size="small">
-                    <n-text strong>Station Info</n-text>
-                    <n-space align="center">
-                      <n-text depth="3">Songs:</n-text>
-                      <n-text :style="`color: ${station.color}; font-weight: 600;`">{{ station.availableSongs ?? 0 }}</n-text>
-                    </n-space>
-                    <n-space align="center">
-                      <n-text depth="3">Status:</n-text>
-                      <span :class="{ online: ['ON_LINE','WARMING_UP','IDLE'].includes(station.currentStatus as any) }"
-                             :style="(['ON_LINE','WARMING_UP','IDLE'].includes(station.currentStatus as any))
-                             ? 'color: #84cc16 !important; text-shadow: 0 0 14px rgba(132, 204, 22, 1), 0 0 24px rgba(132, 204, 22, 0.75); font-weight: 400 !important; font-size: 14px;'
-                             : 'font-weight: 400; font-size: 14px;'"
-                      >
-                        {{ statusText(station.currentStatus) }}
-                      </span>
-                    </n-space>
+                <n-space vertical size="small">
+                  <n-text strong>Station Info</n-text>
+                  <n-space align="center">
+                    <n-text depth="3">Songs:</n-text>
+                    <n-text :style="`color: ${station.color}; font-weight: 600;`">{{ station.availableSongs ?? 0 }}</n-text>
                   </n-space>
-
-                  <n-divider style="margin: 8px 0;" />
-
-                  <n-space vertical size="small">
-                    <n-button v-if="station.messagingPolicy !== 'NOT_ALLOWED'" type="primary" :color="station.color" @click="goToChat" block>
-                      <template #icon><n-icon><MessageCircle /></n-icon></template>
-                      Jump to Chat
-                    </n-button>
-                    <n-button v-if="station.submissionPolicy !== 'NOT_ALLOWED'" :color="station.color" @click="showSubmitSong = true" block>
-                      <template #icon><n-icon><Music /></n-icon></template>
-                      Submit Song
-                    </n-button>
+                  <n-space align="center">
+                    <n-text depth="3">Status:</n-text>
+                    <span :class="{ online: ['ON_LINE','WARMING_UP','IDLE'].includes(station.currentStatus as any) }"
+                           :style="(['ON_LINE','WARMING_UP','IDLE'].includes(station.currentStatus as any))
+                           ? 'color: #84cc16 !important; text-shadow: 0 0 14px rgba(132, 204, 22, 1), 0 0 24px rgba(132, 204, 22, 0.75); font-weight: 400 !important; font-size: 14px;'
+                           : 'font-weight: 400; font-size: 14px;'"
+                    >
+                      {{ statusText(station.currentStatus) }}
+                    </span>
                   </n-space>
                 </n-space>
               </n-card>
+
+              <n-grid cols="1 s:2" responsive="screen" x-gap="12" y-gap="12">
+                <n-grid-item>
+                  <n-card 
+                    :segmented="{ content: true }" 
+                    content-style="padding: 16px;"
+                    hoverable
+                    @click="openPlayer"
+                    style="cursor: pointer; height: 100%;"
+                  >
+                    <n-space vertical align="center" justify="center" size="small">
+                      <n-icon size="32" :color="station.color">
+                        <PlayerPlay />
+                      </n-icon>
+                      <n-text strong>Open Player</n-text>
+                    </n-space>
+                  </n-card>
+                </n-grid-item>
+
+                <n-grid-item v-if="station.messagingPolicy !== 'NOT_ALLOWED'">
+                  <n-card 
+                    :segmented="{ content: true }" 
+                    content-style="padding: 16px;"
+                    hoverable
+                    @click="goToChat"
+                    style="cursor: pointer; height: 100%;"
+                  >
+                    <n-space vertical align="center" justify="center" size="small">
+                      <n-icon size="32" :color="station.color">
+                        <MessageCircle />
+                      </n-icon>
+                      <n-text strong>Chat with DJ</n-text>
+                    </n-space>
+                  </n-card>
+                </n-grid-item>
+
+                <n-grid-item v-if="station.submissionPolicy !== 'NOT_ALLOWED'">
+                  <n-card 
+                    :segmented="{ content: true }" 
+                    content-style="padding: 16px;"
+                    hoverable
+                    @click="goToSubmitSong"
+                    style="cursor: pointer; height: 100%;"
+                  >
+                    <n-space vertical align="center" justify="center" size="small">
+                      <n-icon size="32" :color="station.color">
+                        <Music />
+                      </n-icon>
+                      <n-text strong>Submit Song</n-text>
+                    </n-space>
+                  </n-card>
+                </n-grid-item>
+              </n-grid>
             </n-space>
           </template>
         </n-space>
       </n-layout-content>
     </n-layout>
-
-    <n-modal v-model:show="showSubmitSong" preset="card" title="Submit Song" :style="{ maxWidth: '720px' }" :segmented="{ content: true }">
-      <SubmitSongForm :brand-slug="brandSlug" @close="showSubmitSong = false" />
-    </n-modal>
   </n-config-provider>
 </template>
 
@@ -85,21 +119,22 @@ import {
   NButton,
   NCard,
   NConfigProvider,
-  NDivider,
+  NGrid,
+  NGridItem,
   NH1,
   NIcon,
   NLayout,
   NLayoutContent,
   NLayoutHeader,
-  NModal,
   NSkeleton,
   NSpace,
   NText,
-  NThing
+  NThing,
+  darkTheme
 } from 'naive-ui'
-import { ArrowLeft, MessageCircle, Music } from '@vicons/tabler'
+import { ArrowLeft, MessageCircle, Music, PlayerPlay } from '@vicons/tabler'
 import { useReferencesStore } from '../stores/kneo/referencesStore'
-import SubmitSongForm from '../components/public/SubmitSongForm.vue'
+import { MIXPLA_PLAYER_URL } from '../constants/config'
 
 interface Station {
   name: string;
@@ -119,7 +154,6 @@ const brandSlug = ref(route.params.brand as string)
 const station = ref<Station | null>(null)
 const loading = ref(true)
 const error = ref<unknown | null>(null)
-const showSubmitSong = ref(false)
 
 function statusText(s?: Station['currentStatus']) {
   if (s === 'ON_LINE') return 'Online'
@@ -135,6 +169,15 @@ function goHome() {
 
 function goToChat() {
   router.push({ name: 'PostMessage', query: { brand: brandSlug.value } })
+}
+
+function goToSubmitSong() {
+  router.push({ name: 'SubmitSong', query: { brand: brandSlug.value } })
+}
+
+function openPlayer() {
+  const url = `${MIXPLA_PLAYER_URL}?radio=${encodeURIComponent(brandSlug.value.toLowerCase())}`
+  window.open(url, '_blank', 'noopener,noreferrer')
 }
 
 async function fetchStation() {
