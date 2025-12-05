@@ -15,16 +15,11 @@
         </n-space>
       </n-layout-header>
 
-      <n-layout-content :style="{ padding: '16px 16px 24px' }">
+      <n-layout-content :style="{ padding: '40px 16px 24px' }">
         <n-space vertical :style="{ maxWidth: '720px', margin: '0 auto' }">
           <n-form v-if="!isAuthenticated" :model="form" label-placement="top">
-        <n-grid cols="12" x-gap="16" y-gap="8">
-          <n-grid-item :span="12">
-            <n-form-item label="Nickname (optional)">
-              <n-input v-model:value="form.nickname" placeholder="Your display name" />
-            </n-form-item>
-          </n-grid-item>
-
+        <n-grid cols="12" x-gap="16" y-gap="16">
+          <!-- Email + confirmation first -->
           <n-grid-item :span="12">
             <EmailVerifyFields
               :email="form.email"
@@ -38,6 +33,26 @@
             />
           </n-grid-item>
 
+          <!-- Nickname after confirmation/email -->
+          <n-grid-item :span="12">
+            <n-form-item label="Nickname (optional)">
+              <n-input v-model:value="form.nickname" placeholder="Your display name" />
+            </n-form-item>
+          </n-grid-item>
+
+          <!-- Chat rules above the button -->
+          <n-grid-item :span="12">
+            <div
+              style="border: 1px solid #d9d9d9; border-radius: 6px; padding: 12px; font-size: 13px; line-height: 1.6; margin-top: 4px;"
+            >
+              <strong>Chat rules</strong>
+              <div style="margin-top: 4px;">
+                Please keep the chat respectful. Do not post illegal content, harassment, hate speech or spam.
+              </div>
+            </div>
+          </n-grid-item>
+
+          <!-- Join button last -->
           <n-grid-item :span="12">
             <n-space justify="end">
               <n-button

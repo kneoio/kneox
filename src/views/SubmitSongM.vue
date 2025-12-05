@@ -15,10 +15,50 @@
         </n-space>
       </n-layout-header>
 
-      <n-layout-content :style="{ padding: '16px 16px 24px' }">
+      <n-layout-content :style="{ padding: '40px 16px 24px' }">
         <n-space vertical :style="{ maxWidth: '720px', margin: '0 auto' }">
           <n-form :model="form" ref="formRef" label-placement="top">
-      <n-grid cols="12" x-gap="16" y-gap="8">
+      <n-grid cols="12" x-gap="16" y-gap="16">
+        <!-- Email + confirmation first -->
+        <n-grid-item :span="12">
+          <EmailVerifyFields
+            :email="form.email"
+            :confirmation-code="form.confirmationCode"
+            :sending-code="sendingCode"
+            :code-sent="codeSent"
+            :can-send="isValidEmail(form.email)"
+            @update:email="v => (form.email = v)"
+            @update:confirmationCode="v => (form.confirmationCode = v)"
+            @send-code="sendCode"
+          />
+        </n-grid-item>
+
+        <!-- Then file upload -->
+        <n-grid-item :span="12">
+          <n-form-item label="Audio File (mp3, wav)">
+            <n-upload
+              v-model:file-list="fileList"
+              :multiple="false"
+              :max="1"
+              :show-download-button="false"
+              :disabled="submitting"
+              @change="onFileChange"
+              @remove="handleRemove"
+              :custom-request="handleUploadPublic"
+              :show-remove-button="true"
+            >
+              <n-button>Choose File</n-button>
+            </n-upload>
+          </n-form-item>
+          <n-alert v-if="uploadStatus && uploadStatus.type === 'success'" type="success" closable @close="uploadStatus = null">
+            {{ uploadStatus.message }}
+          </n-alert>
+          <n-alert v-if="uploadStatus && uploadStatus.type === 'error'" type="error" closable @close="uploadStatus = null">
+            {{ uploadStatus.message }}
+          </n-alert>
+        </n-grid-item>
+
+        <!-- Then main metadata fields -->
         <n-grid-item :span="12">
           <n-grid cols="1 s:2" responsive="screen" x-gap="16" y-gap="8">
             <n-grid-item>
@@ -48,44 +88,6 @@
           <n-form-item label="Description (optional)">
             <n-input v-model:value="form.description" type="textarea" :autosize="{ minRows: 3, maxRows: 6 }" placeholder="" />
           </n-form-item>
-        </n-grid-item>
-
-        <!-- Responsive Email/Code: shared component -->
-        <n-grid-item :span="12">
-          <EmailVerifyFields
-            :email="form.email"
-            :confirmation-code="form.confirmationCode"
-            :sending-code="sendingCode"
-            :code-sent="codeSent"
-            :can-send="isValidEmail(form.email)"
-            @update:email="v => (form.email = v)"
-            @update:confirmationCode="v => (form.confirmationCode = v)"
-            @send-code="sendCode"
-          />
-        </n-grid-item>
-
-        <n-grid-item :span="12">
-          <n-form-item label="Audio File (mp3, wav)">
-            <n-upload
-              v-model:file-list="fileList"
-              :multiple="false"
-              :max="1"
-              :show-download-button="false"
-              :disabled="submitting"
-              @change="onFileChange"
-              @remove="handleRemove"
-              :custom-request="handleUploadPublic"
-              :show-remove-button="true"
-            >
-              <n-button>Choose File</n-button>
-            </n-upload>
-          </n-form-item>
-          <n-alert v-if="uploadStatus && uploadStatus.type === 'success'" type="success" closable @close="uploadStatus = null">
-            {{ uploadStatus.message }}
-          </n-alert>
-          <n-alert v-if="uploadStatus && uploadStatus.type === 'error'" type="error" closable @close="uploadStatus = null">
-            {{ uploadStatus.message }}
-          </n-alert>
         </n-grid-item>
       </n-grid>
 
