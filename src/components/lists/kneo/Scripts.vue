@@ -12,14 +12,20 @@
     <n-gi :span="isMobile ? 1 : 6">
       <n-button-group>
         <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
-        <n-button
-            type="default"
+        <n-dropdown
+            trigger="click"
             :disabled="!hasSelection"
-            @click="handleSetPublic"
-            size="large"
+            :options="accessLevelOptions"
+            @select="handleSetAccessLevel"
         >
-          Set Public
-        </n-button>
+          <n-button
+              type="default"
+              :disabled="!hasSelection"
+              size="large"
+          >
+            Set Access Level
+          </n-button>
+        </n-dropdown>
         <n-button @click="handleImport" type="default" size="large">Import</n-button>
         <n-button
             type="default"
@@ -75,6 +81,7 @@ import {
   NButtonGroup,
   NCheckbox,
   NDataTable,
+  NDropdown,
   NGi,
   NGrid,
   NPageHeader,
@@ -91,7 +98,7 @@ import { handleFormSaveError } from '../../../utils/errorHandling';
 import apiClient from '../../../api/apiClient';
 
 export default defineComponent({
-  components: {NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon},
+  components: {NPageHeader, NDataTable, NButtonGroup, NButton, NDropdown, NGi, NGrid, LoaderIcon},
   setup() {
     const router = useRouter();
     const message = useMessage();
@@ -186,7 +193,13 @@ export default defineComponent({
       }
     };
 
-    preFetch();
+    (async () => {
+      try {
+        await preFetch();
+      } catch (error) {
+        console.error('Initial fetch failed:', error);
+      }
+    })();
     startPeriodicRefresh();
 
     onMounted(() => {
@@ -237,6 +250,42 @@ export default defineComponent({
       } catch (error) {
         console.error('Failed to delete Scripts:', error);
         message.error('Failed to delete Scripts.');
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    const accessLevelOptions = [
+      { label: 'Set Public', key: 'PUBLIC' },
+      { label: 'Set Private', key: 'PRIVATE' }
+    ];
+
+    const handleSetAccessLevel = async (key: string) => {
+      if (checkedRowKeys.value.length === 0) {
+        message.warning('Please select scripts to set access level.');
+        return;
+      }
+
+      try {
+        loading.value = true;
+        const topLevelIds = new Set((treeData.value || []).map((r: any) => r.id));
+        const scriptIds = checkedRowKeys.value.filter((id) => topLevelIds.has(id as string));
+        
+        if (scriptIds.length === 0) {
+          message.warning('Please select scripts (not scenes) to set access level.');
+          return;
+        }
+
+        const updatePromises = scriptIds.map((id) => 
+          apiClient.patch(`/scripts/${id}/access-level`, { accessLevel: key })
+        );
+        await Promise.all(updatePromises);
+        message.success(`${scriptIds.length} script(s) set to ${key.toLowerCase()}.`);
+        checkedRowKeys.value = [];
+        await preFetch();
+      } catch (error) {
+        console.error('Failed to set scripts access level:', error);
+        handleFormSaveError(error, message);
       } finally {
         loading.value = false;
       }
@@ -419,7 +468,8 @@ export default defineComponent({
       handleImport,
       handleExport,
       handleExportExtended,
-      handleSetPublic,
+      accessLevelOptions,
+      handleSetAccessLevel,
       hasSelection,
       getRowProps,
       handlePageChange,

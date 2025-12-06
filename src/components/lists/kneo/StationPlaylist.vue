@@ -286,6 +286,21 @@ export default defineComponent( {
       fetchAvailableFragments( 1, getAvailablePagination.value?.pageSize );
     };
 
+    const rateSoundFragment = async ( row: any, action: 'LIKE' | 'DISLIKE' ) => {
+      const id = row.soundfragment.id;
+      try {
+        await store.rateSoundFragment( id, props.brandName, action );
+        await fetchAvailableFragments( getAvailablePagination.value?.page, getAvailablePagination.value?.pageSize );
+      } catch ( error: any ) {
+        const errorData = error?.response?.data;
+        if ( errorData ) {
+          message.error( typeof errorData === 'string' ? errorData : JSON.stringify( errorData ) );
+        } else {
+          message.error( error?.message || 'Request failed' );
+        }
+      }
+    };
+
     const columns = computed<DataTableColumns<any>>( () => [
       { type: 'selection' },
       { title: 'Title', key: 'soundfragment.title', width: 300 },
@@ -301,8 +316,24 @@ export default defineComponent( {
           const ratedByBrandCount = row.ratedByBrandCount ?? 100;
           const rating = ratedByBrandCount - 100;
           const ratingText = rating > 0 ? `+${rating}` : `${rating}`;
-          return h( 'div', { style: 'display: flex; align-items: center;', title: ratingText }, [
-            h( RatingBar, { value: rating, segments: 10, height: 8 } )
+          return h( 'div', { style: 'display: flex; align-items: center; gap: 4px;', title: ratingText }, [
+            h( NButton, {
+              size: 'tiny',
+              tertiary: true,
+              onClick: ( e: MouseEvent ) => {
+                e.stopPropagation();
+                rateSoundFragment( row, 'DISLIKE' );
+              }
+            }, { default: () => '-' } ),
+            h( RatingBar, { value: rating, segments: 10, height: 8 } ),
+            h( NButton, {
+              size: 'tiny',
+              tertiary: true,
+              onClick: ( e: MouseEvent ) => {
+                e.stopPropagation();
+                rateSoundFragment( row, 'LIKE' );
+              }
+            }, { default: () => '+' } )
           ] );
         }
       },

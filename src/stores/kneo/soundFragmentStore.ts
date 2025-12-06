@@ -255,6 +255,12 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         return response.data;
     };
 
+    const rateSoundFragment = async (id: string, brandName: string, action: 'LIKE' | 'DISLIKE') => {
+        const response = await apiClient.patch(`/soundfragments/${id}/rating?brand=${encodeURIComponent(brandName)}`, { action });
+        if (!response?.data) throw new Error('Invalid API response');
+        return response.data;
+    };
+
     // Centralized display mapping for source values
     const formatSource = (source?: string): string => {
         const map: Record<string, string> = {
@@ -283,12 +289,12 @@ export const useSoundFragmentStore = defineStore('soundFragmentStore', () => {
         save,
         delete: deleteSoundFragment,
         uploadFile,
-        //startUploadSession,
         updateCurrent,
         downloadFile,
         fetchAccessList,
         bulkBrandUpdate,
         archive: archiveSoundFragment,
+        rateSoundFragment,
         formatSource
     };
 });
