@@ -299,7 +299,7 @@ export default defineComponent({
     onMounted(async () => {
       try {
         loadingBar.start();
-        await promptStore.fetchAll(1, 100, { master: true });
+        await promptStore.fetchAll(1, 100);
         await load();
       } catch (e) {
         message.error(getErrorMessage(e));
