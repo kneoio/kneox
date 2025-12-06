@@ -13,12 +13,12 @@
       <n-button-group>
         <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
         <n-button
-            type="error"
+            type="default"
             :disabled="!hasSelection"
-            @click="handleDelete"
+            @click="handleSetPublic"
             size="large"
         >
-          Delete ({{ checkedRowKeys.length }})
+          Set Public
         </n-button>
         <n-button @click="handleImport" type="default" size="large">Import</n-button>
         <n-button
@@ -36,6 +36,14 @@
             size="large"
         >
           Export Extended ({{ checkedRowKeys.length }})
+        </n-button>
+        <n-button
+            type="error"
+            :disabled="!hasSelection"
+            @click="handleDelete"
+            size="large"
+        >
+          Delete ({{ checkedRowKeys.length }})
         </n-button>
       </n-button-group>
     </n-gi>
@@ -411,6 +419,7 @@ export default defineComponent({
       handleImport,
       handleExport,
       handleExportExtended,
+      handleSetPublic,
       hasSelection,
       getRowProps,
       handlePageChange,

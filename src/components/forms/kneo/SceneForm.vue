@@ -170,7 +170,6 @@ export default defineComponent({
     const promptOptions = computed(() =>
       (promptStore.getEntries || [])
         .filter((p: any) => typeof p.id === 'string' && p.id)
-        .filter((p: any) => p?.master === true)
         .map((p: any) => ({
           label: p.title || p.id,
           value: p.id as string
