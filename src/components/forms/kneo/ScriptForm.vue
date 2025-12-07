@@ -234,7 +234,7 @@
         <n-button v-if="selectedScene?.id" type="error" @click="deleteSceneFromDialog">Delete</n-button>
         <n-space>
           <n-button @click="closeSceneDialog">Cancel</n-button>
-          <n-button type="primary" @click="saveSceneDialog">Save</n-button>
+          <n-button type="primary" @click="saveSceneDialog">OK</n-button>
         </n-space>
       </n-space>
     </template>

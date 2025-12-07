@@ -226,7 +226,7 @@
               </n-gi>
 
               <n-gi v-if="profileOverrideEnabled">
-                <n-form-item label="Name">
+                <n-form-item label="Local Name (optional)">
                   <n-input v-model:value="localFormData.profileOverriding!.name" 
                     placeholder=""
                     style="width: 50%; max-width: 600px;" />
@@ -234,7 +234,7 @@
               </n-gi>
 
               <n-gi v-if="profileOverrideEnabled">
-                <n-form-item label="Additional Information">
+                <n-form-item label="Additional Information (optional)">
                   <n-input v-model:value="localFormData.profileOverriding!.description" 
                     type="textarea" 
                     placeholder=""
