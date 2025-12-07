@@ -128,7 +128,7 @@
     preset="dialog"
     :closable="false"
     :mask-closable="false"
-    :close-on-esc="false"
+    :close-on-esc="true"
     :style="{ width: isWideScreen ? '1000px' : '90vw', backgroundColor: dialogBackgroundColor }"
   >
     <template #header>
@@ -190,7 +190,7 @@
     </n-space>
   </n-modal>
 
-  <n-modal v-model:show="showReplicateDialog" preset="dialog" title="Replicate Prompt" :style="{ backgroundColor: dialogBackgroundColor }">
+  <n-modal v-model:show="showReplicateDialog" preset="dialog" title="Replicate Prompt" :close-on-esc="true" :style="{ backgroundColor: dialogBackgroundColor }">
     <n-space vertical>
       <n-text>Select languages to replicate this prompt:</n-text>
       <n-grid :cols="3" x-gap="12" y-gap="8">

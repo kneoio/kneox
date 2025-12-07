@@ -32,6 +32,17 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
+                <n-form-item label="Description">
+                  <n-input
+                    v-model:value="localFormData.description"
+                    type="textarea"
+                    :autosize="{ minRows: 3, maxRows: 6 }"
+                    style="width: 50%; max-width: 600px;"
+                    placeholder=""
+                  />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
                 <n-form-item label="Language">
                   <n-select v-model:value="localFormData.languageCode" :options="langOptions"
                             style="width: 25%; max-width: 300px;"/>
@@ -96,8 +107,8 @@
     preset="dialog"
     :closable="false"
     :mask-closable="false"
-    :close-on-esc="false"
-    :style="{ backgroundColor: dialogBackgroundColor }"
+    :close-on-esc="true"
+    :style="{ width: isWideScreen ? '1000px' : '90vw', backgroundColor: dialogBackgroundColor }"
   >
     <template #header>
       <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
@@ -110,27 +121,40 @@
         <n-grid :cols="1" x-gap="12" y-gap="8">
           <n-gi>
             <n-form-item label="Song">
-              <n-select v-model:value="testSongId" :options="songOptions" filterable style="width: 100%; max-width: 100%;" />
+              <n-select v-model:value="testSongId" :options="songOptions" filterable style="width: 100%; max-width: 480px;" />
             </n-form-item>
           </n-gi>
           <n-gi>
             <n-form-item label="Agent">
-              <n-select v-model:value="testAgentId" :options="agentOptions" filterable style="width: 100%; max-width: 100%;" />
+              <n-select v-model:value="testAgentId" :options="agentOptions" filterable style="width: 100%; max-width: 480px;" />
             </n-form-item>
           </n-gi>
           <n-gi>
             <n-form-item label="Station">
-              <n-select v-model:value="testStationId" :options="stationOptions" filterable style="width: 100%; max-width: 100%;" />
+              <n-select v-model:value="testStationId" :options="stationOptions" filterable style="width: 100%; max-width: 480px;" />
             </n-form-item>
           </n-gi>
         </n-grid>
       </n-form>
       <n-space>
-        <n-button type="primary" :loading="testLoading" @click="runDraftTest">Run (Ctrl+Enter)</n-button>
+        <n-button type="primary" :loading="testLoading" :disabled="!canRunTest" @click="runDraftTest">Run (Ctrl+Enter)</n-button>
         <n-button type="default" :disabled="testLoading" @click="showTestDialog = false">Close</n-button>
       </n-space>
       <n-text depth="3">Result</n-text>
-      <n-input type="textarea" :value="testResult" :autosize="{ minRows: 6, maxRows: 12 }" style="width: 100%;" readonly />
+      <CodeMirror
+        :model-value="testResult"
+        basic
+        :disabled="true"
+        :style="{
+          width: '100%',
+          maxWidth: '1000px',
+          height: '360px',
+          border: '1px solid #d9d9d9',
+          borderRadius: '3px',
+          overflow: 'auto'
+        }"
+        :extensions="editorExtensions"
+      />
     </n-space>
   </n-modal>
 
@@ -209,6 +233,7 @@ export default defineComponent({
     const aiAgentStore = useAiAgentStore();
     const radioStore = useRadioStationStore();
     const route = useRoute();
+    const isWideScreen = ref(window.innerWidth >= 1200);
     const activeTab = ref('properties');
     const aclData = ref<any[]>([]);
     const aclLoading = ref(false);
@@ -222,6 +247,7 @@ export default defineComponent({
       lastModifiedDate: '',
       title: '',
       content: '',
+      description: '',
       languageCode: '',
       archived: 0,
       enabled: false,
@@ -236,6 +262,7 @@ export default defineComponent({
     const testStationId = ref<string | null>(null);
     const testResult = ref('');
     const testLoading = ref(false);
+    const canRunTest = computed(() => !!(testSongId.value && testAgentId.value && testStationId.value) && !testLoading.value);
 
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -246,12 +273,18 @@ export default defineComponent({
       }
     };
 
+    const handleResize = () => {
+      isWideScreen.value = window.innerWidth >= 1200;
+    };
+
     onMounted(() => {
       window.addEventListener('keydown', handleKeyDown);
+      window.addEventListener('resize', handleResize);
     });
 
     onUnmounted(() => {
       window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('resize', handleResize);
     });
 
     const promptTypeOptions = (referencesStore as any).promptTypeOptions;
@@ -276,6 +309,24 @@ export default defineComponent({
         try { await soundStore.fetchAll(1, 100); } catch {}
         try { await aiAgentStore.fetchAllUnsecured?.(1, 100); } catch {}
         try { await radioStore.fetchAll(1, 100); } catch {}
+
+        const songs = (soundStore as any).getEntries || [];
+        if (songs.length > 0) {
+          const randomSong = songs[Math.floor(Math.random() * songs.length)];
+          testSongId.value = randomSong.id;
+        }
+
+        const agents = (aiAgentStore as any).getEntries || [];
+        if (agents.length > 0) {
+          const randomAgent = agents[Math.floor(Math.random() * agents.length)];
+          testAgentId.value = randomAgent.id;
+        }
+
+        const stations = (radioStore as any).getEntries || [];
+        if (stations.length > 0) {
+          const randomStation = stations[Math.floor(Math.random() * stations.length)];
+          testStationId.value = randomStation.id;
+        }
       } finally {
         loadingBar.finish();
       }
@@ -292,7 +343,13 @@ export default defineComponent({
           code: localFormData.content
         };
         const response = await apiClient.post('/drafts/test', payload, { responseType: 'text' });
-        testResult.value = typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
+        const raw = typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
+        try {
+          const parsed = JSON.parse(raw);
+          testResult.value = JSON.stringify(parsed, null, 2);
+        } catch {
+          testResult.value = raw;
+        }
       } catch (error: any) {
         const data = error?.response?.data;
         const opts = { duration: 0, closable: true } as const;
@@ -316,6 +373,7 @@ export default defineComponent({
         loadingBar.start();
         const saveData: DraftSave = {
           title: localFormData.title,
+          description: localFormData.description,
           content: localFormData.content,
           languageCode: localFormData.languageCode,
           archived: localFormData.archived,
@@ -429,7 +487,9 @@ export default defineComponent({
       aclData,
       aclLoading,
       themeVars,
-      dialogBackgroundColor
+      dialogBackgroundColor,
+      isWideScreen,
+      canRunTest
     };
   }
 });

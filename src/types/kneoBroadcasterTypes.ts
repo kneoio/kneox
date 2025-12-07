@@ -431,6 +431,7 @@ export interface Draft {
     draftType?: string;
     title?: string;
     content?: string;
+    description?: string;
     languageCode?: string;
     archived?: number;
     enabled?: boolean;
@@ -443,6 +444,7 @@ export interface DraftSave {
     draftType?: string;
     title?: string;
     content?: string;
+    description?: string;
     languageCode?: string;
     archived?: number;
     enabled?: boolean;
