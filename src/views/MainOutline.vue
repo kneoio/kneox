@@ -219,10 +219,6 @@ export default defineComponent({
             key: `station-${station.slugName}-listeners`
           },
           {
-            label: 'Scripts',
-            key: `station-${station.slugName}-scripts`
-          },
-          {
             label: 'Chat',
             key: `station-${station.slugName}-chat`
           },
@@ -406,9 +402,6 @@ export default defineComponent({
       if (route.name === 'StationListeners' && route.params.brandName) {
         return `station-${route.params.brandName}-listeners`;
       }
-      if (route.name === 'StationScripts' && route.params.brandName) {
-        return `station-${route.params.brandName}-scripts`;
-      }
       if (route.name === 'StationChat' && route.params.brandName) {
         return `station-${route.params.brandName}-chat`;
       }
@@ -433,9 +426,6 @@ export default defineComponent({
       } else if (key.startsWith('station-') && key.endsWith('-listeners')) {
         const brandName = key.replace('station-', '').replace('-listeners', '');
         await router.push({name: 'StationListeners', params: {brandName: brandName}});
-      } else if (key.startsWith('station-') && key.endsWith('-scripts')) {
-        const brandName = key.replace('station-', '').replace('-scripts', '');
-        await router.push({name: 'StationScripts', params: {brandName: brandName}});
       } else if (key.startsWith('station-') && key.endsWith('-chat')) {
         const brandName = key.replace('station-', '').replace('-chat', '');
         await router.push({name: 'StationChat', params: {brandName: brandName}});
