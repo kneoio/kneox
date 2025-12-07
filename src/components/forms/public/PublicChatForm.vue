@@ -146,7 +146,7 @@ export default defineComponent({
 
     onMounted(() => {
       chatStore.clearMessages()
-      chatStore.connect(props.userToken)
+      chatStore.connect(props.userToken, props.stationSlug)
       scrollToBottom()
     })
 

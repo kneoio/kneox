@@ -36,6 +36,7 @@ export const useChatWebSocketStore = defineStore( 'chatWebSocketStore', () => {
     const streamingUsername = ref<string | undefined>( undefined );
     const isStreaming = ref( false );
     const shouldReconnect = ref( true );
+    const currentBrandSlug = ref<string>( '' );
 
     const buildWebSocketUrl = (): string => {
         const baseUrl = apiClient.defaults.baseURL || '';
@@ -56,10 +57,11 @@ export const useChatWebSocketStore = defineStore( 'chatWebSocketStore', () => {
         );
     };
 
-    const connect = () => {
+    const connect = ( brandSlug: string ) => {
         if ( isWebSocketActive( chatWebsocket.value ) ) return;
 
         shouldReconnect.value = true;
+        currentBrandSlug.value = brandSlug;
         username.value =
             keycloak.tokenParsed?.preferred_username ||
             keycloak.tokenParsed?.email ||
@@ -168,7 +170,7 @@ export const useChatWebSocketStore = defineStore( 'chatWebSocketStore', () => {
 
             if ( shouldReconnect.value && [1000, 1001, 1006].includes( event.code ) ) {
                 console.log( 'Reconnecting chat in 3s...' );
-                setTimeout( () => connect(), 3000 );
+                setTimeout( () => connect( currentBrandSlug.value ), 3000 );
             }
         };
 
@@ -213,7 +215,7 @@ export const useChatWebSocketStore = defineStore( 'chatWebSocketStore', () => {
                 action: 'sendMessage',
                 username: username.value,
                 content: content.trim(),
-                stationId: stationId,
+                brandSlug: stationId,
                 id: `${Date.now()}-${Math.random().toString( 36 ).substr( 2, 9 )}`,
                 timestamp: Date.now(),
                 type: MessageType.USER
@@ -230,7 +232,7 @@ export const useChatWebSocketStore = defineStore( 'chatWebSocketStore', () => {
     const getHistory = ( limit: number = 50 ) => {
         if ( !isConnected.value || !chatWebsocket.value ) return;
         try {
-            chatWebsocket.value.send( JSON.stringify( { action: 'getHistory', limit } ) );
+            chatWebsocket.value.send( JSON.stringify( { action: 'getHistory', brandSlug: currentBrandSlug.value, limit } ) );
         } catch ( err ) {
             console.error( 'Error requesting history:', err );
         }

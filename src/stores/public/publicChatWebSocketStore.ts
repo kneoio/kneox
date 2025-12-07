@@ -32,6 +32,8 @@ export const usePublicChatWebSocketStore = defineStore('publicChatWebSocketStore
   const streamingUsername = ref<string | undefined>(undefined)
   const isStreaming = ref(false)
   const shouldReconnect = ref(true)
+  const currentBrandSlug = ref<string>('')
+  const currentUserToken = ref<string>('')
 
   const buildWebSocketUrl = (userToken: string): string => {
     // Use backend host from apiServer and per-user token from registration flow
@@ -49,10 +51,12 @@ export const usePublicChatWebSocketStore = defineStore('publicChatWebSocketStore
     )
   }
 
-  const connect = (userToken: string) => {
+  const connect = (userToken: string, brandSlug: string) => {
     if (isWebSocketActive(chatWebsocket.value)) return
 
     shouldReconnect.value = true
+    currentUserToken.value = userToken
+    currentBrandSlug.value = brandSlug
 
     chatWebsocket.value = new WebSocket(buildWebSocketUrl(userToken))
 
@@ -152,7 +156,7 @@ export const usePublicChatWebSocketStore = defineStore('publicChatWebSocketStore
 
       if (shouldReconnect.value && [1000, 1001, 1006].includes(event.code)) {
         console.log('Reconnecting public chat in 3s...')
-        setTimeout(() => connect(userToken), 3000)
+        setTimeout(() => connect(currentUserToken.value, currentBrandSlug.value), 3000)
       }
     }
 
@@ -173,7 +177,7 @@ export const usePublicChatWebSocketStore = defineStore('publicChatWebSocketStore
     }
   }
 
-  const sendMessage = (content: string, stationId: string, username: string) => {
+  const sendMessage = (content: string, brandSlug: string, username: string) => {
     if (!isConnected.value || !chatWebsocket.value) {
       lastError.value = 'Not connected to chat server'
       return
@@ -197,7 +201,7 @@ export const usePublicChatWebSocketStore = defineStore('publicChatWebSocketStore
         action: 'sendMessage',
         username: username,
         content: content.trim(),
-        stationId: stationId,
+        brandSlug: brandSlug,
         id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         timestamp: Date.now(),
         type: MessageType.USER
@@ -214,7 +218,7 @@ export const usePublicChatWebSocketStore = defineStore('publicChatWebSocketStore
   const getHistory = (limit: number = 50) => {
     if (!isConnected.value || !chatWebsocket.value) return
     try {
-      chatWebsocket.value.send(JSON.stringify({ action: 'getHistory', limit }))
+      chatWebsocket.value.send(JSON.stringify({ action: 'getHistory', brandSlug: currentBrandSlug.value, limit }))
     } catch (err) {
       console.error('Error requesting history:', err)
     }
