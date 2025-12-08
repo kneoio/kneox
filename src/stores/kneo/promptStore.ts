@@ -37,7 +37,7 @@ export const usePromptStore = defineStore('promptStore', () => {
       lastModifiedDate: '',
       enabled: false,
       prompt: '',
-      promptType: '',
+      promptType: 'SONG',
       languageCode: '',
       master: false,
       locked: false

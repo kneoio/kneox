@@ -80,11 +80,16 @@
               </n-gi>
               <n-gi>
                 <n-form-item label="Options">
-                  <div style="display: flex; align-items: center; gap: 16px;">
+                  <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
                     <n-checkbox v-model:checked="localFormData.enabled">Enabled</n-checkbox>
                     <n-checkbox v-model:checked="localFormData.master">Master</n-checkbox>
                     <n-checkbox :checked="localFormData.locked" disabled>Locked</n-checkbox>
                     <n-checkbox v-model:checked="localFormData.podcast">Podcast</n-checkbox>
+                    <n-radio-group v-model:value="localFormData.promptType" name="prompt-type-group" style="margin-left: 16px;">
+                      <n-radio-button value="SONG">Song</n-radio-button>
+                      <n-radio-button value="ADVERTISMENT">Advertisment</n-radio-button>
+                      <n-radio-button value="REMAINDER">Remainder</n-radio-button>
+                    </n-radio-group>
                   </div>
                 </n-form-item>
               </n-gi>
@@ -413,7 +418,7 @@ export default defineComponent({
       description: '',
       enabled: false,
       prompt: '',
-      promptType: '',
+      promptType: 'SONG',
       languageCode: '',
       master: false,
       locked: false,
@@ -440,12 +445,13 @@ export default defineComponent({
         const titleToSave = hasSuffixInTitle || !suffix
           ? (localFormData.title || '')
           : `${(localFormData.title || '').trim()} (${suffix})`;
+        const normalizedPromptType = (localFormData as any).promptType || 'SONG';
         const saveData: BroadcastPromptSave = {
           title: titleToSave,
           description: localFormData.description,
           enabled: localFormData.enabled,
           prompt: localFormData.prompt,
-          promptType: localFormData.promptType,
+          promptType: normalizedPromptType,
           languageCode: localFormData.languageCode,
           master: localFormData.master,
           locked: localFormData.locked,
@@ -652,6 +658,9 @@ export default defineComponent({
           await store.fetch(id);
           const data = { ...store.getCurrent } as BroadcastPrompt;
           Object.assign(localFormData, data);
+          if (!(localFormData as any).promptType) {
+            (localFormData as any).promptType = 'SONG';
+          }
           selectedDraftId.value = (data as any).draftId || null;
           selectedMasterId.value = (data as any).masterId || null;
         }
