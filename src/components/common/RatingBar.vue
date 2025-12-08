@@ -23,14 +23,14 @@ const totalSegments = computed(() => props.segments ?? 10);
 const midpoint = computed(() => Math.ceil(totalSegments.value / 2));
 
 const isSegmentActive = (index: number): boolean => {
-  if (props.value === 0) return false;
+  if (props.value === 100) return false;
   
-  if (props.value < 0) {
-    const percentage = Math.abs(props.value) / 100;
+  if (props.value < 100) {
+    const percentage = (100 - props.value) / 100;
     const activeCount = Math.ceil(percentage * midpoint.value);
     return index <= midpoint.value && index > midpoint.value - activeCount;
   } else {
-    const percentage = props.value / 100;
+    const percentage = (props.value - 100) / 100;
     const activeCount = Math.ceil(percentage * midpoint.value);
     return index > midpoint.value && index <= midpoint.value + activeCount;
   }

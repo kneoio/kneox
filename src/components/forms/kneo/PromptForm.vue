@@ -64,7 +64,7 @@
                       v-model:value="selectedMasterId"
                       :options="masterPromptOptions"
                       filterable
-                      style="width: 25%; max-width: 300px;"
+                      style="width: 300px;"
                     />
                     <n-button size="small" type="default" @click="detachMaster" :disabled="!selectedMasterId">
                       <n-icon style="margin-right: 4px;"><InfoCircle /></n-icon>

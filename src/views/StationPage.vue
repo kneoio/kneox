@@ -1,11 +1,7 @@
 <template>
   <n-config-provider :theme="darkTheme">
     <n-layout>
-      <n-layout-header :style="{ 
-        borderBottom: `3px solid ${station?.color || '#2196F3'}`,
-        boxShadow: `inset 0 0 8px ${hexToRgba(station?.color || '#2196F3', 0.5)}, 0 0 8px ${hexToRgba(station?.color || '#2196F3', 0.8)}, 0 0 16px ${hexToRgba(station?.color || '#2196F3', 0.6)}`,
-        filter: 'brightness(125%) saturate(150%)'
-      }">
+      <n-layout-header class="neon-header">
         <n-space align="center" justify="space-between" :wrap="false" :style="{ maxWidth: '720px', margin: '0 auto', padding: '12px 16px' }">
           <n-button quaternary size="small" @click="goHome" :focusable="false">
             <n-icon size="16"><ArrowLeft /></n-icon>
@@ -13,6 +9,7 @@
           </n-button>
           <n-icon size="32"><Alien /></n-icon>
         </n-space>
+        <GlowLine :color="station?.color || '#2196F3'" />
       </n-layout-header>
 
       <n-layout-content :style="{ padding: '16px 16px 24px' }">
@@ -178,6 +175,7 @@ import {
 import { ArrowLeft, Alien, MessageCircle, Music, PlayerPlay } from '@vicons/tabler'
 import { useReferencesStore } from '../stores/kneo/referencesStore'
 import { MIXPLA_PLAYER_URL } from '../constants/config'
+import GlowLine from '../components/common/GlowLine.vue'
 
 interface Station {
   name: string;
@@ -199,12 +197,6 @@ const loading = ref(true)
 const error = ref<unknown | null>(null)
 const hoveredAction = ref<string | null>(null)
 
-function hexToRgba(hex: string, alpha: number) {
-  const r = parseInt(hex.slice(1, 3), 16)
-  const g = parseInt(hex.slice(3, 5), 16)
-  const b = parseInt(hex.slice(5, 7), 16)
-  return `rgba(${r},${g},${b},${alpha})`
-}
 
 function statusText(s?: Station['currentStatus']) {
   if (s === 'ON_LINE') return 'Online'
@@ -275,5 +267,11 @@ onMounted(() => {
 .station-action-card:hover {
   box-shadow: inset 0 0 4px color-mix(in srgb, var(--station-color) 50%, transparent), 0 0 4px color-mix(in srgb, var(--station-color) 80%, transparent), 0 0 8px color-mix(in srgb, var(--station-color) 60%, transparent) !important;
   filter: brightness(125%) saturate(150%);
+}
+
+.neon-header {
+  position: relative;
+  overflow: visible;
+  z-index: 1;
 }
 </style>

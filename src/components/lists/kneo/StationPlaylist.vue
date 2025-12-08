@@ -314,8 +314,9 @@ export default defineComponent( {
         width: 280, 
         render: ( row: any ) => {
           const ratedByBrandCount = row.ratedByBrandCount ?? 100;
-          const rating = ratedByBrandCount - 100;
-          const ratingText = rating > 0 ? `+${rating}` : `${rating}`;
+          const rating = ratedByBrandCount;
+          const displayValue = rating - 100;
+          const ratingText = displayValue > 0 ? `+${displayValue}` : `${displayValue}`;
           return h( 'div', { style: 'display: flex; align-items: center; gap: 4px;', title: ratingText }, [
             h( NButton, {
               size: 'tiny',
@@ -326,6 +327,7 @@ export default defineComponent( {
               }
             }, { default: () => '-' } ),
             h( RatingBar, { value: rating, segments: 10, height: 8 } ),
+            h( 'span', { style: 'font-size: 11px; color: #999; margin-left: 4px;' }, displayValue ),
             h( NButton, {
               size: 'tiny',
               tertiary: true,

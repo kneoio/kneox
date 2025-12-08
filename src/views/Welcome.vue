@@ -5,7 +5,7 @@
         <n-space align="center" justify="space-between" :wrap="false" :style="{ maxWidth: '720px', margin: '0 auto', padding: '12px 16px' }">
           <n-icon size="32"><Alien /></n-icon>
         </n-space>
-        <div class="glow-line" :style="{ background: hexToRgba(hoveredColor, 0.5), boxShadow: `0px 1px 2px rgba(255,255,255,0.3), 0px 4px 4px ${hoveredColor}, 0px 8px 8px ${hoveredColor}, 0px 16px 16px ${hoveredColor}` }"></div>
+        <GlowLine :color="hoveredColor" />
       </n-layout-header>
 
       <n-layout-content :style="{ padding: '16px 16px 24px' }">
@@ -147,6 +147,7 @@ import {
 } from 'naive-ui'
 import {Plus, Alien, InfoSquare, PlayerPlay} from '@vicons/tabler'
 import {useReferencesStore} from '../stores/kneo/referencesStore'
+import GlowLine from '../components/common/GlowLine.vue'
 
 interface Station {
   name: string;
@@ -168,12 +169,6 @@ const hoveredColor = ref('#2196F3')
 const onlineOnly = ref(localStorage.getItem('mixplaOnlineOnly') === 'true')
 const hoveredStation = ref<string | null>(null)
 
-function hexToRgba(hex: string, alpha: number) {
-  const r = parseInt(hex.slice(1, 3), 16)
-  const g = parseInt(hex.slice(3, 5), 16)
-  const b = parseInt(hex.slice(5, 7), 16)
-  return `rgba(${r},${g},${b},${alpha})`
-}
 
 function statusText(s?: Station['currentStatus']) {
   if (s === 'ON_LINE') return 'Online'
@@ -236,16 +231,6 @@ onMounted(() => {
   position: relative;
   overflow: visible;
   z-index: 1;
-}
-
-.glow-line {
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  width: 100%;
-  height: 1px;
-  border-radius: 1px;
-  z-index: 10;
 }
 
 .station-card {

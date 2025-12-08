@@ -1,11 +1,7 @@
 <template>
   <n-config-provider :theme="darkTheme">
     <n-layout>
-      <n-layout-header :style="{ 
-        borderBottom: `3px solid ${stationColor}`,
-        boxShadow: `inset 0 0 8px ${hexToRgba(stationColor, 0.5)}, 0 0 8px ${hexToRgba(stationColor, 0.8)}, 0 0 16px ${hexToRgba(stationColor, 0.6)}`,
-        filter: 'brightness(125%) saturate(150%)'
-      }">
+      <n-layout-header class="neon-header">
         <n-space align="center" justify="space-between" :wrap="false" :style="{ maxWidth: '720px', margin: '0 auto', padding: '12px 16px' }">
           <n-button quaternary size="small" @click="goBack" :focusable="false">
             <n-icon size="16"><ArrowLeft /></n-icon>
@@ -13,6 +9,7 @@
           </n-button>
           <n-icon size="32"><Alien /></n-icon>
         </n-space>
+        <GlowLine :color="stationColor" />
       </n-layout-header>
 
       <n-layout-content :style="{ padding: '40px 16px 24px' }">
@@ -184,6 +181,7 @@ import { useReferencesStore } from '../stores/kneo/referencesStore'
 import MarkdownIt from 'markdown-it'
  
 import EmailVerifyFields from '../components/public/EmailVerifyFields.vue'
+import GlowLine from '../components/common/GlowLine.vue'
 
 const formRef = ref<any | null>(null)
 const submissionStore = useSubmissionStore()
@@ -193,12 +191,6 @@ const route = useRoute()
 const router = useRouter()
 const stationColor = ref('#2196F3')
 
-function hexToRgba(hex: string, alpha: number) {
-  const r = parseInt(hex.slice(1, 3), 16)
-  const g = parseInt(hex.slice(3, 5), 16)
-  const b = parseInt(hex.slice(5, 7), 16)
-  return `rgba(${r},${g},${b},${alpha})`
-}
 
  
 
@@ -472,4 +464,9 @@ function reset() {
 </script>
 
 <style scoped>
+.neon-header {
+  position: relative;
+  overflow: visible;
+  z-index: 1;
+}
 </style>
