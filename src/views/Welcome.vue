@@ -1,14 +1,11 @@
 <template>
   <n-config-provider :theme="darkTheme">
     <n-layout>
-      <n-layout-header class="neon-header" :style="{ 
-        borderBottom: `3px solid ${hoveredColor}`,
-        boxShadow: `inset 0 0 8px ${hexToRgba(hoveredColor, 0.5)}, 0 0 8px ${hexToRgba(hoveredColor, 0.8)}, 0 0 16px ${hexToRgba(hoveredColor, 0.6)}`,
-        filter: 'brightness(125%) saturate(150%)'
-      }">
+      <n-layout-header class="neon-header">
         <n-space align="center" justify="space-between" :wrap="false" :style="{ maxWidth: '720px', margin: '0 auto', padding: '12px 16px' }">
           <n-icon size="32"><Alien /></n-icon>
         </n-space>
+        <div class="glow-line" :style="{ background: hexToRgba(hoveredColor, 0.5), boxShadow: `0px 1px 2px rgba(255,255,255,0.3), 0px 4px 4px ${hoveredColor}, 0px 8px 8px ${hoveredColor}, 0px 16px 16px ${hoveredColor}` }"></div>
       </n-layout-header>
 
       <n-layout-content :style="{ padding: '16px 16px 24px' }">
@@ -236,7 +233,19 @@ onMounted(() => {
 </style>
 <style scoped>
 .neon-header {
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+  overflow: visible;
+  z-index: 1;
+}
+
+.glow-line {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  border-radius: 1px;
+  z-index: 10;
 }
 
 .station-card {
