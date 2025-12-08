@@ -20,6 +20,7 @@ export const useEventsStore = defineStore('eventsStore', () => {
         timestampEvent: '',
         description: '',
         priority: '',
+        actions: [],
     } as Event);
 
     const getPagination = computed(() => {

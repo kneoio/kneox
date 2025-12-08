@@ -6,6 +6,12 @@ export enum FragmentType {
     JINGLE = "JINGLE"
 }
 
+export enum PromptType {
+    SONG = "SONG",
+    ADVERTISEMENT = "ADVERTISEMENT",
+    REMINDER = "REMINDER"
+}
+
 export enum BrandStatus {
     OFF_LINE = "OFF_LINE",
     ON_LINE = "ON_LINE",
@@ -281,6 +287,7 @@ export interface Event {
     type: string;
     description: string;
     priority: string;
+    actions?: EventAction[];
 }
 
 export interface EventViewData {
@@ -302,6 +309,15 @@ export interface EventSave {
         timeZone?: string;
         tasks?: any[];
     };
+    actions?: EventAction[];
+}
+
+export interface EventAction {
+    promptId?: string;
+    active?: boolean;
+    rank?: number;
+    weight?: number;
+    promptType?: PromptType | string;
 }
 
 export interface SubmissionPayload {

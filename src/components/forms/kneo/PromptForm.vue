@@ -86,9 +86,9 @@
                     <n-checkbox :checked="localFormData.locked" disabled>Locked</n-checkbox>
                     <n-checkbox v-model:checked="localFormData.podcast">Podcast</n-checkbox>
                     <n-radio-group v-model:value="localFormData.promptType" name="prompt-type-group" style="margin-left: 16px;">
-                      <n-radio-button value="SONG">Song</n-radio-button>
-                      <n-radio-button value="ADVERTISMENT">Advertisment</n-radio-button>
-                      <n-radio-button value="REMAINDER">Remainder</n-radio-button>
+                      <n-radio-button :value="PromptType.SONG">Song</n-radio-button>
+                      <n-radio-button :value="PromptType.ADVERTISEMENT">Advertisement</n-radio-button>
+                      <n-radio-button :value="PromptType.REMINDER">Reminder</n-radio-button>
                     </n-radio-group>
                   </div>
                 </n-form-item>
@@ -262,7 +262,7 @@ import {
 import { EditorView } from '@codemirror/view';
 import { handlebarsLanguage } from '@xiechao/codemirror-lang-handlebars';
 import CodeMirror from 'vue-codemirror6';
-import { BroadcastPrompt, BroadcastPromptSave } from '../../../types/kneoBroadcasterTypes';
+import { BroadcastPrompt, BroadcastPromptSave, PromptType } from '../../../types/kneoBroadcasterTypes';
 import { usePromptStore } from '../../../stores/kneo/promptStore';
 import { getErrorMessage, handleFormSaveError } from '../../../utils/errorHandling';
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
@@ -418,7 +418,7 @@ export default defineComponent({
       description: '',
       enabled: false,
       prompt: '',
-      promptType: 'SONG',
+      promptType: PromptType.SONG,
       languageCode: '',
       master: false,
       locked: false,
@@ -445,7 +445,7 @@ export default defineComponent({
         const titleToSave = hasSuffixInTitle || !suffix
           ? (localFormData.title || '')
           : `${(localFormData.title || '').trim()} (${suffix})`;
-        const normalizedPromptType = (localFormData as any).promptType || 'SONG';
+        const normalizedPromptType = (localFormData as any).promptType || PromptType.SONG;
         const saveData: BroadcastPromptSave = {
           title: titleToSave,
           description: localFormData.description,
@@ -659,7 +659,7 @@ export default defineComponent({
           const data = { ...store.getCurrent } as BroadcastPrompt;
           Object.assign(localFormData, data);
           if (!(localFormData as any).promptType) {
-            (localFormData as any).promptType = 'SONG';
+            (localFormData as any).promptType = PromptType.SONG;
           }
           selectedDraftId.value = (data as any).draftId || null;
           selectedMasterId.value = (data as any).masterId || null;
@@ -714,6 +714,7 @@ export default defineComponent({
     });
 
     return {
+      PromptType,
       localFormData,
       formTitle,
       handleSave,

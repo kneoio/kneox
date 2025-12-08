@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 import apiClient, { setupApiClient } from '../../api/apiClient';
 import { ApiFormResponse, ApiViewPageResponse } from "../../types";
-import { BroadcastPrompt, BroadcastPromptSave } from "../../types/kneoBroadcasterTypes";
+import { BroadcastPrompt, BroadcastPromptSave, PromptType } from "../../types/kneoBroadcasterTypes";
 
 interface PromptFilterDTO {
   languageCode?: string;
@@ -10,14 +10,34 @@ interface PromptFilterDTO {
   master?: boolean;
   locked?: boolean;
   activated?: boolean;
+  promptType?: PromptType | string;
 }
 
-function buildPromptsUrl(basePath: string, { page = 1, size = 10, filter }: { page?: number; size?: number; filter?: PromptFilterDTO } = {}) {
+function normalizeFilter(filter?: PromptFilterDTO | string) {
+  if (!filter) return undefined;
+  if (typeof filter === 'string') {
+    // If already encoded (e.g., %7B... or %257B...), decode once
+    let val = filter;
+    if (val.startsWith('%')) {
+      try {
+        val = decodeURIComponent(val);
+      } catch {
+        // if decode fails, fall back to original
+      }
+    }
+    return val;
+  }
+  return JSON.stringify(filter);
+}
+
+function buildPromptsUrl(basePath: string, { page = 1, size = 10, filter }: { page?: number; size?: number; filter?: PromptFilterDTO | string } = {}) {
   const params = new URLSearchParams();
   params.set('page', String(page));
   params.set('size', String(size));
-  if (filter && Object.keys(filter).length > 0) {
-    params.set('filter', encodeURIComponent(JSON.stringify(filter)));
+  const normalized = normalizeFilter(filter);
+  if (normalized && normalized !== '{}') {
+    // URLSearchParams encodes automatically; pass raw JSON string to avoid double-encoding
+    params.set('filter', normalized);
   }
   return `${basePath}?${params.toString()}`;
 }
@@ -37,7 +57,7 @@ export const usePromptStore = defineStore('promptStore', () => {
       lastModifiedDate: '',
       enabled: false,
       prompt: '',
-      promptType: 'SONG',
+      promptType: PromptType.SONG,
       languageCode: '',
       master: false,
       locked: false

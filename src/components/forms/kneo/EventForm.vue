@@ -83,6 +83,24 @@
                   </n-text>
                 </n-form-item>
               </n-gi>
+              <n-gi>
+                <n-form-item label="Actions">
+                  <n-dynamic-input
+                    v-model:value="eventActions"
+                    :on-create="createEventAction"
+                    style="width: 80%; max-width: 800px;"
+                  >
+                    <template #default="{ index }">
+                      <n-select
+                        v-model:value="eventActions[index].promptId"
+                        :options="promptOptions"
+                        placeholder="Select action"
+                        style="min-width: 400px;"
+                      />
+                    </template>
+                  </n-dynamic-input>
+                </n-form-item>
+              </n-gi>
             </n-grid>
           </n-form>
         </n-tab-pane>
@@ -212,7 +230,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue';
+import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useMessage } from 'naive-ui';
 import {
@@ -223,7 +241,9 @@ import {
 import { useEventsStore } from '../../../stores/kneo/eventsStore';
 import { useRadioStationStore } from '../../../stores/kneo/radioStationStore';
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
-import type { Event, EventSave } from "../../../types/kneoBroadcasterTypes";
+import { usePromptStore } from '../../../stores/kneo/promptStore';
+import type { Event, EventAction, EventSave } from "../../../types/kneoBroadcasterTypes";
+import { PromptType } from "../../../types/kneoBroadcasterTypes";
 import { handleFormSaveError, getErrorMessage } from '../../../utils/errorHandling';
 import AclTable from '../../common/AclTable.vue';
 
@@ -241,10 +261,12 @@ const message = useMessage();
 const eventsStore = useEventsStore();
 const radioStationStore = useRadioStationStore();
 const referencesStore = useReferencesStore();
+const promptStore = usePromptStore();
 
 const activeTab = ref('properties');
 const currentTime = ref(new Date());
 const clockIntervalId = ref<number | null>(null);
+const previousType = ref<string>('');
 
 const localFormData = reactive<LocalEventFormData>({
   id: '',
@@ -258,6 +280,7 @@ const localFormData = reactive<LocalEventFormData>({
   description: '',
   priority: '',
   triggerType: 'ONCE',
+  actions: [],
   schedule: {
     enabled: false,
     tasks: []
@@ -265,6 +288,7 @@ const localFormData = reactive<LocalEventFormData>({
 });
 
 const scheduleTasksArray = ref<any[]>([]);
+const eventActions = ref<EventAction[]>([]);
 const aclData = ref<any[]>([]);
 const aclLoading = ref(false);
 
@@ -280,6 +304,15 @@ const radioStationOptions = computed(() => {
     label: station.slugName,
     value: station.id
   }));
+});
+
+const promptOptions = computed(() => {
+  return (promptStore.getEntries || [])
+    .filter((p: any) => typeof p.id === 'string' && p.id)
+    .map((p: any) => ({
+      label: p.title || p.id,
+      value: p.id as string
+    }));
 });
 
 const priorityOptions = [
@@ -359,9 +392,41 @@ const createScheduleTask = () => ({
   weekdays: []
 });
 
+const createEventAction = (): EventAction => {
+  const promptType = getPromptTypeForEventType(localFormData.type);
+  return {
+    promptId: '',
+    active: true,
+    rank: 0,
+    weight: 0.5,
+    promptType: promptType
+  };
+};
+
+// Map UI event types to backend prompt types for filtering prompts.
+const getPromptTypeForEventType = (type: string): PromptType | undefined => {
+  if (type === 'AD' || type === 'ADVERTISEMENT' || type === 'ADVERTISEMENTS') return PromptType.ADVERTISEMENT;
+  if (type === 'REMAINDER' || type === 'REMINDER') return PromptType.REMINDER;
+  return undefined;
+};
+
+const refreshPromptsForType = async (type: string) => {
+  const promptType = getPromptTypeForEventType(type);
+  const filter: Record<string, any> = {};
+  if (promptType) filter.promptType = promptType;
+  try {
+    await promptStore.fetchAll(1, 100, filter);
+  } catch (error) {
+    console.error('Error loading prompts:', error);
+  }
+};
+
 const loadFormData = () => {
   const current = eventsStore.getCurrent;
   Object.assign(localFormData, current);
+  eventActions.value = Array.isArray(current.actions) ? [...current.actions] : [];
+  localFormData.actions = eventActions.value;
+  previousType.value = localFormData.type || '';
   
 
 
@@ -466,13 +531,21 @@ const handleSave = async () => {
       })
     };
 
+    // Ensure all actions have promptType set based on event type
+    const promptType = getPromptTypeForEventType(localFormData.type);
+    const actionsWithPromptType = eventActions.value.map(action => ({
+      ...action,
+      promptType: promptType || action.promptType
+    }));
+
     const saveData: EventSave = {
       brandId: localFormData.brandId,
       timeZone: localFormData.timeZone,
       type: localFormData.type,
       description: localFormData.description,
       priority: localFormData.priority,
-      schedule: scheduleData
+      schedule: scheduleData,
+      actions: actionsWithPromptType
     };
 
     await eventsStore.saveEvent(saveData, localFormData.id || null);
@@ -524,6 +597,25 @@ watch(scheduleTasksArray, (newValue) => {
   });
 }, { deep: true });
 
+watch(eventActions, (newValue) => {
+  localFormData.actions = newValue;
+}, { deep: true });
+
+watch(() => localFormData.type, async (newType, oldType) => {
+  if (newType === oldType) return;
+  if (oldType && newType && oldType !== newType && eventActions.value.length > 0) {
+    const confirmed = window.confirm('Changing type will reset actions. Continue?');
+    if (!confirmed) {
+      localFormData.type = oldType;
+      return;
+    }
+    eventActions.value = [];
+    localFormData.actions = [];
+  }
+  previousType.value = newType || '';
+  await refreshPromptsForType(newType || '');
+}, { deep: false });
+
 watch(activeTab, (newTab) => {
   if (newTab === 'acl') {
     fetchAclData();
@@ -550,6 +642,7 @@ onMounted(async () => {
       message.error('Failed to load new event');
     }
   }
+  await refreshPromptsForType(localFormData.type || '');
 });
 
 </script>
