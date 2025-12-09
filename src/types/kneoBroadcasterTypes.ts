@@ -288,6 +288,13 @@ export interface Event {
     description: string;
     priority: string;
     actions?: EventAction[];
+    stagePlaylist?: {
+        sourcing?: string;
+        title?: string;
+        artist?: string;
+        genres?: string[];
+        labels?: string[];
+    };
 }
 
 export interface EventViewData {
@@ -310,6 +317,13 @@ export interface EventSave {
         tasks?: any[];
     };
     actions?: EventAction[];
+    stagePlaylist?: {
+        sourcing?: string;
+        title?: string;
+        artist?: string;
+        genres?: string[];
+        labels?: string[];
+    };
 }
 
 export interface EventAction {
@@ -386,6 +400,13 @@ export interface ScriptScene {
     regDate?: string;
     lastModifier?: string;
     lastModifiedDate?: string;
+    stagePlaylist?: {
+        sourcing?: string;
+        title?: string;
+        artist?: string;
+        genres?: string[];
+        labels?: string[];
+    };
 }
 
 export interface ScriptSceneViewData {
@@ -404,6 +425,13 @@ export interface ScriptSceneSave {
     oneTimeRun?: boolean;
     weekdays?: number[];
     talkativity?: number;
+    stagePlaylist?: {
+        sourcing?: string;
+        title?: string;
+        artist?: string;
+        genres?: string[];
+        labels?: string[];
+    };
 }
 
 // Prompts (Broadcaster)

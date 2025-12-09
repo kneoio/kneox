@@ -104,6 +104,13 @@
             </n-grid>
           </n-form>
         </n-tab-pane>
+        <n-tab-pane name="playlist" tab="Playlist">
+          <PlaylistFields
+              v-model="localFormData.stagePlaylist!"
+              :genre-options="referencesStore.genreOptions"
+              :label-options="referencesStore.labelOptions"
+          />
+        </n-tab-pane>
         <n-tab-pane name="schedule" tab="Schedule">
           <n-form label-placement="left" label-width="auto">
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
@@ -246,12 +253,20 @@ import type { Event, EventAction, EventSave } from "../../../types/kneoBroadcast
 import { PromptType } from "../../../types/kneoBroadcasterTypes";
 import { handleFormSaveError, getErrorMessage } from '../../../utils/errorHandling';
 import AclTable from '../../common/AclTable.vue';
+import PlaylistFields from '../../common/PlaylistFields.vue';
 
 interface LocalEventFormData extends Event {
   triggerType?: string;
   schedule?: {
     enabled?: boolean;
     tasks?: any[];
+  };
+  stagePlaylist?: {
+    sourcing?: string;
+    title?: string;
+    artist?: string;
+    genres?: string[];
+    labels?: string[];
   };
 }
 
@@ -284,6 +299,13 @@ const localFormData = reactive<LocalEventFormData>({
   schedule: {
     enabled: false,
     tasks: []
+  },
+  stagePlaylist: {
+    sourcing: 'RANDOM',
+    title: '',
+    artist: '',
+    genres: [],
+    labels: []
   }
 });
 
@@ -428,6 +450,25 @@ const loadFormData = () => {
   localFormData.actions = eventActions.value;
   previousType.value = localFormData.type || '';
   
+  // Initialize stagePlaylist
+  if (current.stagePlaylist) {
+    localFormData.stagePlaylist = {
+      sourcing: current.stagePlaylist.sourcing || 'RANDOM',
+      title: current.stagePlaylist.title || '',
+      artist: current.stagePlaylist.artist || '',
+      genres: current.stagePlaylist.genres || [],
+      labels: current.stagePlaylist.labels || []
+    };
+  } else {
+    localFormData.stagePlaylist = {
+      sourcing: 'RANDOM',
+      title: '',
+      artist: '',
+      genres: [],
+      labels: []
+    };
+  }
+  
 
 
   if (localFormData.schedule && localFormData.schedule.tasks && localFormData.schedule.tasks.length > 0) {
@@ -532,7 +573,6 @@ const handleSave = async () => {
     };
 
     // Ensure all actions have promptType set based on event type
-    const promptType = getPromptTypeForEventType(localFormData.type);
     const actionsWithoutPromptType = eventActions.value.map(({ promptType, ...action }) => action);
 
     const saveData: EventSave = {
@@ -542,7 +582,14 @@ const handleSave = async () => {
       description: localFormData.description,
       priority: localFormData.priority,
       schedule: scheduleData,
-      actions: actionsWithoutPromptType
+      actions: actionsWithoutPromptType,
+      stagePlaylist: localFormData.stagePlaylist ? {
+        sourcing: localFormData.stagePlaylist.sourcing,
+        title: localFormData.stagePlaylist.title,
+        artist: localFormData.stagePlaylist.artist,
+        genres: localFormData.stagePlaylist.genres,
+        labels: localFormData.stagePlaylist.labels
+      } : undefined,
     };
 
     await eventsStore.saveEvent(saveData, localFormData.id || null);

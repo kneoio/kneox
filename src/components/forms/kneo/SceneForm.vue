@@ -85,6 +85,13 @@
             </n-grid>
           </n-form>
         </n-tab-pane>
+        <n-tab-pane name="playlist" tab="Playlist">
+          <PlaylistFields
+              v-model="localFormData.stagePlaylist!"
+              :genre-options="referencesStore.genreOptions"
+              :label-options="referencesStore.labelOptions"
+          />
+        </n-tab-pane>
         <n-tab-pane name="acl" tab="ACL">
           <AclTable :acl-data="aclData" :loading="aclLoading" />
         </n-tab-pane>
@@ -122,8 +129,10 @@ import { ScriptScene, ScriptSceneSave, ScenePromptDTO } from '../../../types/kne
 import { useScriptSceneStore } from '../../../stores/kneo/scriptSceneStore';
 import { useScriptStore } from '../../../stores/kneo/scriptStore';
 import { usePromptStore } from '../../../stores/kneo/promptStore';
+import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 import { getErrorMessage, handleFormSaveError } from '../../../utils/errorHandling';
 import AclTable from '../../common/AclTable.vue';
+import PlaylistFields from '../../common/PlaylistFields.vue';
 
 export default defineComponent({
   name: 'SceneForm',
@@ -146,7 +155,8 @@ export default defineComponent({
     NSlider,
     NIcon,
     ChevronRight,
-    AclTable
+    AclTable,
+    PlaylistFields
   },
   setup() {
     const loadingBar = useLoadingBar();
@@ -156,6 +166,7 @@ export default defineComponent({
     const store = useScriptSceneStore();
     const scriptsStore = useScriptStore();
     const promptStore = usePromptStore();
+    const referencesStore = useReferencesStore();
     const selectedScriptId = ref<string | null>(null);
     const activeTab = ref('properties');
     const aclData = ref<any[]>([]);
@@ -183,7 +194,14 @@ export default defineComponent({
       scriptId: '',
       prompts: [],
       startTime: '',
-      talkativity: 0.5
+      talkativity: 0.5,
+      stagePlaylist: {
+        sourcing: 'RANDOM',
+        title: '',
+        artist: '',
+        genres: [],
+        labels: []
+      }
     });
 
     const startTimeMs = ref<number | null>(null);
@@ -227,6 +245,25 @@ export default defineComponent({
           const w = (data as any).weekdays || [];
           selectedWeekdays.value = Array.isArray(w) ? (w.filter((n: any) => Number.isInteger(n)) as number[]) : [];
           localFormData.talkativity = typeof data.talkativity === 'number' ? data.talkativity : 0.5;
+          
+          // Initialize stagePlaylist
+          if (data.stagePlaylist) {
+            localFormData.stagePlaylist = {
+              sourcing: data.stagePlaylist.sourcing || 'RANDOM',
+              title: data.stagePlaylist.title || '',
+              artist: data.stagePlaylist.artist || '',
+              genres: data.stagePlaylist.genres || [],
+              labels: data.stagePlaylist.labels || []
+            };
+          } else {
+            localFormData.stagePlaylist = {
+              sourcing: 'RANDOM',
+              title: '',
+              artist: '',
+              genres: [],
+              labels: []
+            };
+          }
         }
       }
     };
@@ -259,6 +296,13 @@ export default defineComponent({
           oneTimeRun: localFormData.oneTimeRun as any,
           weekdays: selectedWeekdays.value,
           talkativity: localFormData.talkativity as any,
+          stagePlaylist: localFormData.stagePlaylist ? {
+        sourcing: localFormData.stagePlaylist.sourcing,
+        title: localFormData.stagePlaylist.title,
+        artist: localFormData.stagePlaylist.artist,
+        genres: localFormData.stagePlaylist.genres,
+        labels: localFormData.stagePlaylist.labels
+      } : undefined,
         };
         const id = route.params.id as string;
         if (!id || id === 'new') {
@@ -326,7 +370,8 @@ export default defineComponent({
       createScenePrompt,
       activeTab,
       aclData,
-      aclLoading
+      aclLoading,
+      referencesStore
     };
   }
 });

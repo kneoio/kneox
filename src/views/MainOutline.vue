@@ -17,7 +17,7 @@
         <n-space justify="space-between" align="center">
           <n-space>
             <n-h3 style=" font-weight:bold; font-family: 'Kaylon', sans-serif; margin-top: 0; margin-bottom: 0px;">MIXPLA</n-h3>
-            <n-h6 style="font-size: small">manager v.1.8.13</n-h6>
+            <n-h6 style="font-size: small">manager v.1.8.14</n-h6>
           </n-space>
           <n-switch
               :value="isDarkTheme"
