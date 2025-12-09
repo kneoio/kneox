@@ -533,10 +533,7 @@ const handleSave = async () => {
 
     // Ensure all actions have promptType set based on event type
     const promptType = getPromptTypeForEventType(localFormData.type);
-    const actionsWithPromptType = eventActions.value.map(action => ({
-      ...action,
-      promptType: promptType || action.promptType
-    }));
+    const actionsWithoutPromptType = eventActions.value.map(({ promptType, ...action }) => action);
 
     const saveData: EventSave = {
       brandId: localFormData.brandId,
@@ -545,7 +542,7 @@ const handleSave = async () => {
       description: localFormData.description,
       priority: localFormData.priority,
       schedule: scheduleData,
-      actions: actionsWithPromptType
+      actions: actionsWithoutPromptType
     };
 
     await eventsStore.saveEvent(saveData, localFormData.id || null);

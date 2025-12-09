@@ -230,7 +230,7 @@ export default defineComponent({
       }));
 
       const allStationsOption: MenuOption = {
-        label: 'All Radiostations',
+        label: 'All Streams',
         key: 'radiostations',
         icon: () => h(Ripple)
       };

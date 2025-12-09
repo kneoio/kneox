@@ -2,7 +2,7 @@
   <n-grid :cols="isMobile ? 1 : 6" x-gap="12" y-gap="12" class="p-4">
     <n-gi>
       <n-page-header>
-        <template #title>Radio Stations</template>
+        <template #title>Streams</template>
         <template #footer>
           Total: {{ store.getPagination.itemCount }}
         </template>

@@ -29,9 +29,17 @@
           <n-space size="small" align="center">
             <n-select v-model:value="filters.languageCode" :options="langOptions" filterable placeholder="Language"
               clearable style="width: 200px;" />
-            <n-checkbox v-model:checked="filters.enabled">Enabled</n-checkbox>
-            <n-checkbox v-model:checked="filters.master">Master</n-checkbox>
-            <n-checkbox v-model:checked="filters.locked">Locked</n-checkbox>
+            <n-radio-group v-model:value="filters.promptType" name="prompt-type-filter-group" style="margin-left: 8px;">
+              <n-radio-button value="SONG">Song</n-radio-button>
+              <n-radio-button value="ADVERTISEMENT">Advertisement</n-radio-button>
+              <n-radio-button value="REMINDER">Reminder</n-radio-button>
+              <n-radio-button :value="null" :disabled="!filters.promptType" type="warning">All types</n-radio-button>
+            </n-radio-group>
+            <n-button-group>
+              <n-button :type="filters.enabled ? 'primary' : 'default'" @click="filters.enabled = !filters.enabled">Enabled</n-button>
+              <n-button :type="filters.master ? 'primary' : 'default'" @click="filters.master = !filters.master">Master</n-button>
+              <n-button :type="filters.locked ? 'primary' : 'default'" @click="filters.locked = !filters.locked">Locked</n-button>
+            </n-button-group>
           </n-space>
         </div>
       </n-collapse-transition>
@@ -52,7 +60,7 @@
 
 <script lang="ts">
 import { computed, defineComponent, h, onMounted, onUnmounted, ref, watch } from 'vue';
-import { DataTableColumns, NButton, NButtonGroup, NCheckbox, NDataTable, NGi, NGrid, NPageHeader, NTag, NFormItem, NSelect, NSpace, NCollapseTransition, useMessage } from 'naive-ui';
+import { DataTableColumns, NButton, NButtonGroup, NDataTable, NGi, NGrid, NPageHeader, NTag, NFormItem, NSelect, NSpace, NCollapseTransition, NRadioGroup, NRadioButton, useMessage } from 'naive-ui';
 import { useRouter } from 'vue-router';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
 import RedLed from '../../common/RedLed.vue';
@@ -61,7 +69,7 @@ import { usePromptStore } from '../../../stores/kneo/promptStore';
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 
 export default defineComponent( {
-  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, RedLed, NTag, NFormItem, NSelect, NSpace, NCollapseTransition, NCheckbox },
+  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, RedLed, NTag, NFormItem, NSelect, NSpace, NCollapseTransition, NRadioGroup, NRadioButton },
   setup() {
     const router = useRouter();
     const message = useMessage();
@@ -75,14 +83,15 @@ export default defineComponent( {
     const STORAGE_SHOW_KEY = 'prompts.list.showFilters';
     const showFilters = ref( false );
     const filters = ref( {
-      languageCode: undefined as string | undefined,
+      languageCode: null as string | null,
+      promptType: null as string | null,
       enabled: false,
       master: false,
       locked: false
     } );
 
     const hasActiveFilters = computed( () =>
-      !!( filters.value.languageCode || filters.value.enabled || filters.value.master || filters.value.locked )
+      !!( filters.value.languageCode || filters.value.promptType || filters.value.enabled || filters.value.master || filters.value.locked )
     );
 
     const loadSavedFilters = () => {
@@ -91,7 +100,8 @@ export default defineComponent( {
         if ( s ) {
           const obj = JSON.parse( s );
           filters.value = {
-            languageCode: obj.languageCode,
+            languageCode: obj.languageCode || null,
+            promptType: obj.promptType || null,
             enabled: !!obj.enabled,
             master: !!obj.master,
             locked: !!obj.locked
@@ -141,23 +151,29 @@ export default defineComponent( {
         let activeFilters: any = {};
         if ( showFilters.value ) {
           const hasFilters = filters.value.languageCode ||
+            filters.value.promptType ||
             filters.value.enabled ||
             filters.value.master ||
             filters.value.locked;
           if ( hasFilters ) {
             activeFilters = {
-              languageCode: filters.value.languageCode || undefined,
-              enabled: filters.value.enabled || undefined,
-              master: filters.value.master || undefined,
-              locked: filters.value.locked || undefined,
               activated: true
             };
-            // Remove undefined values
-            Object.keys( activeFilters ).forEach( key => {
-              if ( activeFilters[key] === undefined ) {
-                delete activeFilters[key];
-              }
-            } );
+            if ( filters.value.languageCode ) {
+              activeFilters.languageCode = filters.value.languageCode;
+            }
+            if ( filters.value.promptType ) {
+              activeFilters.promptType = filters.value.promptType;
+            }
+            if ( filters.value.enabled ) {
+              activeFilters.enabled = filters.value.enabled;
+            }
+            if ( filters.value.master ) {
+              activeFilters.master = filters.value.master;
+            }
+            if ( filters.value.locked ) {
+              activeFilters.locked = filters.value.locked;
+            }
           }
         }
         await store.fetchAll( page, pageSize, activeFilters );
@@ -208,7 +224,8 @@ export default defineComponent( {
 
     const clearFilters = () => {
       filters.value = {
-        languageCode: undefined,
+        languageCode: null,
+        promptType: null,
         enabled: false,
         master: false,
         locked: false
