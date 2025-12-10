@@ -75,11 +75,13 @@ import {
 } from 'naive-ui';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
 import { useEventsStore } from '../../../stores/kneo/eventsStore';
+import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 import type { Event } from "../../../types/kneoBroadcasterTypes";
 
 const router = useRouter();
 const message = useMessage();
 const store = useEventsStore();
+const referencesStore = useReferencesStore();
 
 const loading = ref(false);
 const searchQuery = ref('');
@@ -87,6 +89,13 @@ const checkedRowKeys = ref<string[]>([]);
 const isMobile = ref(window.innerWidth < 768);
 
 const hasSelection = computed(() => checkedRowKeys.value.length > 0);
+
+const labelMap = computed(() => new Map(referencesStore.labelOptions.map(opt => [opt.value, opt.label])));
+
+const resolveLabelNames = (labelUuids: string[]): string => {
+  if (!Array.isArray(labelUuids) || labelUuids.length === 0) return '';
+  return labelUuids.map(uuid => labelMap.value.get(uuid) || uuid).join(', ');
+};
 
 const getRowProps = (row: Event) => {
   return {
@@ -133,6 +142,14 @@ const columns: DataTableColumns<Event> = [
     key: 'description',
     ellipsis: {
       tooltip: true
+    }
+  },
+  {
+    title: 'Labels',
+    key: 'labels',
+    width: 200,
+    render: (row: Event) => {
+      return resolveLabelNames(row.stagePlaylist?.labels || []);
     }
   },
 
@@ -210,7 +227,8 @@ const handleDelete = async () => {
   }
 };
 
-onMounted(() => {
+onMounted(async () => {
+  await referencesStore.fetchLabels();
   loadData();
 });
 
