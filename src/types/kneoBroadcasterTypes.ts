@@ -290,10 +290,12 @@ export interface Event {
     actions?: EventAction[];
     stagePlaylist?: {
         sourcing?: string;
-        title?: string;
-        artist?: string;
+        searchTerm?: string;
         genres?: string[];
         labels?: string[];
+        type?: string[];
+        source?: string[];
+        staticList?: string[];
     };
 }
 
@@ -319,10 +321,12 @@ export interface EventSave {
     actions?: EventAction[];
     stagePlaylist?: {
         sourcing?: string;
-        title?: string;
-        artist?: string;
+        searchTerm?: string;
         genres?: string[];
         labels?: string[];
+        type?: string[];
+        source?: string[];
+        soundFragments?: string[];
     };
 }
 

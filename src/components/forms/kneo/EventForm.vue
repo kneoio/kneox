@@ -76,7 +76,9 @@
           </n-form>
         </n-tab-pane>
         <n-tab-pane name="playlist" tab="Playlist">
-          <PlaylistFields v-model="localFormData.stagePlaylist!" :genre-options="referencesStore.genreOptions"
+          <PlaylistFields :model-value="localFormData.stagePlaylist"
+            @update:model-value="(val) => Object.assign(localFormData.stagePlaylist!, val)"
+            :brand-id="selectedBrandSlugName" :genre-options="referencesStore.genreOptions"
             :label-options="referencesStore.labelOptions" />
         </n-tab-pane>
         <n-tab-pane name="schedule" tab="Schedule">
@@ -227,10 +229,12 @@ interface LocalEventFormData extends Event {
   };
   stagePlaylist?: {
     sourcing?: string;
-    title?: string;
-    artist?: string;
+    searchTerm?: string;
     genres?: string[];
     labels?: string[];
+    type?: string[];
+    source?: string[];
+    staticList?: string[];
   };
 }
 
@@ -264,10 +268,12 @@ const localFormData = reactive<LocalEventFormData>( {
   },
   stagePlaylist: {
     sourcing: 'RANDOM',
-    title: '',
-    artist: '',
+    searchTerm: '',
     genres: [],
-    labels: []
+    labels: [],
+    type: [],
+    source: [],
+    staticList: []
   }
 } );
 
@@ -286,6 +292,11 @@ const radioStationOptions = computed( () => {
     label: station.slugName,
     value: station.id
   } ) );
+} );
+
+const selectedBrandSlugName = computed( () => {
+  const station = radioStationStore.getEntries.find( s => s.id === localFormData.brandId );
+  return station?.slugName || '';
 } );
 
 const promptOptions = computed( () => {
@@ -396,7 +407,10 @@ const loadFormData = () => {
   Object.assign( localFormData, current );
   eventActions.value = current.actions ? [...current.actions] : [];
   localFormData.actions = eventActions.value;
-  localFormData.stagePlaylist = current.stagePlaylist;
+  localFormData.stagePlaylist = current.stagePlaylist ? {
+    ...current.stagePlaylist,
+    staticList: (current.stagePlaylist as any).soundFragments || []
+  } : localFormData.stagePlaylist;
 
   if ( localFormData.schedule?.tasks?.length > 0 ) {
     scheduleTasksArray.value = localFormData.schedule.tasks.map( task => {
@@ -491,10 +505,12 @@ const handleSave = async () => {
       actions: actionsWithoutPromptType,
       stagePlaylist: localFormData.stagePlaylist ? {
         sourcing: localFormData.stagePlaylist.sourcing,
-        title: localFormData.stagePlaylist.title,
-        artist: localFormData.stagePlaylist.artist,
+        searchTerm: localFormData.stagePlaylist.searchTerm,
         genres: localFormData.stagePlaylist.genres,
-        labels: localFormData.stagePlaylist.labels
+        labels: localFormData.stagePlaylist.labels,
+        type: localFormData.stagePlaylist.type,
+        source: localFormData.stagePlaylist.source,
+        soundFragments: localFormData.stagePlaylist.staticList
       } : undefined,
     };
 

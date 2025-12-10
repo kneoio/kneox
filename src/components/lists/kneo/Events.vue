@@ -149,6 +149,21 @@ const columns: DataTableColumns<Event> = [
     }
   },
   {
+    title: 'Source',
+    key: 'sourcing',
+    width: 100,
+    render: (row: Event) => {
+      const sourcing = row.stagePlaylist?.sourcing;
+      if (!sourcing) return '';
+      const labels: Record<string, string> = {
+        'RANDOM': 'Random',
+        'STATIC_LIST': 'Static List',
+        'QUERY': 'Query'
+      };
+      return labels[sourcing] || sourcing;
+    }
+  },
+  {
     title: 'Labels',
     key: 'labels',
     width: 200,

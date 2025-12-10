@@ -84,7 +84,8 @@ export default defineComponent({
           startTime: sc.startTime || '',
           talkativity: (sc as any).talkativity ?? 0,
           weekdays: weekdaysText,
-          oneTimeRun: !!(sc as any).oneTimeRun
+          oneTimeRun: !!(sc as any).oneTimeRun,
+          sourcing: sc.stagePlaylist?.sourcing || ''
         };
       });
     });
@@ -154,7 +155,21 @@ export default defineComponent({
         }
       },
       { title: 'Talkativity', key: 'talkativity' },
-      { title: 'Weekdays', key: 'weekdays' }
+      { title: 'Weekdays', key: 'weekdays' },
+      {
+        title: 'Source',
+        key: 'sourcing',
+        width: 100,
+        render: (row: any) => {
+          if (!row.sourcing) return '';
+          const labels: Record<string, string> = {
+            'RANDOM': 'Random',
+            'STATIC_LIST': 'Static List',
+            'QUERY': 'Query'
+          };
+          return labels[row.sourcing] || row.sourcing;
+        }
+      }
     ]));
 
     const getRowProps = (row: any) => ({

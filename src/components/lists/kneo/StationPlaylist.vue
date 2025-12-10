@@ -16,44 +16,21 @@
         <n-button type="error" :disabled="!hasSelection" @click="handleDelete" size="large">
           Delete ({{ checkedRowKeys.length }})
         </n-button>
-        <n-button @click="toggleFilters" type="default" size="large">
+        <n-button @click="openFilterDialog" type="default" size="large">
           <red-led :active="hasActiveFilters" style="margin-right: 8px;" />
           Filter
+        </n-button>
+        <n-button @click="resetFilters" type="default" size="large" :disabled="!hasActiveFilters">
+          Reset
         </n-button>
       </n-button-group>
 
     </n-gi>
 
     <n-gi>
-      <n-collapse-transition :show="showFilters">
-        <div style="width: 50%;">
-          <n-grid :cols="3" x-gap="12" y-gap="0">
-            <n-gi :span="3">
-              <n-form-item label="Search" :show-feedback="false">
-                <n-input v-model:value="filters.searchTerm" placeholder="Search..." clearable />
-              </n-form-item>
-            </n-gi>
-            <n-gi>
-              <n-form-item label="Genre" :show-feedback="false">
-                <n-select v-model:value="filters.genre" :options="referencesStore.genreOptions" multiple filterable
-                  placeholder="Select genres" clearable />
-              </n-form-item>
-            </n-gi>
-            <n-gi>
-              <n-form-item label="Type" :show-feedback="false">
-                <n-select v-model:value="filters.type" :options="referencesStore.fragmentTypeOptions"
-                  placeholder="Select type" clearable />
-              </n-form-item>
-            </n-gi>
-            <n-gi>
-              <n-form-item label="Source" :show-feedback="false">
-                <n-select v-model:value="filters.source" :options="referencesStore.fragmentSourceOptions"
-                  placeholder="Select source" clearable />
-              </n-form-item>
-            </n-gi>
-          </n-grid>
-        </div>
-      </n-collapse-transition>
+      <div v-if="filterSummary" class="filter-summary">
+        {{ filterSummary }}
+      </div>
     </n-gi>
 
     <n-gi>
@@ -68,6 +45,38 @@
     </n-gi>
   </n-grid>
 
+  <!-- Filter Dialog -->
+  <n-modal v-model:show="showFilterDialog" preset="dialog" title="Filter Options" :style="{ backgroundColor: dialogBackgroundColor }">
+    <n-space vertical>
+      <n-form-item label="Search" :show-feedback="false">
+        <n-input v-model:value="dialogFilters.searchTerm" placeholder="Search..." clearable />
+      </n-form-item>
+      <n-form-item label="Genre" :show-feedback="false">
+        <n-select v-model:value="dialogFilters.genre" :options="referencesStore.genreOptions" multiple filterable
+          placeholder="Select genres" clearable />
+      </n-form-item>
+      <n-form-item label="Labels" :show-feedback="false">
+        <n-select v-model:value="dialogFilters.labels" :options="referencesStore.labelOptions" multiple filterable
+          placeholder="Select labels" clearable />
+      </n-form-item>
+      <n-form-item label="Type" :show-feedback="false">
+        <n-select v-model:value="dialogFilters.type" :options="referencesStore.fragmentTypeOptions" multiple
+          placeholder="Select types" clearable />
+      </n-form-item>
+      <n-form-item label="Source" :show-feedback="false">
+        <n-select v-model:value="dialogFilters.source" :options="referencesStore.fragmentSourceOptions" multiple
+          placeholder="Select sources" clearable />
+      </n-form-item>
+    </n-space>
+    <template #action>
+      <n-space>
+        <n-button @click="clearDialogFilters">Clear</n-button>
+        <n-button @click="showFilterDialog = false">Cancel</n-button>
+        <n-button type="primary" @click="applyDialogFilters">OK</n-button>
+      </n-space>
+    </template>
+  </n-modal>
+
   <bulk-upload-dialog v-model:show="showBulkUploadDialog" :slugName="brandName"
     @upload-complete="handleUploadComplete" />
 </template>
@@ -76,7 +85,8 @@
 import { defineComponent, ref, watch, computed, h } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
-import { NPageHeader, NPagination, NInput, NDataTable, NEmpty, NButton, NButtonGroup, NFormItem, NSelect, NGrid, NGi, NCollapseTransition, useMessage } from 'naive-ui';
+import { NPageHeader, NPagination, NInput, NDataTable, NEmpty, NButton, NButtonGroup, NFormItem, NSelect, NGrid, NGi, NCollapseTransition, NModal, NSpace, useMessage } from 'naive-ui';
+import { useDialogBackground } from '../../../composables/useDialogBackground';
 import { useSoundFragmentStore } from '../../../stores/kneo/soundFragmentStore';
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 import { SoundFragment } from '../../../types/kneoBroadcasterTypes';
@@ -106,6 +116,8 @@ export default defineComponent( {
     NFormItem,
     NSelect,
     NInput,
+    NModal,
+    NSpace,
   },
   props: {
     brandName: {
@@ -119,24 +131,34 @@ export default defineComponent( {
     const store = useSoundFragmentStore();
     const { getAvailableSoundFragments, getAvailablePagination } = storeToRefs( store );
     const referencesStore = useReferencesStore();
+    const { dialogBackgroundColor } = useDialogBackground();
 
     const loading = ref( true );
     const checkedRowKeys = ref<Array<string | number>>( [] );
     const hasSelection = computed( () => checkedRowKeys.value.length > 0 );
     const hasActiveFilters = computed( () =>
-      !!( filters.value.searchTerm || filters.value.genre?.length > 0 || filters.value.type || filters.value.source )
+      !!( filters.value.searchTerm || filters.value.genre?.length > 0 || filters.value.labels?.length > 0 || filters.value.type?.length > 0 || filters.value.source?.length > 0 )
     );
+    const showFilterDialog = ref(false);
+    const dialogFilters = ref({
+      searchTerm: '',
+      genre: [] as string[],
+      labels: [] as string[],
+      type: [] as string[],
+      source: [] as string[]
+    });
     const showBulkUploadDialog = ref( false );
     const STORAGE_KEY = `stationplaylist.${props.brandName}.filters`;
     const STORAGE_SHOW_KEY = `stationplaylist.${props.brandName}.showFilters`;
 
     const showFilters = ref( false );
-    const filters = ref<{ searchTerm: string; genre: string[]; type?: string; source?: string }>( {
+    const filters = ref({
       searchTerm: '',
-      genre: [],
-      type: undefined,
-      source: undefined,
-    } );
+      genre: [] as string[],
+      labels: [] as string[],
+      type: [] as string[],
+      source: [] as string[]
+    });
 
     const loadSavedFilters = () => {
       try {
@@ -146,8 +168,9 @@ export default defineComponent( {
           filters.value = {
             searchTerm: obj.searchTerm || '',
             genre: obj.genre || [],
-            type: obj.type,
-            source: obj.source
+            labels: obj.labels || [],
+            type: obj.type || [],
+            source: obj.source || []
           };
         }
         const sh = localStorage.getItem( STORAGE_SHOW_KEY );
@@ -185,13 +208,9 @@ export default defineComponent( {
       loading.value = true;
       try {
         let activeFilters: any = {};
-        if ( showFilters.value ) {
-          const hasFilters = filters.value.searchTerm || ( filters.value.genre && filters.value.genre.length > 0 ) || filters.value.type || filters.value.source;
-          if ( hasFilters ) {
-            activeFilters = filters.value;
-          } else {
-            return;
-          }
+        const hasFilters = filters.value.searchTerm || filters.value.genre?.length > 0 || filters.value.labels?.length > 0 || filters.value.type?.length > 0 || filters.value.source?.length > 0;
+        if ( hasFilters ) {
+          activeFilters = filters.value;
         }
         const currentPage = page || getAvailablePagination.value?.page || 1;
         const currentPageSize = pageSize || getAvailablePagination.value?.pageSize || 10;
@@ -213,9 +232,12 @@ export default defineComponent( {
 
     const initializeData = async () => {
       try {
-        await referencesStore.fetchGenres();
+        await Promise.all([
+          referencesStore.fetchGenres(),
+          referencesStore.fetchLabels()
+        ]);
       } catch ( error ) {
-        console.error( 'Failed to fetch genres:', error );
+        console.error( 'Failed to fetch references:', error );
       }
     };
 
@@ -228,14 +250,6 @@ export default defineComponent( {
       }
     }, { immediate: true } );
 
-    watch( () => filters.value, () => {
-      saveFilters();
-      fetchAvailableFragments( 1, getAvailablePagination.value?.pageSize );
-    }, { deep: true } );
-
-    watch( showFilters, () => {
-      saveFilters();
-    } );
 
 
     const handleCheckedRowKeysChange = ( keys: Array<string | number> ) => {
@@ -272,19 +286,75 @@ export default defineComponent( {
       fetchAvailableFragments( getAvailablePagination.value?.page, getAvailablePagination.value?.pageSize );
     };
 
-    const toggleFilters = () => {
-      showFilters.value = !showFilters.value;
-      if ( !showFilters.value ) {
-        filters.value = {
-          searchTerm: '',
-          genre: [],
-          type: undefined,
-          source: undefined
-        };
-      }
-      saveFilters();
-      fetchAvailableFragments( 1, getAvailablePagination.value?.pageSize );
+    const openFilterDialog = () => {
+      dialogFilters.value = {
+        searchTerm: filters.value.searchTerm,
+        genre: [...filters.value.genre],
+        labels: [...filters.value.labels],
+        type: [...filters.value.type],
+        source: [...filters.value.source]
+      };
+      showFilterDialog.value = true;
     };
+
+    const applyDialogFilters = () => {
+      filters.value = {
+        searchTerm: dialogFilters.value.searchTerm,
+        genre: [...dialogFilters.value.genre],
+        labels: [...dialogFilters.value.labels],
+        type: [...dialogFilters.value.type],
+        source: [...dialogFilters.value.source]
+      };
+      showFilterDialog.value = false;
+      saveFilters();
+      fetchAvailableFragments(1, getAvailablePagination.value?.pageSize);
+    };
+
+    const clearDialogFilters = () => {
+      dialogFilters.value = {
+        searchTerm: '',
+        genre: [],
+        labels: [],
+        type: [],
+        source: []
+      };
+    };
+
+    const resetFilters = () => {
+      filters.value = {
+        searchTerm: '',
+        genre: [],
+        labels: [],
+        type: [],
+        source: []
+      };
+      saveFilters();
+      fetchAvailableFragments(1, getAvailablePagination.value?.pageSize);
+    };
+
+    const filterSummary = computed(() => {
+      const parts: string[] = [];
+      if (filters.value.searchTerm) {
+        parts.push(`Search: "${filters.value.searchTerm}"`);
+      }
+      if (filters.value.genre?.length > 0) {
+        const names = filters.value.genre.map(id => referencesStore.genreOptions.find(o => o.value === id)?.label || id).join(', ');
+        parts.push(`Genre: ${names}`);
+      }
+      if (filters.value.labels?.length > 0) {
+        const names = filters.value.labels.map(id => referencesStore.labelOptions.find(o => o.value === id)?.label || id).join(', ');
+        parts.push(`Labels: ${names}`);
+      }
+      if (filters.value.type?.length > 0) {
+        const names = filters.value.type.map(id => referencesStore.fragmentTypeOptions.find(o => o.value === id)?.label || id).join(', ');
+        parts.push(`Type: ${names}`);
+      }
+      if (filters.value.source?.length > 0) {
+        const names = filters.value.source.map(id => referencesStore.fragmentSourceOptions.find(o => o.value === id)?.label || id).join(', ');
+        parts.push(`Source: ${names}`);
+      }
+      return parts.join(' | ');
+    });
 
     const rateSoundFragment = async ( row: any, action: 'LIKE' | 'DISLIKE' ) => {
       const id = row.soundfragment.id;
@@ -363,7 +433,14 @@ export default defineComponent( {
       showFilters,
       filters,
       hasActiveFilters,
-      toggleFilters,
+      showFilterDialog,
+      dialogFilters,
+      openFilterDialog,
+      applyDialogFilters,
+      clearDialogFilters,
+      resetFilters,
+      filterSummary,
+      dialogBackgroundColor,
     };
   },
 } );
@@ -372,5 +449,10 @@ export default defineComponent( {
 <style scoped>
 .p-4 {
   padding: 1rem;
+}
+.filter-summary {
+  font-size: 12px;
+  color: #888;
+  line-height: 1.4;
 }
 </style>

@@ -87,9 +87,11 @@
         </n-tab-pane>
         <n-tab-pane name="playlist" tab="Playlist">
           <PlaylistFields
-              v-model="localFormData.stagePlaylist!"
+              :model-value="localFormData.stagePlaylist"
+              @update:model-value="(val) => Object.assign(localFormData.stagePlaylist!, val)"
               :genre-options="referencesStore.genreOptions"
               :label-options="referencesStore.labelOptions"
+              :hide-static-list="true"
           />
         </n-tab-pane>
         <n-tab-pane name="acl" tab="ACL">
@@ -197,10 +199,12 @@ export default defineComponent({
       talkativity: 0.5,
       stagePlaylist: {
         sourcing: 'RANDOM',
-        title: '',
-        artist: '',
+        searchTerm: '',
         genres: [],
-        labels: []
+        labels: [],
+        type: [],
+        source: [],
+        staticList: []
       }
     });
 
@@ -250,18 +254,22 @@ export default defineComponent({
           if (data.stagePlaylist) {
             localFormData.stagePlaylist = {
               sourcing: data.stagePlaylist.sourcing || 'RANDOM',
-              title: data.stagePlaylist.title || '',
-              artist: data.stagePlaylist.artist || '',
+              searchTerm: (data.stagePlaylist as any).searchTerm || '',
               genres: data.stagePlaylist.genres || [],
-              labels: data.stagePlaylist.labels || []
+              labels: data.stagePlaylist.labels || [],
+              type: (data.stagePlaylist as any).type || [],
+              source: (data.stagePlaylist as any).source || [],
+              staticList: (data.stagePlaylist as any).soundFragments || []
             };
           } else {
             localFormData.stagePlaylist = {
               sourcing: 'RANDOM',
-              title: '',
-              artist: '',
+              searchTerm: '',
               genres: [],
-              labels: []
+              labels: [],
+              type: [],
+              source: [],
+              staticList: []
             };
           }
         }
@@ -297,12 +305,14 @@ export default defineComponent({
           weekdays: selectedWeekdays.value,
           talkativity: localFormData.talkativity as any,
           stagePlaylist: localFormData.stagePlaylist ? {
-        sourcing: localFormData.stagePlaylist.sourcing,
-        title: localFormData.stagePlaylist.title,
-        artist: localFormData.stagePlaylist.artist,
-        genres: localFormData.stagePlaylist.genres,
-        labels: localFormData.stagePlaylist.labels
-      } : undefined,
+            sourcing: localFormData.stagePlaylist.sourcing,
+            searchTerm: (localFormData.stagePlaylist as any).searchTerm,
+            genres: localFormData.stagePlaylist.genres,
+            labels: localFormData.stagePlaylist.labels,
+            type: (localFormData.stagePlaylist as any).type,
+            source: (localFormData.stagePlaylist as any).source,
+            soundFragments: (localFormData.stagePlaylist as any).staticList
+          } : undefined,
         };
         const id = route.params.id as string;
         if (!id || id === 'new') {
