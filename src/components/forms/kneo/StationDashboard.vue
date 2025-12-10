@@ -597,7 +597,7 @@ export default defineComponent( {
       return title.replace( /^(#+|--+)\s*/, '' ).replace( /[#-]/g, '|' ).trim();
     };
 
-    const getMergingTypeText = (fragment: any): { text: string; color: string } => {
+    const getMergingTypeText = (fragment: any): { text: string; color: 'default' | 'success' | 'error' | 'warning' | 'primary' | 'info' } => {
       if (!fragment) return { text: '', color: 'default' };
       switch (fragment.mergingType) {
         case 'FILLER_JINGLE':
@@ -610,6 +610,8 @@ export default defineComponent( {
           return { text: 'Intro + Song + Intro + Song', color: 'error' };
         case 'SONG_CROSSFADE_SONG':
           return { text: 'Song + Crossfade + Song', color: 'success' };
+        case 'SONG_ONLY':
+          return { text: 'Song Solely', color: 'success' };
         default:
           return { text: fragment.mergingType || '', color: 'default' };
       }

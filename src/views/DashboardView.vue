@@ -76,18 +76,19 @@
                   <n-tag :type="dashboard.globalStats.schedulerStats.schedulerRunning ? 'success' : 'error'" size="small">
                     {{ dashboard.globalStats.schedulerStats.schedulerRunning ? 'Running' : 'Stopped' }}
                   </n-tag>
+                  <n-text depth="3" style="margin-left: 8px;">{{ dashboard.globalStats.schedulerStats.schedulerName }}</n-text>
                 </div>
                 <div style="font-size: 0.875rem;">
-                  <n-text depth="2">Tasks: {{ dashboard.globalStats.schedulerStats.totalScheduledTasks }}</n-text>
+                  <n-text depth="2">Checked: {{ dashboard.globalStats.schedulerStats.totalEventsChecked }}</n-text>
                 </div>
                 <div style="font-size: 0.875rem;">
-                  <n-text depth="2">Active: {{ dashboard.globalStats.schedulerStats.activeJobs }}</n-text>
+                  <n-text depth="2">Fired: {{ dashboard.globalStats.schedulerStats.totalEventsFired }}</n-text>
                 </div>
                 <div style="font-size: 0.875rem;">
-                  <n-text depth="3">Paused: {{ dashboard.globalStats.schedulerStats.pausedJobs }}</n-text>
+                  <n-text depth="3">Errors: {{ dashboard.globalStats.schedulerStats.totalEventErrors }}</n-text>
                 </div>
                 <div style="font-size: 0.875rem;">
-                  <n-text depth="3">Errors: {{ dashboard.globalStats.schedulerStats.errorJobs }}</n-text>
+                  <n-text depth="3">Last Tick: {{ formatDateTimeWithToday(dashboard.globalStats.schedulerStats.lastEventTick) }}</n-text>
                 </div>
               </n-space>
             </n-card>
@@ -392,6 +393,7 @@ export default defineComponent({
       schedulerTaskColumns,
       sendCommand,
       formatTime,
+      formatDateTimeWithToday,
       isMobile,
       selectedBrand,
       brandOptions,

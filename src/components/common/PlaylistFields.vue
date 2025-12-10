@@ -4,7 +4,7 @@
       <n-gi>
         <n-form-item label="Source">
           <n-radio-group
-              :value="modelValue.sourcing"
+              :value="modelValue?.sourcing"
               @update:value="updateField('sourcing', $event)"
               name="radiobuttongroup1"
           >
@@ -17,7 +17,7 @@
       <n-gi>
         <n-form-item label="Title">
           <n-input
-              :value="modelValue.title"
+              :value="modelValue?.title"
               @update:value="updateField('title', $event)"
               placeholder=""
               style="width: 50%; max-width: 600px;"
@@ -27,7 +27,7 @@
       <n-gi>
         <n-form-item label="Artist">
           <n-input
-              :value="modelValue.artist"
+              :value="modelValue?.artist"
               @update:value="updateField('artist', $event)"
               placeholder=""
               style="width: 50%; max-width: 600px;"
@@ -37,7 +37,7 @@
       <n-gi>
         <n-form-item label="Genres">
           <n-select
-              :value="modelValue.genres"
+              :value="modelValue?.genres"
               @update:value="updateField('genres', $event)"
               :options="genreOptions"
               multiple
@@ -50,7 +50,7 @@
       <n-gi>
         <n-form-item label="Labels">
           <n-select
-              :value="modelValue.labels"
+              :value="modelValue?.labels"
               @update:value="updateField('labels', $event)"
               :options="labelOptions"
               multiple
@@ -91,7 +91,7 @@ const referencesStore = useReferencesStore();
 
 const updateField = (field: keyof PlaylistData, value: any) => {
   emit('update:modelValue', {
-    ...props.modelValue,
+    ...(props.modelValue || {}),
     [field]: value
   });
 };

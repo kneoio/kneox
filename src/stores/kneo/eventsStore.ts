@@ -21,6 +21,13 @@ export const useEventsStore = defineStore('eventsStore', () => {
         description: '',
         priority: '',
         actions: [],
+        stagePlaylist: {
+            sourcing: 'RANDOM',
+            title: '',
+            artist: '',
+            genres: [],
+            labels: []
+        }
     } as Event);
 
     const getPagination = computed(() => {

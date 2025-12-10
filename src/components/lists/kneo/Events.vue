@@ -122,7 +122,11 @@ const columns: DataTableColumns<Event> = [
   {
     title: 'Type',
     key: 'type',
-    width: 120
+    width: 120,
+    render: (row: Event) => {
+      const typeOption = referencesStore.eventTypeOptions.find(opt => opt.value === row.type);
+      return typeOption ? typeOption.label : row.type;
+    }
   },
 
 
