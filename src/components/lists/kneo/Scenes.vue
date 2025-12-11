@@ -79,9 +79,13 @@ export default defineComponent({
         const scriptId = (sc as any).scriptId as string | undefined;
         return {
           id: sc.id,
+          title: sc.title || sc.type || '',
           name: sc.title || sc.type || '',
           scriptId: scriptId || '',
           startTime: sc.startTime || '',
+          timingMode: (sc as any).timingMode || 'ABSOLUTE_TIME',
+          durationSeconds: (sc as any).durationSeconds || 0,
+          seqNum: (sc as any).seqNum || 0,
           talkativity: (sc as any).talkativity ?? 0,
           weekdays: weekdaysText,
           oneTimeRun: !!(sc as any).oneTimeRun,
@@ -145,13 +149,31 @@ export default defineComponent({
       { type: 'selection' },
       { title: 'Name', key: 'name' },
       {
-        title: 'Start Time',
-        key: 'startTime',
+        title: 'Timing',
+        key: 'timing',
         render: (row: any) => {
           const content: any[] = [];
-          if (row.startTime) content.push(h('span', row.startTime));
+          if (row.timingMode === 'ABSOLUTE_TIME') {
+            if (row.startTime) content.push(h('span', row.startTime));
+          } else {
+            content.push(h('span', `${row.durationSeconds}s`));
+          }
           if (row.oneTimeRun) content.push(h(NTag, { type: 'success', size: 'small', style: 'margin-left:8px;' }, { default: () => 'One-time' }));
           return content.length > 0 ? h('div', { style: 'display:flex; align-items:center;' }, content) : null;
+        }
+      },
+      {
+        title: 'Sequence Number',
+        key: 'seqNum',
+        width: 140,
+        render: (row: any) => row.seqNum ?? '-'
+      },
+      {
+        title: 'Timing Mode',
+        key: 'timingMode',
+        width: 180,
+        render: (row: any) => {
+          return row.timingMode === 'ABSOLUTE_TIME' ? 'Absolute Time' : 'Relative to Stream Start';
         }
       },
       {

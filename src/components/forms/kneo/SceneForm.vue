@@ -37,6 +37,27 @@
             </n-form-item>
           </n-gi>
           <n-gi>
+            <n-form-item label="Duration (minutes)">
+              <n-radio-group v-model:value="durationMinutes" name="duration-group">
+                <n-radio-button :value="10">10</n-radio-button>
+                <n-radio-button :value="15">15</n-radio-button>
+                <n-radio-button :value="20">20</n-radio-button>
+                <n-radio-button :value="30">30</n-radio-button>
+                <n-radio-button :value="45">45</n-radio-button>
+                <n-radio-button :value="60">60</n-radio-button>
+                <n-radio-button :value="90">90</n-radio-button>
+                <n-radio-button :value="120">120</n-radio-button>
+              </n-radio-group>
+            </n-form-item>
+          </n-gi>
+          <n-gi>
+            <n-form-item label="Sequence Number">
+              <n-radio-group v-model:value="localFormData.seqNum" name="seq-num-group">
+                <n-radio-button v-for="i in 10" :key="i" :value="i">{{ i }}</n-radio-button>
+              </n-radio-group>
+            </n-form-item>
+          </n-gi>
+          <n-gi>
             <n-form-item label="One-time run">
               <n-checkbox v-model:checked="localFormData.oneTimeRun">Activated</n-checkbox>
             </n-form-item>
@@ -87,7 +108,7 @@
         </n-tab-pane>
         <n-tab-pane name="playlist" tab="Playlist">
           <PlaylistFields
-              :model-value="localFormData.stagePlaylist"
+              :model-value="localFormData.stagePlaylist as any"
               @update:model-value="(val) => Object.assign(localFormData.stagePlaylist!, val)"
               :genre-options="referencesStore.genreOptions"
               :label-options="referencesStore.labelOptions"
@@ -123,6 +144,9 @@ import {
   NTabPane,
   NIcon,
   NSlider,
+  NInputNumber,
+  NRadioGroup,
+  NRadioButton,
   useLoadingBar,
   useMessage
 } from 'naive-ui';
@@ -156,6 +180,9 @@ export default defineComponent({
     NTabPane,
     NSlider,
     NIcon,
+    NInputNumber,
+    NRadioGroup,
+    NRadioButton,
     ChevronRight,
     AclTable,
     PlaylistFields
@@ -190,6 +217,11 @@ export default defineComponent({
     );
 
     const formTitle = computed(() => (localFormData.id ? 'Edit Scene' : 'Create New Scene'));
+    
+    const timingModeOptions = [
+      { label: 'Absolute Time', value: 'ABSOLUTE_TIME' },
+      { label: 'Relative to Stream Start', value: 'RELATIVE_TO_STREAM_START' }
+    ];
 
     const localFormData = reactive<Partial<ScriptScene>>({
       id: '',
@@ -197,6 +229,9 @@ export default defineComponent({
       prompts: [],
       startTime: '',
       talkativity: 0.5,
+      timingMode: 'ABSOLUTE_TIME',
+      durationSeconds: 0,
+      seqNum: 0,
       stagePlaylist: {
         sourcing: 'RANDOM',
         searchTerm: '',
@@ -209,6 +244,15 @@ export default defineComponent({
     });
 
     const startTimeMs = ref<number | null>(null);
+    const durationMinutes = ref<number>(0);
+    
+    watch(durationMinutes, (minutes) => {
+      localFormData.durationSeconds = Math.round(minutes * 60);
+    });
+    
+    watch(() => localFormData.durationSeconds, (seconds) => {
+      durationMinutes.value = (seconds ?? 0) / 60;
+    });
 
     const parseTimeToMs = (timeStr: string | undefined | null): number | null => {
       if (!timeStr) return null;
@@ -249,6 +293,10 @@ export default defineComponent({
           const w = (data as any).weekdays || [];
           selectedWeekdays.value = Array.isArray(w) ? (w.filter((n: any) => Number.isInteger(n)) as number[]) : [];
           localFormData.talkativity = typeof data.talkativity === 'number' ? data.talkativity : 0.5;
+          const duration = typeof (data as any).durationSeconds === 'number' ? (data as any).durationSeconds : 0;
+          localFormData.durationSeconds = duration;
+          durationMinutes.value = duration / 60;
+          localFormData.seqNum = typeof (data as any).seqNum === 'number' ? (data as any).seqNum : 0;
           
           // Initialize stagePlaylist
           if (data.stagePlaylist) {
@@ -301,6 +349,8 @@ export default defineComponent({
           title: localFormData.title as any,
           prompts: scenePrompts.value,
           startTime: startTimeMs.value != null ? formatTimeFromMs(startTimeMs.value) : undefined,
+          durationSeconds: localFormData.durationSeconds as any,
+          seqNum: localFormData.seqNum as any,
           oneTimeRun: localFormData.oneTimeRun as any,
           weekdays: selectedWeekdays.value,
           talkativity: localFormData.talkativity as any,
@@ -311,7 +361,7 @@ export default defineComponent({
             labels: localFormData.stagePlaylist.labels,
             type: (localFormData.stagePlaylist as any).type,
             source: (localFormData.stagePlaylist as any).source,
-            soundFragments: (localFormData.stagePlaylist as any).staticList
+            staticList: (localFormData.stagePlaylist as any).staticList
           } : undefined,
         };
         const id = route.params.id as string;
@@ -372,6 +422,7 @@ export default defineComponent({
       goBack,
       selectedScriptId,
       startTimeMs,
+      durationMinutes,
       scenePrompts,
       selectedWeekdays,
       promptOptions,
@@ -381,7 +432,8 @@ export default defineComponent({
       activeTab,
       aclData,
       aclLoading,
-      referencesStore
+      referencesStore,
+      timingModeOptions
     };
   }
 });

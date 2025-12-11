@@ -51,6 +51,14 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
+                <n-form-item label="Timing Mode">
+                  <n-radio-group v-model:value="localFormData.timingMode" name="timing-mode-group">
+                    <n-radio-button value="ABSOLUTE_TIME">Absolute Time</n-radio-button>
+                    <n-radio-button value="RELATIVE_TO_STREAM_START">Relative to Stream Start</n-radio-button>
+                  </n-radio-group>
+                </n-form-item>
+              </n-gi>
+              <n-gi>
                 <n-form-item label="Labels">
                   <n-select
                     v-model:value="localFormData.labels"
@@ -280,6 +288,8 @@ import {
   NCheckboxGroup,
   NSlider,
   NTag,
+  NRadioGroup,
+  NRadioButton,
   useLoadingBar,
   useMessage
 } from 'naive-ui';
@@ -320,6 +330,8 @@ export default defineComponent({
     NCheckboxGroup,
     NSlider,
     NTag,
+    NRadioGroup,
+    NRadioButton,
     CodeMirror,
     AclTable,
     NModal,
@@ -376,6 +388,7 @@ export default defineComponent({
       languageCode: "",
       labels: [],
       accessLevel: 0,
+      timingMode: "ABSOLUTE_TIME",
       scenes: []
     });
 
@@ -436,6 +449,7 @@ export default defineComponent({
           languageCode: localFormData.languageCode,
           labels: localFormData.labels || [],
           accessLevel: isPublic.value ? 1 : 0,
+          timingMode: localFormData.timingMode,
           scenes: cleanedScenes
         };
 

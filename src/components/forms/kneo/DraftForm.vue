@@ -134,6 +134,11 @@
               <n-select v-model:value="testStationId" :options="stationOptions" filterable style="width: 100%; max-width: 480px;" />
             </n-form-item>
           </n-gi>
+          <n-gi v-for="variable in extractedVariables" :key="variable.name">
+            <n-form-item :label="variable.name">
+              <n-input v-model:value="userVariables[variable.name]" style="width: 100%; max-width: 480px;" placeholder="" />
+            </n-form-item>
+          </n-gi>
         </n-grid>
       </n-form>
       <n-space>
@@ -262,6 +267,8 @@ export default defineComponent({
     const testStationId = ref<string | null>(null);
     const testResult = ref('');
     const testLoading = ref(false);
+    const extractedVariables = ref<Array<{name: string, description: string | null, type: string}>>([]);
+    const userVariables = ref<Record<string, any>>({});
     const canRunTest = computed(() => !!(testSongId.value && testAgentId.value && testStationId.value) && !testLoading.value);
 
 
@@ -303,12 +310,24 @@ export default defineComponent({
 
     const openTestDialog = async () => {
       testResult.value = '';
+      extractedVariables.value = [];
+      userVariables.value = {};
       showTestDialog.value = true;
       try {
         loadingBar.start();
         try { await soundStore.fetchAll(1, 100); } catch {}
         try { await aiAgentStore.fetchAllUnsecured?.(1, 100); } catch {}
         try { await radioStore.fetchAll(1, 100); } catch {}
+        
+        if (localFormData.content) {
+          try {
+            const extractResponse = await apiClient.post('/drafts/extract-variables', { code: localFormData.content });
+            extractedVariables.value = extractResponse.data || [];
+            extractedVariables.value.forEach(v => {
+              userVariables.value[v.name] = '';
+            });
+          } catch {}
+        }
 
         const songs = (soundStore as any).getEntries || [];
         if (songs.length > 0) {
@@ -340,7 +359,8 @@ export default defineComponent({
           songId: testSongId.value,
           agentId: testAgentId.value,
           stationId: testStationId.value,
-          code: localFormData.content
+          code: localFormData.content,
+          userVariables: Object.keys(userVariables.value).length > 0 ? userVariables.value : undefined
         };
         const response = await apiClient.post('/drafts/test', payload, { responseType: 'text' });
         const raw = typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
@@ -480,6 +500,8 @@ export default defineComponent({
       agentOptions,
       stationOptions,
       runDraftTest,
+      extractedVariables,
+      userVariables,
       goBack,
       activeTab,
       editorExtensions,

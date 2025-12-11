@@ -140,6 +140,7 @@ export default defineComponent({
                 tags: '',
                 description: '',
                 startTime: sc.startTime || '',
+                seqNum: (sc as any).seqNum || 0,
                 weekdays: weekdaysText,
                 oneTimeRun: !!(sc as any).oneTimeRun
               };
@@ -439,6 +440,12 @@ export default defineComponent({
           }
           return content.length > 0 ? h('div', { style: 'display:flex; align-items:center;' }, content) : null;
         }
+      },
+      {
+        title: 'Sequence Number',
+        key: 'seqNum',
+        width: 140,
+        render: (row: any) => row.children ? null : (row.seqNum ?? '-')
       },
       {
         title: 'Flags',

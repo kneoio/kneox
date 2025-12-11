@@ -111,6 +111,7 @@ export interface RadioStation {
     schedule?: {
         enabled: boolean;
     };
+    scriptId?: string;
 }
 
 export interface RadioStationSave {
@@ -131,7 +132,7 @@ export interface RadioStationSave {
     messagingPolicy?: SubmissionPolicy;
     aiAgentMode?: AiAgentMode;
     schedule?: any;
-    scripts?: string[];
+    scripts?: { scriptId: string; userVariables: Record<string, any> }[];
 }
 
 export interface SoundFragment {
@@ -377,6 +378,7 @@ export interface Script {
     languageCode?: string;
     labels: string[];
     accessLevel?: number;
+    timingMode?: string;
     scenes?: ScriptScene[];
     requiredVariables?: RequiredVariable[];
 }
@@ -387,6 +389,7 @@ export interface ScriptSave {
     languageCode?: string;
     labels: string[];
     accessLevel?: number;
+    timingMode?: string;
     scenes?: ScriptScene[];
 }
 
@@ -404,6 +407,9 @@ export interface ScriptScene {
     title?: string;
     prompts?: ScenePromptDTO[];
     startTime?: string;
+    timingMode?: string;
+    durationSeconds?: number;
+    seqNum?: number;
     oneTimeRun?: boolean;
     weekdays?: number[];
     talkativity?: number;
@@ -414,10 +420,14 @@ export interface ScriptScene {
     lastModifiedDate?: string;
     stagePlaylist?: {
         sourcing?: string;
+        searchTerm?: string;
         title?: string;
         artist?: string;
         genres?: string[];
         labels?: string[];
+        type?: string[];
+        source?: string[];
+        staticList?: string[];
     };
 }
 
@@ -434,15 +444,23 @@ export interface ScriptSceneSave {
     title?: string;
     prompts?: ScenePromptDTO[];
     startTime?: string;
+    timingMode?: string;
+    durationSeconds?: number;
+    seqNum?: number;
     oneTimeRun?: boolean;
     weekdays?: number[];
     talkativity?: number;
+    podcastMode?: number;
     stagePlaylist?: {
         sourcing?: string;
+        searchTerm?: string;
         title?: string;
         artist?: string;
         genres?: string[];
         labels?: string[];
+        type?: string[];
+        source?: string[];
+        staticList?: string[];
     };
 }
 

@@ -1,7 +1,7 @@
 <template>
   <n-grid cols="6" x-gap="12" y-gap="12" class="m-5">
     <n-gi span="6">
-      <n-page-header subtitle="Radio Station" @back="goBack">
+      <n-page-header subtitle="Stream" @back="goBack">
         <template #title>
           {{ store.getCurrent.country || store.getCurrent.slugName }}
           <span v-if=" localFormData.timeZone && getCurrentTimeInTimezone "
@@ -201,8 +201,27 @@
               </n-gi>
               <n-gi v-if="selectedScript">
                 <n-form-item label="Description">
-                  <n-input :value="selectedScript.description" type="textarea" :autosize="{ minRows: 3, maxRows: 5 }"
-                    style="width: 50%; max-width: 600px; cursor: not-allowed;" disabled />
+                  <n-anchor type="block" :show-background="false" :show-rail="true" style="width: 50%; max-width: 600px;">
+                    <n-anchor-link>
+                      {{ selectedScript.description }}
+                    </n-anchor-link>
+                  </n-anchor>
+                </n-form-item>
+              </n-gi>
+              <n-gi v-if="selectedScript?.requiredVariables?.length">
+                <n-form-item label="Variables">
+                  <div style="width: 50%; max-width: 600px;">
+                    <div v-for="variable in selectedScript.requiredVariables" :key="variable.name" style="margin-bottom: 12px;">
+                      <div style="margin-bottom: 4px; font-size: 13px;">
+                        <strong>{{ formatVariableName(variable.name) }}</strong>
+                        <span v-if="variable.required" style="color: #e74c3c;">*</span>
+                        <span style="color: #666; font-size: 12px; margin-left: 8px;">{{ variable.description }}</span>
+                      </div>
+                      <n-switch v-if="variable.type === 'boolean'" v-model:value="userVariables[variable.name]" />
+                      <n-input-number v-else-if="variable.type === 'number'" v-model:value="userVariables[variable.name]" style="width: 100%;" />
+                      <n-input v-else v-model:value="userVariables[variable.name]" placeholder="" style="width: 100%;" />
+                    </div>
+                  </div>
                 </n-form-item>
               </n-gi>
             </n-grid>
@@ -220,8 +239,11 @@
               </n-gi>
               <n-gi v-if="selectedProfile">
                 <n-form-item label="Description">
-                  <n-input :value="selectedProfile.description" type="textarea" :autosize="{ minRows: 3, maxRows: 5 }"
-                    style="width: 50%; max-width: 600px; cursor: not-allowed;" disabled />
+                  <n-anchor type="block" :show-background="false" show-rail style="width: 50%; max-width: 600px;">
+                    <n-anchor-link>
+                      {{ selectedProfile.description }}
+                    </n-anchor-link>
+                  </n-anchor>
                 </n-form-item>
               </n-gi>
 
@@ -281,6 +303,8 @@ import {
   NCheckbox,
   NCheckboxGroup,
   NColorPicker,
+  NAnchor,
+  NAnchorLink,
   NDynamicInput,
   NForm,
   NFormItem,
@@ -293,6 +317,7 @@ import {
   NSelect,
   NSlider,
   NSpace,
+  NSwitch,
   NTabPane,
   NTabs,
   NText,
@@ -331,6 +356,8 @@ export default defineComponent( {
     NCheckbox,
     NCheckboxGroup,
     NColorPicker,
+    NAnchor,
+    NAnchorLink,
     NDynamicInput,
     NForm,
     NFormItem,
@@ -347,6 +374,7 @@ export default defineComponent( {
     NGrid,
     NGi,
     NSelect,
+    NSwitch,
     NTag,
     NIcon,
     Copy,
@@ -369,6 +397,7 @@ export default defineComponent( {
     const lang = ref( html() );
     const profileOverrideEnabled = ref( false );
     const aiOverrideEnabled = ref( false );
+    const userVariables = ref<Record<string, any>>( {} );
     
 
     const toBool = (v: any): boolean => {
@@ -474,6 +503,21 @@ export default defineComponent( {
       if ( !localFormData.scriptId ) return null;
       return scriptStore.getEntries.find( s => s.id === localFormData.scriptId );
     } );
+
+    watch( selectedScript, ( newScript ) => {
+      userVariables.value = {};
+      if ( newScript?.requiredVariables ) {
+        newScript.requiredVariables.forEach( v => {
+          if ( v.type === 'boolean' ) userVariables.value[v.name] = false;
+          else if ( v.type === 'number' ) userVariables.value[v.name] = 0;
+          else userVariables.value[v.name] = '';
+        } );
+      }
+    } );
+
+    const formatVariableName = ( name: string ): string => {
+      return name.replace( /([A-Z])/g, ' $1' ).replace( /^./, s => s.toUpperCase() ).trim();
+    };
 
     const voiceOptions = computed(() => 
       (referencesStore.voiceOptions || []).map(voice => ({
@@ -581,7 +625,7 @@ export default defineComponent( {
           aiOverriding: aiOverrideEnabled.value ? localFormData.aiOverriding : undefined,
           profileOverriding: profileOverrideEnabled.value ? localFormData.profileOverriding : undefined,
           schedule: localFormData.schedule ? JSON.parse( JSON.stringify( localFormData.schedule ) ) : undefined,
-          scripts: localFormData.scriptId ? [localFormData.scriptId] : undefined
+          scripts: localFormData.scriptId ? [{ scriptId: localFormData.scriptId, userVariables: userVariables.value }] : undefined
         };
 
 
@@ -773,7 +817,13 @@ export default defineComponent( {
         normalizeNumericFields();
 
         if ((currentData as any).scripts && Array.isArray((currentData as any).scripts) && (currentData as any).scripts.length > 0) {
-          (localFormData as any).scriptId = (currentData as any).scripts[0];
+          const firstScript = (currentData as any).scripts[0];
+          if (typeof firstScript === 'object' && firstScript.scriptId) {
+            (localFormData as any).scriptId = firstScript.scriptId;
+            userVariables.value = firstScript.userVariables || {};
+          } else {
+            (localFormData as any).scriptId = firstScript;
+          }
         }
 
         if ( localFormData.localizedName ) {
@@ -871,7 +921,9 @@ export default defineComponent( {
       stopClockUpdate,
       profileOverrideEnabled,
       aiOverrideEnabled,
-      voiceOptions
+      voiceOptions,
+      userVariables,
+      formatVariableName
     };
   }
 } );
