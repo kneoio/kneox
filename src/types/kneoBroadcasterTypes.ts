@@ -359,6 +359,13 @@ export interface SubmissionPayload {
     agreementVersion?: string;
 }
 
+export interface RequiredVariable {
+    name: string;
+    description: string;
+    type: string;
+    required: boolean;
+}
+
 export interface Script {
     id: string;
     author: string;
@@ -371,6 +378,7 @@ export interface Script {
     labels: string[];
     accessLevel?: number;
     scenes?: ScriptScene[];
+    requiredVariables?: RequiredVariable[];
 }
 
 export interface ScriptSave {

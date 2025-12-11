@@ -142,13 +142,6 @@ const columns: DataTableColumns<Event> = [
     }
   },
   {
-    title: 'Description',
-    key: 'description',
-    ellipsis: {
-      tooltip: true
-    }
-  },
-  {
     title: 'Source',
     key: 'sourcing',
     width: 100,
@@ -169,6 +162,13 @@ const columns: DataTableColumns<Event> = [
     width: 200,
     render: (row: Event) => {
       return resolveLabelNames(row.stagePlaylist?.labels || []);
+    }
+  },
+  {
+    title: 'Description',
+    key: 'description',
+    ellipsis: {
+      tooltip: true
     }
   },
 

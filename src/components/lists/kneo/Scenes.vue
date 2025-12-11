@@ -154,8 +154,6 @@ export default defineComponent({
           return content.length > 0 ? h('div', { style: 'display:flex; align-items:center;' }, content) : null;
         }
       },
-      { title: 'Talkativity', key: 'talkativity' },
-      { title: 'Weekdays', key: 'weekdays' },
       {
         title: 'Source',
         key: 'sourcing',
@@ -169,7 +167,9 @@ export default defineComponent({
           };
           return labels[row.sourcing] || row.sourcing;
         }
-      }
+      },
+      { title: 'Talkativity', key: 'talkativity' },
+      { title: 'Weekdays', key: 'weekdays' }
     ]));
 
     const getRowProps = (row: any) => ({

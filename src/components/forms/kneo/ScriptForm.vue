@@ -62,6 +62,16 @@
                   />
                 </n-form-item>
               </n-gi>
+              <n-gi v-if="localFormData.requiredVariables && localFormData.requiredVariables.length">
+                <n-form-item label="Required Variables">
+                  <div style="font-size: 12px; color: #666;">
+                    <div v-for="(variable, index) in localFormData.requiredVariables" :key="index" style="margin-bottom: 4px;">
+                      <strong>{{ variable.name }}</strong> ({{ variable.type }}) - {{ variable.description }}
+                      <span v-if="variable.required" style="color: #e74c3c;">*</span>
+                    </div>
+                  </div>
+                </n-form-item>
+              </n-gi>
               
             </n-grid>
           </n-form>
