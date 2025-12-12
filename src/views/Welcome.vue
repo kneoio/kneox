@@ -91,7 +91,7 @@
                   </n-grid-item>
                   
                   <n-grid-item>
-                    <router-link to="/outline/radiostations" style="text-decoration:none;">
+                    <router-link to="/outline/brands" style="text-decoration:none;">
                       <n-card 
                         :segmented="{ content: true }" 
                         content-style="padding: 16px;"

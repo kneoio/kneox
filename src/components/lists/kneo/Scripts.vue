@@ -10,48 +10,72 @@
     </n-gi>
 
     <n-gi :span="isMobile ? 1 : 6">
-      <n-button-group>
-        <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
-        <n-dropdown
-            trigger="click"
-            :disabled="!hasSelection"
-            :options="accessLevelOptions"
-            @select="handleSetAccessLevel"
-        >
+      <div style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; margin-top: 12px; overflow-x: auto;">
+        <n-button-group>
+          <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
+          <n-dropdown
+              trigger="click"
+              :disabled="!hasSelection"
+              :options="accessLevelOptions"
+              @select="handleSetAccessLevel"
+          >
+            <n-button
+                type="default"
+                :disabled="!hasSelection"
+                size="large"
+            >
+              Set Access Level
+            </n-button>
+          </n-dropdown>
+          <n-button @click="handleImport" type="default" size="large">Import</n-button>
           <n-button
               type="default"
               :disabled="!hasSelection"
+              @click="handleExport"
               size="large"
           >
-            Set Access Level
+            Export ({{ checkedRowKeys.length }})
           </n-button>
-        </n-dropdown>
-        <n-button @click="handleImport" type="default" size="large">Import</n-button>
-        <n-button
-            type="default"
-            :disabled="!hasSelection"
-            @click="handleExport"
-            size="large"
-        >
-          Export ({{ checkedRowKeys.length }})
-        </n-button>
-        <n-button
-            type="default"
-            :disabled="!hasSelection"
-            @click="handleExportExtended"
-            size="large"
-        >
-          Export Extended ({{ checkedRowKeys.length }})
-        </n-button>
-        <n-button
-            type="error"
-            :disabled="!hasSelection"
-            @click="handleDelete"
-            size="large"
-        >
-          Delete ({{ checkedRowKeys.length }})
-        </n-button>
-      </n-button-group>
+          <n-button
+              type="default"
+              :disabled="!hasSelection"
+              @click="handleExportExtended"
+              size="large"
+          >
+            Export Extended ({{ checkedRowKeys.length }})
+          </n-button>
+          <n-button
+              type="error"
+              :disabled="!hasSelection"
+              @click="handleDelete"
+              size="large"
+          >
+            Delete ({{ checkedRowKeys.length }})
+          </n-button>
+          <n-button @click="openFilterDialog" type="default" size="large">
+            <red-led :active="hasActiveFilters" style="margin-right: 8px;" />
+            Filter
+          </n-button>
+          <n-button @click="resetFilters" type="default" size="large" :disabled="!hasActiveFilters">
+            Reset
+          </n-button>
+        </n-button-group>
+
+        <n-input
+          v-model:value="filters.searchTerm"
+          placeholder="Search..."
+          clearable
+          @update:value="onSearchChange"
+          style="width: 200px;"
+          size="large"
+        />
+      </div>
+    </n-gi>
+
+    <n-gi :span="isMobile ? 1 : 6">
+      <div v-if="filterSummary" class="filter-summary">
+        {{ filterSummary }}
+      </div>
     </n-gi>
 
     <n-gi :span="isMobile ? 1 : 6">
@@ -71,6 +95,30 @@
       </n-data-table>
     </n-gi>
   </n-grid>
+
+  <n-modal v-model:show="showFilterDialog" preset="dialog" title="Filter Options" :style="{ backgroundColor: dialogBackgroundColor }">
+    <n-space vertical>
+      <n-form-item label="Search" :show-feedback="false">
+        <n-input v-model:value="dialogFilters.searchTerm" placeholder="Search..." clearable />
+      </n-form-item>
+      <n-form-item label="Language" :show-feedback="false">
+        <n-select v-model:value="dialogFilters.languageCode" :options="langOptions" placeholder="Select language" clearable />
+      </n-form-item>
+      <n-form-item label="Timing Mode" :show-feedback="false">
+        <n-select v-model:value="dialogFilters.timingMode" :options="timingModeOptions" placeholder="Select timing mode" clearable />
+      </n-form-item>
+      <n-form-item label="Labels" :show-feedback="false">
+        <n-select v-model:value="dialogFilters.labels" :options="scriptLabelOptions" multiple filterable placeholder="Select labels" clearable />
+      </n-form-item>
+    </n-space>
+    <template #action>
+      <n-space>
+        <n-button @click="clearDialogFilters">Clear</n-button>
+        <n-button @click="showFilterDialog = false">Cancel</n-button>
+        <n-button type="primary" @click="applyDialogFilters">OK</n-button>
+      </n-space>
+    </template>
+  </n-modal>
 </template>
 
 <script lang="ts">
@@ -82,26 +130,34 @@ import {
   NCheckbox,
   NDataTable,
   NDropdown,
+  NFormItem,
   NGi,
   NGrid,
+  NInput,
+  NModal,
   NPageHeader,
+  NSelect,
+  NSpace,
   NTag,
   useMessage
 } from 'naive-ui';
 import {useRouter} from 'vue-router';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
-import {Script, ScriptScene} from "../../../types/kneoBroadcasterTypes";
+import RedLed from '../../common/RedLed.vue';
+import { SceneTimingMode, Script, ScriptScene } from "../../../types/kneoBroadcasterTypes";
 import {useScriptStore} from "../../../stores/kneo/scriptStore";
 import { useScriptSceneStore } from "../../../stores/kneo/scriptSceneStore";
 import { useReferencesStore } from "../../../stores/kneo/referencesStore";
 import { handleFormSaveError } from '../../../utils/errorHandling';
 import apiClient from '../../../api/apiClient';
+import { useDialogBackground } from '../../../composables/useDialogBackground';
 
 export default defineComponent({
-  components: {NPageHeader, NDataTable, NButtonGroup, NButton, NDropdown, NGi, NGrid, LoaderIcon},
+  components: {NPageHeader, NDataTable, NButtonGroup, NButton, NDropdown, NGi, NGrid, LoaderIcon, RedLed, NInput, NModal, NSpace, NFormItem, NSelect},
   setup() {
     const router = useRouter();
     const message = useMessage();
+    const { dialogBackgroundColor } = useDialogBackground();
     const store = useScriptStore();
     const sceneStore = useScriptSceneStore();
     const referencesStore = useReferencesStore();
@@ -112,24 +168,161 @@ export default defineComponent({
     const treeData = ref<any[]>([]);
     const scriptLabelOptions = ref<Array<{ label: string; value: string; color?: string; fontColor?: string }>>([]);
 
+    const hasSelection = computed(() => {
+      return checkedRowKeys.value.length > 0;
+    });
+
+    const showFilterDialog = ref(false);
+    const dialogFilters = ref({
+      searchTerm: '',
+      labels: [] as string[],
+      timingMode: '' as any,
+      languageCode: '' as any
+    });
+
+    const filters = ref({
+      searchTerm: '',
+      labels: [] as string[],
+      timingMode: '' as any,
+      languageCode: '' as any
+    });
+
+    const hasActiveFilters = computed(() => {
+      return !!(
+        filters.value.searchTerm ||
+        (filters.value.labels && filters.value.labels.length > 0) ||
+        filters.value.timingMode ||
+        filters.value.languageCode
+      );
+    });
+
+    const STORAGE_KEY = 'scripts.list.filters';
+
+    const loadSavedFilters = () => {
+      try {
+        const s = localStorage.getItem(STORAGE_KEY);
+        if (s) {
+          const obj = JSON.parse(s);
+          filters.value = {
+            searchTerm: obj.searchTerm || '',
+            labels: obj.labels || [],
+            timingMode: obj.timingMode || '',
+            languageCode: obj.languageCode || ''
+          };
+        }
+      } catch {}
+    };
+
+    const saveFilters = () => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(filters.value));
+      } catch {}
+    };
+
     const resolveLabelNames = (labelUuids: string[]): string => {
       if (!Array.isArray(labelUuids) || labelUuids.length === 0) return '';
       const labelMap = new Map(scriptLabelOptions.value.map(opt => [opt.value, opt.label]));
       return labelUuids.map(uuid => labelMap.get(uuid) || uuid).join(', ');
     };
 
-    async function preFetch() {
+    const timingModeLabel = (mode: any): string | null => {
+      if (mode === SceneTimingMode.ABSOLUTE_TIME) return 'Radio';
+      if (mode === SceneTimingMode.RELATIVE_TO_STREAM_START) return 'One Time Stream';
+      return null;
+    };
+
+    const timingModeOptions = [
+      { label: 'Radio', value: SceneTimingMode.ABSOLUTE_TIME },
+      { label: 'One Time Stream', value: SceneTimingMode.RELATIVE_TO_STREAM_START }
+    ];
+
+    const langOptions = computed(() => (referencesStore as any).languageOptions || []);
+
+    const openFilterDialog = () => {
+      dialogFilters.value = {
+        searchTerm: filters.value.searchTerm,
+        labels: [...filters.value.labels],
+        timingMode: filters.value.timingMode,
+        languageCode: filters.value.languageCode
+      };
+      showFilterDialog.value = true;
+    };
+
+    const applyDialogFilters = () => {
+      filters.value = {
+        searchTerm: dialogFilters.value.searchTerm,
+        labels: [...dialogFilters.value.labels],
+        timingMode: dialogFilters.value.timingMode,
+        languageCode: dialogFilters.value.languageCode
+      };
+      showFilterDialog.value = false;
+      saveFilters();
+      fetchData();
+    };
+
+    const clearDialogFilters = () => {
+      dialogFilters.value = {
+        searchTerm: '',
+        labels: [],
+        timingMode: '',
+        languageCode: ''
+      };
+    };
+
+    const resetFilters = () => {
+      filters.value = {
+        searchTerm: '',
+        labels: [],
+        timingMode: '',
+        languageCode: ''
+      };
+      saveFilters();
+      fetchData();
+    };
+
+    const onSearchChange = () => {
+      saveFilters();
+      fetchData();
+    };
+
+    const filterSummary = computed(() => {
+      const parts: string[] = [];
+      if (filters.value.searchTerm) {
+        parts.push(`Search: "${filters.value.searchTerm}"`);
+      }
+      if (filters.value.languageCode) {
+        const lang = (langOptions.value || []).find((o: any) => o.value === filters.value.languageCode);
+        parts.push(`Language: ${lang?.label || filters.value.languageCode}`);
+      }
+      if (filters.value.timingMode) {
+        parts.push(`Mode: ${timingModeLabel(filters.value.timingMode) || filters.value.timingMode}`);
+      }
+      if (filters.value.labels?.length > 0) {
+        const labelMap = new Map(scriptLabelOptions.value.map(opt => [opt.value, opt.label]));
+        const names = filters.value.labels.map(id => labelMap.get(id) || id).join(', ');
+        parts.push(`Labels: ${names}`);
+      }
+      return parts.join(' | ');
+    });
+
+    const fetchData = async () => {
       try {
         loading.value = true;
-        scriptLabelOptions.value = await referencesStore.fetchLabelsByCategory('script');
-        await store.fetchAll(1, 100);
+
+        const activeFilters: any = {};
+        if (filters.value.labels?.length > 0) activeFilters.labels = filters.value.labels;
+        if (filters.value.timingMode) activeFilters.timingMode = filters.value.timingMode;
+        if (filters.value.languageCode) activeFilters.languageCode = filters.value.languageCode;
+        if (filters.value.searchTerm) activeFilters.searchTerm = filters.value.searchTerm;
+
+        await store.fetchAll(1, 100, activeFilters);
         const scripts = store.getEntries || [];
         const childrenPromises = scripts.map(async (s: Script) => {
           try {
             await sceneStore.fetchForScript(s.id as string, 1, 50);
             const scenes = (sceneStore.apiViewResponse?.viewData?.entries || []) as ScriptScene[];
             const children = scenes.map(sc => {
-              const map = ['','Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+              const map = ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
               const w = (sc as any).weekdays || [];
               const weekdaysText = Array.isArray(w) && w.length > 0
                 ? w.filter((n: any) => Number.isInteger(n) && n >= 1 && n <= 7).map((n: number) => map[n]).join(', ')
@@ -152,6 +345,7 @@ export default defineComponent({
               labelUuids: (s as any).labels || [],
               description: s.description || '',
               accessLevel: (s as any).accessLevel,
+              timingMode: (s as any).timingMode,
               children
             };
           } catch {
@@ -161,15 +355,26 @@ export default defineComponent({
               tags: resolveLabelNames((s as any).labels || []),
               labelUuids: (s as any).labels || [],
               description: s.description || '',
-              accessLevel: (s as any).accessLevel
+              accessLevel: (s as any).accessLevel,
+              timingMode: (s as any).timingMode
             };
           }
         });
-        const rows = await Promise.all(childrenPromises);
-        treeData.value = rows;
+        treeData.value = await Promise.all(childrenPromises);
       } catch (error) {
-        console.error('Failed to fetch initial Script data:', error);
+        console.error('Failed to fetch Scripts:', error);
         message.error('Failed to load Scripts.');
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    async function preFetch() {
+      try {
+        loading.value = true;
+        scriptLabelOptions.value = await referencesStore.fetchLabelsByCategory('script');
+        loadSavedFilters();
+        await fetchData();
       } finally {
         loading.value = false;
       }
@@ -179,7 +384,7 @@ export default defineComponent({
       if (!intervalId.value) {
         intervalId.value = window.setInterval(async () => {
           try {
-            await store.fetchAll(store.getPagination.page, store.getPagination.pageSize);
+            await fetchData();
           } catch (error) {
             console.error('Periodic refresh of Scripts failed:', error);
           }
@@ -215,10 +420,6 @@ export default defineComponent({
 
     const handlePageChange = async (_page: number) => {};
     const handlePageSizeChange = async (_pageSize: number) => {};
-
-    const hasSelection = computed(() => {
-      return checkedRowKeys.value.length > 0;
-    });
 
     const handleNewClick = () => {
       router.push('/outline/scripts/new');
@@ -453,8 +654,16 @@ export default defineComponent({
         render: (row: any) => {
           if (row.children) {
             const isPublic = row.accessLevel === 1;
-            return isPublic
-              ? h(NTag, { type: 'success', size: 'small' }, { default: () => 'Public' })
+            const tags: any[] = [];
+            if (isPublic) {
+              tags.push(h(NTag, { type: 'success', size: 'small' }, { default: () => 'Public' }));
+            }
+            const modeLabel = timingModeLabel(row.timingMode);
+            if (modeLabel) {
+              tags.push(h(NTag, { type: row.timingMode === SceneTimingMode.RELATIVE_TO_STREAM_START ? 'warning' : 'info', size: 'small' }, { default: () => modeLabel }));
+            }
+            return tags.length
+              ? h('div', { style: 'display:flex; gap:6px; flex-wrap:wrap;' }, tags)
               : null;
           }
           return null;
@@ -469,6 +678,7 @@ export default defineComponent({
       columns,
       rowKey: (row: any) => row.id,
       isMobile,
+      hasSelection,
       handleNewClick,
       handleNewSceneClick,
       handleDelete,
@@ -477,7 +687,20 @@ export default defineComponent({
       handleExportExtended,
       accessLevelOptions,
       handleSetAccessLevel,
-      hasSelection,
+      openFilterDialog,
+      applyDialogFilters,
+      clearDialogFilters,
+      resetFilters,
+      onSearchChange,
+      hasActiveFilters,
+      showFilterDialog,
+      dialogFilters,
+      filters,
+      filterSummary,
+      timingModeOptions,
+      langOptions,
+      dialogBackgroundColor,
+      scriptLabelOptions,
       getRowProps,
       handlePageChange,
       handlePageSizeChange,
@@ -492,5 +715,11 @@ export default defineComponent({
 <style scoped>
 .p-4 {
   padding: 1rem;
+}
+
+.filter-summary {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #666;
 }
 </style>

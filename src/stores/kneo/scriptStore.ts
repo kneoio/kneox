@@ -2,7 +2,25 @@ import {defineStore} from 'pinia';
 import {computed, ref} from 'vue';
 import apiClient, {setupApiClient} from '../../api/apiClient';
 import {ApiFormResponse, ApiViewPageResponse} from "../../types";
-import {Script, ScriptSave} from "../../types/kneoBroadcasterTypes";
+import { SceneTimingMode, Script, ScriptSave } from "../../types/kneoBroadcasterTypes";
+
+interface ScriptFilterDTO {
+    labels?: string[];
+    timingMode?: SceneTimingMode;
+    languageCode?: string;
+    searchTerm?: string;
+    activated?: boolean;
+}
+
+function buildScriptsUrl(basePath: string, { page = 1, size = 10, filter }: { page?: number; size?: number; filter?: ScriptFilterDTO } = {}) {
+    const params = new URLSearchParams();
+    params.set('page', String(page));
+    params.set('size', String(size));
+    if (filter && Object.keys(filter).length > 0) {
+        params.set('filter', JSON.stringify(filter));
+    }
+    return `${basePath}?${params.toString()}`;
+}
 
 export const useScriptStore = defineStore('scriptStore', () => {
     const apiViewResponse = ref<ApiViewPageResponse<Script> | null>(null);
@@ -53,8 +71,13 @@ export const useScriptStore = defineStore('scriptStore', () => {
         };
     });
 
-    const fetchScripts = async (page = 1, pageSize = 10) => {
-        const response = await apiClient.get(`/scripts?page=${page}&size=${pageSize}`, {});
+    const fetchScripts = async (page = 1, pageSize = 10, filters: ScriptFilterDTO = {}) => {
+        const url = buildScriptsUrl('/scripts', {
+            page,
+            size: pageSize,
+            filter: filters && Object.keys(filters).length ? filters : undefined
+        });
+        const response = await apiClient.get(url, {});
         if (response?.data?.payload) {
             apiViewResponse.value = response.data.payload;
         } else {

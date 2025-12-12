@@ -9,8 +9,8 @@ import Listeners from '../components/lists/kneo/Listeners.vue';
 import AvailableListeners from '../components/lists/kneo/AvailableListeners.vue';
 import AvailableScripts from '../components/lists/kneo/AvailableScripts.vue';
 import ListenerForm from '../components/forms/kneo/ListenerForm.vue';
-import RadioStations from '../components/lists/kneo/RadioStations.vue';
-import RadioStation from '../components/forms/kneo/RadioStationForm.vue';
+import Brands from '../components/lists/kneo/Brands.vue';
+import BrandForm from '../components/forms/kneo/BrandForm.vue';
 import SoundFragments from '../components/lists/kneo/SoundFragments.vue';
 import SoundFragment from '../components/forms/kneo/SoundFragmentForm.vue';
 import AiAgents from '../components/lists/kneo/AiAgents.vue';
@@ -79,7 +79,7 @@ const routes: Array<RouteRecordRaw> = [
         children: [
             {
                 path: '',
-                redirect: {name: 'RadioStations'}
+                redirect: {name: 'Brands'}
             },
             {
                 path: 'dashboard',
@@ -142,14 +142,14 @@ const routes: Array<RouteRecordRaw> = [
                 props: true
             },
             {
-                path: 'radiostations',
-                name: 'RadioStations',
-                component: RadioStations
+                path: 'brands',
+                name: 'Brands',
+                component: Brands
             },
             {
-                path: 'radiostations/:id',
-                name: 'RadioStation',
-                component: RadioStation
+                path: 'brands/:id',
+                name: 'Brand',
+                component: BrandForm
             },
             {
                 path: 'soundfragments',

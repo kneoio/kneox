@@ -54,7 +54,7 @@ import {
   useMessage
 } from 'naive-ui';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
-import { ScriptScene } from '../../../types/kneoBroadcasterTypes';
+import { SceneTimingMode, ScriptScene } from '../../../types/kneoBroadcasterTypes';
 import { useScriptSceneStore } from '../../../stores/kneo/scriptSceneStore';
 
 export default defineComponent({
@@ -83,7 +83,7 @@ export default defineComponent({
           name: sc.title || sc.type || '',
           scriptId: scriptId || '',
           startTime: sc.startTime || '',
-          timingMode: (sc as any).timingMode || 'ABSOLUTE_TIME',
+          timingMode: (sc as any).timingMode || SceneTimingMode.ABSOLUTE_TIME,
           durationSeconds: (sc as any).durationSeconds || 0,
           seqNum: (sc as any).seqNum || 0,
           talkativity: (sc as any).talkativity ?? 0,
@@ -153,7 +153,7 @@ export default defineComponent({
         key: 'timing',
         render: (row: any) => {
           const content: any[] = [];
-          if (row.timingMode === 'ABSOLUTE_TIME') {
+          if (row.timingMode === SceneTimingMode.RELATIVE_TO_STREAM_START) {
             if (row.startTime) content.push(h('span', row.startTime));
           } else {
             content.push(h('span', `${row.durationSeconds}s`));
@@ -173,7 +173,7 @@ export default defineComponent({
         key: 'timingMode',
         width: 180,
         render: (row: any) => {
-          return row.timingMode === 'ABSOLUTE_TIME' ? 'Absolute Time' : 'Relative to Stream Start';
+          return row.timingMode === SceneTimingMode.RELATIVE_TO_STREAM_START ? 'Absolute Time' : 'Relative to Stream Start';
         }
       },
       {

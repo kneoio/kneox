@@ -231,7 +231,7 @@ export default defineComponent({
 
       const allStationsOption: MenuOption = {
         label: 'All Streams',
-        key: 'radiostations',
+        key: 'brands',
         icon: () => h(Ripple)
       };
 
@@ -380,7 +380,7 @@ export default defineComponent({
     const activeMenuKey = computed(() => {
       if (route.name === 'Dashboard') return 'dashboard';
       if (route.name === 'Player') return 'player';
-      if (route.name === 'RadioStations') return 'radiostations';
+      if (route.name === 'Brands') return 'brands';
       if (route.name === 'SoundFragments') return 'fragments';
       if (route.name === 'Events') return 'events';
       if (route.name === 'AiAgents') return 'ai_agents';
@@ -405,7 +405,7 @@ export default defineComponent({
       if (route.name === 'StationChat' && route.params.brandName) {
         return `station-${route.params.brandName}-chat`;
       }
-      if (route.name === 'RadioStation' && route.params.id) {
+      if (route.name === 'Brand' && route.params.id) {
         const station = radioStations.value.find((s) => s.id === route.params.id);
         if (station) {
           return `station-${station.slugName}-settings`;
@@ -432,9 +432,9 @@ export default defineComponent({
       } else if (key.startsWith('station-') && key.endsWith('-settings')) {
         const brandName = key.replace('station-', '').replace('-settings', '');
         const station = radioStations.value.find((s) => s.slugName === brandName)!;
-        await router.push({name: 'RadioStation', params: {id: station.id}});
-      } else if (key === 'radiostations') {
-        await router.push({name: 'RadioStations'});
+        await router.push({name: 'Brand', params: {id: station.id}});
+      } else if (key === 'brands') {
+        await router.push({name: 'Brands'});
       } else if (key === 'listeners') {
         await router.push({name: 'Listeners'});
       } else if (key === 'home') {

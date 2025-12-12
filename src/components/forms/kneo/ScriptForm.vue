@@ -40,6 +40,11 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
+                <n-form-item label="Default Profile">
+                  <n-select v-model:value="localFormData.defaultProfileId" :options="profileOptions" filterable style="width: 25%; max-width: 300px;" />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
                 <n-form-item label="Description">
                   <n-input
                     v-model:value="localFormData.description"
@@ -53,8 +58,8 @@
               <n-gi>
                 <n-form-item label="Mode">
                   <n-radio-group v-model:value="localFormData.timingMode" name="timing-mode-group">
-                    <n-radio-button value="ABSOLUTE_TIME">One Time Stream</n-radio-button>
-                    <n-radio-button value="RELATIVE_TO_STREAM_START">Radio</n-radio-button>
+                    <n-radio-button :value="SceneTimingMode.ABSOLUTE_TIME">Radio</n-radio-button>
+                    <n-radio-button :value="SceneTimingMode.RELATIVE_TO_STREAM_START">One Time Stream</n-radio-button>
                   </n-radio-group>
                 </n-form-item>
               </n-gi>
@@ -297,7 +302,7 @@ import { useScriptStore } from '../../../stores/kneo/scriptStore';
 import { useScriptSceneStore } from '../../../stores/kneo/scriptSceneStore';
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 import { usePromptStore } from '../../../stores/kneo/promptStore';
-import { Script, ScriptSave, ScriptScene, ScenePromptDTO } from '../../../types/kneoBroadcasterTypes';
+import { SceneTimingMode, Script, ScriptSave, ScriptScene, ScenePromptDTO } from '../../../types/kneoBroadcasterTypes';
 import { getErrorMessage, handleFormSaveError } from '../../../utils/errorHandling';
 import { EditorView } from "@codemirror/view";
 import { json } from "@codemirror/lang-json";
@@ -305,6 +310,7 @@ import CodeMirror from 'vue-codemirror6';
 import AclTable from '../../common/AclTable.vue';
 import GreenLed from '../../common/GreenLed.vue';
 import { useRadioStationStore } from '../../../stores/kneo/radioStationStore';
+import { useProfileStore } from '../../../stores/kneo/profileStore';
 import { useDialogBackground } from '../../../composables/useDialogBackground';
 
 export default defineComponent({
@@ -348,6 +354,7 @@ export default defineComponent({
     const referencesStore = useReferencesStore();
     const sceneStore = useScriptSceneStore();
     const radioStore = useRadioStationStore();
+    const profileStore = useProfileStore();
     const promptStore = usePromptStore();
     const scenesLoading = ref(false);
     const scriptLabelOptions = ref<Array<{ label: string; value: string; color?: string; fontColor?: string }>>([]);
@@ -385,10 +392,11 @@ export default defineComponent({
       lastModifiedDate: "",
       name: "",
       description: "",
+      defaultProfileId: undefined,
       languageCode: "",
       labels: [],
       accessLevel: 0,
-      timingMode: "ABSOLUTE_TIME",
+      timingMode: SceneTimingMode.RELATIVE_TO_STREAM_START,
       scenes: []
     });
 
@@ -426,6 +434,11 @@ export default defineComponent({
       return list.map((st: any) => ({ label: st.localizedName?.en || st.name || st.slugName || st.id, value: st.id }));
     });
 
+    const profileOptions = computed(() => {
+      const list = (profileStore as any).getEntries || [];
+      return list.map((p: any) => ({ label: p.name, value: p.id }));
+    });
+
     const localScenes = computed(() => localFormData.scenes || []);
 
     const handleSave = async () => {
@@ -446,6 +459,7 @@ export default defineComponent({
         const saveData: ScriptSave = {
           name: localFormData.name || '',
           description: localFormData.description || '',
+          defaultProfileId: localFormData.defaultProfileId,
           languageCode: localFormData.languageCode,
           labels: localFormData.labels || [],
           accessLevel: isPublic.value ? 1 : 0,
@@ -685,6 +699,7 @@ export default defineComponent({
       try {
         loadingBar.start();
         scriptLabelOptions.value = await referencesStore.fetchLabelsByCategory('script');
+        await profileStore.fetchAllUnsecured(1, 100);
         await promptStore.fetchAll(1, 100, { master: true });
         
         const id = route.params.id as string;
@@ -874,6 +889,7 @@ export default defineComponent({
       isPublic,
       referencesStore,
       langOptions: (referencesStore as any).languageOptions,
+      profileOptions,
       editorExtensions,
       aclData,
       aclLoading,

@@ -151,7 +151,7 @@ import {
   useMessage
 } from 'naive-ui';
 import { ChevronRight } from '@vicons/tabler';
-import { ScriptScene, ScriptSceneSave, ScenePromptDTO } from '../../../types/kneoBroadcasterTypes';
+import { SceneTimingMode, ScriptScene, ScriptSceneSave, ScenePromptDTO } from '../../../types/kneoBroadcasterTypes';
 import { useScriptSceneStore } from '../../../stores/kneo/scriptSceneStore';
 import { useScriptStore } from '../../../stores/kneo/scriptStore';
 import { usePromptStore } from '../../../stores/kneo/promptStore';
@@ -219,8 +219,8 @@ export default defineComponent({
     const formTitle = computed(() => (localFormData.id ? 'Edit Scene' : 'Create New Scene'));
     
     const timingModeOptions = [
-      { label: 'Absolute Time', value: 'ABSOLUTE_TIME' },
-      { label: 'Relative to Stream Start', value: 'RELATIVE_TO_STREAM_START' }
+      { label: 'Absolute Time', value: SceneTimingMode.RELATIVE_TO_STREAM_START },
+      { label: 'Relative to Stream Start', value: SceneTimingMode.ABSOLUTE_TIME }
     ];
 
     const localFormData = reactive<Partial<ScriptScene>>({
@@ -229,7 +229,7 @@ export default defineComponent({
       prompts: [],
       startTime: '',
       talkativity: 0.5,
-      timingMode: 'ABSOLUTE_TIME',
+      timingMode: SceneTimingMode.RELATIVE_TO_STREAM_START,
       durationSeconds: 0,
       seqNum: 0,
       stagePlaylist: {

@@ -47,6 +47,11 @@ export enum MessageType {
     ERROR = "ERROR"
 }
 
+export enum SceneTimingMode {
+    ABSOLUTE_TIME = "ABSOLUTE_TIME",
+    RELATIVE_TO_STREAM_START = "RELATIVE_TO_STREAM_START"
+}
+
 export interface Profile {
     id: string;
     author?: string;
@@ -111,6 +116,7 @@ export interface RadioStation {
     schedule?: {
         enabled: boolean;
     };
+    isTemporary?: number;
     scriptId?: string;
 }
 
@@ -375,10 +381,11 @@ export interface Script {
     lastModifiedDate: string;
     name: string;
     description: string;
+    defaultProfileId?: string;
     languageCode?: string;
     labels: string[];
     accessLevel?: number;
-    timingMode?: string;
+    timingMode?: SceneTimingMode;
     scenes?: ScriptScene[];
     requiredVariables?: RequiredVariable[];
 }
@@ -386,10 +393,11 @@ export interface Script {
 export interface ScriptSave {
     name: string;
     description: string;
+    defaultProfileId?: string;
     languageCode?: string;
     labels: string[];
     accessLevel?: number;
-    timingMode?: string;
+    timingMode?: SceneTimingMode;
     scenes?: ScriptScene[];
 }
 
@@ -407,7 +415,7 @@ export interface ScriptScene {
     title?: string;
     prompts?: ScenePromptDTO[];
     startTime?: string;
-    timingMode?: string;
+    timingMode?: SceneTimingMode;
     durationSeconds?: number;
     seqNum?: number;
     oneTimeRun?: boolean;
@@ -444,7 +452,7 @@ export interface ScriptSceneSave {
     title?: string;
     prompts?: ScenePromptDTO[];
     startTime?: string;
-    timingMode?: string;
+    timingMode?: SceneTimingMode;
     durationSeconds?: number;
     seqNum?: number;
     oneTimeRun?: boolean;

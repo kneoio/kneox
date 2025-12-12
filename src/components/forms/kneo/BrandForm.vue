@@ -348,7 +348,7 @@ import { handleFormSaveError, getErrorMessage } from '../../../utils/errorHandli
 import AclTable from '../../common/AclTable.vue';
 
 export default defineComponent( {
-  name: "RadioStationForm",
+  name: "BrandForm",
   components: {
     NPageHeader,
     NButtonGroup,
@@ -634,7 +634,7 @@ export default defineComponent( {
         
         const fromStation = router.options.history.state.back?.toString().includes('/outline/station/');
         if (!fromStation) {
-          await router.push( "/outline/radiostations" );
+          await router.push( "/outline/brands" );
         }
       } catch ( error ) {
         handleFormSaveError(error, message);
@@ -648,7 +648,7 @@ export default defineComponent( {
     };
 
     const goBack = () => {
-      router.push( "/outline/radiostations" );
+      router.push( "/outline/brands" );
     };
 
     const calculateDuration = ( startTime: string, endTime: string ): string => {
