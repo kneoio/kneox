@@ -1,5 +1,5 @@
 <template>
-  <n-grid :cols="isMobile ? 1 : 6" x-gap="12" y-gap="12" class="p-4">
+  <n-grid :cols="1" x-gap="12" y-gap="12" class="p-4">
     <n-gi>
       <n-page-header>
         <template #title>{{ brandName ? `${brandName} Sound Fragments` : 'Sound Fragments' }}</template>
@@ -9,24 +9,33 @@
       </n-page-header>
     </n-gi>
 
-    <n-gi :span="isMobile ? 1 : 6" class="flex items-center flex-wrap gap-2">
-      <n-button-group class="mr-4">
-        <n-button @click="handleNewClick" type="primary" :size="isMobile ? 'medium' : 'large'">New</n-button>
-        <n-button type="error" :disabled="!hasSelection" @click="handleDelete" :size="isMobile ? 'medium' : 'large'">
-          Delete ({{ checkedRowKeys.length }})
-        </n-button>
-        <n-button type="primary" :disabled="!hasSelection" @click="handleBulkBrandUpdate" :size="isMobile ? 'medium' : 'large'">
-          Update Brands ({{ checkedRowKeys.length }})
-        </n-button>
-         <n-button @click="openFilterDialog" type="default" :size="isMobile ? 'medium' : 'large'">
-        <red-led :active="hasActiveFilters" style="margin-right: 8px;" />
-        Filter
-      </n-button>
-      <n-button @click="resetFilters" type="default" :size="isMobile ? 'medium' : 'large'" :disabled="!hasActiveFilters">
-        Reset
-      </n-button>
-      </n-button-group>
-     
+    <n-gi>
+      <div style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; margin-top: 12px; overflow-x: auto;">
+        <n-button-group>
+          <n-button @click="handleNewClick" type="primary" :size="isMobile ? 'medium' : 'large'">New</n-button>
+          <n-button type="error" :disabled="!hasSelection" @click="handleDelete" :size="isMobile ? 'medium' : 'large'">
+            Del ({{ checkedRowKeys.length }})
+          </n-button>
+          <n-button type="primary" :disabled="!hasSelection" @click="handleBulkBrandUpdate" :size="isMobile ? 'medium' : 'large'">
+            Brands ({{ checkedRowKeys.length }})
+          </n-button>
+          <n-button @click="openFilterDialog" type="default" :size="isMobile ? 'medium' : 'large'">
+            <red-led :active="hasActiveFilters" style="margin-right: 8px;" />
+            Filter
+          </n-button>
+          <n-button @click="resetFilters" type="default" :size="isMobile ? 'medium' : 'large'" :disabled="!hasActiveFilters">
+            Reset
+          </n-button>
+        </n-button-group>
+        <n-input 
+          v-model:value="filters.searchTerm" 
+          placeholder="Search..." 
+          clearable
+          @update:value="onSearchChange"
+          style="width: 200px;"
+          :size="isMobile ? 'medium' : 'large'"
+        />
+      </div>
     </n-gi>
 
     <n-gi :span="isMobile ? 1 : 4">
@@ -121,7 +130,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, h, onMounted, ref, onUnmounted, watch } from 'vue';
+import { computed, defineComponent, h, onMounted, ref, onUnmounted } from 'vue';
 import {
   DataTableColumns,
   NButton,
@@ -146,7 +155,7 @@ import {
 import { useRouter } from 'vue-router';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
 import RedLed from '../../common/RedLed.vue';
-import { SoundFragment, FragmentType } from "../../../types/kneoBroadcasterTypes";
+import { SoundFragment } from "../../../types/kneoBroadcasterTypes";
 import { useSoundFragmentStore } from '../../../stores/kneo/soundFragmentStore';
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 import { useRadioStationStore } from '../../../stores/kneo/radioStationStore';
@@ -480,6 +489,11 @@ export default defineComponent( {
       fetchData(1, store.getPagination.pageSize);
     };
 
+    const onSearchChange = () => {
+      saveFilters();
+      fetchData(1, store.getPagination.pageSize);
+    };
+
     const applyFilters = () => {
       fetchData( 1, store.getPagination.pageSize );
     };
@@ -555,7 +569,8 @@ export default defineComponent( {
       showBrandUpdateDialog,
       brandUpdateOperation,
       selectedBrands,
-      dialogBackgroundColor
+      dialogBackgroundColor,
+      onSearchChange
     };
   }
 } );

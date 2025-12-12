@@ -9,22 +9,31 @@
       </n-page-header>
     </n-gi>
 
-    <n-gi class="flex items-center flex-wrap gap-2">
-      <n-button-group>
-        <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
-        <n-button @click="handleBulkUploadClick" type="info" size="large">Bulk Upload</n-button>
-        <n-button type="error" :disabled="!hasSelection" @click="handleDelete" size="large">
-          Delete ({{ checkedRowKeys.length }})
-        </n-button>
-        <n-button @click="openFilterDialog" type="default" size="large">
-          <red-led :active="hasActiveFilters" style="margin-right: 8px;" />
-          Filter
-        </n-button>
-        <n-button @click="resetFilters" type="default" size="large" :disabled="!hasActiveFilters">
-          Reset
-        </n-button>
-      </n-button-group>
-
+    <n-gi>
+      <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 12px;">
+        <n-button-group>
+          <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
+          <n-button @click="handleBulkUploadClick" type="info" size="large">Bulk Upload</n-button>
+          <n-button type="error" :disabled="!hasSelection" @click="handleDelete" size="large">
+            Delete ({{ checkedRowKeys.length }})
+          </n-button>
+          <n-button @click="openFilterDialog" type="default" size="large">
+            <red-led :active="hasActiveFilters" style="margin-right: 8px;" />
+            Filter
+          </n-button>
+          <n-button @click="resetFilters" type="default" size="large" :disabled="!hasActiveFilters">
+            Reset
+          </n-button>
+        </n-button-group>
+        <n-input 
+          v-model:value="filters.searchTerm" 
+          placeholder="Search..." 
+          clearable
+          @update:value="onSearchChange"
+          style="width: 200px;"
+          size="large"
+        />
+      </div>
     </n-gi>
 
     <n-gi>
@@ -332,6 +341,11 @@ export default defineComponent( {
       fetchAvailableFragments(1, getAvailablePagination.value?.pageSize);
     };
 
+    const onSearchChange = () => {
+      saveFilters();
+      fetchAvailableFragments(1, getAvailablePagination.value?.pageSize);
+    };
+
     const filterSummary = computed(() => {
       const parts: string[] = [];
       if (filters.value.searchTerm) {
@@ -439,6 +453,7 @@ export default defineComponent( {
       applyDialogFilters,
       clearDialogFilters,
       resetFilters,
+      onSearchChange,
       filterSummary,
       dialogBackgroundColor,
     };
