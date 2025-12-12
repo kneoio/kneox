@@ -54,7 +54,7 @@
 
       <div class="chat-input-area">
         <transition name="processing-fade">
-          <n-text v-if="processingMessage" depth="3" style="font-size: 12px; margin-bottom: 8px; display: block;">
+          <n-text v-if="processingMessage" depth="3" class="processing-message">
             {{ processingMessage }}
           </n-text>
         </transition>
@@ -286,6 +286,7 @@ export default defineComponent({
 }
 
 .chat-input-area {
+  position: relative;
   padding: 20px 24px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
@@ -293,6 +294,13 @@ export default defineComponent({
   align-items: flex-end;
   flex-shrink: 0;
   background: rgba(0, 0, 0, 0.2);
+}
+
+.processing-message {
+  position: absolute;
+  top: -24px;
+  left: 24px;
+  font-size: 12px;
 }
 
 .chat-input-area :deep(.n-input) {

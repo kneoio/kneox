@@ -51,10 +51,10 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
-                <n-form-item label="Timing Mode">
+                <n-form-item label="Mode">
                   <n-radio-group v-model:value="localFormData.timingMode" name="timing-mode-group">
-                    <n-radio-button value="ABSOLUTE_TIME">Absolute Time</n-radio-button>
-                    <n-radio-button value="RELATIVE_TO_STREAM_START">Relative to Stream Start</n-radio-button>
+                    <n-radio-button value="ABSOLUTE_TIME">One Time Stream</n-radio-button>
+                    <n-radio-button value="RELATIVE_TO_STREAM_START">Radio</n-radio-button>
                   </n-radio-group>
                 </n-form-item>
               </n-gi>
