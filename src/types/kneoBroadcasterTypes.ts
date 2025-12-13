@@ -92,6 +92,7 @@ export interface RadioStation {
     localizedName: Record<string, string>;
     country: string;
     description: string;
+    titleFont?: string;
     color: string;
     slugName: string;
     url: string;
@@ -121,6 +122,7 @@ export interface RadioStationSave {
     localizedName: Record<string, string>;
     country: string;
     description?: string;
+    titleFont?: string;
     color: string;
     bitRate?: number;
     popularityRate?: number;

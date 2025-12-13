@@ -67,11 +67,6 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
-                <n-form-item label="Color">
-                  <n-color-picker v-model:value="localFormData.color" style="width: 200px;" />
-                </n-form-item>
-              </n-gi>
-              <n-gi>
                 <n-form-item label="Time Zone">
                   <n-select v-model:value="localFormData.timeZone" :options="timezones"
                     style="width: 25%; max-width: 300px;" />
@@ -291,6 +286,35 @@
             </n-grid>
           </n-form>
         </n-tab-pane>
+
+        <n-tab-pane name="playerUi" tab="Player UI">
+          <n-form label-placement="left" label-width="auto">
+            <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
+              <n-gi v-if="stationTitlePreview">
+                <n-form-item label="Preview">
+                  <n-anchor type="block" :show-background="false" :show-rail="true" style="width: 50%; max-width: 600px;">
+                    <n-anchor-link>
+                      <div :style="{ fontFamily: localFormData.titleFont || undefined, fontSize: '34px', lineHeight: 1.1 }">
+                        {{ stationTitlePreview }}
+                      </div>
+                    </n-anchor-link>
+                  </n-anchor>
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="Title Font">
+                  <n-select v-model:value="localFormData.titleFont" :options="stationFontOptions"
+                    style="width: 25%; max-width: 300px;" />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="Color">
+                  <n-color-picker v-model:value="localFormData.color" style="width: 200px;" />
+                </n-form-item>
+              </n-gi>
+            </n-grid>
+          </n-form>
+        </n-tab-pane>
         <n-tab-pane name="acl" tab="ACL">
           <AclTable :acl-data="aclData" :loading="aclLoading" />
         </n-tab-pane>
@@ -432,6 +456,36 @@ export default defineComponent( {
       { value: ManagedBy.MIX, label: "AI DJ" }
     ];
 
+    const stationFonts = [
+      'Goldman',
+      'Digital Play Italic St',
+      'Airborne',
+      'AncientGod',
+      'Apollo',
+      'Cubic',
+      'DigitalPlay',
+      'Drexs',
+      'Elias',
+      'FutureSallow',
+      'Goodtime',
+      'GameOfSquids',
+      'Glypic',
+      'Icklips',
+      'Moto',
+      'MontereyPopsicle',
+      'PolenticalNeon',
+      'Venta',
+      'Conthrax',
+      'Kaylon',
+      'Nsecthin',
+      'Yonder'
+    ];
+
+    const stationFontOptions = stationFonts.map( f => ( {
+      label: f,
+      value: f
+    } ) );
+
 
 
 
@@ -454,6 +508,7 @@ export default defineComponent( {
       },
       country: "",
       description: "",
+      titleFont: "",
       color: "#FFFFFF",
       hlsUrl: "",
       iceCastUrl: "",
@@ -473,6 +528,18 @@ export default defineComponent( {
     } );
 
     const localizedNameArray = ref<{ language: string; name: string }[]>( [] );
+
+    const stationTitlePreview = computed( () => {
+      const ln: any = (localFormData as any).localizedName;
+      if ( ln && typeof ln === 'object' ) {
+        const en = ln.en;
+        if ( en ) return String( en );
+        for ( const v of Object.values( ln ) ) {
+          if ( v ) return String( v );
+        }
+      }
+      return '';
+    } );
 
     watch( localizedNameArray, ( newValue ) => {
       localFormData.localizedName = {};
@@ -619,6 +686,7 @@ export default defineComponent( {
           localizedName: localFormData.localizedName ? JSON.parse( JSON.stringify( localFormData.localizedName ) ) : {},
           country: localFormData.country || "",
           description: localFormData.description || "",
+          titleFont: localFormData.titleFont,
           color: localFormData.color || "",
           aiAgentId: localFormData.aiAgentId,
           profileId: localFormData.profileId,
@@ -782,6 +850,8 @@ export default defineComponent( {
       aclLoading,
       timezones: referencesStore.timezones,
       managedByOptions,
+      stationFontOptions,
+      stationTitlePreview,
       targetOptions,
       referencesStore,
       getCurrentTimeInTimezone,

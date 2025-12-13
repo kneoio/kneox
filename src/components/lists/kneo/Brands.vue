@@ -197,7 +197,7 @@ export default defineComponent({
       const params = new URLSearchParams();
       params.set('page', '1');
       params.set('size', '100');
-      params.set('filter', JSON.stringify({ timingMode: SceneTimingMode.ABSOLUTE_TIME }));
+      params.set('filter', JSON.stringify({ timingMode: SceneTimingMode.RELATIVE_TO_STREAM_START }));
       const response = await apiClient.get(`/scripts?${params.toString()}`);
       const entries = response?.data?.payload?.viewData?.entries || [];
       oneTimeStreamScripts.value = entries;
