@@ -10,7 +10,7 @@
     <n-card>
       <n-space vertical size="medium">
         <n-space align="center" size="medium">
-          <n-h2 style="margin: 0;">{{ brandName }}</n-h2>
+          <n-h2 style="margin: 0; cursor: pointer;" @click="copyBrandNameToClipboard">{{ brandName }}</n-h2>
           <span
             class="live-status"
             :class="{ 'live-on-air': isHeartbeatActive }"
@@ -21,6 +21,7 @@
             On Air
           </span>
         </n-space>
+
         <n-space align="center" size="small">
           <n-tag :type="getStatusInfo.type" size="large" :bordered="false">
             {{ getStatusInfo.text }}
@@ -266,6 +267,11 @@ export default defineComponent( {
     const isStartingStation = ref( false );
     const isStoppingStation = ref( false );
     const now = ref(new Date());
+
+    const copyBrandNameToClipboard = async () => {
+      await navigator.clipboard.writeText( props.brandName );
+      message.success( 'Copied' );
+    };
 
     const activeTab = ref<'dashboard'>('dashboard');
 
@@ -821,7 +827,8 @@ export default defineComponent( {
       getMergingTypeText,
       formattedTime,
       timeWithDot,
-      activeTab
+      activeTab,
+      copyBrandNameToClipboard
     };
   },
 } );
