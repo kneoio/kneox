@@ -110,6 +110,7 @@ export interface RadioStation {
     timeZone?: string;
     managedBy?: ManagedBy;
     aiControlAllowed?: boolean;
+    oneTimeStreamPolicy?: SubmissionPolicy;
     submissionPolicy?: SubmissionPolicy;
     messagingPolicy?: SubmissionPolicy;
     aiAgentMode?: AiAgentMode;
@@ -134,6 +135,7 @@ export interface RadioStationSave {
     profileOverriding?: ProfileOverriding;
     timeZone?: string;
     managedBy?: ManagedBy;
+    oneTimeStreamPolicy?: SubmissionPolicy;
     submissionPolicy?: SubmissionPolicy;
     messagingPolicy?: SubmissionPolicy;
     aiAgentMode?: AiAgentMode;

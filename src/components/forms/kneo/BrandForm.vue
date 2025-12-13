@@ -271,13 +271,19 @@
           <n-form label-placement="left" label-width="auto">
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
               <n-gi>
-                <n-form-item label="Messaging Allowed">
+                <n-form-item label="Messaging">
                   <n-select v-model:value="localFormData.messagingPolicy" :options="referencesStore.messagingPolicyOptions"
                     style="width: 25%; max-width: 300px;" />
                 </n-form-item>
               </n-gi>
               <n-gi>
-                <n-form-item label="Song Submission Allowed">
+                <n-form-item label="One-Time Stream">
+                  <n-select v-model:value="localFormData.oneTimeStreamPolicy" :options="referencesStore.submissionPolicyOptions"
+                    style="width: 25%; max-width: 300px;" />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="Song Submission">
                   <n-select v-model:value="localFormData.submissionPolicy" :options="referencesStore.submissionPolicyOptions"
                     style="width: 25%; max-width: 300px;" />
                 </n-form-item>
@@ -459,6 +465,7 @@ export default defineComponent( {
       timeZone: "",
       managedBy: ManagedBy.MIX,
       bitRate: 128000,
+      oneTimeStreamPolicy: undefined,
       submissionPolicy: undefined,
       messagingPolicy: undefined,
       aiOverriding: { name: "", prompt: "", primaryVoice: "" },
@@ -620,6 +627,7 @@ export default defineComponent( {
           managedBy: localFormData.managedBy,
           bitRate: localFormData.bitRate,
           nRate: localFormData.nRate,
+          oneTimeStreamPolicy: localFormData.oneTimeStreamPolicy,
           submissionPolicy: localFormData.submissionPolicy,
           messagingPolicy: localFormData.messagingPolicy,
           aiOverriding: aiOverrideEnabled.value ? localFormData.aiOverriding : undefined,
