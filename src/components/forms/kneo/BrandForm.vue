@@ -439,7 +439,7 @@ export default defineComponent( {
       { value: "default", label: "default" }
     ];
 
-    const localFormData = reactive<Partial<RadioStation> & { schedule?: any }>( {
+    const localFormData = reactive<Partial<RadioStation>>( {
       id: "",
       author: "",
       regDate: "",
@@ -469,8 +469,7 @@ export default defineComponent( {
       submissionPolicy: undefined,
       messagingPolicy: undefined,
       aiOverriding: { name: "", prompt: "", primaryVoice: "" },
-      profileOverriding: { name: "", description: "" },
-      schedule: { enabled: false, tasks: [] }
+      profileOverriding: { name: "", description: "" }
     } );
 
     const localizedNameArray = ref<{ language: string; name: string }[]>( [] );
@@ -632,7 +631,6 @@ export default defineComponent( {
           messagingPolicy: localFormData.messagingPolicy,
           aiOverriding: aiOverrideEnabled.value ? localFormData.aiOverriding : undefined,
           profileOverriding: profileOverrideEnabled.value ? localFormData.profileOverriding : undefined,
-          schedule: localFormData.schedule ? JSON.parse( JSON.stringify( localFormData.schedule ) ) : undefined,
           scripts: localFormData.scriptId ? [{ scriptId: localFormData.scriptId, userVariables: userVariables.value }] : undefined
         };
 
@@ -657,114 +655,6 @@ export default defineComponent( {
 
     const goBack = () => {
       router.push( "/outline/brands" );
-    };
-
-    const calculateDuration = ( startTime: string, endTime: string ): string => {
-      const [startHour, startMin] = startTime.split( ':' ).map( Number );
-      const [endHour, endMin] = endTime.split( ':' ).map( Number );
-
-      let startMinutes = startHour * 60 + startMin;
-      let endMinutes = endHour * 60 + endMin;
-
-      // Handle overnight schedules
-      if ( endMinutes < startMinutes ) {
-        endMinutes += 24 * 60;
-      }
-
-      const durationMinutes = endMinutes - startMinutes;
-      const hours = Math.floor( durationMinutes / 60 );
-      const minutes = durationMinutes % 60;
-
-      if ( hours === 0 ) {
-        return `${minutes}m`;
-      } else if ( minutes === 0 ) {
-        return `${hours}h`;
-      } else {
-        return `${hours}h ${minutes}m`;
-      }
-    };
-
-    const formatWeekday = ( day: string ): string => {
-      const dayMap: { [key: string]: string } = {
-        'MONDAY': 'Mon',
-        'TUESDAY': 'Tue',
-        'WEDNESDAY': 'Wed',
-        'THURSDAY': 'Thu',
-        'FRIDAY': 'Fri',
-        'SATURDAY': 'Sat',
-        'SUNDAY': 'Sun'
-      };
-      return dayMap[day] || day;
-    };
-
-    const formatMinutesToTime = ( minutes: number ): string => {
-      const hours = Math.floor( minutes / 60 );
-      const mins = minutes % 60;
-      return `${hours.toString().padStart( 2, '0' )}:${mins.toString().padStart( 2, '0' )}`;
-    };
-
-    const calculateDurationFromMinutes = ( startMinutes: number, endMinutes: number ): string => {
-      let duration = endMinutes - startMinutes;
-      if ( duration < 0 ) {
-        duration += 24 * 60; // Handle overnight schedules
-      }
-      const hours = Math.floor( duration / 60 );
-      const minutes = duration % 60;
-
-      if ( hours === 0 ) {
-        return `${minutes}m`;
-      } else if ( minutes === 0 ) {
-        return `${hours}h`;
-      } else {
-        return `${hours}h ${minutes}m`;
-      }
-    };
-
-    const timeToMinutes = ( timeStr: string ): number => {
-      const [hours, minutes] = timeStr.split( ':' ).map( Number );
-      return hours * 60 + minutes;
-    };
-
-    const scheduleTasksArray = ref<any[]>( [] );
-
-    watch( scheduleTasksArray, ( newValue ) => {
-      if ( !localFormData.schedule ) {
-        localFormData.schedule = { enabled: false, tasks: [] };
-      }
-
-      localFormData.schedule.tasks = newValue.map( task => ( {
-        type: task.type,
-        target: task.target,
-        triggerType: 'TIME_WINDOW',
-        timeWindowTrigger: {
-          startTime: formatMinutesToTime( task.startTime ),
-          endTime: formatMinutesToTime( task.endTime ),
-          weekdays: task.weekdays
-        }
-      } ) );
-    }, { deep: true } );
-
-    const createScheduleTask = () => ( {
-      type: 'PROCESS_DJ_CONTROL',
-      target: 'default',
-      startTime: 540, // 09:00
-      endTime: 600,   // 10:00
-      weekdays: ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY']
-    } );
-
-
-
-    const taskTypeOptions = [
-      { label: 'DJs shift', value: 'PROCESS_DJ_CONTROL' },
-
-    ];
-
-    const timeMarks = {
-      0: '00:00',
-      360: '06:00',
-      720: '12:00',
-      1080: '18:00',
-      1440: '24:00'
     };
 
     const fetchAclData = async () => {
@@ -841,27 +731,6 @@ export default defineComponent( {
           } ) );
         }
 
-        if ( localFormData.schedule && localFormData.schedule.tasks?.length > 0 ) {
-          scheduleTasksArray.value = localFormData.schedule.tasks.map( task => ( {
-            type: task.type,
-            target: task.target,
-            startTime: task.timeWindowTrigger ? timeToMinutes( task.timeWindowTrigger.startTime ) : 540,
-            endTime: task.timeWindowTrigger ? timeToMinutes( task.timeWindowTrigger.endTime ) : 600,
-            weekdays: task.timeWindowTrigger ? task.timeWindowTrigger.weekdays : []
-          } ) );
-        } else {
-          scheduleTasksArray.value = [];
-        }
-
-        if ( !localFormData.schedule ) {
-          localFormData.schedule = {
-            enabled: false,
-            tasks: []
-          };
-        }
-        if ( localFormData.schedule && typeof localFormData.schedule.enabled === 'undefined' ) {
-          localFormData.schedule.enabled = false;
-        }
       } catch ( error ) {
         console.error( "Failed to fetch data:", error );
         message.error( getErrorMessage(error) );
@@ -915,15 +784,6 @@ export default defineComponent( {
       managedByOptions,
       targetOptions,
       referencesStore,
-      scheduleTasksArray,
-      createScheduleTask,
-      taskTypeOptions,
-      timeMarks,
-      formatMinutesToTime,
-      calculateDurationFromMinutes,
-      timeToMinutes,
-      calculateDuration,
-      formatWeekday,
       getCurrentTimeInTimezone,
       startClockUpdate,
       stopClockUpdate,

@@ -109,14 +109,10 @@ export interface RadioStation {
     profileOverriding?: ProfileOverriding;
     timeZone?: string;
     managedBy?: ManagedBy;
-    aiControlAllowed?: boolean;
     oneTimeStreamPolicy?: SubmissionPolicy;
     submissionPolicy?: SubmissionPolicy;
     messagingPolicy?: SubmissionPolicy;
     aiAgentMode?: AiAgentMode;
-    schedule?: {
-        enabled: boolean;
-    };
     isTemporary?: number;
     scriptId?: string;
 }
@@ -139,7 +135,6 @@ export interface RadioStationSave {
     submissionPolicy?: SubmissionPolicy;
     messagingPolicy?: SubmissionPolicy;
     aiAgentMode?: AiAgentMode;
-    schedule?: any;
     scripts?: { scriptId: string; userVariables: Record<string, any> }[];
 }
 
