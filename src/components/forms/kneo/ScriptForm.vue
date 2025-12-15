@@ -278,6 +278,7 @@ import {
   NGi,
   NGrid,
   NInput,
+  NInputNumber,
   NPageHeader,
   NTabs,
   NTabPane,
@@ -288,6 +289,7 @@ import {
   NSpace,
   NAlert,
   NCheckbox,
+  NSwitch,
   NTimePicker,
   NDynamicInput,
   NCheckboxGroup,
@@ -322,6 +324,7 @@ export default defineComponent({
     NForm,
     NFormItem,
     NInput,
+    NInputNumber,
     NButton,
     NTabs,
     NTabPane,
@@ -331,6 +334,7 @@ export default defineComponent({
     NText,
     NDataTable,
     NCheckbox,
+    NSwitch,
     NTimePicker,
     NDynamicInput,
     NCheckboxGroup,
@@ -343,7 +347,7 @@ export default defineComponent({
     NModal,
     NSpace,
     NAlert,
-    GreenLed
+    GreenLed,
   },
   setup() {
     const loadingBar = useLoadingBar();
@@ -701,6 +705,7 @@ export default defineComponent({
         scriptLabelOptions.value = await referencesStore.fetchLabelsByCategory('script');
         await profileStore.fetchAllUnsecured(1, 100);
         await promptStore.fetchAll(1, 100, { master: true });
+        try { await radioStore.fetchAll(1, 100); } catch {}
         
         const id = route.params.id as string;
         if (id && id !== 'new') {
@@ -883,6 +888,7 @@ export default defineComponent({
     return {
       localFormData,
       formTitle,
+      SceneTimingMode,
       handleSave,
       goBack,
       activeTab,

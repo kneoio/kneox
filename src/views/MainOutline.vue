@@ -112,6 +112,7 @@ import {
   FileText,
   Prompt,
   Ripple,
+  PictureInPictureTop,
   Tent,
   BuildingSkyscraper,
   Fall,
@@ -230,8 +231,14 @@ export default defineComponent({
       }));
 
       const allStationsOption: MenuOption = {
-        label: 'All Streams',
+        label: 'Brands',
         key: 'brands',
+        icon: () => h(PictureInPictureTop)
+      };
+
+      const allStreamsOption: MenuOption = {
+        label: 'Streams',
+        key: 'streams',
         icon: () => h(Ripple)
       };
 
@@ -273,6 +280,7 @@ export default defineComponent({
               }
             }
           },
+          allStreamsOption,
           allStationsOption,
           homeOption,
           {
@@ -372,6 +380,7 @@ export default defineComponent({
             }
           }
         },
+        allStreamsOption,
         allStationsOption,
         ...remainingOptions
       ];
@@ -381,6 +390,7 @@ export default defineComponent({
       if (route.name === 'Dashboard') return 'dashboard';
       if (route.name === 'Player') return 'player';
       if (route.name === 'Brands') return 'brands';
+      if (route.name === 'Streams') return 'streams';
       if (route.name === 'SoundFragments') return 'fragments';
       if (route.name === 'Events') return 'events';
       if (route.name === 'AiAgents') return 'ai_agents';
@@ -435,6 +445,8 @@ export default defineComponent({
         await router.push({name: 'Brand', params: {id: station.id}});
       } else if (key === 'brands') {
         await router.push({name: 'Brands'});
+      } else if (key === 'streams') {
+        await router.push({name: 'Streams'});
       } else if (key === 'listeners') {
         await router.push({name: 'Listeners'});
       } else if (key === 'home') {

@@ -2,7 +2,7 @@
   <n-grid :cols="isMobile ? 1 : 6" x-gap="12" y-gap="12" class="p-4">
     <n-gi>
       <n-page-header>
-        <template #title>Streams</template>
+        <template #title>Brands</template>
         <template #footer>
           Total: {{ store.getPagination.itemCount }}
         </template>
@@ -12,7 +12,6 @@
     <n-gi :span="isMobile ? 1 : 6">
       <n-button-group>
         <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
-        <n-button type="default" size="large" @click="handleOpenOneTimeStreamDialog">New One-Time stream</n-button>
         <n-button
             type="error"
             :disabled="!hasSelection"
