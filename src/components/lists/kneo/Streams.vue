@@ -234,7 +234,7 @@ export default defineComponent({
           if (target.closest('.n-checkbox') || target.closest('[data-n-checkbox]')) {
             return;
           }
-          const routeTo = {name: 'Stream', params: {slugName: row.slugName}};
+          const routeTo = {name: 'Stream', params: {id: row.id}};
           router.push(routeTo).catch((err) => {
             console.error('Navigation error:', err);
           });
@@ -344,7 +344,7 @@ export default defineComponent({
                 if (checkedRowKeys.value.length === store.getEntries.length) {
                   checkedRowKeys.value = [];
                 } else {
-                  checkedRowKeys.value = store.getEntries.map(item => item.slugName);
+                  checkedRowKeys.value = store.getEntries.map(item => item.id);
                 }
               }
             })
@@ -380,7 +380,7 @@ export default defineComponent({
     return {
       store,
       columns,
-      rowKey: (row: any) => row.slugName,
+      rowKey: (row: any) => row.id,
       isMobile,
       currentSongName,
       handleNewClick,

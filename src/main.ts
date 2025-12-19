@@ -41,10 +41,7 @@ keycloak.init({
                 try {
                     const refreshed = await keycloak.updateToken(70);
                     if (refreshed) {
-                        console.log('Token was successfully refreshed');
                         setupApiClient(keycloak.idToken);
-                    } else {
-                        console.log('Token is still valid');
                     }
                 } catch (error) {
                     console.error('Failed to refresh token, attempting login', error);

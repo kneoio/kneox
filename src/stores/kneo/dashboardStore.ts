@@ -182,7 +182,6 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
         connectGlobal();
         
         globalPollingInterval.value = setInterval(() => {
-            console.log('Polling global dashboard data');
             fetchGlobalDashboard();
         }, POLLING_INTERVAL);
     };
@@ -207,7 +206,6 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
         ensureStationConnected(brandName);
         
         stationPollingIntervals.value[brandName] = setInterval(() => {
-            console.log('Polling station data for:', brandName);
             fetchStation(brandName);
         }, POLLING_INTERVAL);
     };

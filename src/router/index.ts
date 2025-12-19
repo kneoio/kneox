@@ -159,7 +159,7 @@ const routes: Array<RouteRecordRaw> = [
                 component: Streams
             },
             {
-                path: 'streams/:slugName',
+                path: 'streams/:id',
                 name: 'Stream',
                 component: StreamForm
             },

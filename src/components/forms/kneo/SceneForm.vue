@@ -39,6 +39,7 @@
           <n-gi>
             <n-form-item label="Duration (minutes)">
               <n-radio-group v-model:value="durationMinutes" name="duration-group">
+                <n-radio-button :value="10">5</n-radio-button>
                 <n-radio-button :value="10">10</n-radio-button>
                 <n-radio-button :value="15">15</n-radio-button>
                 <n-radio-button :value="20">20</n-radio-button>
@@ -361,7 +362,7 @@ export default defineComponent({
             labels: localFormData.stagePlaylist.labels,
             type: (localFormData.stagePlaylist as any).type,
             source: (localFormData.stagePlaylist as any).source,
-            staticList: (localFormData.stagePlaylist as any).staticList
+            soundFragments: (localFormData.stagePlaylist as any).staticList
           } : undefined,
         };
         const id = route.params.id as string;

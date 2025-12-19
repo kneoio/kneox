@@ -1,5 +1,5 @@
 import {defineStore} from 'pinia';
-import {computed, ref, nextTick} from 'vue';
+import {computed, ref} from 'vue';
 import apiClient, {setupApiClient} from '../../api/apiClient';
 import {ApiFormResponse, ApiViewPageResponse} from "../../types";
 import {RadioStation, RadioStationSave, BrandStatus} from "../../types/kneoBroadcasterTypes";
@@ -53,32 +53,26 @@ export const useStreamStore = defineStore('streamStore', () => {
     const fetchStreams = async (page = 1, pageSize = 10) => {
         const response = await apiClient.get(`streams?page=${page}&size=${pageSize}`);
         if (response?.data?.payload) {
-            nextTick(() => {
-                apiViewResponse.value = response.data.payload;
-            });
+            apiViewResponse.value = response.data.payload;
         } else {
             throw new Error('Invalid API response structure');
         }
     };
 
-    const fetchStream = async (slugName: string) => {
-        const response = await apiClient.get(`streams/${slugName}`);
+    const fetchStream = async (id: string) => {
+        const response = await apiClient.get(`streams/${id}`);
         if (response?.data?.payload) {
-            nextTick(() => {
-                apiFormResponse.value = response.data.payload;
-            });
+            apiFormResponse.value = response.data.payload;
         } else {
             throw new Error('Invalid API response structure');
         }
     };
 
     const updateCurrent = (data: RadioStation, actions: any = {}) => {
-        nextTick(() => {
-            apiFormResponse.value = {
-                docData: data,
-                actions: actions
-            };
-        });
+        apiFormResponse.value = {
+            docData: data,
+            actions: actions
+        };
     };
 
     const save = async (data: RadioStationSave, id?: string) => {

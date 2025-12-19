@@ -3,7 +3,16 @@
     <n-gi span="6">
       <n-page-header subtitle="Stream" @back="goBack">
         <template #title>
-          {{ store.getCurrent.country || store.getCurrent.slugName }}
+          <span style="display: inline-flex; align-items: center; gap: 8px;">
+            <span style="cursor: pointer;" @click="copyStreamTitleToClipboard">{{ streamTitleText }}</span>
+            <n-button type="primary" text @click="copyStreamTitleToClipboard">
+              <template #icon>
+                <n-icon>
+                  <Copy />
+                </n-icon>
+              </template>
+            </n-button>
+          </span>
           <span v-if=" localFormData.timeZone && getCurrentTimeInTimezone "
             style="margin-left: 16px; font-weight: normal; color: #666;">
             {{ getCurrentTimeInTimezone }}
@@ -31,15 +40,13 @@
     </n-gi>
     <n-gi class="mt-2" span="6">
       <n-button-group>
-        <n-button type="primary" @click="handleSave" size="large">Run immediatly</n-button>
-        <n-button type="default" @click="handleBuildPlan" :disabled="!canBuildPlan" :loading="planBuildLoading" size="large">Build plan</n-button>
-        <n-button type="default" @click="handleRunPlan" :disabled="!canRunPlan" :loading="planRunLoading" size="large">Run</n-button>
-        <n-button type="default" disabled @click="handleArchive" size="large">Archive</n-button>
+        <n-button type="default" @click="handleBuildPlan" :loading="planBuildLoading" size="large">{{ planSchedule ? 'Re-build plan' : 'Build plan' }}</n-button>
+        <n-button type="warning" @click="handleRunPlan" :disabled="!canRunPlan" :loading="planRunLoading" size="large">Run</n-button>
       </n-button-group>
     </n-gi>
     <n-gi span="6">
       <n-tabs v-model:value="activeTab">
-        <n-tab-pane name="plan" tab="Plan">
+        <n-tab-pane name="plan" tab="Properties">
           <n-form label-placement="left" label-width="auto">
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
               <n-gi>
@@ -49,8 +56,26 @@
               </n-gi>
 
               <n-gi>
+                <n-form-item label="DJ">
+                  <n-select v-model:value="localFormData.aiAgentId" :options="agentOptions"
+                    :disabled="aiOverrideEnabled"
+                    style="width: 50%; max-width: 600px;" />
+                  <n-text v-if="aiOverrideEnabled" depth="3" style="font-size: 12px; margin-top: 4px; display: block;">
+                    ⚠️ AI agent values are overridden
+                  </n-text>
+                </n-form-item>
+              </n-gi>
+
+              <n-gi>
                 <n-form-item label="Script">
                   <n-select v-model:value="localFormData.scriptId" :options="scriptOptions" :render-label="renderScriptLabel"
+                    style="width: 50%; max-width: 600px;" />
+                </n-form-item>
+              </n-gi>
+
+              <n-gi>
+                <n-form-item label="Audience Type">
+                  <n-select v-model:value="localFormData.profileId" :options="profileOptions"
                     style="width: 50%; max-width: 600px;" />
                 </n-form-item>
               </n-gi>
@@ -93,15 +118,15 @@
               </n-gi>
             </n-grid>
           </n-form>
-        </n-tab-pane>
-        <n-tab-pane name="properties" tab="Properties">
+        </n-tab-pane>@@
+        <n-tab-pane name="properties" tab="Parameters">
           <n-form label-placement="left" label-width="auto">
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
               <n-gi>
                 <n-form-item label="Localized Names">
                   <n-dynamic-input v-model:value="localizedNameArray" :on-create="createLocalizedName"
                     style="width: 50%; max-width: 600px;">
-                    <template #default=" { value, index } ">
+                    <template #default="{ value }">
                       <n-space align="center" style="width: 100%;">
                         <n-select v-model:value="value.language" :options="languageOptions"
                           style="width: 120px;" />
@@ -109,24 +134,6 @@
                       </n-space>
                     </template>
                   </n-dynamic-input>
-                </n-form-item>
-              </n-gi>
-              <n-gi>
-                <n-form-item label="Country">
-                  <n-select v-model:value="localFormData.country" :options="countryOptions"
-                    style="width: 25%; max-width: 300px;" />
-                </n-form-item>
-              </n-gi>
-              <n-gi>
-                <n-form-item label="Description">
-                  <n-input v-model:value="localFormData.description" type="textarea" placeholder=""
-                    :autosize="{ minRows: 3, maxRows: 6 }" style="width: 50%; max-width: 600px;" />
-                </n-form-item>
-              </n-gi>
-              <n-gi>
-                <n-form-item label="Time Zone">
-                  <n-select v-model:value="localFormData.timeZone" :options="timezones"
-                    style="width: 25%; max-width: 300px;" />
                 </n-form-item>
               </n-gi>
               <n-gi>
@@ -187,115 +194,57 @@
                 </n-form-item>
               </n-gi>
             </n-grid>
-          </n-form>
+          </n-form>@@
         </n-tab-pane>
 
-        <n-tab-pane name="aiAgent" tab="DJ">
-          <n-form label-placement="left" label-width="150px">
-            <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
-              <n-gi>
-                <n-form-item label="Name">
-                  <n-select v-model:value="localFormData.aiAgentId" :options="agentOptions"
-                    :disabled="aiOverrideEnabled"
-                    style="width: 50%; max-width: 600px;" />
-                  <n-text v-if="aiOverrideEnabled" depth="3" style="font-size: 12px; margin-top: 4px; display: block;">
-                    ⚠️ AI agent values are overridden
-                  </n-text>
-                </n-form-item>
-              </n-gi>
+        <n-tab-pane name="emceeing" tab="Emceeing">
+          <div v-if="planSchedule" style="padding: 12px;">
+            <div style="color: #9ca3af; font-size: 12px; margin-bottom: 12px;">
+              Created: {{ planSchedule.createdAt }}
+              <span style="margin-left: 12px;">Estimated end: {{ planSchedule.estimatedEndTime }}</span>
+              <span style="margin-left: 12px;">Scenes: {{ planSchedule.totalScenes }}</span>
+              <span style="margin-left: 12px;">Songs: {{ planSchedule.totalSongs }}</span>
+            </div>
 
-              <n-gi>
-                <n-form-item label="Override DJ Properties">
-                  <n-checkbox v-model:checked="aiOverrideEnabled">
-                    Enable
-                  </n-checkbox>
-                </n-form-item>
-              </n-gi>
+            <div v-for="scene in planSchedule.scenes" :key="scene.sceneId"
+              style="border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; padding: 12px; margin-bottom: 12px; background: rgba(255, 255, 255, 0.04);">
+              <div style="display: flex; justify-content: space-between; gap: 12px; align-items: baseline;">
+                <div style="font-weight: 600; color: #e5e7eb;">
+                  {{ scene.sceneTitle }}
+                </div>
+                <div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; color: #9ca3af; font-size: 12px;">
+                  {{ fmtHm(scene.scheduledStartTime) }} - {{ fmtHm(scene.scheduledEndTime) }} ({{ fmtMin(scene.durationSeconds) }})
+                </div>
+              </div>
 
-              <n-gi v-if="aiOverrideEnabled">
-                <n-form-item label="Override Name">
-                  <n-input v-model:value="localFormData.aiOverriding.name" 
-                    placeholder=""
-                    style="width: 50%; max-width: 600px;" />
-                </n-form-item>
-              </n-gi>
+              <div style="margin-top: 6px; color: #9ca3af; font-size: 12px;">
+                Sourcing: {{ scene.sourcing }}
+                <span style="margin-left: 12px;">Playlist: {{ scene.playlistTitle }}</span>
+                <span style="margin-left: 12px;">Artist: {{ scene.artist }}</span>
+                <span style="margin-left: 12px;">Search: {{ scene.searchTerm }}</span>
+              </div>
 
-              <n-gi v-if="aiOverrideEnabled">
-                <n-form-item label="Additional Instructions">
-                  <n-input v-model:value="localFormData.aiOverriding.prompt" 
-                    type="textarea" 
-                    placeholder=""
-                    :autosize="{ minRows: 3, maxRows: 5 }"
-                    style="width: 50%; max-width: 600px;" />
-                </n-form-item>
-              </n-gi>
-
-              <n-gi v-if="aiOverrideEnabled">
-                <n-form-item label="Override Voice">
-                  <n-select v-model:value="localFormData.aiOverriding.primaryVoice" 
-                    :options="voiceOptions"
-                    filterable
-                    style="width: 30%; max-width: 300px;" />
-                </n-form-item>
-              </n-gi>
-            </n-grid>
-          </n-form>
-        </n-tab-pane>
-
-        <n-tab-pane name="script" tab="Script">
-          <n-form label-placement="left" label-width="150px">
-            <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
-              <n-gi v-if="selectedScript">
-                <n-form-item label="Description">
-                  <n-anchor type="block" :show-background="false" :show-rail="true" style="width: 50%; max-width: 600px;">
-                    <n-anchor-link>
-                      {{ selectedScript.description }}
-                    </n-anchor-link>
-                  </n-anchor>
-                </n-form-item>
-              </n-gi>
-            </n-grid>
-          </n-form>
-        </n-tab-pane>
-
-        <n-tab-pane name="profile" tab="Audience">
-          <n-form label-placement="left" label-width="150px">
-            <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
-              <n-gi>
-                <n-form-item label="Audience Type">
-                  <n-select v-model:value="localFormData.profileId" :options="profileOptions"
-                    style="width: 50%; max-width: 600px;" />
-                </n-form-item>
-              </n-gi>
-              <n-gi v-if="selectedProfile">
-                <n-form-item label="Description">
-                  <n-anchor type="block" :show-background="false" show-rail style="width: 50%; max-width: 600px;">
-                    <n-anchor-link>
-                      {{ selectedProfile.description }}
-                    </n-anchor-link>
-                  </n-anchor>
-                </n-form-item>
-              </n-gi>
-
-              <n-gi v-if="profileOverrideEnabled">
-                <n-form-item label="Local Name (optional)">
-                  <n-input v-model:value="localFormData.profileOverriding!.name" 
-                    placeholder=""
-                    style="width: 50%; max-width: 600px;" />
-                </n-form-item>
-              </n-gi>
-
-              <n-gi v-if="profileOverrideEnabled">
-                <n-form-item label="Additional Information (optional)">
-                  <n-input v-model:value="localFormData.profileOverriding!.description" 
-                    type="textarea" 
-                    placeholder=""
-                    :autosize="{ minRows: 3, maxRows: 5 }"
-                    style="width: 50%; max-width: 600px;" />
-                </n-form-item>
-              </n-gi>
-            </n-grid>
-          </n-form>
+              <div style="margin-top: 10px;">
+                <div v-for="song in scene.songs" :key="song.id"
+                  style="display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+                  <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+                    <div style="color: #9ca3af; font-size: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">
+                      {{ fmtHm(song.scheduledStartTime) }} ({{ fmtMin(song.estimatedDurationSeconds) }})
+                    </div>
+                    <div style="color: #e5e7eb; font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                      {{ song.title }}
+                    </div>
+                    <div style="color: #9ca3af; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                      {{ song.artist }}
+                    </div>
+                  </div>
+                  <div style="color: #9ca3af; font-size: 12px; white-space: nowrap;">
+                    Played: {{ song.played }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </n-tab-pane>
 
         <n-tab-pane name="acl" tab="ACL">
@@ -411,6 +360,7 @@ export default defineComponent( {
     const scriptStore = useScriptStore();
     const referencesStore = useReferencesStore();
     const route = useRoute();
+    const skipNextRouteLoad = ref( false );
     const activeTab = ref( "plan" );
     const fileList = ref<UploadFileInfo[]>( [] );
     const lang = ref( html() );
@@ -422,6 +372,7 @@ export default defineComponent( {
     const planBuildLoading = ref(false);
     const planRunLoading = ref(false);
     const planStationId = ref<string | null>(null);
+    const isInitialLoad = ref(true);
 
     const toBool = (v: any): boolean => {
       if (typeof v === 'boolean') return v;
@@ -447,7 +398,7 @@ export default defineComponent( {
 
     const stationOptions = computed(() => {
       const list = (radioStore as any).getEntries || [];
-      return list.map((st: any) => ({ label: st.localizedName?.en || st.name || st.slugName || st.id, value: st.id }));
+      return list.map((st: any) => ({ label: st.localizedName?.en || st.name || st.id, value: st.id }));
     });
 
     const localFormData = reactive<Partial<RadioStation>>( {
@@ -480,7 +431,7 @@ export default defineComponent( {
       oneTimeStreamPolicy: undefined,
       submissionPolicy: undefined,
       messagingPolicy: undefined,
-      aiOverriding: { name: "", prompt: "", primaryVoice: "" },
+      aiOverriding: { name: "", prompt: "", talkativity: 0, primaryVoice: "" },
       profileOverriding: { name: "", description: "" }
     } );
 
@@ -522,9 +473,53 @@ export default defineComponent( {
       return scriptStore.getEntries.find( s => s.id === localFormData.scriptId );
     } );
 
-    watch( selectedScript, ( newScript ) => {
+    const ensureUserVariableDefaults = (script: any, vars: Record<string, any>) => {
+      const nextVars: Record<string, any> = { ...(vars || {}) };
+      const req = script?.requiredVariables;
+      if (Array.isArray(req)) {
+        req.forEach((v: any) => {
+          if (nextVars[v.name] !== undefined) return;
+          if (v.type === 'boolean') nextVars[v.name] = false;
+          else if (v.type === 'number') nextVars[v.name] = 0;
+          else nextVars[v.name] = '';
+        });
+      }
+      return nextVars;
+    };
+
+    const hydrateUserVariablesFromDoc = (doc: any) => {
+      const docUserVariables = doc?.userVariables;
+      let scriptUserVariables: any = undefined;
+      let scriptId: any = undefined;
+
+      if (doc?.scripts && Array.isArray(doc.scripts) && doc.scripts.length > 0) {
+        const firstScript = doc.scripts[0];
+        if (typeof firstScript === 'object' && firstScript.scriptId) {
+          scriptId = firstScript.scriptId;
+          scriptUserVariables = firstScript.userVariables;
+        } else {
+          scriptId = firstScript;
+        }
+      }
+
+      const mergedUserVariables: Record<string, any> = {
+        ...(docUserVariables && typeof docUserVariables === 'object' ? docUserVariables : {}),
+        ...(scriptUserVariables && typeof scriptUserVariables === 'object' ? scriptUserVariables : {})
+      };
+
+      if (scriptId) {
+        (localFormData as any).scriptId = scriptId;
+      }
+      userVariables.value = ensureUserVariableDefaults(selectedScript.value, mergedUserVariables);
+    };
+
+    watch( selectedScript, ( newScript, oldScript ) => {
+      if (isInitialLoad.value) return;
       userVariables.value = {};
       planSchedule.value = null;
+      if (newScript?.defaultProfileId) {
+        localFormData.profileId = newScript.defaultProfileId;
+      }
       if ( newScript?.requiredVariables ) {
         newScript.requiredVariables.forEach( v => {
           if ( v.type === 'boolean' ) userVariables.value[v.name] = false;
@@ -563,7 +558,7 @@ export default defineComponent( {
       const scenes = Array.isArray(p.scenes) ? p.scenes : [];
 
       return scenes.map((scene: any, i: number) => {
-        const title = `Stage ${i + 1}: ${scene.sceneTitle} (${fmtHm(scene.scheduledStartTime)} - ${fmtHm(scene.scheduledEndTime)})`;
+        const title = `Stage ${i + 1}: ${scene.sceneTitle} (${fmtHm(scene.scheduledStartTime)} - ${fmtHm(scene.scheduledEndTime)}) - Sourcing: ${scene.sourcing || 'N/A'}`;
         const songs = Array.isArray(scene.songs) ? scene.songs : [];
         return {
           key: `${i}-${scene.sceneTitle}`,
@@ -581,10 +576,46 @@ export default defineComponent( {
       return !!planStationId.value && !!localFormData.scriptId && !!planSchedule.value;
     });
 
+    const validatePlanInputs = (): boolean => {
+      if (!planStationId.value) {
+        message.error('Source brand is required');
+        return false;
+      }
+      if (!localFormData.scriptId) {
+        message.error('Script is required');
+        return false;
+      }
+
+      const vars = selectedScript.value?.requiredVariables || [];
+      for (const v of vars) {
+        if (!v.required) continue;
+        const val = userVariables.value[v.name];
+        if (v.type === 'boolean') {
+          if (val !== true) {
+            message.error(`${formatVariableName(v.name)} is required`);
+            return false;
+          }
+        } else if (v.type === 'number') {
+          if (val === null || val === undefined || Number.isNaN(Number(val))) {
+            message.error(`${formatVariableName(v.name)} is required`);
+            return false;
+          }
+        } else {
+          if (String(val ?? '').trim() === '') {
+            message.error(`${formatVariableName(v.name)} is required`);
+            return false;
+          }
+        }
+      }
+
+      return true;
+    };
+
     const handleBuildPlan = async () => {
+      if (!validatePlanInputs()) return;
       try {
         planBuildLoading.value = true;
-        const response = await apiClient.post(`/streams/schedule/${planStationId.value}/${localFormData.scriptId}`);
+        const response = await apiClient.post('/streams/schedule', { baseBrandId: planStationId.value, scriptId: localFormData.scriptId });
         planSchedule.value = response.data;
       } catch (e) {
         message.error('Failed to build plan');
@@ -594,14 +625,44 @@ export default defineComponent( {
     };
 
     const handleRunPlan = async () => {
+      if (!validatePlanInputs()) return;
+      if (!planSchedule.value) {
+        message.error('Plan is required');
+        return;
+      }
       try {
         planRunLoading.value = true;
-        await apiClient.post('/streams/run', {
-          brandId: planStationId.value,
+        const response = await apiClient.post('/streams/run', {
+          baseBrandId: planStationId.value,
           scriptId: localFormData.scriptId,
+          aiAgentId: localFormData.aiAgentId,
+          profileId: localFormData.profileId,
           userVariables: userVariables.value,
           schedule: planSchedule.value
         });
+        const returned = response.data;
+        const savedScriptId = localFormData.scriptId;
+        const savedAiAgentId = localFormData.aiAgentId;
+        const savedProfileId = localFormData.profileId;
+        Object.assign(localFormData, returned);
+        planSchedule.value = (returned as any).streamSchedule || planSchedule.value;
+        localFormData.scriptId = savedScriptId || localFormData.scriptId;
+        // Preserve aiAgentId and profileId - use saved value or server value
+        localFormData.aiAgentId = savedAiAgentId || returned.aiAgentId;
+        localFormData.profileId = savedProfileId || returned.profileId;
+
+        hydrateUserVariablesFromDoc(returned);
+
+        localizedNameArray.value = Object.entries( returned.localizedName ).map( ( [language, name] ) => ( {
+          language,
+          name: name as string
+        } ) );
+        (store as any).apiFormResponse.value = { docData: returned, actions: [] };
+
+        if ( returned.id && returned.id !== route.params.id ) {
+          skipNextRouteLoad.value = true;
+          await router.replace( { name: 'Stream', params: { id: returned.id } } );
+        }
       } catch (e) {
         message.error('Failed to run');
       } finally {
@@ -609,8 +670,17 @@ export default defineComponent( {
       }
     };
 
-    watch(planStationId, () => {
-      planSchedule.value = null;
+    watch(planStationId, (newStationId, oldStationId) => {
+      if (isInitialLoad.value) return;
+      if (oldStationId) {
+        planSchedule.value = null;
+      }
+      if (newStationId) {
+        const selectedStation = radioStore.getEntries.find(station => station.id === newStationId);
+        if (selectedStation) {
+          localFormData.aiAgentId = selectedStation.aiAgentId;
+        }
+      }
     });
 
     const voiceOptions = computed(() => 
@@ -683,6 +753,19 @@ export default defineComponent( {
       }
     } );
 
+    const streamTitleText = computed(() => {
+      return (localFormData.localizedName as any)?.en || localFormData.slugName || localFormData.country || '';
+    });
+
+    const copyStreamTitleToClipboard = async () => {
+      if (!streamTitleText.value) {
+        message.error('Nothing to copy');
+        return;
+      }
+      await navigator.clipboard.writeText(streamTitleText.value);
+      message.success('Copied');
+    };
+
     const copyToClipboard = ( text: string | undefined ) => {
       if ( !text ) {
         message.error( 'Nothing to copy' );
@@ -702,6 +785,14 @@ export default defineComponent( {
     };
 
     const handleSave = async () => {
+      if (!localFormData.aiAgentId) {
+        message.error('DJ (AI Agent) is required');
+        return;
+      }
+      if (!localFormData.profileId) {
+        message.error('Audience Type (Profile) is required');
+        return;
+      }
       try {
         loadingBar.start();
         const saveDTO: RadioStationSave = {
@@ -735,42 +826,12 @@ export default defineComponent( {
       }
     };
 
-    const handleArchive = () => {
-      message.info( "Archive functionality not implemented yet" );
-    };
-
     const goBack = () => {
       router.push( "/outline/streams" );
     };
 
-    const fetchAclData = async () => {
-      const id = route.params.slugName as string;
-      if ( !id || id === 'new' ) {
-        aclData.value = [];
-        return;
-      }
-
-      try {
-        aclLoading.value = true;
-        const response = await store.fetchAccessList( id );
-        aclData.value = response.accessList || [];
-      } catch ( error ) {
-        console.error( 'Failed to fetch ACL data:', error );
-        message.error( getErrorMessage(error) );
-        aclData.value = [];
-      } finally {
-        aclLoading.value = false;
-      }
-    };
-
-    watch( activeTab, ( newTab ) => {
-      if ( newTab === 'acl' && localFormData.id ) {
-        fetchAclData();
-      }
-    } );
-
     const loadFormData = async () => {
-      const id = route.params.slugName as string;
+      const id = route.params.id as string;
       try {
         loadingBar.start();
         await radioStore.fetchAll( 1, 100 );
@@ -781,7 +842,19 @@ export default defineComponent( {
         await store.fetch( id );
         await nextTick();
         const currentData = store.getCurrent;
-        Object.assign( localFormData, currentData );
+        Object.assign(localFormData, currentData);
+        planSchedule.value = (currentData as any).streamSchedule;
+        if ((currentData as any).baseBrandId) {
+          planStationId.value = (currentData as any).baseBrandId;
+        }
+
+        // Ensure aiAgentId and profileId are preserved from server data
+        if ((currentData as any).aiAgentId) {
+          localFormData.aiAgentId = (currentData as any).aiAgentId;
+        }
+        if ((currentData as any).profileId) {
+          localFormData.profileId = (currentData as any).profileId;
+        }
         (localFormData as any).managedBy = ManagedBy.MIX;
 
         aiOverrideEnabled.value = toBool((currentData as any).aiOverridingEnabled);
@@ -801,23 +874,16 @@ export default defineComponent( {
         }
         normalizeNumericFields();
 
-        if ((currentData as any).scripts && Array.isArray((currentData as any).scripts) && (currentData as any).scripts.length > 0) {
-          const firstScript = (currentData as any).scripts[0];
-          if (typeof firstScript === 'object' && firstScript.scriptId) {
-            (localFormData as any).scriptId = firstScript.scriptId;
-            userVariables.value = firstScript.userVariables || {};
-          } else {
-            (localFormData as any).scriptId = firstScript;
-          }
-        }
+        hydrateUserVariablesFromDoc(currentData);
 
         if ( localFormData.localizedName ) {
           localizedNameArray.value = Object.entries( localFormData.localizedName ).map( ( [language, name] ) => ( {
             language,
-            name: name || ""
+            name: name as string
           } ) );
         }
 
+        isInitialLoad.value = false;
       } catch ( error ) {
         console.error( "Failed to fetch data:", error );
         message.error( getErrorMessage(error) );
@@ -826,8 +892,13 @@ export default defineComponent( {
       }
     };
 
-    watch(() => route.params.slugName, async (newId, oldId) => {
+    watch(() => route.params.id, async (newId, oldId) => {
       if (newId && newId !== oldId) {
+        if ( skipNextRouteLoad.value ) {
+          skipNextRouteLoad.value = false;
+          return;
+        }
+        isInitialLoad.value = true;
         await loadFormData();
       }
     });
@@ -851,12 +922,12 @@ export default defineComponent( {
       canRunPlan,
       planBuildLoading,
       planRunLoading,
+      planSchedule,
       planStationId,
       stationOptions,
       planHeaderText,
       planStages,
       handleSave,
-      handleArchive,
       activeTab,
       fileList,
       lang,
@@ -874,6 +945,8 @@ export default defineComponent( {
       selectedProfile,
       selectedScript,
       copyToClipboard,
+      streamTitleText,
+      copyStreamTitleToClipboard,
       openUrl,
       goBack,
       aclData,
@@ -889,8 +962,8 @@ export default defineComponent( {
       voiceOptions,
       userVariables,
       formatVariableName,
-      scriptOptions,
-      renderScriptLabel
+      fmtHm,
+      fmtMin
     };
   }
 } );

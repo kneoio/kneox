@@ -457,7 +457,18 @@ export default defineComponent({
           prompts: scene.prompts,
           startTime: scene.startTime,
           oneTimeRun: scene.oneTimeRun,
-          weekdays: scene.weekdays
+          weekdays: scene.weekdays,
+          durationSeconds: scene.durationSeconds,
+          seqNum: scene.seqNum,
+          stagePlaylist: scene.stagePlaylist ? {
+            sourcing: scene.stagePlaylist.sourcing,
+            searchTerm: scene.stagePlaylist.searchTerm,
+            genres: scene.stagePlaylist.genres,
+            labels: scene.stagePlaylist.labels,
+            type: scene.stagePlaylist.type,
+            source: scene.stagePlaylist.source,
+            soundFragments: (scene.stagePlaylist as any).staticList
+          } : undefined
         }));
 
         const saveData: ScriptSave = {

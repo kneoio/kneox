@@ -212,6 +212,55 @@
                   </n-card>
                 </div>
               </n-space>
+
+              <n-card title="Schedule" size="small" style="width: 100%;">
+                <div v-if="stationDetails?.schedule && stationDetails.schedule.length" class="schedule-groups">
+                  <div class="schedule-group">
+                    <n-text depth="3" class="schedule-group__title">Past</n-text>
+                    <div class="schedule-compact-list">
+                      <div v-for="(s, idx) in pastSchedule" :key="'p-' + idx" class="schedule-compact-item">
+                        <YellowLed :active="s.active" :pulse="pulsingScheduleId === scheduleItemId(s)" :size="14" />
+                        <n-text>{{ formatScheduleStart(s.startTime) }}</n-text>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="schedule-group schedule-group--current">
+                    <n-text depth="3" class="schedule-group__title">Current</n-text>
+                    <div v-if="currentSchedule" class="schedule-current">
+                      <div class="schedule-current__top">
+                        <n-text strong>{{ formatTime(currentSchedule.startTime) }} - {{ formatTime(currentSchedule.endTime) }}</n-text>
+                        <BlueLed :active="currentSchedule.active" :pulse="currentSchedule.active" :size="16" />
+                      </div>
+                      <div class="schedule-current__details">
+                        <n-text>{{ currentSchedule.sceneTitle }}</n-text>
+                        <div class="schedule-current__row">
+                          <n-text depth="3">Source:</n-text>
+                          <n-text>{{ currentSchedule.sourcing }}</n-text>
+                        </div>
+                        <div class="schedule-current__row">
+                          <n-text depth="3">Details:</n-text>
+                          <n-text>
+                            {{ currentSchedule.playlistTitle || currentSchedule.searchTerm || currentSchedule.artist || '-' }}
+                            <span v-if="currentSchedule.songsCount !== undefined"> ({{ currentSchedule.songsCount }})</span>
+                          </n-text>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="schedule-group">
+                    <n-text depth="3" class="schedule-group__title">Future</n-text>
+                    <div class="schedule-compact-list">
+                      <div v-for="(s, idx) in futureSchedule" :key="'f-' + idx" class="schedule-compact-item">
+                        <GreenLed :active="s.active" :pulse="pulsingScheduleId === scheduleItemId(s)" :size="14" />
+                        <n-text>{{ formatScheduleStart(s.startTime) }}</n-text>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <n-text v-else depth="3">No schedule available</n-text>
+              </n-card>
             </n-space>
           </n-tab-pane>
         </n-tabs>
@@ -247,13 +296,19 @@ import {
 } from 'naive-ui';
 import { ExternalLink, PlayerPlay, PlayerStop, Activity } from '@vicons/tabler';
 import { MIXPLA_PLAYER_URL } from '../../../constants/config';
+import BlueLed from '../../common/BlueLed.vue';
+import GreenLed from '../../common/GreenLed.vue';
+import YellowLed from '../../common/YellowLed.vue';
 
-export default defineComponent( {
+export default defineComponent({
   name: 'StationDashboard',
   components: {
     NButton, NCard, NIcon, NTag, NStatistic, NProgress, NSpace, NH2, NText,
     NTimeline, NTimelineItem, NButtonGroup,
-    NMarquee, NTabs, NTabPane, NSelect, NScrollbar, NInput, NBadge, PlayerPlay, PlayerStop, ExternalLink, Activity
+    NMarquee, NTabs, NTabPane, NSelect, NScrollbar, NInput, NBadge, PlayerPlay, PlayerStop, ExternalLink, Activity,
+    BlueLed,
+    GreenLed,
+    YellowLed
   },
   props: {
     brandName: {
@@ -261,23 +316,23 @@ export default defineComponent( {
       required: true
     }
   },
-  setup( props: { brandName: string } ) {
+  setup(props: { brandName: string }) {
     const dashboardStore = useDashboardStore();
     const message = useMessage();
-    const isStartingStation = ref( false );
-    const isStoppingStation = ref( false );
+    const isStartingStation = ref(false);
+    const isStoppingStation = ref(false);
     const now = ref(new Date());
 
     const copyBrandNameToClipboard = async () => {
-      await navigator.clipboard.writeText( props.brandName );
-      message.success( 'Copied' );
+      await navigator.clipboard.writeText(props.brandName);
+      message.success('Copied');
     };
 
     const activeTab = ref<'dashboard'>('dashboard');
 
-    const stationDetails = computed( () => {
-      return dashboardStore.getStationDetails( props.brandName );
-    } );
+    const stationDetails = computed(() => {
+      return dashboardStore.getStationDetails(props.brandName);
+    });
 
     const isDjActive = computed(() => {
       const stats = stationDetails.value?.aiDjStats;
@@ -292,25 +347,25 @@ export default defineComponent( {
       return !stats?.djName && !stats?.lastRequestTime;
     });
 
-    const isOnline = computed( () => {
+    const isOnline = computed(() => {
       return stationDetails.value?.status === 'ON_LINE' || stationDetails.value?.status === 'WARMING_UP' || stationDetails.value?.status === 'QUEUE_SATURATED';
-    } );
+    });
 
-    const currentListeners = computed( () => {
+    const currentListeners = computed(() => {
       return stationDetails.value?.currentListeners || 0;
-    } );
+    });
 
-    const lastUpdateTime = computed( () => {
-      const lastUpdate = dashboardStore.getStationLastUpdate( props.brandName );
-      if ( !lastUpdate ) return 'N/A';
-      return lastUpdate.toLocaleTimeString( [], {
+    const lastUpdateTime = computed(() => {
+      const lastUpdate = dashboardStore.getStationLastUpdate(props.brandName);
+      if (!lastUpdate) return 'N/A';
+      return lastUpdate.toLocaleTimeString([], {
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit'
-      } );
-    } );
+      });
+    });
 
-    const combinedPlaylist = computed( () => {
+    const combinedPlaylist = computed(() => {
       const livePlaylist = (stationDetails.value?.playlistManagerStats?.livePlaylist || []) as any[];
       const queued = ((stationDetails.value?.playlistManagerStats as any)?.queued || []) as any[];
 
@@ -320,7 +375,7 @@ export default defineComponent( {
       ];
 
       return combined;
-    } );
+    });
 
     const formattedTime = computed(() => {
       return now.value.toLocaleTimeString('en-GB', {
@@ -341,71 +396,71 @@ export default defineComponent( {
       onUnmounted(() => clearInterval(id));
     });
 
-    const timelineDisplay = computed( () => {
+    const timelineDisplay = computed(() => {
       const timeline = stationDetails.value?.timeline;
-      if ( !timeline ) return null;
+      if (!timeline) return null;
 
       const parts = [];
 
-      if ( timeline.pastSegmentSequences?.length > 0 ) {
-        parts.push( timeline.pastSegmentSequences.join( '-' ) );
-        parts.push( '-' );
+      if (timeline.pastSegmentSequences?.length > 0) {
+        parts.push(timeline.pastSegmentSequences.join('-'));
+        parts.push('-');
       }
 
-      parts.push( '||>' );
+      parts.push('||>');
 
-      if ( timeline.visibleSegmentSequences?.length > 0 ) {
-        parts.push( timeline.visibleSegmentSequences.join( '-' ) );
+      if (timeline.visibleSegmentSequences?.length > 0) {
+        parts.push(timeline.visibleSegmentSequences.join('-'));
       } else {
-        parts.push( '(empty)' );
+        parts.push('(empty)');
       }
 
-      parts.push( '<||' );
+      parts.push('<||');
 
-      if ( timeline.upcomingSegmentSequences?.length > 0 ) {
-        parts.push( '-' );
-        parts.push( timeline.upcomingSegmentSequences.join( '-' ) );
+      if (timeline.upcomingSegmentSequences?.length > 0) {
+        parts.push('-');
+        parts.push(timeline.upcomingSegmentSequences.join('-'));
       }
 
-      return parts.join( ' ' );
-    } );
+      return parts.join(' ');
+    });
 
-    const timelineItems = computed( () => {
+    const timelineItems = computed(() => {
       const timeline = stationDetails.value?.timeline;
-      if ( !timeline ) return [];
+      if (!timeline) return [];
 
       const items = [];
 
-      if ( timeline.pastSegmentSequences?.length > 0 ) {
-        items.push( {
+      if (timeline.pastSegmentSequences?.length > 0) {
+        items.push({
           type: 'default' as const,
           title: 'Past Segments',
-          content: timeline.pastSegmentSequences.join( ', ' )
-        } );
+          content: timeline.pastSegmentSequences.join(', ')
+        });
       }
 
-      if ( timeline.visibleSegmentSequences?.length > 0 ) {
-        items.push( {
+      if (timeline.visibleSegmentSequences?.length > 0) {
+        items.push({
           type: 'success' as const,
           title: 'Current Segments',
-          content: timeline.visibleSegmentSequences.join( ', ' )
-        } );
+          content: timeline.visibleSegmentSequences.join(', ')
+        });
       }
 
-      if ( timeline.upcomingSegmentSequences?.length > 0 ) {
-        items.push( {
+      if (timeline.upcomingSegmentSequences?.length > 0) {
+        items.push({
           type: 'info' as const,
           title: 'Upcoming Segments',
-          content: timeline.upcomingSegmentSequences.join( ', ' )
-        } );
+          content: timeline.upcomingSegmentSequences.join(', ')
+        });
       }
 
       return items;
-    } );
+    });
 
-    const stationColor = computed( () => {
+    const stationColor = computed(() => {
       const status = stationDetails.value?.status;
-      switch ( status ) {
+      switch (status) {
         case 'ON_LINE':
           return '#18a058';
         case 'QUEUE_SATURATED':
@@ -420,11 +475,11 @@ export default defineComponent( {
         default:
           return '#606266';
       }
-    } );
+    });
 
-    const getStatusInfo = computed( () => {
+    const getStatusInfo = computed(() => {
       const status = stationDetails.value?.status;
-      switch ( status ) {
+      switch (status) {
         case 'ON_LINE':
           return { text: 'Online', type: 'success' as const };
         case 'QUEUE_SATURATED':
@@ -439,11 +494,11 @@ export default defineComponent( {
         default:
           return { text: 'Offline', type: 'default' as const };
       }
-    } );
+    });
 
-    const managedByInfo = computed( () => {
+    const managedByInfo = computed(() => {
       const managedBy = stationDetails.value?.managedBy;
-      switch ( managedBy ) {
+      switch (managedBy) {
         case 'AI_AGENT':
           return { text: 'AI-managed', type: 'info' as const };
         case 'ITSELF':
@@ -451,15 +506,15 @@ export default defineComponent( {
         default:
           return { text: managedBy || 'Unknown', type: 'default' as const };
       }
-    } );
+    });
 
-    const stationInitials = computed( () => {
-      return props.brandName.substring( 0, 2 ).toUpperCase();
-    } );
+    const stationInitials = computed(() => {
+      return props.brandName.substring(0, 2).toUpperCase();
+    });
 
-    const mixplaUrl = computed( () => {
-      return `${MIXPLA_PLAYER_URL}?radio=${encodeURIComponent( props.brandName.toLowerCase() )}`;
-    } );
+    const mixplaUrl = computed(() => {
+      return `${MIXPLA_PLAYER_URL}?radio=${encodeURIComponent(props.brandName.toLowerCase())}`;
+    });
 
     const formatTime = (timeString: string) => {
       if (!timeString) return '';
@@ -477,9 +532,16 @@ export default defineComponent( {
       }
     };
 
+    const formatScheduleStart = (timeString: string) => {
+      const t = formatTime(timeString);
+      if (!t) return t;
+      if (/^\d{2}:\d{2}:\d{2}$/.test(t)) return t.slice(0, 5);
+      return t;
+    };
+
     const parseTimeToMinutes = (timeStr: string): number => {
       if (!timeStr) return 0;
-      
+
       // Handle HH:mm format
       const match = timeStr.match(/^(\d{1,2}):(\d{2})/);
       if (match) {
@@ -487,7 +549,7 @@ export default defineComponent( {
         const minutes = parseInt(match[2], 10);
         return hours * 60 + minutes;
       }
-      
+
       // Handle ISO date string
       try {
         const date = new Date(timeStr);
@@ -497,26 +559,26 @@ export default defineComponent( {
       } catch (e) {
         // Continue to return 0
       }
-      
+
       return 0;
     };
 
     const calculateDuration = (startTime: string, endTime: string): string => {
       if (!startTime || !endTime) return '--:--';
-      
+
       const startMinutes = parseTimeToMinutes(startTime);
       let endMinutes = parseTimeToMinutes(endTime);
-      
+
       // Handle overnight case (end time is next day)
       if (endMinutes <= startMinutes) {
         endMinutes += 24 * 60; // Add 24 hours in minutes
       }
-      
+
       const totalMinutes = endMinutes - startMinutes;
-      
+
       // Handle full 24-hour case
       if (totalMinutes >= 24 * 60) return '24:00';
-      
+
       // Format as HH:MM
       const hours = Math.floor(totalMinutes / 60);
       const minutes = totalMinutes % 60;
@@ -527,80 +589,80 @@ export default defineComponent( {
       if (!nextSceneTitle || nextSceneTitle === currentSceneTitle) {
         return '24 hours rolling';
       }
-      
+
       const duration = calculateDuration(startTime, endTime);
       if (duration === '24:00') return 'Full 24-hours';
-      
+
       // If duration is less than 1 hour, show in minutes
       if (duration.startsWith('00:')) {
         const minutes = parseInt(duration.substring(3), 10);
         return `${minutes} min`;
       }
-      
+
       // If minutes is 00, show just hours
       if (duration.endsWith(':00')) {
         const hours = parseInt(duration.split(':')[0], 10);
         return `${hours} hour${hours > 1 ? 's' : ''}`;
       }
-      
+
       // Otherwise show full HH:MM
       return duration;
     };
 
     const calculatePreviousSceneEnd = (currentStartTime: string): string => {
       if (!currentStartTime) return '';
-      
+
       // For demo purposes, assume previous scene ended 1 hour before current scene
       // In a real implementation, you'd get this from the actual scene data
       const currentMinutes = parseTimeToMinutes(currentStartTime);
       const prevEndMinutes = (currentMinutes - 60 + (24 * 60)) % (24 * 60);
-      
+
       const hours = Math.floor(prevEndMinutes / 60);
       const minutes = prevEndMinutes % 60;
       return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
     };
 
-    const isHeartbeatActive = computed( () => {
+    const isHeartbeatActive = computed(() => {
       return stationDetails.value?.heartbeat === true;
-    } );
+    });
 
-    const sendCommand = async ( brandName: string, command: string ) => {
+    const sendCommand = async (brandName: string, command: string) => {
       try {
-        const success = await dashboardStore.triggerBroadcastAction( brandName, command );
-        if ( success ) {
-          message.success( `${command} command sent successfully` );
+        const success = await dashboardStore.triggerBroadcastAction(brandName, command);
+        if (success) {
+          message.success(`${command} command sent successfully`);
         } else {
-          message.error( `Failed to send ${command} command` );
+          message.error(`Failed to send ${command} command`);
         }
-      } catch ( error ) {
-        console.error( `Error sending ${command} command:`, error );
-        message.error( `Error sending ${command} command` );
+      } catch (error) {
+        console.error(`Error sending ${command} command:`, error);
+        message.error(`Error sending ${command} command`);
       }
     };
 
     const handleStart = async () => {
-      if ( isStartingStation.value ) return;
+      if (isStartingStation.value) return;
       isStartingStation.value = true;
       try {
-        await sendCommand( props.brandName, 'start' );
+        await sendCommand(props.brandName, 'start');
       } finally {
         isStartingStation.value = false;
       }
     };
 
     const handleStop = async () => {
-      if ( isStoppingStation.value ) return;
+      if (isStoppingStation.value) return;
       isStoppingStation.value = true;
       try {
-        await sendCommand( props.brandName, 'stop' );
+        await sendCommand(props.brandName, 'stop');
       } finally {
         isStoppingStation.value = false;
       }
     };
 
-    const cleanTitle = ( title: string | undefined | null ): string => {
-      if ( !title || typeof title !== 'string' ) return 'N/A';
-      return title.replace( /^(#+|--+)\s*/, '' ).replace( /[#-]/g, '|' ).trim();
+    const cleanTitle = (title: string | undefined | null): string => {
+      if (!title || typeof title !== 'string') return 'N/A';
+      return title.replace(/^(#+|--+)\s*/, '').replace(/[#-]/g, '|').trim();
     };
 
     const getMergingTypeText = (fragment: any): { text: string; color: 'default' | 'success' | 'error' | 'warning' | 'primary' | 'info' } => {
@@ -625,10 +687,10 @@ export default defineComponent( {
 
     const getHlsCurrentTrack = (): string => {
       const songStats = stationDetails.value?.songStatistics;
-      if ( !songStats ) return 'N/A';
+      if (!songStats) return 'N/A';
       const title = (songStats as any)?.songMetadata?.title ?? (songStats as any)?.title;
       if (!title) return 'N/A';
-      return cleanTitle( title );
+      return cleanTitle(title);
     };
 
     const formatArtistTitle = (fragment: any): string => {
@@ -644,34 +706,34 @@ export default defineComponent( {
       return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
     };
 
-    const formatTimestamp = ( timestamp: string ): string => {
-      const date = new Date( timestamp );
-      return date.toLocaleTimeString( [], { hour: '2-digit', minute: '2-digit', second: '2-digit' } );
+    const formatTimestamp = (timestamp: string): string => {
+      const date = new Date(timestamp);
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     };
 
-    const formatTaskType = ( taskType: string ): string => {
-      return taskType.replace( /_/g, ' ' ).replace( /\b\w/g, l => l.toUpperCase() );
+    const formatTaskType = (taskType: string): string => {
+      return taskType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     };
 
-    const getTaskDuration = ( startTime: string ): string => {
-      const start = new Date( startTime );
+    const getTaskDuration = (startTime: string): string => {
+      const start = new Date(startTime);
       const now = new Date();
       const diffMs = now.getTime() - start.getTime();
-      const hours = Math.floor( diffMs / ( 1000 * 60 * 60 ) );
-      const minutes = Math.floor( ( diffMs % ( 1000 * 60 * 60 ) ) / ( 1000 * 60 ) );
-      const seconds = Math.floor( ( diffMs % ( 1000 * 60 ) ) / 1000 );
+      const hours = Math.floor(diffMs / (1000 * 60 * 60));
+      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
 
-      if ( hours > 0 ) {
+      if (hours > 0) {
         return `${hours}h ${minutes}m ${seconds}s`;
-      } else if ( minutes > 0 ) {
+      } else if (minutes > 0) {
         return `${minutes}m ${seconds}s`;
       } else {
         return `${seconds}s`;
       }
     };
 
-    const formatStatus = ( status: string | null | undefined ): string => {
-      if ( !status ) return 'Unknown';
+    const formatStatus = (status: string | null | undefined): string => {
+      if (!status) return 'Unknown';
 
       const statusMap: Record<string, string> = {
         'ON_LINE': 'Online',
@@ -691,12 +753,12 @@ export default defineComponent( {
       return statusMap[status.toUpperCase()] || status;
     };
 
-    const isCurrentSong = ( fragment: any ): boolean => {
+    const isCurrentSong = (fragment: any): boolean => {
       const currentTrack = getHlsCurrentTrack();
-      if ( !currentTrack || currentTrack === 'N/A' ) return false;
+      if (!currentTrack || currentTrack === 'N/A') return false;
       const fragmentTitle = typeof fragment === 'string' ? fragment : fragment?.title;
-      if ( !fragmentTitle ) return false;
-      const cleanFragment = cleanTitle( fragmentTitle );
+      if (!fragmentTitle) return false;
+      const cleanFragment = cleanTitle(fragmentTitle);
       return cleanFragment === currentTrack;
     };
 
@@ -721,9 +783,9 @@ export default defineComponent( {
       return 'default';
     };
 
-    const getStatusTimelineType = ( status: string | null | undefined ): 'success' | 'warning' | 'error' | 'default' => {
-      if ( !status ) return 'default';
-      switch ( status.toUpperCase() ) {
+    const getStatusTimelineType = (status: string | null | undefined): 'success' | 'warning' | 'error' | 'default' => {
+      if (!status) return 'default';
+      switch (status.toUpperCase()) {
         case 'ON_LINE':
         case 'QUEUE_SATURATED':
           return 'success';
@@ -739,16 +801,16 @@ export default defineComponent( {
       }
     };
 
-    const statusHistoryTimeline = computed( () => {
+    const statusHistoryTimeline = computed(() => {
       const history = stationDetails.value?.statusHistory || [];
-      const recentHistory = history.slice( -5 );
+      const recentHistory = history.slice(-5);
 
-      return recentHistory.map( ( event, index ) => {
+      return recentHistory.map((event, index) => {
         let timeDiff = '';
-        if ( index > 0 ) {
+        if (index > 0) {
           const prevEvent = recentHistory[index - 1];
-          const diffMs = new Date( event.timestamp ).getTime() - new Date( prevEvent.timestamp ).getTime();
-          const diffMins = Math.round( diffMs / ( 1000 * 60 ) );
+          const diffMs = new Date(event.timestamp).getTime() - new Date(prevEvent.timestamp).getTime();
+          const diffMins = Math.round(diffMs / (1000 * 60));
           timeDiff = `+${diffMins}m`;
         }
 
@@ -757,11 +819,92 @@ export default defineComponent( {
           status: (event as any).newStatus,
           timeDiff
         };
-      } );
-    } );
+      });
+    });
 
-    const isDestroyed = ref( false );
+    const isDestroyed = ref(false);
 
+    const sortedSchedule = computed(() => {
+      const schedule = stationDetails.value?.schedule || [];
+      const dayStartMinutes = 6 * 60;
+
+      return schedule
+        .slice()
+        .sort((a: any, b: any) => {
+          const aStart = parseTimeToMinutes(a.startTime);
+          const bStart = parseTimeToMinutes(b.startTime);
+          const aOffset = (aStart - dayStartMinutes + 24 * 60) % (24 * 60);
+          const bOffset = (bStart - dayStartMinutes + 24 * 60) % (24 * 60);
+          return aOffset - bOffset;
+        });
+    });
+
+    const currentSchedule = computed(() => {
+      return sortedSchedule.value.find((s: any) => s.active);
+    });
+
+    const pastSchedule = computed(() => {
+      const currentIdx = sortedSchedule.value.findIndex((s: any) => s.active);
+      return sortedSchedule.value.slice(0, currentIdx);
+    });
+
+    const futureSchedule = computed(() => {
+      const currentIdx = sortedSchedule.value.findIndex((s: any) => s.active);
+      return sortedSchedule.value.slice(currentIdx + 1);
+    });
+
+    const nonCurrentSchedule = computed(() => {
+      return sortedSchedule.value.filter((s: any) => !s.active);
+    });
+
+    const scheduleItemId = (s: any) => {
+      return `${s.startTime}|${s.endTime}|${s.sceneTitle}`;
+    };
+
+    const scheduleSignature = computed(() => {
+      return sortedSchedule.value.map(scheduleItemId).join('||');
+    });
+
+    const pulsingScheduleId = ref<string | null>(null);
+    const schedulePulseIndex = ref(0);
+    let schedulePulseTimeoutId: number | null = null;
+
+    const stopSchedulePulse = () => {
+      if (schedulePulseTimeoutId !== null) {
+        window.clearTimeout(schedulePulseTimeoutId);
+        schedulePulseTimeoutId = null;
+      }
+      pulsingScheduleId.value = null;
+    };
+
+    const startSchedulePulse = () => {
+      stopSchedulePulse();
+      if (nonCurrentSchedule.value.length === 0) return;
+
+      const onMs = 180;
+      const offMs = 80;
+
+      const tick = () => {
+        if (nonCurrentSchedule.value.length === 0) return;
+
+        const idx = schedulePulseIndex.value % nonCurrentSchedule.value.length;
+        const s = nonCurrentSchedule.value[idx];
+        pulsingScheduleId.value = scheduleItemId(s);
+
+        schedulePulseIndex.value = idx + 1;
+
+        if (schedulePulseTimeoutId !== null) {
+          window.clearTimeout(schedulePulseTimeoutId);
+        }
+
+        schedulePulseTimeoutId = window.setTimeout(() => {
+          pulsingScheduleId.value = null;
+          schedulePulseTimeoutId = window.setTimeout(tick, offMs);
+        }, onMs);
+      };
+
+      tick();
+    };
 
     onMounted(() => {
       console.log('StationDetail mounted for brand:', props.brandName);
@@ -782,12 +925,22 @@ export default defineComponent( {
     onUnmounted(() => {
       console.log('StationDetail unmounted for brand:', props.brandName);
       isDestroyed.value = true;
+      stopSchedulePulse();
       dashboardStore.stopStationPolling(props.brandName);
       dashboardStore.disconnectStation(props.brandName);
     });
 
-    watch( () => stationDetails.value?.timeline, () => {
-    }, { deep: true } );
+    watch(scheduleSignature, (next, prev) => {
+      if (!next || nonCurrentSchedule.value.length === 0) {
+        stopSchedulePulse();
+        return;
+      }
+
+      if (schedulePulseTimeoutId === null || (prev !== undefined && next !== prev)) {
+        schedulePulseIndex.value = 0;
+        startSchedulePulse();
+      }
+    }, { immediate: true });
 
     return {
       dashboardStore,
@@ -821,6 +974,7 @@ export default defineComponent( {
       handleStop,
       formatDuration,
       formatTime,
+      formatScheduleStart,
       formatSceneDuration,
       mapMessageType,
       calculatePreviousSceneEnd,
@@ -828,10 +982,16 @@ export default defineComponent( {
       formattedTime,
       timeWithDot,
       activeTab,
-      copyBrandNameToClipboard
+      copyBrandNameToClipboard,
+      sortedSchedule,
+      currentSchedule,
+      pastSchedule,
+      futureSchedule,
+      scheduleItemId,
+      pulsingScheduleId
     };
   },
-} );
+});
 </script>
 
 <style scoped>
@@ -892,5 +1052,71 @@ export default defineComponent( {
   40% { transform: scaleY(0.5); }
   60% { transform: scaleY(1.0); }
   80% { transform: scaleY(0.6); }
+}
+
+.schedule-groups {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.schedule-group {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--n-border-color);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.schedule-group--current {
+  flex: 1.4;
+  border-color: rgba(91, 99, 255, 0.6);
+}
+
+.schedule-group__title {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.schedule-compact-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.schedule-compact-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border: 1px solid var(--n-border-color);
+  border-radius: 999px;
+}
+
+.schedule-current {
+  border: 1px solid var(--n-border-color);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.schedule-current__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.schedule-current__details {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.schedule-current__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
 }
 </style>

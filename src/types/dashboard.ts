@@ -152,6 +152,17 @@ export interface StationDetails {
         timestamp: string;
         status: string;
     }[];
+    schedule: Array<{
+        sceneTitle: string;
+        startTime: string;
+        endTime: string;
+        active: boolean;
+        sourcing: string;
+        playlistTitle: string | null;
+        artist: string | null;
+        searchTerm: string | null;
+        songsCount: number;
+    }>;
     runningTasks?: Array<{
         taskType: string;
         target: string;
