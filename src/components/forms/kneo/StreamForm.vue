@@ -4,31 +4,11 @@
       <n-page-header subtitle="Stream" @back="goBack">
         <template #title>
           <span style="display: inline-flex; align-items: center; gap: 8px;">
-            <span style="cursor: pointer;" @click="copyStreamTitleToClipboard">{{ streamTitleText }}</span>
-            <n-button type="primary" text @click="copyStreamTitleToClipboard">
-              <template #icon>
-                <n-icon>
-                  <Copy />
-                </n-icon>
-              </template>
-            </n-button>
+            <span style="cursor: pointer;" @click="copyStreamHeaderTitleToClipboard">{{ localFormData.country || localFormData.slugName }}</span>
           </span>
           <span v-if=" localFormData.timeZone && getCurrentTimeInTimezone "
             style="margin-left: 16px; font-weight: normal; color: #666;">
             {{ getCurrentTimeInTimezone }}
-          </span>
-          <span style="margin-left: 16px; display: inline-flex; align-items: center;">
-            <n-rate
-              v-model:value="localFormData.nRate"
-              :count="5"
-              allow-half
-            >
-              <template #character>
-                <n-icon>
-                  <HandRock />
-                </n-icon>
-              </template>
-            </n-rate>
           </span>
         </template>
         <template #footer>
@@ -118,7 +98,7 @@
               </n-gi>
             </n-grid>
           </n-form>
-        </n-tab-pane>@@
+        </n-tab-pane>
         <n-tab-pane name="properties" tab="Parameters">
           <n-form label-placement="left" label-width="auto">
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
@@ -194,56 +174,59 @@
                 </n-form-item>
               </n-gi>
             </n-grid>
-          </n-form>@@
+          </n-form>
         </n-tab-pane>
 
         <n-tab-pane name="emceeing" tab="Emceeing">
-          <div v-if="planSchedule" style="padding: 12px;">
-            <div style="color: #9ca3af; font-size: 12px; margin-bottom: 12px;">
-              Created: {{ planSchedule.createdAt }}
-              <span style="margin-left: 12px;">Estimated end: {{ planSchedule.estimatedEndTime }}</span>
-              <span style="margin-left: 12px;">Scenes: {{ planSchedule.totalScenes }}</span>
-              <span style="margin-left: 12px;">Songs: {{ planSchedule.totalSongs }}</span>
-            </div>
-
-            <div v-for="scene in planSchedule.scenes" :key="scene.sceneId"
-              style="border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; padding: 12px; margin-bottom: 12px; background: rgba(255, 255, 255, 0.04);">
-              <div style="display: flex; justify-content: space-between; gap: 12px; align-items: baseline;">
-                <div style="font-weight: 600; color: #e5e7eb;">
-                  {{ scene.sceneTitle }}
-                </div>
-                <div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; color: #9ca3af; font-size: 12px;">
-                  {{ fmtHm(scene.scheduledStartTime) }} - {{ fmtHm(scene.scheduledEndTime) }} ({{ fmtMin(scene.durationSeconds) }})
-                </div>
+          <div style="padding: 12px; width: 50%; max-width: 600px;">
+            <div v-if="planSchedule">
+              <div style="color: #9ca3af; font-size: 12px; margin-bottom: 12px;">
+                Created: {{ fmtIsoMin(planSchedule.createdAt) }}
+                <span style="margin-left: 12px;">Estimated end: {{ fmtIsoMin(planSchedule.estimatedEndTime) }}</span>
+                <span style="margin-left: 12px;">Scenes: {{ planSchedule.totalScenes }}</span>
+                <span style="margin-left: 12px;">Songs: {{ planSchedule.totalSongs }}</span>
               </div>
 
-              <div style="margin-top: 6px; color: #9ca3af; font-size: 12px;">
-                Sourcing: {{ scene.sourcing }}
-                <span style="margin-left: 12px;">Playlist: {{ scene.playlistTitle }}</span>
-                <span style="margin-left: 12px;">Artist: {{ scene.artist }}</span>
-                <span style="margin-left: 12px;">Search: {{ scene.searchTerm }}</span>
-              </div>
-
-              <div style="margin-top: 10px;">
-                <div v-for="song in scene.songs" :key="song.id"
-                  style="display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid rgba(255, 255, 255, 0.08);">
-                  <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
-                    <div style="color: #9ca3af; font-size: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">
-                      {{ fmtHm(song.scheduledStartTime) }} ({{ fmtMin(song.estimatedDurationSeconds) }})
-                    </div>
-                    <div style="color: #e5e7eb; font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                      {{ song.title }}
-                    </div>
-                    <div style="color: #9ca3af; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                      {{ song.artist }}
-                    </div>
+              <div v-for="scene in planSchedule.scenes" :key="scene.sceneId"
+                style="border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; padding: 12px; margin-bottom: 12px; background: rgba(255, 255, 255, 0.04);">
+                <div style="display: flex; justify-content: space-between; gap: 12px; align-items: baseline;">
+                  <div style="font-weight: 600; color: #e5e7eb;">
+                    {{ scene.sceneTitle }}
                   </div>
-                  <div style="color: #9ca3af; font-size: 12px; white-space: nowrap;">
-                    Played: {{ song.played }}
+                  <div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; color: #9ca3af; font-size: 12px;">
+                    {{ fmtHm(scene.scheduledStartTime) }} - {{ fmtHm(scene.scheduledEndTime) }} ({{ fmtMin(scene.durationSeconds) }})
                   </div>
                 </div>
+
+                <div style="margin-top: 6px; color: #9ca3af; font-size: 12px;">
+                  Sourcing: {{ scene.sourcing }}
+                  <span style="margin-left: 12px;">Playlist: {{ scene.playlistTitle }}</span>
+                  <span style="margin-left: 12px;">Artist: {{ scene.artist }}</span>
+                  <span style="margin-left: 12px;">Search: {{ scene.searchTerm }}</span>
+                </div>
+
+                <div style="margin-top: 10px;">
+                  <div v-for="song in scene.songs" :key="song.id"
+                    style="display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+                    <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+                      <div style="color: #9ca3af; font-size: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">
+                        {{ fmtHm(song.scheduledStartTime) }} ({{ fmtMin(song.estimatedDurationSeconds) }})
+                      </div>
+                      <div style="color: #e5e7eb; font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        {{ song.title }}
+                      </div>
+                      <div style="color: #9ca3af; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        {{ song.artist }}
+                      </div>
+                    </div>
+                    <div style="color: #9ca3af; font-size: 12px; white-space: nowrap;">
+                      Played: {{ song.played }}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
+            <n-text v-else depth="3">Build plan to see emceeing schedule</n-text>
           </div>
         </n-tab-pane>
 
@@ -255,6 +238,10 @@
               </n-gi>
             </n-grid>
           </n-form>
+        </n-tab-pane>
+
+        <n-tab-pane name="dashboard" tab="Dashboard">
+          <StationDashboard v-if="activeTab === 'dashboard'" :brandName="localFormData.slugName" />
         </n-tab-pane>
 
       </n-tabs>
@@ -281,7 +268,6 @@ import {
   NInput,
   NInputNumber,
   NPageHeader,
-  NRate,
   NSelect,
   NSlider,
   NSpace,
@@ -295,7 +281,7 @@ import {
   useLoadingBar,
   useMessage
 } from "naive-ui";
-import { Copy, HandRock } from '@vicons/tabler';
+import { Copy } from '@vicons/tabler';
 import { html } from '@codemirror/lang-html';
 import { EditorView } from '@codemirror/view';
 import CodeMirror from 'vue-codemirror6';
@@ -315,6 +301,7 @@ import { useScriptStore } from "../../../stores/kneo/scriptStore";
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 import { handleFormSaveError, getErrorMessage } from '../../../utils/errorHandling';
 import AclTable from '../../common/AclTable.vue';
+import StationDashboard from './StationDashboard.vue';
 
 export default defineComponent( {
   name: "StreamForm",
@@ -329,7 +316,6 @@ export default defineComponent( {
     NForm,
     NFormItem,
     NInput,
-    NRate,
     NInputNumber,
     NButton,
     NSlider,
@@ -345,9 +331,9 @@ export default defineComponent( {
     NTag,
     NIcon,
     Copy,
-    HandRock,
     CodeMirror,
     AclTable,
+    StationDashboard,
   },
   setup() {
     const loadingBar = useLoadingBar();
@@ -537,6 +523,11 @@ export default defineComponent( {
       const s = String(v);
       const m = s.match(/T(\d{2}:\d{2})/);
       return m ? m[1] : s;
+    };
+
+    const fmtIsoMin = (v: any) => {
+      const s = String(v);
+      return s.length >= 16 ? s.slice(0, 16) : s;
     };
 
     const fmtMin = (v: any) => {
@@ -753,16 +744,13 @@ export default defineComponent( {
       }
     } );
 
-    const streamTitleText = computed(() => {
-      return (localFormData.localizedName as any)?.en || localFormData.slugName || localFormData.country || '';
-    });
-
-    const copyStreamTitleToClipboard = async () => {
-      if (!streamTitleText.value) {
+    const copyStreamHeaderTitleToClipboard = async () => {
+      const text = localFormData.country || localFormData.slugName;
+      if (!text) {
         message.error('Nothing to copy');
         return;
       }
-      await navigator.clipboard.writeText(streamTitleText.value);
+      await navigator.clipboard.writeText(text);
       message.success('Copied');
     };
 
@@ -945,8 +933,7 @@ export default defineComponent( {
       selectedProfile,
       selectedScript,
       copyToClipboard,
-      streamTitleText,
-      copyStreamTitleToClipboard,
+      copyStreamHeaderTitleToClipboard,
       openUrl,
       goBack,
       aclData,
@@ -963,6 +950,7 @@ export default defineComponent( {
       userVariables,
       formatVariableName,
       fmtHm,
+      fmtIsoMin,
       fmtMin
     };
   }
