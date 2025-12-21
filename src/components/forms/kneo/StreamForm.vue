@@ -199,10 +199,10 @@
                 </div>
 
                 <div style="margin-top: 6px; color: #9ca3af; font-size: 12px;">
-                  Sourcing: {{ scene.sourcing }}
-                  <span style="margin-left: 12px;">Playlist: {{ scene.playlistTitle }}</span>
-                  <span style="margin-left: 12px;">Artist: {{ scene.artist }}</span>
-                  <span style="margin-left: 12px;">Search: {{ scene.searchTerm }}</span>
+                  Sourcing: {{ scene.playlistRequest?.sourcing }}
+                  <span style="margin-left: 12px;">Playlist: {{ scene.playlistRequest?.playlistTitle }}</span>
+                  <span style="margin-left: 12px;">Artist: {{ scene.playlistRequest?.artist }}</span>
+                  <span style="margin-left: 12px;">Search: {{ scene.playlistRequest?.searchTerm }}</span>
                 </div>
 
                 <div style="margin-top: 10px;">
@@ -234,7 +234,7 @@
           <n-form label-placement="left" label-width="auto">
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
               <n-gi>
-                <acl-table :data="aclData" :loading="aclLoading" />
+                <acl-table :acl-data="aclData" :loading="aclLoading" />
               </n-gi>
             </n-grid>
           </n-form>
@@ -354,7 +354,8 @@ export default defineComponent( {
     const aiOverrideEnabled = ref( false );
     const userVariables = ref<Record<string, any>>( {} );
 
-    const planSchedule = ref<any | null>(null);
+    const localPlanSchedule = ref<any | null>(null);
+    const planSchedule = computed(() => localPlanSchedule.value || (store.getCurrent as any)?.streamSchedule || null);
     const planBuildLoading = ref(false);
     const planRunLoading = ref(false);
     const planStationId = ref<string | null>(null);
@@ -502,7 +503,7 @@ export default defineComponent( {
     watch( selectedScript, ( newScript, oldScript ) => {
       if (isInitialLoad.value) return;
       userVariables.value = {};
-      planSchedule.value = null;
+      localPlanSchedule.value = null;
       if (newScript?.defaultProfileId) {
         localFormData.profileId = newScript.defaultProfileId;
       }
@@ -549,7 +550,7 @@ export default defineComponent( {
       const scenes = Array.isArray(p.scenes) ? p.scenes : [];
 
       return scenes.map((scene: any, i: number) => {
-        const title = `Stage ${i + 1}: ${scene.sceneTitle} (${fmtHm(scene.scheduledStartTime)} - ${fmtHm(scene.scheduledEndTime)}) - Sourcing: ${scene.sourcing || 'N/A'}`;
+        const title = `Stage ${i + 1}: ${scene.sceneTitle} (${fmtHm(scene.scheduledStartTime)} - ${fmtHm(scene.scheduledEndTime)}) - Sourcing: ${scene.playlistRequest?.sourcing || 'N/A'}`;
         const songs = Array.isArray(scene.songs) ? scene.songs : [];
         return {
           key: `${i}-${scene.sceneTitle}`,
@@ -607,7 +608,7 @@ export default defineComponent( {
       try {
         planBuildLoading.value = true;
         const response = await apiClient.post('/streams/schedule', { baseBrandId: planStationId.value, scriptId: localFormData.scriptId });
-        planSchedule.value = response.data;
+        localPlanSchedule.value = response.data;
       } catch (e) {
         message.error('Failed to build plan');
       } finally {
@@ -631,28 +632,16 @@ export default defineComponent( {
           userVariables: userVariables.value,
           schedule: planSchedule.value
         });
-        const returned = response.data;
-        const savedScriptId = localFormData.scriptId;
-        const savedAiAgentId = localFormData.aiAgentId;
-        const savedProfileId = localFormData.profileId;
-        Object.assign(localFormData, returned);
-        planSchedule.value = (returned as any).streamSchedule || planSchedule.value;
-        localFormData.scriptId = savedScriptId || localFormData.scriptId;
-        // Preserve aiAgentId and profileId - use saved value or server value
-        localFormData.aiAgentId = savedAiAgentId || returned.aiAgentId;
-        localFormData.profileId = savedProfileId || returned.profileId;
+        const returned = response.data.payload.docData || response.data.docData || response.data;
+        store.updateCurrent(returned);
 
-        hydrateUserVariablesFromDoc(returned);
-
-        localizedNameArray.value = Object.entries( returned.localizedName ).map( ( [language, name] ) => ( {
-          language,
-          name: name as string
-        } ) );
-        (store as any).apiFormResponse.value = { docData: returned, actions: [] };
+        await nextTick();
 
         if ( returned.id && returned.id !== route.params.id ) {
           skipNextRouteLoad.value = true;
           await router.replace( { name: 'Stream', params: { id: returned.id } } );
+        } else {
+          await loadFormData();
         }
       } catch (e) {
         message.error('Failed to run');
@@ -664,7 +653,7 @@ export default defineComponent( {
     watch(planStationId, (newStationId, oldStationId) => {
       if (isInitialLoad.value) return;
       if (oldStationId) {
-        planSchedule.value = null;
+        localPlanSchedule.value = null;
       }
       if (newStationId) {
         const selectedStation = radioStore.getEntries.find(station => station.id === newStationId);
@@ -831,7 +820,6 @@ export default defineComponent( {
         await nextTick();
         const currentData = store.getCurrent;
         Object.assign(localFormData, currentData);
-        planSchedule.value = (currentData as any).streamSchedule;
         if ((currentData as any).baseBrandId) {
           planStationId.value = (currentData as any).baseBrandId;
         }

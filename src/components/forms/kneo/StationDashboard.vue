@@ -221,6 +221,7 @@
                       <div v-for="(s, idx) in pastSchedule" :key="'p-' + idx" class="schedule-compact-item">
                         <YellowLed :active="s.active" :pulse="pulsingScheduleId === scheduleItemId(s)" :size="14" />
                         <n-text>{{ formatScheduleStart(s.startTime) }}</n-text>
+                        <n-text :depth="3">{{ s.sceneTitle }}</n-text>
                       </div>
                     </div>
                   </div>
@@ -236,12 +237,12 @@
                         <n-text>{{ currentSchedule.sceneTitle }}</n-text>
                         <div class="schedule-current__row">
                           <n-text depth="3">Source:</n-text>
-                          <n-text>{{ currentSchedule.sourcing }}</n-text>
+                          <n-text>{{ currentSchedule.playlistRequest?.sourcing }}</n-text>
                         </div>
                         <div class="schedule-current__row">
                           <n-text depth="3">Details:</n-text>
                           <n-text>
-                            {{ currentSchedule.playlistTitle || currentSchedule.searchTerm || currentSchedule.artist || '-' }}
+                            {{ currentSchedule.playlistRequest?.playlistTitle || currentSchedule.playlistRequest?.searchTerm || currentSchedule.playlistRequest?.artist || '-' }}
                             <span v-if="currentSchedule.songsCount !== undefined"> ({{ currentSchedule.songsCount }})</span>
                           </n-text>
                         </div>
@@ -255,11 +256,11 @@
                       <div v-for="(s, idx) in futureSchedule" :key="'f-' + idx" class="schedule-compact-item">
                         <GreenLed :active="s.active" :pulse="pulsingScheduleId === scheduleItemId(s)" :size="14" />
                         <n-text>{{ formatScheduleStart(s.startTime) }}</n-text>
+                        <n-text :depth="3">{{ s.sceneTitle }}</n-text>
                       </div>
                     </div>
                   </div>
                 </div>
-                <n-text v-else depth="3">No schedule available</n-text>
               </n-card>
             </n-space>
           </n-tab-pane>
@@ -1069,7 +1070,8 @@ export default defineComponent({
 }
 
 .schedule-group--current {
-  flex: 1.4;
+  flex: 0.8;
+  max-width: 300px;
   border-color: rgba(91, 99, 255, 0.6);
 }
 

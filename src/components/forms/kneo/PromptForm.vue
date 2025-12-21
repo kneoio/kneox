@@ -624,9 +624,9 @@ export default defineComponent({
           if (draftContent) {
             const draftPayload = {
               languageCode: localFormData.languageCode,
-              songId: testSongId.value,
-              agentId: testAgentId.value,
-              stationId: testStationId.value,
+              songId: testSongId.value || null,
+              agentId: testAgentId.value || null,
+              stationId: testStationId.value || null,
               code: draftContent,
               userVariables: Object.keys(userVariables.value).length > 0 ? userVariables.value : undefined
             };

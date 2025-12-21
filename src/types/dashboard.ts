@@ -157,11 +157,18 @@ export interface StationDetails {
         startTime: string;
         endTime: string;
         active: boolean;
-        sourcing: string;
-        playlistTitle: string | null;
-        artist: string | null;
-        searchTerm: string | null;
         songsCount: number;
+        playlistRequest?: {
+            sourcing?: string;
+            playlistTitle?: string;
+            artist?: string;
+            genres?: string[];
+            labels?: string[];
+            playlistItemTypes?: string[];
+            sourceTypes?: string[];
+            searchTerm?: string;
+            soundFragments?: string[];
+        };
     }>;
     runningTasks?: Array<{
         taskType: string;

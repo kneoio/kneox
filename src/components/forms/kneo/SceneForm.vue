@@ -308,7 +308,7 @@ export default defineComponent({
               labels: data.stagePlaylist.labels || [],
               type: (data.stagePlaylist as any).type || [],
               source: (data.stagePlaylist as any).source || [],
-              staticList: (data.stagePlaylist as any).soundFragments || []
+              staticList: (data.stagePlaylist as any).staticList || []
             };
           } else {
             localFormData.stagePlaylist = {
@@ -362,7 +362,7 @@ export default defineComponent({
             labels: localFormData.stagePlaylist.labels,
             type: (localFormData.stagePlaylist as any).type,
             source: (localFormData.stagePlaylist as any).source,
-            soundFragments: (localFormData.stagePlaylist as any).staticList
+            staticList: (localFormData.stagePlaylist as any).staticList
           } : undefined,
         };
         const id = route.params.id as string;

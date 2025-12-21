@@ -53,6 +53,9 @@ export const useRadioStationStore = defineStore('radioStationStore', () => {
     });
 
     const fetchRadioStations = async (page = 1, pageSize = 10) => {
+        if (getEntries.value.length > 0) {
+            return;
+        }
         const response = await apiClient.get(`radiostations?page=${page}&size=${pageSize}`);
         if (response?.data?.payload) {
             nextTick(() => {

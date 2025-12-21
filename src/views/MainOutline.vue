@@ -280,8 +280,8 @@ export default defineComponent({
               }
             }
           },
-          allStreamsOption,
           allStationsOption,
+          allStreamsOption,
           homeOption,
           {
             type: 'divider',
@@ -380,8 +380,8 @@ export default defineComponent({
             }
           }
         },
-        allStreamsOption,
         allStationsOption,
+        allStreamsOption,
         ...remainingOptions
       ];
     });

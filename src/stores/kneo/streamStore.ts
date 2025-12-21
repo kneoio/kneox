@@ -52,8 +52,9 @@ export const useStreamStore = defineStore('streamStore', () => {
 
     const fetchStreams = async (page = 1, pageSize = 10) => {
         const response = await apiClient.get(`streams?page=${page}&size=${pageSize}`);
-        if (response?.data?.payload) {
-            apiViewResponse.value = response.data.payload;
+        const payload = response?.data?.payload?.payload || response?.data?.payload;
+        if (payload) {
+            apiViewResponse.value = payload;
         } else {
             throw new Error('Invalid API response structure');
         }
@@ -61,8 +62,9 @@ export const useStreamStore = defineStore('streamStore', () => {
 
     const fetchStream = async (id: string) => {
         const response = await apiClient.get(`streams/${id}`);
-        if (response?.data?.payload) {
-            apiFormResponse.value = response.data.payload;
+        const payload = response?.data?.payload?.payload || response?.data?.payload;
+        if (payload) {
+            apiFormResponse.value = payload;
         } else {
             throw new Error('Invalid API response structure');
         }
