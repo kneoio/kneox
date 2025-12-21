@@ -219,7 +219,7 @@
                     <n-text depth="3" class="schedule-group__title">Past</n-text>
                     <div class="schedule-compact-list">
                       <div v-for="(s, idx) in pastSchedule" :key="'p-' + idx" class="schedule-compact-item">
-                        <YellowLed :active="s.active" :pulse="pulsingScheduleId === scheduleItemId(s)" :size="14" />
+                        <YellowLed :active="s.active" :size="14" />
                         <n-text>{{ formatScheduleStart(s.startTime) }}</n-text>
                         <n-text :depth="3">{{ s.sceneTitle }}</n-text>
                       </div>
@@ -231,7 +231,7 @@
                     <div v-if="currentSchedule" class="schedule-current">
                       <div class="schedule-current__top">
                         <n-text strong>{{ formatTime(currentSchedule.startTime) }} - {{ formatTime(currentSchedule.endTime) }}</n-text>
-                        <BlueLed :active="currentSchedule.active" :pulse="currentSchedule.active" :size="16" />
+                        <YellowLed :active="currentSchedule.active" :pulse="currentSchedule.active" :size="16" />
                       </div>
                       <div class="schedule-current__details">
                         <n-text>{{ currentSchedule.sceneTitle }}</n-text>
@@ -254,7 +254,7 @@
                     <n-text depth="3" class="schedule-group__title">Future</n-text>
                     <div class="schedule-compact-list">
                       <div v-for="(s, idx) in futureSchedule" :key="'f-' + idx" class="schedule-compact-item">
-                        <GreenLed :active="s.active" :pulse="pulsingScheduleId === scheduleItemId(s)" :size="14" />
+                        <GreenLed :active="s.active" :size="14" />
                         <n-text>{{ formatScheduleStart(s.startTime) }}</n-text>
                         <n-text :depth="3">{{ s.sceneTitle }}</n-text>
                       </div>
@@ -297,7 +297,6 @@ import {
 } from 'naive-ui';
 import { ExternalLink, PlayerPlay, PlayerStop, Activity } from '@vicons/tabler';
 import { MIXPLA_PLAYER_URL } from '../../../constants/config';
-import BlueLed from '../../common/BlueLed.vue';
 import GreenLed from '../../common/GreenLed.vue';
 import YellowLed from '../../common/YellowLed.vue';
 
@@ -307,7 +306,6 @@ export default defineComponent({
     NButton, NCard, NIcon, NTag, NStatistic, NProgress, NSpace, NH2, NText,
     NTimeline, NTimelineItem, NButtonGroup,
     NMarquee, NTabs, NTabPane, NSelect, NScrollbar, NInput, NBadge, PlayerPlay, PlayerStop, ExternalLink, Activity,
-    BlueLed,
     GreenLed,
     YellowLed
   },
@@ -866,47 +864,6 @@ export default defineComponent({
       return sortedSchedule.value.map(scheduleItemId).join('||');
     });
 
-    const pulsingScheduleId = ref<string | null>(null);
-    const schedulePulseIndex = ref(0);
-    let schedulePulseTimeoutId: number | null = null;
-
-    const stopSchedulePulse = () => {
-      if (schedulePulseTimeoutId !== null) {
-        window.clearTimeout(schedulePulseTimeoutId);
-        schedulePulseTimeoutId = null;
-      }
-      pulsingScheduleId.value = null;
-    };
-
-    const startSchedulePulse = () => {
-      stopSchedulePulse();
-      if (nonCurrentSchedule.value.length === 0) return;
-
-      const onMs = 180;
-      const offMs = 80;
-
-      const tick = () => {
-        if (nonCurrentSchedule.value.length === 0) return;
-
-        const idx = schedulePulseIndex.value % nonCurrentSchedule.value.length;
-        const s = nonCurrentSchedule.value[idx];
-        pulsingScheduleId.value = scheduleItemId(s);
-
-        schedulePulseIndex.value = idx + 1;
-
-        if (schedulePulseTimeoutId !== null) {
-          window.clearTimeout(schedulePulseTimeoutId);
-        }
-
-        schedulePulseTimeoutId = window.setTimeout(() => {
-          pulsingScheduleId.value = null;
-          schedulePulseTimeoutId = window.setTimeout(tick, offMs);
-        }, onMs);
-      };
-
-      tick();
-    };
-
     onMounted(() => {
       console.log('StationDetail mounted for brand:', props.brandName);
       dashboardStore.startStationPolling(props.brandName);
@@ -926,22 +883,9 @@ export default defineComponent({
     onUnmounted(() => {
       console.log('StationDetail unmounted for brand:', props.brandName);
       isDestroyed.value = true;
-      stopSchedulePulse();
       dashboardStore.stopStationPolling(props.brandName);
       dashboardStore.disconnectStation(props.brandName);
     });
-
-    watch(scheduleSignature, (next, prev) => {
-      if (!next || nonCurrentSchedule.value.length === 0) {
-        stopSchedulePulse();
-        return;
-      }
-
-      if (schedulePulseTimeoutId === null || (prev !== undefined && next !== prev)) {
-        schedulePulseIndex.value = 0;
-        startSchedulePulse();
-      }
-    }, { immediate: true });
 
     return {
       dashboardStore,
@@ -987,9 +931,7 @@ export default defineComponent({
       sortedSchedule,
       currentSchedule,
       pastSchedule,
-      futureSchedule,
-      scheduleItemId,
-      pulsingScheduleId
+      futureSchedule
     };
   },
 });
@@ -1072,7 +1014,7 @@ export default defineComponent({
 .schedule-group--current {
   flex: 0.8;
   max-width: 300px;
-  border-color: rgba(91, 99, 255, 0.6);
+  border-color: rgba(128, 128, 128, 0.6);
 }
 
 .schedule-group__title {

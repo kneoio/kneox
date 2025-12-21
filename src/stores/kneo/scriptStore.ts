@@ -85,8 +85,10 @@ export const useScriptStore = defineStore('scriptStore', () => {
         }
     };
 
-    const fetchSharedScripts = async (page = 1, pageSize = 10) => {
-        const response = await apiClient.get(`/scripts/shared?page=${page}&size=${pageSize}`, {});
+    const fetchSharedScripts = async (page = 1, pageSize = 10, filters: ScriptFilterDTO = {}) => {
+        const url = buildScriptsUrl('/scripts/shared', { page, size: pageSize, filter: filters });
+        const response = await apiClient.get(url);
+
         if (response?.data?.payload) {
             apiViewResponse.value = response.data.payload;
         } else {

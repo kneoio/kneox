@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const ejs = require('ejs');
 const fs = require('fs');
 const dotenv = require('dotenv');
+const { createProxyMiddleware } = require('http-proxy-middleware');
 
 const envFile = process.env.NODE_ENV === 'production'
     ? path.join(__dirname, '.env.production')
@@ -23,6 +24,25 @@ if (fs.existsSync(manifestPath)) {
     console.log('✅ Manifest loaded successfully');
 } else {
     console.log('❌ Manifest not found at:', manifestPath);
+}
+
+const apiServer = process.env.VITE_API_SERVER;
+if (apiServer) {
+    app.use('/api', createProxyMiddleware({
+        target: apiServer,
+        changeOrigin: true,
+        onProxyReq: (proxyReq, req, res) => {
+            console.log(`[PROXY] Forwarding request: ${req.method} ${req.url} -> ${apiServer}${req.url}`);
+        },
+        onError: (err, req, res) => {
+            console.error('[PROXY] Error:', err);
+            if (!res.headersSent) {
+                res.status(500).send('Proxy error');
+            }
+        }
+    }));
+} else {
+    console.error('VITE_API_SERVER is not defined. API proxy will not be configured.');
 }
 
 app.use((req, res, next) => {

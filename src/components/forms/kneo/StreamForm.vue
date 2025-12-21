@@ -241,7 +241,7 @@
         </n-tab-pane>
 
         <n-tab-pane name="dashboard" tab="Dashboard">
-          <StationDashboard v-if="activeTab === 'dashboard'" :brandName="localFormData.slugName" />
+          <StationDashboard v-if="activeTab === 'dashboard' && localFormData.slugName" :brandName="localFormData.slugName" />
         </n-tab-pane>
 
       </n-tabs>
@@ -608,7 +608,7 @@ export default defineComponent( {
       try {
         planBuildLoading.value = true;
         const response = await apiClient.post('/streams/schedule', { baseBrandId: planStationId.value, scriptId: localFormData.scriptId });
-        localPlanSchedule.value = response.data;
+        localPlanSchedule.value = response.data.payload.docData;
       } catch (e) {
         message.error('Failed to build plan');
       } finally {
@@ -632,7 +632,10 @@ export default defineComponent( {
           userVariables: userVariables.value,
           schedule: planSchedule.value
         });
-        const returned = response.data.payload.docData || response.data.docData || response.data;
+        const returned = response.data.payload.docData;
+        if (returned.streamSchedule) {
+          localPlanSchedule.value = returned.streamSchedule;
+        }
         store.updateCurrent(returned);
 
         await nextTick();
@@ -814,7 +817,7 @@ export default defineComponent( {
         await radioStore.fetchAll( 1, 100 );
         await aiAgentStore.fetchAllUnsecured( 1, 100 );
         await profileStore.fetchAllUnsecured( 1, 100 );
-        await scriptStore.fetchAllShared( 1, 100 );
+        await scriptStore.fetchAllShared(1, 100, { timingMode: 'RELATIVE_TO_STREAM_START' });
         await referencesStore.fetchVoices();
         await store.fetch( id );
         await nextTick();
