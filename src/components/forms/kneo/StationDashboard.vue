@@ -214,52 +214,38 @@
               </n-space>
 
               <n-card title="Schedule" size="small" style="width: 100%;">
-                <div v-if="stationDetails?.schedule && stationDetails.schedule.length" class="schedule-groups">
-                  <div class="schedule-group">
-                    <n-text depth="3" class="schedule-group__title">Past</n-text>
-                    <div class="schedule-compact-list">
-                      <div v-for="(s, idx) in pastSchedule" :key="'p-' + idx" class="schedule-compact-item">
-                        <YellowLed :active="s.active" :size="14" />
-                        <n-text>{{ formatScheduleStart(s.startTime) }}</n-text>
-                        <n-text :depth="3">{{ s.sceneTitle }}</n-text>
-                      </div>
-                    </div>
-                  </div>
+                <div v-if="stationDetails?.schedule && stationDetails.schedule.length">
+                  <n-timeline>
+                    <n-timeline-item
+                      v-for="s in sortedSchedule"
+                      :key="s.startTime + '|' + s.endTime + '|' + s.sceneTitle"
+                      :title="formatTime(s.startTime) + ' - ' + formatTime(s.endTime)"
+                    >
+                      <template #icon>
+                        <YellowLed v-if="s.active" :active="s.active" :pulse="s.active" :size="16" />
+                        <YellowLed v-else-if="pastSchedule.includes(s)" :active="s.active" :size="14" />
+                        <GreenLed v-else :active="s.active" :size="14" />
+                      </template>
 
-                  <div class="schedule-group schedule-group--current">
-                    <n-text depth="3" class="schedule-group__title">Current</n-text>
-                    <div v-if="currentSchedule" class="schedule-current">
-                      <div class="schedule-current__top">
-                        <n-text strong>{{ formatTime(currentSchedule.startTime) }} - {{ formatTime(currentSchedule.endTime) }}</n-text>
-                        <YellowLed :active="currentSchedule.active" :pulse="currentSchedule.active" :size="16" />
-                      </div>
-                      <div class="schedule-current__details">
-                        <n-text>{{ currentSchedule.sceneTitle }}</n-text>
-                        <div class="schedule-current__row">
-                          <n-text depth="3">Source:</n-text>
-                          <n-text>{{ currentSchedule.playlistRequest?.sourcing }}</n-text>
-                        </div>
-                        <div class="schedule-current__row">
-                          <n-text depth="3">Details:</n-text>
-                          <n-text>
-                            {{ currentSchedule.playlistRequest?.playlistTitle || currentSchedule.playlistRequest?.searchTerm || currentSchedule.playlistRequest?.artist || '-' }}
-                            <span v-if="currentSchedule.songsCount !== undefined"> ({{ currentSchedule.songsCount }})</span>
-                          </n-text>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                      <template #default>
+                        <n-text>{{ s.sceneTitle }}</n-text>
 
-                  <div class="schedule-group">
-                    <n-text depth="3" class="schedule-group__title">Future</n-text>
-                    <div class="schedule-compact-list">
-                      <div v-for="(s, idx) in futureSchedule" :key="'f-' + idx" class="schedule-compact-item">
-                        <GreenLed :active="s.active" :size="14" />
-                        <n-text>{{ formatScheduleStart(s.startTime) }}</n-text>
-                        <n-text :depth="3">{{ s.sceneTitle }}</n-text>
-                      </div>
-                    </div>
-                  </div>
+                        <div v-if="s.active" class="schedule-current__details" style="margin-top: 8px;">
+                          <div class="schedule-current__row">
+                            <n-text depth="3">Source:</n-text>
+                            <n-text>{{ s.playlistRequest?.sourcing }}</n-text>
+                          </div>
+                          <div class="schedule-current__row">
+                            <n-text depth="3">Details:</n-text>
+                            <n-text>
+                              {{ s.playlistRequest?.playlistTitle || s.playlistRequest?.searchTerm || s.playlistRequest?.artist || '-' }}
+                              <span v-if="s.songsCount !== undefined"> ({{ s.songsCount }})</span>
+                            </n-text>
+                          </div>
+                        </div>
+                      </template>
+                    </n-timeline-item>
+                  </n-timeline>
                 </div>
               </n-card>
             </n-space>
@@ -929,6 +915,7 @@ export default defineComponent({
       activeTab,
       copyBrandNameToClipboard,
       sortedSchedule,
+      scheduleItemId,
       currentSchedule,
       pastSchedule,
       futureSchedule
