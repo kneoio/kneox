@@ -79,7 +79,14 @@
                 <n-timeline horizontal v-if=" statusHistoryTimeline.length > 0 ">
                   <n-timeline-item v-for=" ( event, index ) in statusHistoryTimeline " :key="index"
                     :type="getStatusTimelineType( event.status )" :title="formatStatus( event.status )"
-                    :content="formatTimestamp( event.timestamp ) + ( event.timeDiff ? ' (' + event.timeDiff + ')' : '' )" />
+                    :content="formatTimestamp( event.timestamp ) + ( event.timeDiff ? ' (' + event.timeDiff + ')' : '' )">
+                    <template #icon>
+                      <GreenLed v-if="getStatusTimelineType(event.status) === 'success' && index === statusHistoryTimeline.length - 1" :active="true" :size="14" />
+                      <YellowLed v-else-if="getStatusTimelineType(event.status) === 'warning' && index === statusHistoryTimeline.length - 1" :active="true" :size="14" />
+                      <YellowLed v-else-if="getStatusTimelineType(event.status) === 'error' && index === statusHistoryTimeline.length - 1" :active="true" :size="14" />
+                      <GreenLed v-else :active="false" :size="14" />
+                    </template>
+                  </n-timeline-item>
                 </n-timeline>
                 <n-text depth="3" v-else>No status history available</n-text>
               </n-card>
@@ -90,9 +97,13 @@
                     <n-timeline-item
                       v-for="(fragment, index) in combinedPlaylist"
                       :key="index"
-                      :type="getPlaylistItemType(fragment)"
-                      :color="getPlaylistItemColor(fragment)"
                     >
+                      <template #icon>
+                        <GreenLed v-if="fragment.isPlayingNow" :active="true" :pulse="true" :size="14" />
+                        <YellowLed v-else-if="!fragment.isQueued" :active="true" :size="14" />
+                        <GreenLed v-else-if="fragment.isQueued" :active="true" :size="14" />
+                        <GreenLed v-else :active="false" :size="14" />
+                      </template>
                       <template #default>
                         <div style="max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500;">
                           {{ formatArtistTitle(fragment) }}
@@ -217,9 +228,8 @@
                 <div v-if="stationDetails?.schedule && stationDetails.schedule.length">
                   <n-timeline>
                     <n-timeline-item
-                      v-for="s in sortedSchedule"
-                      :key="s.startTime + '|' + s.endTime + '|' + s.sceneTitle"
-                      :title="formatTime(s.startTime) + ' - ' + formatTime(s.endTime)"
+                      v-for="(s, index) in sortedSchedule"
+                      :key="index"
                     >
                       <template #icon>
                         <YellowLed v-if="s.active" :active="s.active" :pulse="s.active" :size="16" />
@@ -228,20 +238,9 @@
                       </template>
 
                       <template #default>
-                        <n-text>{{ s.sceneTitle }}</n-text>
-
-                        <div v-if="s.active" class="schedule-current__details" style="margin-top: 8px;">
-                          <div class="schedule-current__row">
-                            <n-text depth="3">Source:</n-text>
-                            <n-text>{{ s.playlistRequest?.sourcing }}</n-text>
-                          </div>
-                          <div class="schedule-current__row">
-                            <n-text depth="3">Details:</n-text>
-                            <n-text>
-                              {{ s.playlistRequest?.playlistTitle || s.playlistRequest?.searchTerm || s.playlistRequest?.artist || '-' }}
-                              <span v-if="s.songsCount !== undefined"> ({{ s.songsCount }})</span>
-                            </n-text>
-                          </div>
+                        <n-text style="font-weight: 500;">{{ s.sceneTitle }}</n-text>
+                        <div style="margin-top: 4px; color: #9ca3af; font-size: 12px;">
+                          {{ s.sourcing }} ({{ s.songsCount }} songs)
                         </div>
                       </template>
                     </n-timeline-item>
@@ -811,17 +810,7 @@ export default defineComponent({
 
     const sortedSchedule = computed(() => {
       const schedule = stationDetails.value?.schedule || [];
-      const dayStartMinutes = 6 * 60;
-
-      return schedule
-        .slice()
-        .sort((a: any, b: any) => {
-          const aStart = parseTimeToMinutes(a.startTime);
-          const bStart = parseTimeToMinutes(b.startTime);
-          const aOffset = (aStart - dayStartMinutes + 24 * 60) % (24 * 60);
-          const bOffset = (bStart - dayStartMinutes + 24 * 60) % (24 * 60);
-          return aOffset - bOffset;
-        });
+      return schedule.slice();
     });
 
     const currentSchedule = computed(() => {
