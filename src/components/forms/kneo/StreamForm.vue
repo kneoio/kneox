@@ -230,6 +230,10 @@
           </div>
         </n-tab-pane>
 
+        <n-tab-pane name="dashboard" tab="Dashboard">
+          <StreamDashboard v-if="localFormData.slugName" :brand-name="localFormData.slugName" />
+        </n-tab-pane>
+
         <n-tab-pane name="acl" tab="ACL">
           <n-form label-placement="left" label-width="auto">
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
@@ -298,7 +302,6 @@ import { useScriptStore } from "../../../stores/kneo/scriptStore";
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 import { handleFormSaveError, getErrorMessage } from '../../../utils/errorHandling';
 import AclTable from '../../common/AclTable.vue';
-import { useMessage } from "naive-ui";
 
 export default defineComponent( {
   name: "StreamForm",

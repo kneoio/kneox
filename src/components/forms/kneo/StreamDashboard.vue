@@ -122,44 +122,36 @@
                       DJ
                       <span v-if="stationDetails?.aiDjStats?.djName"> - {{ stationDetails.aiDjStats.djName }}</span>
                     </span>
-                    <n-tag v-if="isDjActive" type="info" size="small">Active</n-tag>
-                    <n-tag v-else-if="isDjOffline" type="error" size="small">DJ is offline</n-tag>
+                    <n-space align="center" size="small">
+                      <n-tag v-if="stationDetails?.schedule?.[0] && (stationDetails.schedule[0] as any).status" size="small" :bordered="false">
+                        {{ (stationDetails.schedule[0] as any).status }}
+                      </n-tag>
+                      <n-tag v-if="isDjActive" type="info" size="small">Active</n-tag>
+                      <n-tag v-else-if="isDjOffline" type="error" size="small">DJ is offline</n-tag>
+                    </n-space>
                   </n-space>
                 </template>
-                <n-space vertical size="small" v-if="stationDetails?.aiDjStats">
+                <n-space vertical size="small" v-if="stationDetails?.schedule">
                   <n-space vertical size="small">
                     <n-space justify="space-between">
                       <n-text strong>Current Scene:</n-text>
-                      <n-text strong style="font-size: 18px;">{{ stationDetails.aiDjStats.currentSceneTitle }}</n-text>
+                      <n-text strong style="font-size: 18px;">{{ stationDetails.schedule[0]?.sceneTitle || 'N/A' }}</n-text>
                     </n-space>
-                    <n-space justify="space-between" v-if="isDjActive">
-                      <n-text depth="3">Time:</n-text>
-                      <n-text>{{ formatTime(stationDetails.aiDjStats.sceneStartTime) }} - {{ formatTime(stationDetails.aiDjStats.sceneEndTime) }}</n-text>
-                    </n-space>
-                    <n-space justify="space-between">
-                      <n-text depth="3">Duration:</n-text>
-                      <n-text>{{ formatSceneDuration(stationDetails.aiDjStats.sceneStartTime, stationDetails.aiDjStats.sceneEndTime, stationDetails.aiDjStats.nextSceneTitle, stationDetails.aiDjStats.currentSceneTitle) }}</n-text>
+                    <n-space justify="space-between" v-if="stationDetails.schedule[0] && (stationDetails.schedule[0] as any).actualStartTime">
+                      <n-text depth="3">Started:</n-text>
+                      <n-text>{{ formatTimestamp((stationDetails.schedule[0] as any).actualStartTime) }}</n-text>
                     </n-space>
                     <n-space justify="space-between">
-                      <n-text depth="3">Prompts:</n-text>
-                      <n-text>{{ stationDetails.aiDjStats.promptCount }}</n-text>
+                      <n-text depth="3">Songs:</n-text>
+                      <n-text>{{ stationDetails.schedule[0]?.songsCount || 0 }}</n-text>
                     </n-space>
-                    <n-space justify="space-between" v-if="isDjActive">
-                      <n-text depth="3">Next Scene:</n-text>
-                      <n-text>{{ stationDetails.aiDjStats.nextSceneTitle }}</n-text>
-                    </n-space>
-                    <n-space vertical v-if="stationDetails.aiDjStats.messages && stationDetails.aiDjStats.messages.length" size="small">
-                      <n-text strong>Messages:</n-text>
-                      <n-space vertical size="small">
-                        <n-space v-for="(m, idx) in stationDetails.aiDjStats.messages" :key="idx" align="center" justify="space-between">
-                          <n-tag :type="mapMessageType(m.type)" size="small" :bordered="false">{{ m.type }}</n-tag>
-                          <n-text>{{ m.message }}</n-text>
-                        </n-space>
-                      </n-space>
+                    <n-space justify="space-between" v-if="stationDetails.schedule[0] && (stationDetails.schedule[0] as any).timingOffsetSeconds !== null">
+                      <n-text depth="3">Timing Offset:</n-text>
+                      <n-text>{{ (stationDetails.schedule[0] as any).timingOffsetSeconds }}s</n-text>
                     </n-space>
                   </n-space>
                 </n-space>
-                <n-text v-else depth="3">No DJ information available</n-text>
+                <n-text v-else depth="3">No schedule information available</n-text>
               </n-card>
             </div>
           </n-space>
@@ -173,14 +165,21 @@
                 >
                   <template #icon>
                     <YellowLed v-if="s.active" :active="s.active" :pulse="s.active" :size="16" />
-                    <YellowLed v-else-if="pastSchedule.includes(s)" :active="s.active" :size="14" />
-                    <GreenLed v-else :active="s.active" :size="14" />
+                    <YellowLed v-else-if="pastSchedule.includes(s)" :active="false" :size="14" />
+                    <GreenLed v-else-if="(s as any).status === 'PENDING'" :active="true" :size="14" />
+                    <GreenLed v-else :active="false" :size="14" />
                   </template>
 
                   <template #default>
                     <n-text style="font-weight: 500;">{{ s.sceneTitle }}</n-text>
                     <div style="margin-top: 4px; color: #9ca3af; font-size: 12px;">
-                      {{ s.playlistRequest?.sourcing }} ({{ s.songsCount }} songs)
+                      {{ (s as any).sourcing }} ({{ s.songsCount }} songs)
+                      <span v-if="(s as any).timingOffsetSeconds !== null" style="margin-left: 8px;">
+                        Offset: {{ (s as any).timingOffsetSeconds }}s
+                      </span>
+                    </div>
+                    <div v-if="(s as any).status" style="margin-top: 2px; color: #6b7280; font-size: 11px;">
+                      Status: {{ (s as any).status }}
                     </div>
                   </template>
                 </n-timeline-item>
