@@ -41,7 +41,7 @@
                 <PlayerStop />
               </n-icon>
             </template>
-            Stop Station
+            Stop
           </n-button>
         </n-space>
         <n-space size="large" style="margin-left: 30px;">
