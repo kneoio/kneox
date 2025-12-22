@@ -1,10 +1,3 @@
-.time-fixed {
-  display: inline-block;
-  width: 8ch;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
-}
 <template>
   <n-space vertical size="large" style="padding: 24px;">
     <n-card>
@@ -42,214 +35,159 @@
           <n-text depth="3" style="font-size: 12px; margin-left: 8px;">Updated: {{ lastUpdateTime }}</n-text>
         </n-space>
         <n-space >
-          <n-button-group>
-            <n-button type="primary"  :loading="isStartingStation" :disabled="isOnline"
-              @click="handleStart">
-              <template #icon>
-                <n-icon>
-                  <PlayerPlay />
-                </n-icon>
-              </template>
-              Start Station
-            </n-button>
-            <n-button type="error" :loading="isStoppingStation" :disabled="!(isOnline || stationDetails?.status === 'IDLE')" @click="handleStop">
-              <template #icon>
-                <n-icon>
-                  <PlayerStop />
-                </n-icon>
-              </template>
-              Stop Station
-            </n-button>
-          </n-button-group>
-          <n-space size="large" style="margin-left: 30px;">
-            <a :href="mixplaUrl" target="_blank" rel="noopener noreferrer" class="mixpla-link">
-              {{ mixplaUrl }}
-              <n-icon style="margin-left: 4px; vertical-align: middle;" size="14">
-                <ExternalLink />
+          <n-button type="error" :loading="isStoppingStation" :disabled="!(isOnline || stationDetails?.status === 'IDLE')" @click="handleStop">
+            <template #icon>
+              <n-icon>
+                <PlayerStop />
               </n-icon>
-            </a>
-          </n-space>
-          
+            </template>
+            Stop Station
+          </n-button>
+        </n-space>
+        <n-space size="large" style="margin-left: 30px;">
+          <a :href="mixplaUrl" target="_blank" rel="noopener noreferrer" class="mixpla-link">
+            {{ mixplaUrl }}
+            <n-icon style="margin-left: 4px; vertical-align: middle;" size="14">
+              <ExternalLink />
+            </n-icon>
+          </a>
         </n-space>
 
-        <n-tabs v-model:value="activeTab" type="line">
-          <n-tab-pane name="dashboard" tab="Dashboard">
-            <n-space vertical size="large">
-              <n-card title="Status History" size="small">
-                <n-timeline horizontal v-if=" statusHistoryTimeline.length > 0 ">
-                  <n-timeline-item v-for=" ( event, index ) in statusHistoryTimeline " :key="index"
-                    :type="getStatusTimelineType( event.status )" :title="formatStatus( event.status )"
-                    :content="formatTimestamp( event.timestamp ) + ( event.timeDiff ? ' (' + event.timeDiff + ')' : '' )">
-                    <template #icon>
-                      <GreenLed v-if="getStatusTimelineType(event.status) === 'success' && index === statusHistoryTimeline.length - 1" :active="true" :size="14" />
-                      <YellowLed v-else-if="getStatusTimelineType(event.status) === 'warning' && index === statusHistoryTimeline.length - 1" :active="true" :size="14" />
-                      <YellowLed v-else-if="getStatusTimelineType(event.status) === 'error' && index === statusHistoryTimeline.length - 1" :active="true" :size="14" />
-                      <GreenLed v-else :active="false" :size="14" />
-                    </template>
-                  </n-timeline-item>
-                </n-timeline>
-                <n-text depth="3" v-else>No status history available</n-text>
-              </n-card>
+        <n-space vertical size="large">
+          <n-card title="Status History" size="small">
+            <n-timeline horizontal v-if=" statusHistoryTimeline.length > 0 ">
+              <n-timeline-item v-for=" ( event, index ) in statusHistoryTimeline " :key="index"
+                :type="getStatusTimelineType( event.status )" :title="formatStatus( event.status )"
+                :content="formatTimestamp( event.timestamp ) + ( event.timeDiff ? ' (' + event.timeDiff + ')' : '' )">
+                <template #icon>
+                  <GreenLed v-if="getStatusTimelineType(event.status) === 'success' && index === statusHistoryTimeline.length - 1" :active="true" :size="14" />
+                  <YellowLed v-else-if="getStatusTimelineType(event.status) === 'warning' && index === statusHistoryTimeline.length - 1" :active="true" :size="14" />
+                  <YellowLed v-else-if="getStatusTimelineType(event.status) === 'error' && index === statusHistoryTimeline.length - 1" :active="true" :size="14" />
+                  <GreenLed v-else :active="false" :size="14" />
+                </template>
+              </n-timeline-item>
+            </n-timeline>
+            <n-text depth="3" v-else>No status history available</n-text>
+          </n-card>
 
-              <n-space size="medium" style="align-items: flex-start;">
-                <n-card title="Live Playlist" size="small" style="width: 400px; flex-shrink: 0;">
-                  <n-timeline v-if="combinedPlaylist.length > 0">
-                    <n-timeline-item
-                      v-for="(fragment, index) in combinedPlaylist"
-                      :key="index"
-                    >
-                      <template #icon>
-                        <GreenLed v-if="fragment.isPlayingNow" :active="true" :pulse="true" :size="14" />
-                        <YellowLed v-else-if="!fragment.isQueued" :active="true" :size="14" />
-                        <GreenLed v-else-if="fragment.isQueued" :active="true" :size="14" />
-                        <GreenLed v-else :active="false" :size="14" />
-                      </template>
-                      <template #default>
-                        <div style="max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500;">
-                          {{ formatArtistTitle(fragment) }}
-                        </div>
-                        <n-space size="small" align="center">
-                          <span v-if="fragment.isPlayingNow" class="playing-indicator" aria-label="Playing now">
-                            <svg viewBox="0 0 24 14" width="24" height="14" role="img">
-                              <rect class="bar b1" x="1" y="2" width="4" height="10" rx="1" />
-                              <rect class="bar b2" x="9" y="2" width="4" height="10" rx="1" />
-                              <rect class="bar b3" x="17" y="2" width="4" height="10" rx="1" />
-                            </svg>
-                          </span>
-                          <n-tag v-if="!fragment.isQueued" type="warning" size="small">
-                            Pending
-                          </n-tag>
-                          <n-tag v-if="fragment.isQueued" type="info" size="small">
-                            Queued
-                          </n-tag>
-                          <n-text v-if="fragment.duration" depth="3" style="font-size: 0.75rem;">
-                            {{ formatDuration(fragment.duration) }}
-                          </n-text>
-                          <n-tag v-if="getMergingTypeText(fragment).text" size="small" :type="getMergingTypeText(fragment).color">
-                            {{ getMergingTypeText(fragment).text }}
-                          </n-tag>
+          <n-space size="medium" style="align-items: flex-start;">
+            <n-card title="Live Playlist" size="small" style="width: 400px; flex-shrink: 0;">
+              <n-timeline v-if="combinedPlaylist.length > 0">
+                <n-timeline-item
+                  v-for="(fragment, index) in combinedPlaylist"
+                  :key="index"
+                >
+                  <template #icon>
+                    <GreenLed v-if="fragment.isPlayingNow" :active="true" :pulse="true" :size="14" />
+                    <YellowLed v-else-if="!fragment.isQueued" :active="true" :size="14" />
+                    <GreenLed v-else-if="fragment.isQueued" :active="true" :size="14" />
+                    <GreenLed v-else :active="false" :size="14" />
+                  </template>
+                  <template #default>
+                    <div style="max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500;">
+                      {{ formatArtistTitle(fragment) }}
+                    </div>
+                    <n-space size="small" align="center">
+                      <span v-if="fragment.isPlayingNow" class="playing-indicator" aria-label="Playing now">
+                        <svg viewBox="0 0 24 14" width="24" height="14" role="img">
+                          <rect class="bar b1" x="1" y="2" width="4" height="10" rx="1" />
+                          <rect class="bar b2" x="9" y="2" width="4" height="10" rx="1" />
+                          <rect class="bar b3" x="17" y="2" width="4" height="10" rx="1" />
+                        </svg>
+                      </span>
+                      <n-tag v-if="!fragment.isQueued" type="warning" size="small">
+                        Pending
+                      </n-tag>
+                      <n-tag v-if="fragment.isQueued" type="info" size="small">
+                        Queued
+                      </n-tag>
+                      <n-text v-if="fragment.duration" depth="3" style="font-size: 0.75rem;">
+                        {{ formatDuration(fragment.duration) }}
+                      </n-text>
+                      <n-tag v-if="getMergingTypeText(fragment).text" size="small" :type="getMergingTypeText(fragment).color">
+                        {{ getMergingTypeText(fragment).text }}
+                      </n-tag>
+                    </n-space>
+                  </template>
+                </n-timeline-item>
+              </n-timeline>
+              <n-text depth="3" v-else>No playlist items available.</n-text>
+            </n-card>
+
+            <div style="flex-shrink: 0; width: auto;">
+              <n-card size="small">
+                <template #header>
+                  <n-space justify="space-between" align="center">
+                    <span>
+                      DJ
+                      <span v-if="stationDetails?.aiDjStats?.djName"> - {{ stationDetails.aiDjStats.djName }}</span>
+                    </span>
+                    <n-tag v-if="isDjActive" type="info" size="small">Active</n-tag>
+                    <n-tag v-else-if="isDjOffline" type="error" size="small">DJ is offline</n-tag>
+                  </n-space>
+                </template>
+                <n-space vertical size="small" v-if="stationDetails?.aiDjStats">
+                  <n-space vertical size="small">
+                    <n-space justify="space-between">
+                      <n-text strong>Current Scene:</n-text>
+                      <n-text strong style="font-size: 18px;">{{ stationDetails.aiDjStats.currentSceneTitle }}</n-text>
+                    </n-space>
+                    <n-space justify="space-between" v-if="isDjActive">
+                      <n-text depth="3">Time:</n-text>
+                      <n-text>{{ formatTime(stationDetails.aiDjStats.sceneStartTime) }} - {{ formatTime(stationDetails.aiDjStats.sceneEndTime) }}</n-text>
+                    </n-space>
+                    <n-space justify="space-between">
+                      <n-text depth="3">Duration:</n-text>
+                      <n-text>{{ formatSceneDuration(stationDetails.aiDjStats.sceneStartTime, stationDetails.aiDjStats.sceneEndTime, stationDetails.aiDjStats.nextSceneTitle, stationDetails.aiDjStats.currentSceneTitle) }}</n-text>
+                    </n-space>
+                    <n-space justify="space-between">
+                      <n-text depth="3">Prompts:</n-text>
+                      <n-text>{{ stationDetails.aiDjStats.promptCount }}</n-text>
+                    </n-space>
+                    <n-space justify="space-between" v-if="isDjActive">
+                      <n-text depth="3">Next Scene:</n-text>
+                      <n-text>{{ stationDetails.aiDjStats.nextSceneTitle }}</n-text>
+                    </n-space>
+                    <n-space vertical v-if="stationDetails.aiDjStats.messages && stationDetails.aiDjStats.messages.length" size="small">
+                      <n-text strong>Messages:</n-text>
+                      <n-space vertical size="small">
+                        <n-space v-for="(m, idx) in stationDetails.aiDjStats.messages" :key="idx" align="center" justify="space-between">
+                          <n-tag :type="mapMessageType(m.type)" size="small" :bordered="false">{{ m.type }}</n-tag>
+                          <n-text>{{ m.message }}</n-text>
                         </n-space>
-                      </template>
-                    </n-timeline-item>
-                  </n-timeline>
-                  <n-text depth="3" v-else>No playlist items available.</n-text>
-                </n-card>
-
-                <n-card title="Listeners Today" size="small" style="flex: 1; min-width: 0;">
-                  <n-space vertical v-if="stationDetails?.listenersByCountry && stationDetails.listenersByCountry.length > 0" size="small">
-                    <n-space v-for="(c, idx) in stationDetails.listenersByCountry" :key="idx" justify="space-between" align="center">
-                      <n-text strong>{{ c.countryCode }}</n-text>
-                      <n-badge :value="c.accessCount" type="info" />
+                      </n-space>
                     </n-space>
                   </n-space>
-                  <n-text depth="3" v-else>No listener country stats</n-text>
-                </n-card>
-
-                <div style="flex-shrink: 0; width: auto;">
-                  <n-card size="small">
-                    <template #header>
-                      <n-space justify="space-between" align="center">
-                        <span>
-                          DJ
-                          <span v-if="stationDetails?.aiDjStats?.djName"> - {{ stationDetails.aiDjStats.djName }}</span>
-                        </span>
-                        <n-tag v-if="isDjActive" type="info" size="small">Active</n-tag>
-                        <n-tag v-else-if="isDjOffline" type="error" size="small">DJ is offline</n-tag>
-                      </n-space>
-                    </template>
-                    <n-space vertical size="small" v-if="stationDetails?.aiDjStats">
-                      <n-space vertical size="small">
-                        <n-space justify="space-between">
-                          <n-text strong>Current Scene:</n-text>
-                          <n-text strong style="font-size: 18px;">{{ stationDetails.aiDjStats.currentSceneTitle }}</n-text>
-                        </n-space>
-                        <n-space justify="space-between" v-if="isDjActive">
-                          <n-text depth="3">Time:</n-text>
-                          <n-text>{{ formatTime(stationDetails.aiDjStats.sceneStartTime) }} - {{ formatTime(stationDetails.aiDjStats.sceneEndTime) }}</n-text>
-                        </n-space>
-                        <n-space justify="space-between">
-                          <n-text depth="3">Duration:</n-text>
-                          <n-text>{{ formatSceneDuration(stationDetails.aiDjStats.sceneStartTime, stationDetails.aiDjStats.sceneEndTime, stationDetails.aiDjStats.nextSceneTitle, stationDetails.aiDjStats.currentSceneTitle) }}</n-text>
-                        </n-space>
-                        <n-space justify="space-between">
-                          <n-text depth="3">Prompts:</n-text>
-                          <n-text>{{ stationDetails.aiDjStats.promptCount }}</n-text>
-                        </n-space>
-                        <n-space justify="space-between" v-if="isDjActive">
-                          <n-text depth="3">Next Scene:</n-text>
-                          <n-text>{{ stationDetails.aiDjStats.nextSceneTitle }}</n-text>
-                        </n-space>
-                        <n-space vertical v-if="stationDetails.aiDjStats.messages && stationDetails.aiDjStats.messages.length" size="small">
-                          <n-text strong>Messages:</n-text>
-                          <n-space vertical size="small">
-                            <n-space v-for="(m, idx) in stationDetails.aiDjStats.messages" :key="idx" align="center" justify="space-between">
-                              <n-tag :type="mapMessageType(m.type)" size="small" :bordered="false">{{ m.type }}</n-tag>
-                              <n-text>{{ m.message }}</n-text>
-                            </n-space>
-                          </n-space>
-                        </n-space>
-                      </n-space>
-                    </n-space>
-                    <n-text v-else depth="3">No DJ information available</n-text>
-                  </n-card>
-                </div>
-
-                <div style="flex-shrink: 0; width: auto;">
-                  <n-card size="small" title="Scheduled Tasks">
-                    <n-space vertical size="small">
-                      <div v-if=" stationDetails?.runningTasks && stationDetails.runningTasks.length > 0 ">
-                        <n-space vertical size="small">
-                          <div v-for=" ( task, index ) in stationDetails.runningTasks " :key="index"
-                            style="padding: 8px; border: 1px solid var(--n-border-color); border-radius: 4px; font-size: 0.875rem;">
-                            <n-space vertical size="small">
-                              <n-space justify="space-between">
-                                <n-text strong>{{ formatTaskType( task.taskType ) }}</n-text>
-                                <n-tag size="small" type="info">{{ task.target }}</n-tag>
-                              </n-space>
-                              <n-space justify="space-between">
-                                <n-text depth="3">Started:</n-text>
-                                <n-text>{{ formatTimestamp( task.startTime ) }}</n-text>
-                              </n-space>
-                              <n-space justify="space-between">
-                                <n-text depth="3">Duration:</n-text>
-                                <n-text>{{ getTaskDuration( task.startTime ) }}</n-text>
-                              </n-space>
-                            </n-space>
-                          </div>
-                        </n-space>
-                      </div>
-                      <n-text depth="3" v-else>No running tasks</n-text>
-                    </n-space>
-                  </n-card>
-                </div>
-              </n-space>
-
-              <n-card title="Schedule" size="small" style="width: 100%;">
-                <div v-if="stationDetails?.schedule && stationDetails.schedule.length">
-                  <n-timeline>
-                    <n-timeline-item
-                      v-for="(s, index) in sortedSchedule"
-                      :key="index"
-                    >
-                      <template #icon>
-                        <YellowLed v-if="s.active" :active="s.active" :pulse="s.active" :size="16" />
-                        <YellowLed v-else-if="pastSchedule.includes(s)" :active="s.active" :size="14" />
-                        <GreenLed v-else :active="s.active" :size="14" />
-                      </template>
-
-                      <template #default>
-                        <n-text style="font-weight: 500;">{{ s.sceneTitle }}</n-text>
-                        <div style="margin-top: 4px; color: #9ca3af; font-size: 12px;">
-                          {{ s.playlistRequest?.sourcing }} ({{ s.songsCount }} songs)
-                        </div>
-                      </template>
-                    </n-timeline-item>
-                  </n-timeline>
-                </div>
+                </n-space>
+                <n-text v-else depth="3">No DJ information available</n-text>
               </n-card>
-            </n-space>
-          </n-tab-pane>
-        </n-tabs>
+            </div>
+          </n-space>
+
+          <n-card title="Schedule" size="small" style="width: 100%;">
+            <div v-if="stationDetails?.schedule && stationDetails.schedule.length">
+              <n-timeline>
+                <n-timeline-item
+                  v-for="(s, index) in sortedSchedule"
+                  :key="index"
+                >
+                  <template #icon>
+                    <YellowLed v-if="s.active" :active="s.active" :pulse="s.active" :size="16" />
+                    <YellowLed v-else-if="pastSchedule.includes(s)" :active="s.active" :size="14" />
+                    <GreenLed v-else :active="s.active" :size="14" />
+                  </template>
+
+                  <template #default>
+                    <n-text style="font-weight: 500;">{{ s.sceneTitle }}</n-text>
+                    <div style="margin-top: 4px; color: #9ca3af; font-size: 12px;">
+                      {{ s.playlistRequest?.sourcing }} ({{ s.songsCount }} songs)
+                    </div>
+                  </template>
+                </n-timeline-item>
+              </n-timeline>
+            </div>
+          </n-card>
+        </n-space>
       </n-space>
     </n-card>
   </n-space>
@@ -272,25 +210,22 @@ import {
   NTimelineItem,
   NMarquee,
   useMessage,
-  NButtonGroup,
-  NTabs,
-  NTabPane,
   NSelect,
   NScrollbar,
   NInput,
   NBadge
 } from 'naive-ui';
-import { ExternalLink, PlayerPlay, PlayerStop, Activity } from '@vicons/tabler';
+import { ExternalLink, PlayerStop, Activity } from '@vicons/tabler';
 import { MIXPLA_PLAYER_URL } from '../../../constants/config';
 import GreenLed from '../../common/GreenLed.vue';
 import YellowLed from '../../common/YellowLed.vue';
 
 export default defineComponent({
-  name: 'StationDashboard',
+  name: 'StreamDashboard',
   components: {
     NButton, NCard, NIcon, NTag, NStatistic, NProgress, NSpace, NH2, NText,
-    NTimeline, NTimelineItem, NButtonGroup,
-    NMarquee, NTabs, NTabPane, NSelect, NScrollbar, NInput, NBadge, PlayerPlay, PlayerStop, ExternalLink, Activity,
+    NTimeline, NTimelineItem,
+    NMarquee, NSelect, NScrollbar, NInput, NBadge, PlayerStop, ExternalLink, Activity,
     GreenLed,
     YellowLed
   },
@@ -303,7 +238,6 @@ export default defineComponent({
   setup(props: { brandName: string }) {
     const dashboardStore = useDashboardStore();
     const message = useMessage();
-    const isStartingStation = ref(false);
     const isStoppingStation = ref(false);
     const now = ref(new Date());
 
@@ -311,8 +245,6 @@ export default defineComponent({
       await navigator.clipboard.writeText(props.brandName);
       message.success('Copied');
     };
-
-    const activeTab = ref<'dashboard'>('dashboard');
 
     const stationDetails = computed(() => {
       return dashboardStore.getStationDetails(props.brandName);
@@ -446,18 +378,13 @@ export default defineComponent({
       const status = stationDetails.value?.status;
       switch (status) {
         case 'ON_LINE':
-          return '#18a058';
-        case 'QUEUE_SATURATED':
-          return '#18a058';
+          return '#52c41a';
         case 'WARMING_UP':
-          return '#f0a020';
-        case 'IDLE':
-          return '#d03050';
-        case 'SYSTEM_ERROR':
-          return '#d03050';
+          return '#faad14';
         case 'OFF_LINE':
+          return '#ff4d4f';
         default:
-          return '#606266';
+          return '#d9d9d9';
       }
     });
 
@@ -466,17 +393,18 @@ export default defineComponent({
       switch (status) {
         case 'ON_LINE':
           return { text: 'Online', type: 'success' as const };
-        case 'QUEUE_SATURATED':
-          return { text: 'Queue Saturated', type: 'success' as const };
         case 'WARMING_UP':
           return { text: 'Warming Up', type: 'warning' as const };
+        case 'OFF_LINE':
+          return { text: 'Offline', type: 'error' as const };
         case 'IDLE':
-          return { text: 'Idle', type: 'warning' as const };
+          return { text: 'Idle', type: 'default' as const };
+        case 'QUEUE_SATURATED':
+          return { text: 'Queue Saturated', type: 'warning' as const };
         case 'SYSTEM_ERROR':
           return { text: 'System Error', type: 'error' as const };
-        case 'OFF_LINE':
         default:
-          return { text: 'Offline', type: 'default' as const };
+          return { text: 'Unknown', type: 'default' as const };
       }
     });
 
@@ -488,7 +416,7 @@ export default defineComponent({
         case 'ITSELF':
           return { text: 'Self-managed', type: 'default' as const };
         default:
-          return { text: managedBy || 'Unknown', type: 'default' as const };
+          return { text: 'System Error', type: 'error' as const };
       }
     });
 
@@ -624,16 +552,6 @@ export default defineComponent({
       }
     };
 
-    const handleStart = async () => {
-      if (isStartingStation.value) return;
-      isStartingStation.value = true;
-      try {
-        await sendCommand(props.brandName, 'start');
-      } finally {
-        isStartingStation.value = false;
-      }
-    };
-
     const handleStop = async () => {
       if (isStoppingStation.value) return;
       isStoppingStation.value = true;
@@ -693,27 +611,6 @@ export default defineComponent({
     const formatTimestamp = (timestamp: string): string => {
       const date = new Date(timestamp);
       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    };
-
-    const formatTaskType = (taskType: string): string => {
-      return taskType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-    };
-
-    const getTaskDuration = (startTime: string): string => {
-      const start = new Date(startTime);
-      const now = new Date();
-      const diffMs = now.getTime() - start.getTime();
-      const hours = Math.floor(diffMs / (1000 * 60 * 60));
-      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
-
-      if (hours > 0) {
-        return `${hours}h ${minutes}m ${seconds}s`;
-      } else if (minutes > 0) {
-        return `${minutes}m ${seconds}s`;
-      } else {
-        return `${seconds}s`;
-      }
     };
 
     const formatStatus = (status: string | null | undefined): string => {
@@ -832,7 +729,7 @@ export default defineComponent({
     };
 
     onMounted(() => {
-      console.log('StationDetail mounted for brand:', props.brandName);
+      console.log('StreamDashboard mounted for brand:', props.brandName);
       dashboardStore.startStationPolling(props.brandName);
     });
 
@@ -848,7 +745,7 @@ export default defineComponent({
     });
 
     onUnmounted(() => {
-      console.log('StationDetail unmounted for brand:', props.brandName);
+      console.log('StreamDashboard unmounted for brand:', props.brandName);
       isDestroyed.value = true;
       dashboardStore.stopStationPolling(props.brandName);
       dashboardStore.disconnectStation(props.brandName);
@@ -856,7 +753,6 @@ export default defineComponent({
 
     return {
       dashboardStore,
-      isStartingStation,
       isStoppingStation,
       isOnline,
       isDjActive,
@@ -876,13 +772,10 @@ export default defineComponent({
       getStatusTimelineType,
       formatStatus,
       formatTimestamp,
-      formatTaskType,
-      getTaskDuration,
       getPlaylistItemType,
       getPlaylistItemColor,
       formatArtistTitle,
       stationDetails,
-      handleStart,
       handleStop,
       formatDuration,
       formatTime,
@@ -893,7 +786,6 @@ export default defineComponent({
       getMergingTypeText,
       formattedTime,
       timeWithDot,
-      activeTab,
       copyBrandNameToClipboard,
       sortedSchedule,
       scheduleItemId,
@@ -1030,5 +922,13 @@ export default defineComponent({
   justify-content: space-between;
   align-items: center;
   gap: 10px;
+}
+
+.time-fixed {
+  display: inline-block;
+  width: 8ch;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
 }
 </style>

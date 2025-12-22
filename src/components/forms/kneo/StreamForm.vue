@@ -240,10 +240,6 @@
           </n-form>
         </n-tab-pane>
 
-        <n-tab-pane name="dashboard" tab="Dashboard">
-          <StationDashboard v-if="activeTab === 'dashboard' && localFormData.slugName" :brandName="localFormData.slugName" />
-        </n-tab-pane>
-
       </n-tabs>
     </n-gi>
   </n-grid>
@@ -286,6 +282,7 @@ import { html } from '@codemirror/lang-html';
 import { EditorView } from '@codemirror/view';
 import CodeMirror from 'vue-codemirror6';
 import apiClient from '../../../api/apiClient';
+import StreamDashboard from './StreamDashboard.vue';
 import {
   RadioStation,
   BrandStatus,
@@ -301,7 +298,7 @@ import { useScriptStore } from "../../../stores/kneo/scriptStore";
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 import { handleFormSaveError, getErrorMessage } from '../../../utils/errorHandling';
 import AclTable from '../../common/AclTable.vue';
-import StationDashboard from './StationDashboard.vue';
+import { useMessage } from "naive-ui";
 
 export default defineComponent( {
   name: "StreamForm",
@@ -333,7 +330,7 @@ export default defineComponent( {
     Copy,
     CodeMirror,
     AclTable,
-    StationDashboard,
+    StreamDashboard,
   },
   setup() {
     const loadingBar = useLoadingBar();
