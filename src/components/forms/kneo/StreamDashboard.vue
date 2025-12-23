@@ -178,8 +178,21 @@
                         Offset: {{ (s as any).timingOffsetSeconds }}s
                       </span>
                     </div>
-                    <div v-if="(s as any).status" style="margin-top: 2px; color: #6b7280; font-size: 11px;">
-                      Status: {{ (s as any).status }}
+                    <div style="margin-top: 6px; display: flex; align-items: center; gap: 8px;">
+                      <div style="display: flex; gap: 2px;">
+                        <BlueLed 
+                          v-for="i in (s as any).songsCount" 
+                          :key="i"
+                          :active="i <= (s as any).fetchedSongsCount"
+                          :size="12"
+                        />
+                      </div>
+                      <span style="font-size: 11px; color: #6b7280;">
+                        {{ (s as any).fetchedSongsCount }}/{{ (s as any).songsCount }} queued
+                      </span>
+                      <span v-if="(s as any).status" style="font-size: 11px; color: #6b7280;">
+                        {{ (s as any).status }}
+                      </span>
                     </div>
                   </template>
                 </n-timeline-item>
@@ -218,6 +231,7 @@ import { ExternalLink, PlayerStop, Activity } from '@vicons/tabler';
 import { MIXPLA_PLAYER_URL } from '../../../constants/config';
 import GreenLed from '../../common/GreenLed.vue';
 import YellowLed from '../../common/YellowLed.vue';
+import BlueLed from '../../common/BlueLed.vue';
 
 export default defineComponent({
   name: 'StreamDashboard',
@@ -226,7 +240,8 @@ export default defineComponent({
     NTimeline, NTimelineItem,
     NMarquee, NSelect, NScrollbar, NInput, NBadge, PlayerStop, ExternalLink, Activity,
     GreenLed,
-    YellowLed
+    YellowLed,
+    BlueLed
   },
   props: {
     brandName: {
