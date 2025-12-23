@@ -79,24 +79,24 @@
     <n-modal v-model:show="showResultDialog" preset="dialog" title="Stream Started Successfully">
       <n-space vertical size="large">
         <n-space vertical size="small">
-          <n-text strong>HLS URL</n-text>
+          <n-text strong type="success">Mixpla Player URL</n-text>
           <n-space align="center">
-            <n-text>
-              <a :href="streamResult?.hlsUrl" target="_blank">{{ streamResult?.hlsUrl }}</a>
+            <n-text type="success">
+              <a :href="streamResult?.mixplaUrl" target="_blank">{{ streamResult?.mixplaUrl }}</a>
             </n-text>
-            <n-button size="small" @click="copyToClipboard(streamResult?.hlsUrl, 'HLS URL')">
+            <n-button size="small" type="primary" @click="copyToClipboard(streamResult?.mixplaUrl, 'Mixpla URL')">
               Copy
             </n-button>
           </n-space>
         </n-space>
 
         <n-space vertical size="small">
-          <n-text strong>Mixpla Player URL</n-text>
+          <n-text strong>HLS URL</n-text>
           <n-space align="center">
             <n-text>
-              <a :href="streamResult?.mixplaUrl" target="_blank">{{ streamResult?.mixplaUrl }}</a>
+              <a :href="streamResult?.hlsUrl" target="_blank">{{ streamResult?.hlsUrl }}</a>
             </n-text>
-            <n-button size="small" @click="copyToClipboard(streamResult?.mixplaUrl, 'Mixpla URL')">
+            <n-button size="small" @click="copyToClipboard(streamResult?.hlsUrl, 'HLS URL')">
               Copy
             </n-button>
           </n-space>
