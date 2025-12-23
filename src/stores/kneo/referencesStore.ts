@@ -162,6 +162,17 @@ export const useReferencesStore = defineStore('references', () => {
     }
   };
 
+  const fetchStation = async (brand: string) => {
+    try {
+      const baseWithoutApi = apiServer.replace(/\/api\/?$/, '');
+      const response = await unsecuredClient.get(`${baseWithoutApi}/radio/all-stations/${brand}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching station:', error);
+      throw error;
+    }
+  };
+
   const fetchRadioStations = async (online?: boolean) => {
     try {
       // Build absolute URL without trailing /api to avoid /api prefix for this endpoint
@@ -349,6 +360,7 @@ export const useReferencesStore = defineStore('references', () => {
     fetchLabelsByCategory,
     fetchVoices,
     fetchDictionary,
+    fetchStation,
     fetchRadioStations
   };
 });

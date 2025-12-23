@@ -72,6 +72,42 @@ export const useSubmissionStore = defineStore( 'submissionStore', () => {
     }
   }
 
+  async function fetchSharedScripts(): Promise<any[]> {
+    const url = `${publicApiRoot}/radio/shared-scripts`
+    console.debug( '[submissionStore.fetchSharedScripts] GET', url )
+    try {
+      const res = await unsecuredClient.get( url )
+      console.debug( '[submissionStore.fetchSharedScripts] OK', res.status )
+      return res.data as any[]
+    } catch ( err: any ) {
+      console.error( '[submissionStore.fetchSharedScripts] FAIL', url, err?.response?.status, err?.response?.data || err?.message )
+      throw err
+    }
+  }
+
+  async function runStream(data: {
+    scriptId: string
+    baseBrandId?: string
+    slugName: string
+    userVariables: Record<string, any>
+  }): Promise<any> {
+    const url = `${publicApiRoot}/radio/run-stream`
+    console.debug( '[submissionStore.runStream] POST', url, {
+      scriptId: data.scriptId,
+      baseBrandId: data.baseBrandId,
+      slugName: data.slugName,
+      variablesCount: Object.keys(data.userVariables).length
+    })
+    try {
+      const res = await unsecuredClient.post( url, data )
+      console.debug( '[submissionStore.runStream] OK', res.status )
+      return res.data
+    } catch ( err: any ) {
+      console.error( '[submissionStore.runStream] FAIL', url, err?.response?.status, err?.response?.data || err?.message )
+      throw err
+    }
+  }
+
   async function submit(slug: string, data: SubmissionPayload ): Promise<void> {
     const url = `${publicApiRoot}/radio/${encodeURIComponent(slug)}/submissions`
     console.debug( '[submissionStore.submit] POST', url, {
@@ -160,6 +196,8 @@ export const useSubmissionStore = defineStore( 'submissionStore', () => {
     startUploadSession,
     uploadFile,
     getStation,
-    postMessage
+    postMessage,
+    fetchSharedScripts,
+    runStream
   }
 } );

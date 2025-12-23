@@ -274,16 +274,17 @@ export default defineComponent({
           render: (row: RadioStation) => renderFlags(row)
         },
         {
-          title: 'Slug name',
+          title: 'Name',
           key: 'slugName',
           render: (row: RadioStation) => {
-            return h(NTag, {
-              bordered: true,
-              color: row.color ? {  textColor: '#555', borderColor: row.color } : { textColor: '#555', borderColor: '#BBB' }
-            }, { default: () => row.slugName });
+            const displayName = row.localizedName?.en;
+            const subtitle = row.slugName;
+            return h('div', {}, [
+              h('div', { style: 'font-weight: bold;' }, displayName || subtitle),
+              displayName && h('div', { style: 'font-size: 0.75rem; color: #666;' }, subtitle)
+            ]);
           }
         },
-        {title: 'Country', key: 'country'},
         {
           title: 'Timezone',
           key: 'timeZone',
@@ -300,7 +301,6 @@ export default defineComponent({
             ]);
           }
         },
-        {title: 'Managed By', key: 'managedBy'},
         {
           title: 'Bit Rate',
           key: 'bitRate',
@@ -353,12 +353,12 @@ export default defineComponent({
             title: 'Station',
             key: 'combined',
             render: (row: RadioStation) => {
+              const displayName = row.localizedName?.en;
+              const subtitle = row.slugName;
               return h('div', {}, [
-                h('div', { style: 'font-weight: bold;' }, row.slugName),
+                h('div', { style: 'font-weight: bold;' }, displayName || subtitle),
+                displayName && h('div', { style: 'font-size: 0.75rem; color: #666;' }, subtitle),
                 renderFlags(row),
-                h('div', {
-                  style: 'font-size: 0.8rem; color: #666;'
-                }, `Managed by: ${row.managedBy}`),
                 h('div', {
                   style: 'cursor: pointer; font-size: 0.8rem;',
                   onClick: (e: MouseEvent) => {

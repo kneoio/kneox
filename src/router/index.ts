@@ -33,6 +33,7 @@ import Profile from '../components/lists/kneo/Profile.vue';
 import Welcome from '../views/Welcome.vue';
 import AboutM from '../views/AboutM.vue';
 import SubmitSongM from '../views/SubmitSongM.vue';
+import CreateOneTimeStreamM from '../views/CreateOneTimeStreamM.vue';
 import Chat from '../views/Chat.vue';
 import StationPage from '../views/StationPage.vue';
 import Keycloak from "keycloak-js";
@@ -60,6 +61,12 @@ const routes: Array<RouteRecordRaw> = [
         path: '/submit-song',
         name: 'SubmitSong',
         component: SubmitSongM,
+        meta: { requiresAuth: false }
+    },
+    {
+        path: '/create-stream',
+        name: 'CreateOneTimeStream',
+        component: CreateOneTimeStreamM,
         meta: { requiresAuth: false }
     },
     {

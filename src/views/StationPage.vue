@@ -68,6 +68,12 @@
                       {{ statusText(station.currentStatus) }}
                     </span>
                   </n-space>
+                  <n-space v-if="station.djName" align="center">
+                    <n-text depth="3">DJ:</n-text>
+                    <n-text style="font-weight: 400; font-size: 14px;">
+                      {{ station.djName }}
+                    </n-text>
+                  </n-space>
                 </n-space>
               </n-card>
 
@@ -143,6 +149,30 @@
                     </n-space>
                   </n-card>
                 </n-grid-item>
+
+                <n-grid-item v-if="station.oneTimeStreamPolicy === 'NO_RESTRICTIONS'">
+                  <n-card 
+                    class="station-action-card"
+                    :class="{ 'is-dimmed': hoveredAction && hoveredAction !== 'stream' }"
+                    :segmented="{ content: true }" 
+                    content-style="padding: 16px;"
+                    @click="goToCreateOneTimeStream"
+                    @mouseenter="hoveredAction = 'stream'"
+                    @mouseleave="hoveredAction = null"
+                    :style="{
+                      cursor: 'pointer',
+                      height: '100%',
+                      '--station-color': station.color
+                    }"
+                  >
+                    <n-space vertical align="center" justify="center" size="small">
+                      <n-icon size="32" color="#666666">
+                        <Radio />
+                      </n-icon>
+                      <n-text strong>Create Stream</n-text>
+                    </n-space>
+                  </n-card>
+                </n-grid-item>
               </n-grid>
             </n-space>
           </template>
@@ -172,7 +202,7 @@ import {
   NThing,
   darkTheme
 } from 'naive-ui'
-import { ArrowLeft, Alien, MessageCircle, Music, PlayerPlay } from '@vicons/tabler'
+import { ArrowLeft, Alien, MessageCircle, Music, PlayerPlay, Radio } from '@vicons/tabler'
 import { useReferencesStore } from '../stores/kneo/referencesStore'
 import { MIXPLA_PLAYER_URL } from '../constants/config'
 import GlowLine from '../components/common/GlowLine.vue'
@@ -185,7 +215,14 @@ interface Station {
   currentStatus?: 'ON_LINE' | 'OFF_LINE' | 'WARMING_UP' | 'IDLE';
   submissionPolicy?: 'NO_RESTRICTIONS' | 'REVIEW_REQUIRED' | 'NOT_ALLOWED';
   messagingPolicy?: 'NO_RESTRICTIONS' | 'REVIEW_REQUIRED' | 'NOT_ALLOWED';
+  oneTimeStreamPolicy?: 'NO_RESTRICTIONS' | 'REVIEW_REQUIRED' | 'NOT_ALLOWED';
   availableSongs?: number | null;
+  managedBy?: string;
+  djName?: string;
+  djPreferredLang?: string;
+  djStatus?: string;
+  countryCode?: string;
+  animation?: any;
 }
 
 const route = useRoute()
@@ -218,6 +255,10 @@ function goToSubmitSong() {
   router.push({ name: 'SubmitSong', query: { brand: brandSlug.value } })
 }
 
+function goToCreateOneTimeStream() {
+  router.push({ name: 'CreateOneTimeStream', query: { brand: brandSlug.value } })
+}
+
 function openPlayer() {
   const url = `${MIXPLA_PLAYER_URL}?radio=${encodeURIComponent(brandSlug.value.toLowerCase())}`
   window.open(url, '_blank', 'noopener,noreferrer')
@@ -226,8 +267,7 @@ function openPlayer() {
 async function fetchStation() {
   try {
     loading.value = true
-    const stations = await referencesStore.fetchRadioStations()
-    station.value = stations.find((s: Station) => s.slugName.toLowerCase() === brandSlug.value.toLowerCase()) || null
+    station.value = await referencesStore.fetchStation(brandSlug.value)
     error.value = null
   } catch (e) {
     error.value = e
