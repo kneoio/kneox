@@ -20,6 +20,7 @@
     </n-gi>
     <n-gi class="mt-2" span="6">
       <n-button-group>
+        <n-button type="primary" @click="handleSave" size="large">Save</n-button>
         <n-button type="default" @click="handleBuildPlan" :loading="planBuildLoading" size="large">{{ planSchedule ? 'Re-build plan' : 'Build plan' }}</n-button>
         <n-button type="warning" @click="handleRunPlan" :disabled="!canRunPlan" :loading="planRunLoading" size="large">Run</n-button>
       </n-button-group>
@@ -31,7 +32,7 @@
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
               <n-gi>
                 <n-form-item label="Source brand">
-                  <n-select v-model:value="planStationId" :options="stationOptions" filterable style="width: 50%; max-width: 600px;" />
+                  <n-select v-model:value="baseBrandId" :options="stationOptions" filterable style="width: 50%; max-width: 600px;" />
                 </n-form-item>
               </n-gi>
 
@@ -177,59 +178,6 @@
           </n-form>
         </n-tab-pane>
 
-        <n-tab-pane name="emceeing" tab="Emceeing">
-          <div style="padding: 12px; width: 50%; max-width: 600px;">
-            <div v-if="planSchedule">
-              <div style="color: #9ca3af; font-size: 12px; margin-bottom: 12px;">
-                Created: {{ fmtIsoMin(planSchedule.createdAt) }}
-                <span style="margin-left: 12px;">Estimated end: {{ fmtIsoMin(planSchedule.estimatedEndTime) }}</span>
-                <span style="margin-left: 12px;">Scenes: {{ planSchedule.totalScenes }}</span>
-                <span style="margin-left: 12px;">Songs: {{ planSchedule.totalSongs }}</span>
-              </div>
-
-              <div v-for="scene in planSchedule.scenes" :key="scene.sceneId"
-                style="border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; padding: 12px; margin-bottom: 12px; background: rgba(255, 255, 255, 0.04);">
-                <div style="display: flex; justify-content: space-between; gap: 12px; align-items: baseline;">
-                  <div style="font-weight: 600; color: #e5e7eb;">
-                    {{ scene.sceneTitle }}
-                  </div>
-                  <div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; color: #9ca3af; font-size: 12px;">
-                    {{ fmtHm(scene.scheduledStartTime) }} - {{ fmtHm(scene.scheduledEndTime) }} ({{ fmtMin(scene.durationSeconds) }})
-                  </div>
-                </div>
-
-                <div style="margin-top: 6px; color: #9ca3af; font-size: 12px;">
-                  Sourcing: {{ scene.playlistRequest?.sourcing }}
-                  <span style="margin-left: 12px;">Playlist: {{ scene.playlistRequest?.playlistTitle }}</span>
-                  <span style="margin-left: 12px;">Artist: {{ scene.playlistRequest?.artist }}</span>
-                  <span style="margin-left: 12px;">Search: {{ scene.playlistRequest?.searchTerm }}</span>
-                </div>
-
-                <div style="margin-top: 10px;">
-                  <div v-for="song in scene.songs" :key="song.id"
-                    style="display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid rgba(255, 255, 255, 0.08);">
-                    <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
-                      <div style="color: #9ca3af; font-size: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">
-                        {{ fmtHm(song.scheduledStartTime) }} ({{ fmtMin(song.estimatedDurationSeconds) }})
-                      </div>
-                      <div style="color: #e5e7eb; font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                        {{ song.title }}
-                      </div>
-                      <div style="color: #9ca3af; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                        {{ song.artist }}
-                      </div>
-                    </div>
-                    <div style="color: #9ca3af; font-size: 12px; white-space: nowrap;">
-                      Played: {{ song.played }}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <n-text v-else depth="3">Build plan to see emceeing schedule</n-text>
-          </div>
-        </n-tab-pane>
-
         <n-tab-pane name="dashboard" tab="Dashboard">
           <StreamDashboard v-if="localFormData.slugName" :brand-name="localFormData.slugName" />
         </n-tab-pane>
@@ -358,7 +306,7 @@ export default defineComponent( {
     const planSchedule = computed(() => localPlanSchedule.value || (store.getCurrent as any)?.streamSchedule || null);
     const planBuildLoading = ref(false);
     const planRunLoading = ref(false);
-    const planStationId = ref<string | null>(null);
+    const baseBrandId = ref<string | null>(null);
     const isInitialLoad = ref(true);
 
     const toBool = (v: any): boolean => {
@@ -474,30 +422,35 @@ export default defineComponent( {
       return nextVars;
     };
 
-    const hydrateUserVariablesFromDoc = (doc: any) => {
+    const hydrateUserVariablesFromDoc = async (doc: any) => {
       const docUserVariables = doc?.userVariables;
-      let scriptUserVariables: any = undefined;
       let scriptId: any = undefined;
 
       if (doc?.scripts && Array.isArray(doc.scripts) && doc.scripts.length > 0) {
         const firstScript = doc.scripts[0];
         if (typeof firstScript === 'object' && firstScript.scriptId) {
           scriptId = firstScript.scriptId;
-          scriptUserVariables = firstScript.userVariables;
         } else {
           scriptId = firstScript;
         }
       }
 
-      const mergedUserVariables: Record<string, any> = {
-        ...(docUserVariables && typeof docUserVariables === 'object' ? docUserVariables : {}),
-        ...(scriptUserVariables && typeof scriptUserVariables === 'object' ? scriptUserVariables : {})
-      };
-
       if (scriptId) {
         (localFormData as any).scriptId = scriptId;
       }
-      userVariables.value = ensureUserVariableDefaults(selectedScript.value, mergedUserVariables);
+      
+      // Use root level userVariables directly and ensure defaults
+      if (docUserVariables && typeof docUserVariables === 'object') {
+        let script = scriptStore.getEntries.find(s => s.id === scriptId);
+        
+        // If script doesn't have requiredVariables, fetch full script details
+        if (script && !script.requiredVariables) {
+          await scriptStore.fetch(scriptId);
+          script = scriptStore.getCurrent;
+        }
+        
+                userVariables.value = ensureUserVariableDefaults(script, docUserVariables);
+      }
     };
 
     watch( selectedScript, ( newScript, oldScript ) => {
@@ -561,15 +514,15 @@ export default defineComponent( {
     });
 
     const canBuildPlan = computed(() => {
-      return !!planStationId.value && !!localFormData.scriptId;
+      return !!baseBrandId.value && !!localFormData.scriptId;
     });
 
     const canRunPlan = computed(() => {
-      return !!planStationId.value && !!localFormData.scriptId && !!planSchedule.value;
+      return !!baseBrandId.value && !!localFormData.scriptId && !!planSchedule.value;
     });
 
     const validatePlanInputs = (): boolean => {
-      if (!planStationId.value) {
+      if (!baseBrandId.value) {
         message.error('Source brand is required');
         return false;
       }
@@ -607,7 +560,7 @@ export default defineComponent( {
       if (!validatePlanInputs()) return;
       try {
         planBuildLoading.value = true;
-        const response = await apiClient.post('/streams/schedule', { baseBrandId: planStationId.value, scriptId: localFormData.scriptId });
+        const response = await apiClient.post('/streams/schedule', { baseBrandId: baseBrandId.value, scriptId: localFormData.scriptId });
         localPlanSchedule.value = response.data.payload.docData;
       } catch (e) {
         message.error('Failed to build plan');
@@ -625,7 +578,7 @@ export default defineComponent( {
       try {
         planRunLoading.value = true;
         const response = await apiClient.post('/streams/run', {
-          baseBrandId: planStationId.value,
+          baseBrandId: baseBrandId.value,
           scriptId: localFormData.scriptId,
           aiAgentId: localFormData.aiAgentId,
           profileId: localFormData.profileId,
@@ -633,18 +586,11 @@ export default defineComponent( {
           schedule: planSchedule.value
         });
         const returned = response.data.payload.docData;
-        if (returned.streamSchedule) {
-          localPlanSchedule.value = returned.streamSchedule;
-        }
-        store.updateCurrent(returned);
-
-        await nextTick();
-
+        message.success('Stream started successfully');
+        
         if ( returned.id && returned.id !== route.params.id ) {
           skipNextRouteLoad.value = true;
           await router.replace( { name: 'Stream', params: { id: returned.id } } );
-        } else {
-          await loadFormData();
         }
       } catch (e) {
         message.error('Failed to run');
@@ -653,7 +599,7 @@ export default defineComponent( {
       }
     };
 
-    watch(planStationId, (newStationId, oldStationId) => {
+    watch(baseBrandId, (newStationId, oldStationId) => {
       if (isInitialLoad.value) return;
       if (oldStationId) {
         localPlanSchedule.value = null;
@@ -792,7 +738,10 @@ export default defineComponent( {
           messagingPolicy: localFormData.messagingPolicy,
           aiOverriding: aiOverrideEnabled.value ? localFormData.aiOverriding : undefined,
           profileOverriding: profileOverrideEnabled.value ? localFormData.profileOverriding : undefined,
-          scripts: localFormData.scriptId ? [{ scriptId: localFormData.scriptId, userVariables: userVariables.value }] : undefined
+          baseBrandId: baseBrandId.value,
+          userVariables: userVariables.value,
+          streamSchedule: planSchedule.value,
+          scripts: localFormData.scriptId ? [{ scriptId: localFormData.scriptId }] : undefined
         };
 
         await store.save( saveDTO, localFormData.id as string );
@@ -824,7 +773,7 @@ export default defineComponent( {
         const currentData = store.getCurrent;
         Object.assign(localFormData, currentData);
         if ((currentData as any).baseBrandId) {
-          planStationId.value = (currentData as any).baseBrandId;
+          baseBrandId.value = (currentData as any).baseBrandId;
         }
 
         // Ensure aiAgentId and profileId are preserved from server data
@@ -853,7 +802,8 @@ export default defineComponent( {
         }
         normalizeNumericFields();
 
-        hydrateUserVariablesFromDoc(currentData);
+        await nextTick();
+        await hydrateUserVariablesFromDoc(currentData);
 
         if ( localFormData.localizedName ) {
           localizedNameArray.value = Object.entries( localFormData.localizedName ).map( ( [language, name] ) => ( {
@@ -902,7 +852,7 @@ export default defineComponent( {
       planBuildLoading,
       planRunLoading,
       planSchedule,
-      planStationId,
+      baseBrandId,
       stationOptions,
       planHeaderText,
       planStages,
