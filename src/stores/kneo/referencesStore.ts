@@ -140,7 +140,7 @@ export const useReferencesStore = defineStore('references', () => {
   };
 
   const fetchLabelsByCategory = async (category: string) => {
-    const response = await apiClient.get(`/labels/only/category/${encodeURIComponent(category)}`);
+    const response = await apiClient.get(`/labels/only/category/${category}`);
     if (!response?.data?.payload) throw new Error('Invalid API response');
 
     return response.data.payload.viewData.entries
