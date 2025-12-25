@@ -117,7 +117,8 @@ import {
   BuildingSkyscraper,
   Fall,
   ToiletPaper,
-  Gauge
+  Gauge,
+  Folder
 } from '@vicons/tabler';
 import { LayersLinked } from '@vicons/tabler';
 import {useRadioStationStore} from "../stores/kneo/radioStationStore";
@@ -313,6 +314,11 @@ export default defineComponent({
 
       const remainingOptions: MenuOption[] = [
         {
+          label: 'Documents',
+          key: 'document-tree',
+          icon: () => h(Folder)
+        },
+        {
           label: 'Listeners',
           key: 'listeners',
           icon: () => h(Headphones)
@@ -400,6 +406,7 @@ export default defineComponent({
       if (route.name === 'Drafts') return 'drafts';
       if (route.name === 'EnvironmentProfiles') return 'environment_profiles';
       if (route.name === 'Listeners') return 'listeners';
+      if (route.name === 'DocumentTree') return 'document-tree';
       if (route.name === 'Profile') return 'profile';
 
       // Fix: Change 'StationDetail' to 'StationDashboard'
@@ -477,6 +484,8 @@ export default defineComponent({
         await router.push({name: 'Drafts'});
       } else if (key === 'environment_profiles') {
         await router.push({name: 'EnvironmentProfiles'});
+      } else if (key === 'document-tree') {
+        await router.push({name: 'DocumentTree'});
       }
 
       await nextTick();

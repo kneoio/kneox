@@ -30,6 +30,7 @@ import ProfileForm from '../components/forms/kneo/EnvironmentProfileForm.vue';
 import Events from '../components/lists/kneo/Events.vue';
 import EventForm from '../components/forms/kneo/EventForm.vue';
 import Profile from '../components/lists/kneo/Profile.vue';
+import DocumentTree from '../views/DocumentTree.vue';
 import Welcome from '../views/Welcome.vue';
 import AboutM from '../views/AboutM.vue';
 import SubmitSongM from '../views/SubmitSongM.vue';
@@ -262,6 +263,11 @@ const routes: Array<RouteRecordRaw> = [
                 path: 'profile',
                 name: 'Profile',
                 component: Profile
+            },
+            {
+                path: 'document-tree',
+                name: 'DocumentTree',
+                component: DocumentTree
             },
         ]
     },
