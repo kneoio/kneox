@@ -18,6 +18,7 @@
         <n-button type="primary" @click="handleSave" size="large">Save</n-button>
         <n-button type="default" @click="openTestDialog" size="large">Test</n-button>
         <n-button type="default" :disabled="!localFormData.master" @click="handleReplicateClick" size="large">Replicate</n-button>
+        <n-button type="default" @click="handleReset" size="large">Reset</n-button>
       </n-button-group>
     </n-gi>
 
@@ -479,6 +480,29 @@ export default defineComponent({
       }
     };
 
+    const handleReset = () => {
+      Object.assign(localFormData, {
+        id: '',
+        author: '',
+        regDate: '',
+        lastModifier: '',
+        lastModifiedDate: '',
+        title: '',
+        description: '',
+        enabled: false,
+        prompt: '',
+        promptType: PromptType.SONG,
+        languageCode: '',
+        master: false,
+        locked: false,
+        podcast: false,
+        version: undefined as unknown as number | undefined
+      });
+      selectedMasterId.value = null;
+      selectedDraftId.value = null;
+      selectedLanguages.value = ['en'];
+    };
+
     const goBack = () => {
       router.push('/outline/prompts');
     };
@@ -742,6 +766,7 @@ export default defineComponent({
       localFormData,
       formTitle,
       handleSave,
+      handleReset,
       goBack,
       activeTab,
       editorExtensions,

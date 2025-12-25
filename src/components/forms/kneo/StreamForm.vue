@@ -585,14 +585,13 @@ export default defineComponent( {
           userVariables: userVariables.value,
           schedule: planSchedule.value
         });
-        const returned = response.data.payload.docData;
+        const returned = response.data;
         message.success('Stream started successfully');
         
-        if ( returned.id && returned.id !== route.params.id ) {
-          skipNextRouteLoad.value = true;
-          await router.replace( { name: 'Stream', params: { id: returned.id } } );
-        }
+        // Close form and navigate back to streams list
+        await router.push('/outline/streams');
       } catch (e) {
+        console.error('Run failed:', e);
         message.error('Failed to run');
       } finally {
         planRunLoading.value = false;
