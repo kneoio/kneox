@@ -700,7 +700,12 @@ export default defineComponent({
       } else if (route.params.brandName) {
         await router.push(`/outline/station/${route.params.brandName}/scripts`);
       } else {
-        await router.push("/outline/scripts");
+        const previousRoute = router.options.history.state.back;
+        if (previousRoute && previousRoute.toString().includes('/outline/document-tree')) {
+          await router.push('/outline/document-tree');
+        } else {
+          await router.push("/outline/scripts");
+        }
       }
     };
 

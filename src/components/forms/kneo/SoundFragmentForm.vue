@@ -558,7 +558,7 @@ export default defineComponent({
         await Promise.all([
           radioStationStore.fetchAll(1, 100),
           referencesStore.fetchGenres(),
-          referencesStore.fetchLabels()
+          referencesStore.fetchLabelsByCategory('sound_fragment')
         ]);
       } catch (error) {
         console.error("Failed to preload references:", error);

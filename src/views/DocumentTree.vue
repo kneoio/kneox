@@ -33,6 +33,7 @@
           :checked-keys="checkedRowKeys"
           :on-update:checked-keys="handleCheckChange"
           :node-props="getNodeProps"
+          :render-switcher-icon="renderSwitcherIcon"
           key-field="key"
           label-field="label"
           children-field="children"
@@ -43,11 +44,12 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, computed, ref } from 'vue';
-import { NTree, NGrid, NGi, NPageHeader, NButtonGroup, NButton } from 'naive-ui';
+import { defineComponent, onMounted, computed, ref, h } from 'vue';
+import { NTree, NGrid, NGi, NPageHeader, NButtonGroup, NButton, NIcon } from 'naive-ui';
 import { useRouter } from 'vue-router';
 import { useDocumentTreeStore } from '../stores/kneo/documentTreeStore';
-import { useMessage } from 'naive-ui';
+import { useMessage, useLoadingBar } from 'naive-ui';
+import { SquarePlus, SquareMinus } from '@vicons/tabler';
 
 
 export default defineComponent({
@@ -63,6 +65,7 @@ export default defineComponent({
     const router = useRouter();
     const documentTreeStore = useDocumentTreeStore();
     const message = useMessage();
+    const loadingBar = useLoadingBar();
     const isMobile = computed(() => window.innerWidth < 768);
     const checkedRowKeys = ref<(string | number)[]>([]);
 
@@ -74,9 +77,17 @@ export default defineComponent({
       if (meta.action === 'expand' && meta.node) {
         const node = meta.node;
         if (!node.isLeaf && (!node.children || node.children.length === 0)) {
+          loadingBar.start();
           await documentTreeStore.loadChildren(node.key, node);
+          loadingBar.finish();
         }
       }
+    };
+
+    const renderSwitcherIcon = ({ expanded }: { expanded: boolean }) => {
+      return h(NIcon, null, {
+        default: () => h(expanded ? SquareMinus : SquarePlus)
+      });
     };
 
     const getNodeProps = ({ option }: any) => {
@@ -84,8 +95,8 @@ export default defineComponent({
         onClick() {
           if (option.entityId) {
             const routeTo = option.children 
-              ? { name: 'ScriptForm', params: { id: option.entityId } }
-              : { name: 'SceneForm', params: { id: option.entityId } };
+              ? { path: `/outline/scripts/${option.entityId}` }
+              : { path: `/outline/scenes/${option.entityId}` };
             router.push(routeTo);
           }
         }
@@ -122,6 +133,7 @@ export default defineComponent({
       hasSelection,
       handleExpand,
       getNodeProps,
+      renderSwitcherIcon,
       handleCheckChange,
       handleDelete,
       checkedRowKeys

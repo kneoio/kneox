@@ -377,7 +377,12 @@ export default defineComponent({
           await store.upsert(id, saveData);
         }
         message.success('Scene saved successfully');
-        await router.push({ name: 'Scripts' });
+        const previousRoute = router.options.history.state.back;
+        if (previousRoute && previousRoute.toString().includes('/outline/document-tree')) {
+          await router.push('/outline/document-tree');
+        } else {
+          await router.push({ name: 'Scripts' });
+        }
       } catch (error: any) {
         handleFormSaveError(error, message);
       } finally {
