@@ -9,6 +9,7 @@ interface TreeNode {
   children?: TreeNode[];
   openTarget?: string;
   entityId?: string;
+  nodeType?: string;
 }
 
 export const useDocumentTreeStore = defineStore('documentTreeStore', () => {
@@ -22,10 +23,11 @@ export const useDocumentTreeStore = defineStore('documentTreeStore', () => {
       return response.data.map((item: any) => ({
         key: item.key,
         label: item.label,
-        isLeaf: item.isLeaf,
+        isLeaf: item.leaf,
         openTarget: item.openTarget,
         entityId: item.entityId,
-        children: item.isLeaf ? undefined : []
+        nodeType: item.nodeType,
+        children: item.leaf ? undefined : []
       }));
     } catch (error) {
       console.error('Failed to fetch tree data:', error);

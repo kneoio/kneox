@@ -118,7 +118,7 @@ import {
   Fall,
   ToiletPaper,
   Gauge,
-  Folder
+  Tornado
 } from '@vicons/tabler';
 import { LayersLinked } from '@vicons/tabler';
 import {useRadioStationStore} from "../stores/kneo/radioStationStore";
@@ -314,11 +314,6 @@ export default defineComponent({
 
       const remainingOptions: MenuOption[] = [
         {
-          label: 'Documents',
-          key: 'document-tree',
-          icon: () => h(Folder)
-        },
-        {
           label: 'Listeners',
           key: 'listeners',
           icon: () => h(Headphones)
@@ -342,6 +337,11 @@ export default defineComponent({
           label: 'AiAgents',
           key: 'ai_agents',
           icon: () => h(Robot)
+        },
+        {
+          label: 'Flows',
+          key: 'document-tree',
+          icon: () => h(Tornado)
         },
         {
           label: 'Scripts',

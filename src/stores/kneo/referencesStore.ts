@@ -50,6 +50,29 @@ export const useReferencesStore = defineStore('references', () => {
     { label: "ქართული", value: "ka" }
   ];
 
+  const languageToCountryMap: Record<string, string> = {
+    'en': 'US',
+    'pt': 'PT',
+    'kk': 'KZ',
+    'es': 'ES',
+    'fr': 'FR',
+    'de': 'DE',
+    'ru': 'RU',
+    'lv': 'LV',
+    'ja': 'JP',
+    'zh': 'CN',
+    'ko': 'KR',
+    'hi': 'IN',
+    'uk': 'UA',
+    'fi': 'FI',
+    'no': 'NO',
+    'sv': 'SE',
+    'pl': 'PL',
+    'it': 'IT',
+    'tr': 'TR',
+    'ka': 'GE'
+  };
+
   const genreOptions = ref<Array<{label: string, value: string}>>([]);
   const voiceOptions = ref<Array<{label: string, value: string}>>([]);
   const labelOptions = ref<Array<{ label: string; value: string; color?: string; fontColor?: string; style?: Record<string, string> }>>([]);
@@ -337,6 +360,7 @@ export const useReferencesStore = defineStore('references', () => {
   return {
     countryOptions,
     languageOptions,
+    languageToCountryMap,
     voiceOptions,
     timezones,
     genreOptions,

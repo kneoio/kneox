@@ -204,7 +204,7 @@
   <n-modal v-model:show="showReplicateDialog" preset="dialog" title="Replicate Prompt" :close-on-esc="true" :style="{ width: isWideScreen ? '800px' : '90vw', backgroundColor: dialogBackgroundColor }">
     <n-space vertical>
       <n-text>Select languages to replicate this prompt:</n-text>
-      <n-grid :cols="3" x-gap="12" y-gap="8">
+      <n-grid :cols="4" x-gap="0" y-gap="0">
         <n-gi v-for="lang in langOptions" :key="lang.value">
           <div class="lang-row">
             <GreenLed
@@ -471,7 +471,12 @@ export default defineComponent({
         const id = localFormData.id ? localFormData.id : null;
         await store.save(saveData, id);
         message.success('Prompt saved successfully');
-        await router.push('/outline/prompts');
+        const previousRoute = router.options.history.state.back;
+        if (previousRoute && previousRoute.toString().includes('/outline/document-tree')) {
+          await router.push('/outline/document-tree');
+        } else {
+          await router.push('/outline/prompts');
+        }
       } catch (error: any) {
         console.error('Failed to save Prompt:', error);
         handleFormSaveError(error, message);
@@ -504,7 +509,12 @@ export default defineComponent({
     };
 
     const goBack = () => {
-      router.push('/outline/prompts');
+      const previousRoute = router.options.history.state.back;
+      if (previousRoute && previousRoute.toString().includes('/outline/document-tree')) {
+        router.push('/outline/document-tree');
+      } else {
+        router.push('/outline/prompts');
+      }
     };
 
     const handleReplicateClick = () => {
@@ -529,6 +539,7 @@ export default defineComponent({
           masterId: localFormData.id,
           translationType: 'PROMPT',
           languageCode: lang,
+          countryCode: referencesStore.languageToCountryMap[lang] || null,
           version: localFormData.version
         }));
         const jobId = crypto.randomUUID();

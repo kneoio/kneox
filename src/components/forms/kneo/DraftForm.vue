@@ -408,7 +408,12 @@ export default defineComponent({
         const id = localFormData.id ? localFormData.id : null;
         await store.save(saveData, id);
         message.success('Draft saved successfully');
-        await router.push('/outline/drafts');
+        const previousRoute = router.options.history.state.back;
+        if (previousRoute && previousRoute.toString().includes('/outline/document-tree')) {
+          await router.push('/outline/document-tree');
+        } else {
+          await router.push('/outline/drafts');
+        }
       } catch (error: any) {
         console.error('Failed to save Draft:', error);
         handleFormSaveError(error, message);
@@ -418,7 +423,12 @@ export default defineComponent({
     };
 
     const goBack = () => {
-      router.push('/outline/drafts');
+      const previousRoute = router.options.history.state.back;
+      if (previousRoute && previousRoute.toString().includes('/outline/document-tree')) {
+        router.push('/outline/document-tree');
+      } else {
+        router.push('/outline/drafts');
+      }
     };
 
     onMounted(async () => {

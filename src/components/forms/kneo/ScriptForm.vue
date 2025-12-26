@@ -21,6 +21,7 @@
       <n-button-group>
         <n-button type="primary" @click="handleSave" size="large">Save</n-button>
         <n-button type="default" @click="openDryRunDialog" size="large">Dry run</n-button>
+        <n-button type="default" @click="handleClone" size="large" :disabled="!localFormData.id">Clone</n-button>
         <n-button type="default" disabled size="large">Archive</n-button>
       </n-button-group>
     </n-gi>
@@ -494,6 +495,27 @@ export default defineComponent({
       }
     };
 
+    const handleClone = async () => {
+      try {
+        loadingBar.start();
+        const response = await apiClient.post(`/scripts/${localFormData.id}/clone`, {
+          title: `${localFormData.name} (Copy)`
+        });
+        message.success("Script cloned successfully");
+        await router.push(`/outline/scripts/${response.data.id}`);
+      } catch (error: any) {
+        console.error('Failed to clone Script:', error);
+        const data = error?.response?.data;
+        if (data?.message) {
+          message.error(String(data.message));
+        } else {
+          message.error('Failed to clone script');
+        }
+      } finally {
+        loadingBar.finish();
+      }
+    };
+
     const openDryRunDialog = async () => {
       showDryRunDialog.value = true;
       try {
@@ -906,6 +928,7 @@ export default defineComponent({
       formTitle,
       SceneTimingMode,
       handleSave,
+      handleClone,
       goBack,
       activeTab,
       isPublic,

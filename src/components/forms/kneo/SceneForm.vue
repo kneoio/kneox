@@ -402,7 +402,12 @@ export default defineComponent({
     });
 
     const goBack = () => {
-      router.push({ name: 'Scripts' });
+      const previousRoute = router.options.history.state.back;
+      if (previousRoute && previousRoute.toString().includes('/outline/document-tree')) {
+        router.push('/outline/document-tree');
+      } else {
+        router.push({ name: 'Scripts' });
+      }
     };
 
     onMounted(async () => {
