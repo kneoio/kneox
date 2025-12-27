@@ -82,13 +82,13 @@
                 <n-form-item label="Plan">
                   <n-anchor type="block" :show-background="false" :show-rail="true" style="width: 100%;">
                     <n-anchor-link>
-                      <div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; white-space: pre-wrap;">
+                      <div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word;">
                         {{ planHeaderText }}
                         <div v-for="stage in planStages" :key="stage.key" style="margin-top: 10px;">
-                          <div style="font-weight: 600; margin-bottom: 6px;">
+                          <div style="font-weight: 600; margin-bottom: 6px; word-wrap: break-word; overflow-wrap: break-word;">
                             {{ stage.title }}
                           </div>
-                          <div v-for="(songLine, idx) in stage.songs" :key="idx" style="white-space: pre-wrap;">
+                          <div v-for="(songLine, idx) in stage.songs" :key="idx" style="white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word;">
                             {{ songLine }}
                           </div>
                         </div>
@@ -505,10 +505,16 @@ export default defineComponent( {
       return scenes.map((scene: any, i: number) => {
         const title = `Stage ${i + 1}: ${scene.sceneTitle} (${fmtHm(scene.scheduledStartTime)} - ${fmtHm(scene.scheduledEndTime)}) - Sourcing: ${scene.playlistRequest?.sourcing || 'N/A'}`;
         const songs = Array.isArray(scene.songs) ? scene.songs : [];
+        const songLines = songs.map((song: any) => `- ${song.title} — ${song.artist} (${fmtHm(song.scheduledStartTime)}, ${fmtMin(song.estimatedDurationSeconds)})`);
+        
+        if (scene.warning) {
+          songLines.push(`\n${scene.warning}`);
+        }
+        
         return {
           key: `${i}-${scene.sceneTitle}`,
           title,
-          songs: songs.map((song: any) => `- ${song.title} — ${song.artist} (${fmtHm(song.scheduledStartTime)}, ${fmtMin(song.estimatedDurationSeconds)})`)
+          songs: songLines
         };
       });
     });

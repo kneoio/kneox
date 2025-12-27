@@ -39,7 +39,13 @@
           <n-gi>
             <n-form-item label="Duration (minutes)">
               <n-radio-group v-model:value="durationMinutes" name="duration-group">
+                <n-radio-button :value="2">2</n-radio-button>
+                <n-radio-button :value="3">3</n-radio-button>
+                <n-radio-button :value="4">4</n-radio-button>
                 <n-radio-button :value="5">5</n-radio-button>
+                <n-radio-button :value="6">6</n-radio-button>
+                <n-radio-button :value="7">7</n-radio-button>
+                <n-radio-button :value="8">8</n-radio-button>
                 <n-radio-button :value="10">10</n-radio-button>
                 <n-radio-button :value="15">15</n-radio-button>
                 <n-radio-button :value="20">20</n-radio-button>
