@@ -47,7 +47,7 @@
                     <n-form-item :label="variable.description || variable.name">
                       <n-input
                         v-model:value="form.variables[variable.name]"
-                        :placeholder="variable.description || variable.name"
+                        placeholder=""
                       />
                     </n-form-item>
                   </n-grid-item>
