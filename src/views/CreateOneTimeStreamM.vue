@@ -257,7 +257,8 @@ async function handleSubmit() {
       scriptId: form.value.scriptId!,
       baseBrandId: station.value?.id || undefined,
       slugName: stationSlug,
-      userVariables: form.value.variables
+      userVariables: form.value.variables,
+      confirmationCode: codeSent.value ? form.value.confirmationCode : ''
     }
 
     if (form.value.sendEmail) {
