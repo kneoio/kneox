@@ -147,19 +147,17 @@ export const useReferencesStore = defineStore('references', () => {
   };
 
   const fetchLabels = async () => {
-    const response = await apiClient.get('/labels?page=1&size=100');
+    const response = await apiClient.get('/dictionary/labels?page=1&size=1000');
     if (!response?.data?.payload) throw new Error('Invalid API response');
 
     labelOptions.value = response.data.payload.viewData.entries
       .map((entry: any) => ({
-        label: entry.localizedName.en.toLowerCase(),
+        label: entry.identifier,
         value: entry.id,
         color: entry.color,
         fontColor: entry.fontColor
       }))
-        .sort((a: { label: string }, b: { label: string }) =>
-          a.label.localeCompare(b.label)
-        );
+      .sort((a: { label: string }, b: { label: string }) => a.label.localeCompare(b.label));
   };
 
   const fetchLabelsByCategory = async (category: string) => {

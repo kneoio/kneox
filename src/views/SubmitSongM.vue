@@ -78,6 +78,19 @@
                 <n-select v-model:value="form.genres" :options="referencesStore.genreOptions" multiple filterable placeholder="" />
               </n-form-item>
             </n-grid-item>
+            <n-grid-item :span="12">
+              <n-form-item label="Labels (optional)">
+                <n-select 
+                  v-model:value="form.labels" 
+                  :options="referencesStore.labelOptions" 
+                  :render-tag="renderLabelTag"
+                  :render-label="renderLabel"
+                  multiple 
+                  filterable 
+                  placeholder="" 
+                />
+              </n-form-item>
+            </n-grid-item>
           </n-grid>
         </n-grid-item>
 
@@ -150,7 +163,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref, h } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { UploadCustomRequestOptions, UploadFileInfo } from 'naive-ui'
 import {
@@ -171,6 +184,7 @@ import {
   NLayoutHeader,
   NSelect,
   NSpace,
+  NTag,
   NUpload,
   useMessage,
   darkTheme
@@ -199,6 +213,7 @@ const form = ref({
   artist: '',
   title: '',
   genres: [] as string[],
+  labels: [] as string[],
   email: '',
   description: '',
   album: '',
@@ -276,6 +291,7 @@ onMounted(async () => {
 
   try {
     await referencesStore.fetchGenres()
+    await referencesStore.fetchLabels()
   } catch (_) { /* ignore */ }
 })
 
@@ -408,6 +424,7 @@ async function handleSubmit() {
       artist: form.value.artist,
       title: form.value.title,
       genres: form.value.genres,
+      labels: form.value.labels,
       email: form.value.email,
       confirmationCode: codeSent.value ? form.value.confirmationCode : '',
       description: form.value.description,
@@ -443,6 +460,7 @@ function reset() {
     artist: '',
     title: '',
     genres: [],
+    labels: [],
     email: '',
     description: '',
     album: '',
@@ -461,6 +479,28 @@ function reset() {
   uploadStatus.value = null
   codeSent.value = false
 }
+
+const renderLabelTag = ({ option, handleClose }: any) => {
+  const bg = option?.color;
+  const fg = option?.fontColor;
+  return h(
+    NTag as any,
+    {
+      closable: true,
+      onClose: handleClose,
+      style: {
+        backgroundColor: bg,
+        color: fg,
+        border: 'none'
+      }
+    },
+    { default: () => option?.label || '' }
+  );
+};
+
+const renderLabel = (option: any) => {
+  return h('span', null, option?.label as string);
+};
 </script>
 
 <style scoped>
