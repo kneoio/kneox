@@ -180,7 +180,7 @@ export interface SoundFragmentSave {
 export type LanguageCode = string;
 
 export interface LanguagePreference {
-    code: string;
+    languageTag: string;
     weight: number;
 }
 
@@ -482,7 +482,7 @@ export interface BroadcastPrompt {
     prompt: string;
     promptType?: string;
     description?: string;
-    languageCode?: string;
+    languageTag?: string;
     master?: boolean;
     locked?: boolean;
     title?: string;
@@ -495,7 +495,7 @@ export interface BroadcastPromptSave {
     prompt?: string;
     promptType?: string;
     description?: string;
-    languageCode?: string;
+    languageTag?: string;
     master?: boolean;
     locked?: boolean;
     title?: string;
@@ -513,7 +513,7 @@ export interface Draft {
     title?: string;
     content?: string;
     description?: string;
-    languageCode?: string;
+    languageTag?: string;
     archived?: number;
     enabled?: boolean;
     isMaster?: boolean;
@@ -526,7 +526,7 @@ export interface DraftSave {
     title?: string;
     content?: string;
     description?: string;
-    languageCode?: string;
+    languageTag?: string;
     archived?: number;
     enabled?: boolean;
     isMaster?: boolean;

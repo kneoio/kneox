@@ -45,7 +45,7 @@
               </n-gi>
               <n-gi>
                 <n-form-item label="Language">
-                  <n-select v-model:value="localFormData.languageCode" :options="langOptions" style="width: 25%; max-width: 300px;" />
+                  <n-select v-model:value="localFormData.languageTag" :options="langOptions" style="width: 25%; max-width: 300px;" />
                 </n-form-item>
               </n-gi>
               <n-gi>
@@ -214,7 +214,7 @@
             />
             <n-checkbox 
               :checked="selectedLanguages.includes(lang.value)" 
-              :disabled="lang.value === 'en'"
+              :disabled="lang.value === 'en-US'"
               @update:checked="(checked) => toggleLanguage(lang.value, checked)"
             >
               {{ lang.label }}
@@ -374,12 +374,12 @@ export default defineComponent({
     const selectedDraftId = ref<string | null>(null);
     const selectedMasterId = ref<string | null>(null);
     const draftOptions = computed(() => {
-      const lang = String(localFormData.languageCode || '').trim().toLowerCase();
+      const lang = String(localFormData.languageTag || '').trim().toLowerCase();
       const list = (draftStore as any).getEntries || [];
       const items = list.map((d: any) => {
         const label = d?.title || d?.name || d?.id;
         const value = d?.id;
-        const entryLang = String(d?.languageCode || '').trim().toLowerCase();
+        const entryLang = String(d?.languageTag || '').trim().toLowerCase();
         const hasSuffix = lang
           ? new RegExp(`\\(\\s*${lang}\\s*\\)$`, 'i').test(String(label))
           : false;
@@ -427,7 +427,7 @@ export default defineComponent({
       enabled: false,
       prompt: '',
       promptType: PromptType.SONG,
-      languageCode: '',
+      languageTag: '',
       master: false,
       locked: false,
       podcast: false,
@@ -447,7 +447,7 @@ export default defineComponent({
     const handleSave = async () => {
       try {
         loadingBar.start();
-        const lang = localFormData.languageCode || '';
+        const lang = localFormData.languageTag || '';
         const suffix = localFormData.master ? '' : lang;
         const hasSuffixInTitle = suffix && (localFormData.title || '').includes(suffix);
         const titleToSave = hasSuffixInTitle || !suffix
@@ -460,7 +460,7 @@ export default defineComponent({
           enabled: localFormData.enabled,
           prompt: localFormData.prompt,
           promptType: normalizedPromptType,
-          languageCode: localFormData.languageCode,
+          languageTag: localFormData.languageTag,
           master: localFormData.master,
           locked: localFormData.locked,
           podcast: localFormData.podcast,
@@ -497,7 +497,7 @@ export default defineComponent({
         enabled: false,
         prompt: '',
         promptType: PromptType.SONG,
-        languageCode: '',
+        languageTag: '',
         master: false,
         locked: false,
         podcast: false,
@@ -505,7 +505,7 @@ export default defineComponent({
       });
       selectedMasterId.value = null;
       selectedDraftId.value = null;
-      selectedLanguages.value = ['en'];
+      selectedLanguages.value = ['en-US'];
     };
 
     const goBack = () => {
@@ -518,7 +518,7 @@ export default defineComponent({
     };
 
     const handleReplicateClick = () => {
-      selectedLanguages.value = ['en'];
+      selectedLanguages.value = ['en-US'];
       hasReplicateError.value = false;
       hasReplicateSuccess.value = false;
       completedLanguages.value.clear();
@@ -538,7 +538,7 @@ export default defineComponent({
           toTranslate: localFormData.prompt || '',
           masterId: localFormData.id,
           translationType: 'PROMPT',
-          languageCode: lang,
+          languageTag: lang,
           countryCode: referencesStore.languageToCountryMap[lang] || null,
           version: localFormData.version
         }));
@@ -658,7 +658,7 @@ export default defineComponent({
           const draftContent = selectedDraft?.content || null;
           if (draftContent) {
             const draftPayload = {
-              languageCode: localFormData.languageCode,
+              languageTag: localFormData.languageTag,
               songId: testSongId.value || null,
               agentId: testAgentId.value || null,
               stationId: testStationId.value || null,

@@ -48,7 +48,7 @@
                       <n-grid cols="2" x-gap="8">
                         <n-gi>
                           <n-select
-                            v-model:value="value.code"
+                            v-model:value="value.languageTag"
                             :options="langOptions"
                             style="width: 100%; max-width: 300px;"
                           />
@@ -189,7 +189,9 @@ export default defineComponent({
       llmType: "",
       primaryVoice: [],
       primaryVoiceId: "",
-      copilotId: ""
+      copilotId: "",
+      talkativity: 0,
+      podcastMode: 0
     });
 
     const createVoiceItem = () => ({
@@ -203,7 +205,7 @@ export default defineComponent({
       description: ""
     });
 
-    const createLangPrefItem = () => ({ code: 'en', weight: 1 });
+    const createLangPrefItem = () => ({ languageTag: 'en-US', weight: 1 });
 
     const handleSave = async () => {
       try {

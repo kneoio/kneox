@@ -205,15 +205,15 @@ export default defineComponent({
               'div',
               { style: 'display: flex; flex-wrap: wrap; gap: 4px;' },
               arr.map((lp: any, index: number) => {
-                const code = lp?.code || '';
-                if (!code) return null;
+                const languageTag = lp?.languageTag || '';
+                if (!languageTag) return null;
                 const w = typeof lp?.weight === 'number' ? `${Math.round(lp.weight * 100)}%` : '';
-                const label = w ? `${code} (${w})` : code;
+                const label = w ? `${languageTag} (${w})` : languageTag;
                 return h(
                   NTag,
                   {
                     size: 'small',
-                    key: `${code}-${index}`
+                    key: `${languageTag}-${index}`
                   },
                   { default: () => label }
                 );
@@ -265,9 +265,9 @@ export default defineComponent({
               const langs = Array.isArray(row.preferredLang)
                 ? row.preferredLang
                     .map((lp: any) => {
-                      const code = lp?.code || '';
+                      const languageTag = lp?.languageTag || '';
                       const w = typeof lp?.weight === 'number' ? `(${Math.round(lp.weight * 100)}%)` : '';
-                      return code ? `${code}${w}` : '';
+                      return languageTag ? `${languageTag}${w}` : '';
                     })
                     .filter(Boolean)
                     .join(', ')

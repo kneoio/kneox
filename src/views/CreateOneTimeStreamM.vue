@@ -82,7 +82,7 @@
           <n-text strong type="success">Mixpla Player URL</n-text>
           <n-space align="center">
             <n-text type="success">
-              <a :href="streamResult?.mixplaUrl" target="_blank">{{ streamResult?.mixplaUrl }}</a>
+              <a :href="streamResult?.mixplaUrl" target="_blank" @click="showResultDialog = false">{{ streamResult?.mixplaUrl }}</a>
             </n-text>
             <n-button size="small" type="primary" @click="copyToClipboard(streamResult?.mixplaUrl, 'Mixpla URL')">
               Copy
