@@ -37,7 +37,7 @@
               </n-gi>
               <n-gi>
                 <n-form-item label="Language">
-                  <n-select v-model:value="localFormData.languageCode" :options="langOptions" style="width: 25%; max-width: 300px;" />
+                  <n-select v-model:value="localFormData.languageTag" :options="langOptions" style="width: 25%; max-width: 300px;" />
                 </n-form-item>
               </n-gi>
               <n-gi>
@@ -398,7 +398,7 @@ export default defineComponent({
       name: "",
       description: "",
       defaultProfileId: undefined,
-      languageCode: "",
+      languageTag: "",
       labels: [],
       accessLevel: 0,
       timingMode: SceneTimingMode.RELATIVE_TO_STREAM_START,
@@ -476,7 +476,7 @@ export default defineComponent({
           name: localFormData.name || '',
           description: localFormData.description || '',
           defaultProfileId: localFormData.defaultProfileId,
-          languageCode: localFormData.languageCode,
+          languageTag: localFormData.languageTag,
           labels: localFormData.labels || [],
           accessLevel: isPublic.value ? 1 : 0,
           timingMode: localFormData.timingMode,

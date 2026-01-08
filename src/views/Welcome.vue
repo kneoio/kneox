@@ -82,7 +82,10 @@
                               <n-icon size="20" ><InfoSquare /></n-icon>
                             </n-button>
                           </router-link>
-                          <n-button ghost color="#666"  @click.stop="openPlayer(s.slugName)">
+                          <n-button ghost color="#666" @click.stop="togglePlay(s.slugName, s.currentStatus)" :class="{ 
+                            'playing-glow': playingStation === s.slugName,
+                            'error-pulse': errorStation === s.slugName
+                          }">
                             <n-icon size="20"><PlayerPlay /></n-icon>
                           </n-button>
                         </n-space>
@@ -124,7 +127,7 @@
 </template>
 
 <script setup lang="ts">
-import {onMounted, ref} from 'vue'
+import {onMounted, ref, onUnmounted} from 'vue'
 import {
   NButton,
   NCard,
@@ -148,6 +151,7 @@ import {
 import {Plus, Alien, InfoSquare, PlayerPlay} from '@vicons/tabler'
 import {useReferencesStore} from '../stores/kneo/referencesStore'
 import GlowLine from '../components/common/GlowLine.vue'
+import Hls from 'hls.js'
 
 interface Station {
   name: string;
@@ -168,6 +172,10 @@ const error = ref<unknown | null>(null)
 const hoveredColor = ref('#2196F3')
 const onlineOnly = ref(localStorage.getItem('mixplaOnlineOnly') === 'true')
 const hoveredStation = ref<string | null>(null)
+const playingStation = ref<string | null>(null)
+const errorStation = ref<string | null>(null)
+let hls: Hls | null = null
+let audio: HTMLAudioElement | null = null
 
 
 function statusText(s?: Station['currentStatus']) {
@@ -182,9 +190,66 @@ function goToStation(s: Station) {
   window.location.href = `/${s.slugName}`
 }
 
-function openPlayer(slugName: string) {
-  const url = `https://player.mixpla.io?radio=${encodeURIComponent(slugName.toLowerCase())}`
-  window.open(url, '_blank', 'noopener,noreferrer')
+function togglePlay(slugName: string, currentStatus?: string) {
+  if (playingStation.value === slugName) {
+    stopPlayback()
+  } else if (errorStation.value === slugName) {
+    errorStation.value = null
+  } else {
+    if (currentStatus === 'OFF_LINE') {
+      errorStation.value = slugName
+    } else {
+      startPlayback(slugName)
+    }
+  }
+}
+
+function startPlayback(slugName: string) {
+  stopPlayback()
+  errorStation.value = null
+  
+  const streamServer = import.meta.env.VITE_STREAM_SERVER
+  const streamUrl = `${streamServer}/${slugName}/radio/stream.m3u8`
+  
+  audio = new Audio()
+  hls = new Hls()
+  
+  hls.loadSource(streamUrl)
+  hls.attachMedia(audio)
+  
+  hls.on(Hls.Events.MANIFEST_PARSED, () => {
+    audio?.play()
+    playingStation.value = slugName
+  })
+  
+  hls.on(Hls.Events.ERROR, (event, data) => {
+    if (data.fatal) {
+      switch (data.type) {
+        case Hls.ErrorTypes.NETWORK_ERROR:
+          hls?.startLoad()
+          break
+        case Hls.ErrorTypes.MEDIA_ERROR:
+          hls?.recoverMediaError()
+          break
+        default:
+          stopPlayback()
+          break
+      }
+    }
+  })
+}
+
+function stopPlayback() {
+  if (hls) {
+    hls.destroy()
+    hls = null
+  }
+  if (audio) {
+    audio.pause()
+    audio = null
+  }
+  playingStation.value = null
+  errorStation.value = null
 }
 
 function handleOnlineOnlyUpdate(value: boolean) {
@@ -207,6 +272,10 @@ async function fetchStations() {
 
 onMounted(() => {
   fetchStations()
+})
+
+onUnmounted(() => {
+  stopPlayback()
 })
 </script>
 
@@ -245,6 +314,24 @@ onMounted(() => {
 .station-card:hover {
   box-shadow: inset 0 0 4px color-mix(in srgb, var(--station-color) 50%, transparent), 0 0 4px color-mix(in srgb, var(--station-color) 80%, transparent), 0 0 8px color-mix(in srgb, var(--station-color) 60%, transparent) !important;
   filter: brightness(125%) saturate(150%);
+}
+
+.playing-glow {
+  color: #00FF3C !important;
+  text-shadow:
+    0 0 5px currentColor,
+    0 0 15px currentColor,
+    0 0 30px currentColor;
+}
+
+.error-pulse {
+  color: #ff0000 !important;
+  animation: error-pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes error-pulse {
+  0%, 70%, 100% { opacity: 1; text-shadow: 0 0 18px currentColor; }
+  40% { opacity: 0.25; text-shadow: 0 0 4px currentColor; }
 }
 
 .status-online {

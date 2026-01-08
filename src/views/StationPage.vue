@@ -84,7 +84,7 @@
                     :class="{ 'is-dimmed': hoveredAction && hoveredAction !== 'player' }"
                     :segmented="{ content: true }" 
                     content-style="padding: 16px;"
-                    @click="openPlayer"
+                    @click="togglePlay"
                     @mouseenter="hoveredAction = 'player'"
                     @mouseleave="hoveredAction = null"
                     :style="{
@@ -94,8 +94,35 @@
                     }"
                   >
                     <n-space vertical align="center" justify="center" size="small">
-                      <n-icon size="32" color="#666666">
+                      <n-icon size="32" :class="{ 
+                        'playing-glow': isPlaying,
+                        'error-pulse': isError
+                      }">
                         <PlayerPlay />
+                      </n-icon>
+                      <n-text strong>{{ isPlaying ? 'Playing' : (isError ? 'Offline' : 'Play Radio') }}</n-text>
+                    </n-space>
+                  </n-card>
+                </n-grid-item>
+
+                <n-grid-item>
+                  <n-card 
+                    class="station-action-card"
+                    :class="{ 'is-dimmed': hoveredAction && hoveredAction !== 'external-player' }"
+                    :segmented="{ content: true }" 
+                    content-style="padding: 16px;"
+                    @click="openExternalPlayer"
+                    @mouseenter="hoveredAction = 'external-player'"
+                    @mouseleave="hoveredAction = null"
+                    :style="{
+                      cursor: 'pointer',
+                      height: '100%',
+                      '--station-color': station.color
+                    }"
+                  >
+                    <n-space vertical align="center" justify="center" size="small">
+                      <n-icon size="32" color="#666666">
+                        <ExternalLink />
                       </n-icon>
                       <n-text strong>Open Player</n-text>
                     </n-space>
@@ -183,7 +210,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   NButton,
@@ -202,10 +229,11 @@ import {
   NThing,
   darkTheme
 } from 'naive-ui'
-import { ArrowLeft, Alien, MessageCircle, Music, PlayerPlay, Radio } from '@vicons/tabler'
+import { ArrowLeft, Alien, MessageCircle, Music, PlayerPlay, Radio, ExternalLink } from '@vicons/tabler'
 import { useReferencesStore } from '../stores/kneo/referencesStore'
 import { MIXPLA_PLAYER_URL } from '../constants/config'
 import GlowLine from '../components/common/GlowLine.vue'
+import Hls from 'hls.js'
 
 interface Station {
   name: string;
@@ -233,6 +261,10 @@ const station = ref<Station | null>(null)
 const loading = ref(true)
 const error = ref<unknown | null>(null)
 const hoveredAction = ref<string | null>(null)
+const isPlaying = ref(false)
+const isError = ref(false)
+let hls: Hls | null = null
+let audio: HTMLAudioElement | null = null
 
 
 function statusText(s?: Station['currentStatus']) {
@@ -259,7 +291,70 @@ function goToCreateOneTimeStream() {
   router.push({ name: 'CreateOneTimeStream', query: { brand: brandSlug.value } })
 }
 
-function openPlayer() {
+function togglePlay() {
+  if (isPlaying.value) {
+    stopPlayback()
+  } else if (isError.value) {
+    isError.value = false
+  } else {
+    if (station.value?.currentStatus === 'OFF_LINE') {
+      isError.value = true
+    } else {
+      startPlayback()
+    }
+  }
+}
+
+function startPlayback() {
+  stopPlayback()
+  isError.value = false
+  
+  const streamServer = import.meta.env.VITE_STREAM_SERVER
+  const streamUrl = `${streamServer}/${brandSlug.value}/radio/stream.m3u8`
+  
+  audio = new Audio()
+  hls = new Hls()
+  
+  hls.loadSource(streamUrl)
+  hls.attachMedia(audio)
+  
+  hls.on(Hls.Events.MANIFEST_PARSED, () => {
+    audio?.play()
+    isPlaying.value = true
+  })
+  
+  hls.on(Hls.Events.ERROR, (_, data) => {
+    if (data.fatal) {
+      switch (data.type) {
+        case Hls.ErrorTypes.NETWORK_ERROR:
+          hls?.startLoad()
+          break
+        case Hls.ErrorTypes.MEDIA_ERROR:
+          hls?.recoverMediaError()
+          break
+        default:
+          stopPlayback()
+          isError.value = true
+          break
+      }
+    }
+  })
+}
+
+function stopPlayback() {
+  if (hls) {
+    hls.destroy()
+    hls = null
+  }
+  if (audio) {
+    audio.pause()
+    audio = null
+  }
+  isPlaying.value = false
+  isError.value = false
+}
+
+function openExternalPlayer() {
   const url = `${MIXPLA_PLAYER_URL}?radio=${encodeURIComponent(brandSlug.value.toLowerCase())}`
   window.open(url, '_blank', 'noopener,noreferrer')
 }
@@ -278,6 +373,10 @@ async function fetchStation() {
 
 onMounted(() => {
   fetchStation()
+})
+
+onUnmounted(() => {
+  stopPlayback()
 })
 </script>
 
@@ -307,6 +406,24 @@ onMounted(() => {
 .station-action-card:hover {
   box-shadow: inset 0 0 4px color-mix(in srgb, var(--station-color) 50%, transparent), 0 0 4px color-mix(in srgb, var(--station-color) 80%, transparent), 0 0 8px color-mix(in srgb, var(--station-color) 60%, transparent) !important;
   filter: brightness(125%) saturate(150%);
+}
+
+.playing-glow {
+  color: #00FF3C !important;
+  text-shadow:
+    0 0 5px currentColor,
+    0 0 15px currentColor,
+    0 0 30px currentColor;
+}
+
+.error-pulse {
+  color: #ff0000 !important;
+  animation: error-pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes error-pulse {
+  0%, 70%, 100% { opacity: 1; text-shadow: 0 0 18px currentColor; }
+  40% { opacity: 0.25; text-shadow: 0 0 4px currentColor; }
 }
 
 .neon-header {
