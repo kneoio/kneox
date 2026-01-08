@@ -2,9 +2,12 @@
   <n-config-provider :theme="darkTheme">
     <n-layout>
       <n-layout-header class="neon-header">
-        <n-space align="center" justify="space-between" :wrap="false" :style="{ maxWidth: '720px', margin: '0 auto', padding: '12px 16px' }">
+        <div :style="{ maxWidth: '720px', margin: '0 auto', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '24px' }">
           <n-icon size="32"><Alien /></n-icon>
-        </n-space>
+          <n-text v-if="playingStation || previousPlayingStation" :style="{ fontSize: '14px', opacity: 0.8, flex: 1, fontFamily: 'Goldman' as any }">
+              {{ stations.find(s => s.slugName === (playingStation || previousPlayingStation))?.name || (playingStation || previousPlayingStation) }} - {{ currentSong || 'Loading...' }}
+            </n-text>
+        </div>
         <GlowLine :color="hoveredColor" />
       </n-layout-header>
 
@@ -127,7 +130,7 @@
 </template>
 
 <script setup lang="ts">
-import {onMounted, ref, onUnmounted} from 'vue'
+import {onMounted, ref, onUnmounted, watch} from 'vue'
 import {
   NButton,
   NCard,
@@ -174,8 +177,13 @@ const onlineOnly = ref(localStorage.getItem('mixplaOnlineOnly') === 'true')
 const hoveredStation = ref<string | null>(null)
 const playingStation = ref<string | null>(null)
 const errorStation = ref<string | null>(null)
+const currentSong = ref<string>('')
+const previousPlayingStation = ref<string | null>(null)
+const waitingForOfflineStation = ref<string | null>(null)
 let hls: Hls | null = null
 let audio: HTMLAudioElement | null = null
+let songRefreshInterval: NodeJS.Timeout | null = null
+let offlineWaitTimeout: NodeJS.Timeout | null = null
 
 
 function statusText(s?: Station['currentStatus']) {
@@ -197,7 +205,42 @@ function togglePlay(slugName: string, currentStatus?: string) {
     errorStation.value = null
   } else {
     if (currentStatus === 'OFF_LINE') {
-      errorStation.value = slugName
+      // Stop current playback and keep previous station info
+      if (playingStation.value) {
+        previousPlayingStation.value = playingStation.value
+        waitingForOfflineStation.value = slugName
+        errorStation.value = slugName
+        
+        // Stop audio but keep playingStation for display
+        if (songRefreshInterval) {
+          clearInterval(songRefreshInterval)
+          songRefreshInterval = null
+        }
+        if (hls) {
+          hls.destroy()
+          hls = null
+        }
+        if (audio) {
+          audio.pause()
+          audio = null
+        }
+        playingStation.value = null
+        
+        // Set timeout to automatically unpress after 3 minutes
+        if (offlineWaitTimeout) {
+          clearTimeout(offlineWaitTimeout)
+        }
+        offlineWaitTimeout = setTimeout(() => {
+          if (waitingForOfflineStation.value === slugName) {
+            waitingForOfflineStation.value = null
+            errorStation.value = null
+            previousPlayingStation.value = null
+            offlineWaitTimeout = null
+          }
+        }, 3 * 60 * 1000) // 3 minutes
+      } else {
+        errorStation.value = slugName
+      }
     } else {
       startPlayback(slugName)
     }
@@ -209,12 +252,20 @@ function startPlayback(slugName: string) {
   errorStation.value = null
   
   const streamServer = import.meta.env.VITE_STREAM_SERVER
-  const streamUrl = `${streamServer}/${slugName}/radio/stream.m3u8`
+  const playlistUrl = `${streamServer}/${slugName}/radio/stream.m3u8`
+  
+  // Fetch and parse playlist to get current song
+  fetchCurrentSong(playlistUrl)
+  
+  // Refresh song info every 5 seconds
+  songRefreshInterval = setInterval(() => {
+    fetchCurrentSong(playlistUrl)
+  }, 5000)
   
   audio = new Audio()
   hls = new Hls()
   
-  hls.loadSource(streamUrl)
+  hls.loadSource(playlistUrl)
   hls.attachMedia(audio)
   
   hls.on(Hls.Events.MANIFEST_PARSED, () => {
@@ -222,7 +273,32 @@ function startPlayback(slugName: string) {
     playingStation.value = slugName
   })
   
-  hls.on(Hls.Events.ERROR, (event, data) => {
+  hls.on(Hls.Events.FRAG_PARSING_METADATA, (_, data) => {
+    for (let i = 0; i < data.samples.length; i++) {
+      const sample = data.samples[i]
+      if (sample.data) {
+        const decoder = new TextDecoder('utf-8')
+        const text = decoder.decode(sample.data)
+        
+        // Parse ID3 tags
+        if (text.includes('TIT2')) {
+          // Song title
+          const match = text.match(/TIT2[^\0]*\0([^\0]*)/)
+          if (match && match[1]) {
+            currentSong.value = match[1]
+          }
+        } else if (text.includes('TPE1')) {
+          // Artist
+          const match = text.match(/TPE1[^\0]*\0([^\0]*)/)
+          if (match && match[1]) {
+            currentSong.value = `${match[1]} - ${currentSong.value}`
+          }
+        }
+      }
+    }
+  })
+  
+  hls.on(Hls.Events.ERROR, (_, data) => {
     if (data.fatal) {
       switch (data.type) {
         case Hls.ErrorTypes.NETWORK_ERROR:
@@ -239,7 +315,38 @@ function startPlayback(slugName: string) {
   })
 }
 
+async function fetchCurrentSong(playlistUrl: string) {
+  try {
+    const response = await fetch(playlistUrl)
+    const text = await response.text()
+    const lines = text.split('\n')
+    
+    // Find the last EXTINF line
+    for (let i = lines.length - 1; i >= 0; i--) {
+      const line = lines[i]
+      if (line.startsWith('#EXTINF:')) {
+        // Extract song info after the comma
+        const match = line.match(/#EXTINF:[^,]+,(.+)/)
+        if (match && match[1]) {
+          currentSong.value = match[1]
+          break
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Failed to fetch current song:', error)
+  }
+}
+
 function stopPlayback() {
+  if (songRefreshInterval) {
+    clearInterval(songRefreshInterval)
+    songRefreshInterval = null
+  }
+  if (offlineWaitTimeout) {
+    clearTimeout(offlineWaitTimeout)
+    offlineWaitTimeout = null
+  }
   if (hls) {
     hls.destroy()
     hls = null
@@ -250,6 +357,9 @@ function stopPlayback() {
   }
   playingStation.value = null
   errorStation.value = null
+  previousPlayingStation.value = null
+  waitingForOfflineStation.value = null
+  currentSong.value = ''
 }
 
 function handleOnlineOnlyUpdate(value: boolean) {
@@ -273,6 +383,21 @@ async function fetchStations() {
 onMounted(() => {
   fetchStations()
 })
+
+// Watch for station status changes
+watch(stations, (newStations) => {
+  if (waitingForOfflineStation.value && offlineWaitTimeout) {
+    const waitingStation = newStations.find(s => s.slugName === waitingForOfflineStation.value)
+    if (waitingStation && waitingStation.currentStatus !== 'OFF_LINE') {
+      // Station came online, start playing it
+      clearTimeout(offlineWaitTimeout)
+      offlineWaitTimeout = null
+      startPlayback(waitingForOfflineStation.value)
+      waitingForOfflineStation.value = null
+      previousPlayingStation.value = null
+    }
+  }
+}, { deep: true })
 
 onUnmounted(() => {
   stopPlayback()
@@ -319,9 +444,9 @@ onUnmounted(() => {
 .playing-glow {
   color: #00FF3C !important;
   text-shadow:
-    0 0 5px currentColor,
-    0 0 15px currentColor,
-    0 0 30px currentColor;
+    0 0 10px currentColor,
+    0 0 25px currentColor,
+    0 0 50px currentColor;
 }
 
 .error-pulse {

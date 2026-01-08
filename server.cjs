@@ -94,7 +94,8 @@ app.get('*', (req, res) => {
             title: process.env.ORG_NAME,
             cssFile: manifest['style.css']?.file || '',
             scriptFilename: manifest['index.html']?.file || '',
-            apiServer: process.env.VITE_API_SERVER
+            apiServer: process.env.VITE_API_SERVER,
+            streamServer: process.env.VITE_STREAM_SERVER || 'http://localhost:38707'
         });
 
         res.send(html);

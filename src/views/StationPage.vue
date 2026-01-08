@@ -56,23 +56,26 @@
                 </n-thing>
               </n-space>
 
-              <n-card :segmented="{ content: true }" content-style="padding: 16px;">
-                <n-space vertical size="small">
-                  <n-text strong>Station Info</n-text>
-                  <n-space align="center">
-                    <n-text depth="3">Status:</n-text>
-                    <span
-                      :class="{ 'status-online': ['ON_LINE','WARMING_UP','IDLE'].includes(station.currentStatus as any) }"
-                      style="font-weight: 400; font-size: 14px;"
-                    >
-                      {{ statusText(station.currentStatus) }}
-                    </span>
-                  </n-space>
-                  <n-space v-if="station.djName" align="center">
-                    <n-text depth="3">DJ:</n-text>
-                    <n-text style="font-weight: 400; font-size: 14px;">
-                      {{ station.djName }}
-                    </n-text>
+              <n-card :segmented="{ content: true }" content-style="padding: 12px;">
+                <n-space size="small" align="center">
+                  <n-space vertical style="min-width: 0; flex: 1;">
+                    <n-space align="center" size="small">
+                      <n-text style="font-size: 12px; opacity: 0.7;">{{ station?.countryCode }}</n-text>
+                      <span
+                        :class="{ 'status-online': ['ON_LINE','WARMING_UP','IDLE'].includes(station.currentStatus as any) }"
+                        style="font-weight: 400; font-size: 12px;"
+                      >
+                        {{ statusText(station.currentStatus) }}
+                      </span>
+                      <n-text v-if="station.djName" style="font-weight: 400; font-size: 12px;">
+                        DJ: {{ station.djName }}
+                      </n-text>
+                    </n-space>
+                    <div :style="{ minHeight: '18px' }">
+                      <n-text v-if="isPlaying" :style="{ fontSize: '12px', opacity: 0.8, fontFamily: 'Goldman' as any }">
+                        {{ currentSong || 'Loading...' }}
+                      </n-text>
+                    </div>
                   </n-space>
                 </n-space>
               </n-card>
@@ -263,9 +266,11 @@ const error = ref<unknown | null>(null)
 const hoveredAction = ref<string | null>(null)
 const isPlaying = ref(false)
 const isError = ref(false)
+const currentSong = ref<string>('')
+
 let hls: Hls | null = null
 let audio: HTMLAudioElement | null = null
-
+let songRefreshInterval: NodeJS.Timeout | null = null
 
 function statusText(s?: Station['currentStatus']) {
   if (s === 'ON_LINE') return 'Online'
@@ -294,33 +299,58 @@ function goToCreateOneTimeStream() {
 function togglePlay() {
   if (isPlaying.value) {
     stopPlayback()
-  } else if (isError.value) {
-    isError.value = false
   } else {
-    if (station.value?.currentStatus === 'OFF_LINE') {
-      isError.value = true
-    } else {
-      startPlayback()
-    }
+    startPlayback()
   }
 }
 
 function startPlayback() {
   stopPlayback()
-  isError.value = false
-  
   const streamServer = import.meta.env.VITE_STREAM_SERVER
-  const streamUrl = `${streamServer}/${brandSlug.value}/radio/stream.m3u8`
+  const playlistUrl = `${streamServer}/${brandSlug.value}/radio/stream.m3u8`
+  
+  // Fetch and parse playlist to get current song
+  fetchCurrentSong(playlistUrl)
+  
+  // Refresh song info every 5 seconds
+  songRefreshInterval = setInterval(() => {
+    fetchCurrentSong(playlistUrl)
+  }, 5000)
   
   audio = new Audio()
   hls = new Hls()
   
-  hls.loadSource(streamUrl)
+  hls.loadSource(playlistUrl)
   hls.attachMedia(audio)
   
   hls.on(Hls.Events.MANIFEST_PARSED, () => {
     audio?.play()
     isPlaying.value = true
+  })
+  
+  hls.on(Hls.Events.FRAG_PARSING_METADATA, (_, data) => {
+    for (let i = 0; i < data.samples.length; i++) {
+      const sample = data.samples[i]
+      if (sample.data) {
+        const decoder = new TextDecoder('utf-8')
+        const text = decoder.decode(sample.data)
+        
+        // Parse ID3 tags
+        if (text.includes('TIT2')) {
+          // Song title
+          const match = text.match(/TIT2[^\0]*\0([^\0]*)/)
+          if (match && match[1]) {
+            // Update current song if you have a ref for it in StationPage
+          }
+        } else if (text.includes('TPE1')) {
+          // Artist
+          const match = text.match(/TPE1[^\0]*\0([^\0]*)/)
+          if (match && match[1]) {
+            // Update current song if you have a ref for it in StationPage
+          }
+        }
+      }
+    }
   })
   
   hls.on(Hls.Events.ERROR, (_, data) => {
@@ -342,6 +372,10 @@ function startPlayback() {
 }
 
 function stopPlayback() {
+  if (songRefreshInterval) {
+    clearInterval(songRefreshInterval)
+    songRefreshInterval = null
+  }
   if (hls) {
     hls.destroy()
     hls = null
@@ -352,11 +386,35 @@ function stopPlayback() {
   }
   isPlaying.value = false
   isError.value = false
+  currentSong.value = ''
 }
 
 function openExternalPlayer() {
   const url = `${MIXPLA_PLAYER_URL}?radio=${encodeURIComponent(brandSlug.value.toLowerCase())}`
   window.open(url, '_blank', 'noopener,noreferrer')
+}
+
+async function fetchCurrentSong(playlistUrl: string) {
+  try {
+    const response = await fetch(playlistUrl)
+    const text = await response.text()
+    const lines = text.split('\n')
+    
+    // Find the last EXTINF line
+    for (let i = lines.length - 1; i >= 0; i--) {
+      const line = lines[i]
+      if (line.startsWith('#EXTINF:')) {
+        // Extract song info after the comma
+        const match = line.match(/#EXTINF:[^,]+,(.+)/)
+        if (match && match[1]) {
+          currentSong.value = match[1]
+          break
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Failed to fetch current song:', error)
+  }
 }
 
 async function fetchStation() {
@@ -411,9 +469,9 @@ onUnmounted(() => {
 .playing-glow {
   color: #00FF3C !important;
   text-shadow:
-    0 0 5px currentColor,
-    0 0 15px currentColor,
-    0 0 30px currentColor;
+    0 0 10px currentColor,
+    0 0 25px currentColor,
+    0 0 50px currentColor;
 }
 
 .error-pulse {
