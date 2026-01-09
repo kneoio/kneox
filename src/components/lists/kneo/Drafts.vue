@@ -28,7 +28,7 @@
       <n-collapse-transition :show="showFilters">
         <div :style="{ width: isMobile ? '100%' : '50%' }">
           <n-space size="small" align="center">
-            <n-select v-model:value="filters.languageCode" :options="langOptions" filterable placeholder="Language"
+            <n-select v-model:value="filters.languageTag" :options="langOptions" filterable placeholder="Language"
               clearable style="width: 200px;" />
             <n-checkbox v-model:checked="filters.enabled">Enabled</n-checkbox>
             <n-checkbox v-model:checked="filters.isMaster">Master</n-checkbox>
@@ -77,7 +77,7 @@ export default defineComponent( {
     const STORAGE_SHOW_KEY = 'drafts.list.showFilters';
     const showFilters = ref( false );
     const filters = ref( {
-      languageCode: undefined as string | undefined,
+      languageTag: undefined as string | undefined,
       archived: false,
       enabled: false,
       isMaster: false,
@@ -85,7 +85,7 @@ export default defineComponent( {
     } );
 
     const hasActiveFilters = computed( () =>
-      !!( filters.value.languageCode || filters.value.archived || filters.value.enabled || filters.value.isMaster || filters.value.locked )
+      !!( filters.value.languageTag || filters.value.archived || filters.value.enabled || filters.value.isMaster || filters.value.locked )
     );
 
     const loadSavedFilters = () => {
@@ -94,7 +94,7 @@ export default defineComponent( {
         if ( s ) {
           const obj = JSON.parse( s );
           filters.value = {
-            languageCode: obj.languageCode,
+            languageTag: obj.languageTag,
             archived: !!obj.archived,
             enabled: !!obj.enabled,
             isMaster: !!obj.isMaster,
@@ -133,14 +133,14 @@ export default defineComponent( {
         loading.value = true;
         let activeFilters: any = {};
         if ( showFilters.value ) {
-          const hasFilters = filters.value.languageCode ||
+          const hasFilters = filters.value.languageTag ||
             filters.value.archived ||
             filters.value.enabled ||
             filters.value.isMaster ||
             filters.value.locked;
           if ( hasFilters ) {
             activeFilters = {
-              languageCode: filters.value.languageCode || undefined,
+              languageTag: filters.value.languageTag || undefined,
               archived: filters.value.archived ? 1 : undefined,
               enabled: filters.value.enabled || undefined,
               master: filters.value.isMaster || undefined,
@@ -218,7 +218,7 @@ export default defineComponent( {
 
     const clearFilters = () => {
       filters.value = {
-        languageCode: undefined,
+        languageTag: undefined,
         archived: false,
         enabled: false,
         isMaster: false,
@@ -254,7 +254,7 @@ export default defineComponent( {
 
     const hasSelection = computed( () => checkedRowKeys.value.length > 0 );
 
-    const rowKeyFn = ( row: Draft ) => row.id ?? `${row.draftType || 'type'}-${row.languageCode || 'lang'}-${( row.title || '' ).slice( 0, 20 )}`;
+    const rowKeyFn = ( row: Draft ) => row.id ?? `${row.draftType || 'type'}-${row.languageTag || 'lang'}-${( row.title || '' ).slice( 0, 20 )}`;
 
     const handleNewClick = () => {
       router.push( { name: 'DraftForm', params: { id: 'new' } } );
@@ -306,7 +306,7 @@ export default defineComponent( {
     const columns = computed<DataTableColumns<Draft>>( () => {
       const baseColumns: DataTableColumns<Draft> = [
         { type: 'selection', fixed: 'left', width: 50 },
-        { title: 'Lang', key: 'languageCode', width: 100 },
+        { title: 'Lang', key: 'languageTag', width: 100 },
         { title: 'Ver', key: 'version', width: 90 },
         { title: 'Title', key: 'title', width: 300 },
         {
@@ -364,7 +364,7 @@ export default defineComponent( {
                   row.draftType ? h( NTag as any, { size: 'small', style: 'margin-left: 6px;', type: getTypeType( row.draftType ) }, { default: () => row.draftType } ) : null
                 ] ),
                 h( 'div', { style: 'font-size: 0.8rem; margin: 4px 0;' }, text.length > maxLength ? text.substring( 0, maxLength ) + '...' : text ),
-                h( 'div', { style: 'font-size: 0.75rem; color: #666;' }, row.languageCode || '' )
+                h( 'div', { style: 'font-size: 0.75rem; color: #666;' }, row.languageTag || '' )
               ] );
             }
           }

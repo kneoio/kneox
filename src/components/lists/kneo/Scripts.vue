@@ -102,7 +102,7 @@
         <n-input v-model:value="dialogFilters.searchTerm" placeholder="Search..." clearable />
       </n-form-item>
       <n-form-item label="Language" :show-feedback="false">
-        <n-select v-model:value="dialogFilters.languageCode" :options="langOptions" placeholder="Select language" clearable />
+        <n-select v-model:value="dialogFilters.languageTag" :options="langOptions" placeholder="Select language" clearable />
       </n-form-item>
       <n-form-item label="Timing Mode" :show-feedback="false">
         <n-select v-model:value="dialogFilters.timingMode" :options="timingModeOptions" placeholder="Select timing mode" clearable />
@@ -177,14 +177,14 @@ export default defineComponent({
       searchTerm: '',
       labels: [] as string[],
       timingMode: '' as any,
-      languageCode: '' as any
+      languageTag: '' as any
     });
 
     const filters = ref({
       searchTerm: '',
       labels: [] as string[],
       timingMode: '' as any,
-      languageCode: '' as any
+      languageTag: '' as any
     });
 
     const hasActiveFilters = computed(() => {
@@ -192,7 +192,7 @@ export default defineComponent({
         filters.value.searchTerm ||
         (filters.value.labels && filters.value.labels.length > 0) ||
         filters.value.timingMode ||
-        filters.value.languageCode
+        filters.value.languageTag
       );
     });
 
@@ -207,7 +207,7 @@ export default defineComponent({
             searchTerm: obj.searchTerm || '',
             labels: obj.labels || [],
             timingMode: obj.timingMode || '',
-            languageCode: obj.languageCode || ''
+            languageTag: obj.languageTag || ''
           };
         }
       } catch {}
@@ -243,7 +243,7 @@ export default defineComponent({
         searchTerm: filters.value.searchTerm,
         labels: [...filters.value.labels],
         timingMode: filters.value.timingMode,
-        languageCode: filters.value.languageCode
+        languageTag: filters.value.languageTag
       };
       showFilterDialog.value = true;
     };
@@ -253,7 +253,7 @@ export default defineComponent({
         searchTerm: dialogFilters.value.searchTerm,
         labels: [...dialogFilters.value.labels],
         timingMode: dialogFilters.value.timingMode,
-        languageCode: dialogFilters.value.languageCode
+        languageTag: dialogFilters.value.languageTag
       };
       showFilterDialog.value = false;
       saveFilters();
@@ -290,9 +290,9 @@ export default defineComponent({
       if (filters.value.searchTerm) {
         parts.push(`Search: "${filters.value.searchTerm}"`);
       }
-      if (filters.value.languageCode) {
-        const lang = (langOptions.value || []).find((o: any) => o.value === filters.value.languageCode);
-        parts.push(`Language: ${lang?.label || filters.value.languageCode}`);
+      if (filters.value.languageTag) {
+        const lang = (langOptions.value || []).find((o: any) => o.value === filters.value.languageTag);
+        parts.push(`Language: ${lang?.label || filters.value.languageTag}`);
       }
       if (filters.value.timingMode) {
         parts.push(`Mode: ${timingModeLabel(filters.value.timingMode) || filters.value.timingMode}`);
@@ -312,7 +312,7 @@ export default defineComponent({
         const activeFilters: any = {};
         if (filters.value.labels?.length > 0) activeFilters.labels = filters.value.labels;
         if (filters.value.timingMode) activeFilters.timingMode = filters.value.timingMode;
-        if (filters.value.languageCode) activeFilters.languageCode = filters.value.languageCode;
+        if (filters.value.languageTag) activeFilters.languageTag = filters.value.languageTag;
         if (filters.value.searchTerm) activeFilters.searchTerm = filters.value.searchTerm;
 
         await store.fetchAll(1, 100, activeFilters);

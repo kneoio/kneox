@@ -199,11 +199,17 @@
       <n-grid :cols="4" x-gap="0" y-gap="0">
         <n-gi v-for="lang in langOptions" :key="lang.value">
           <div class="lang-row">
-            <GreenLed
-              class="lang-dot"
-              :active="selectedLanguages.includes(lang.value) && (isReplicating || hasReplicateError || hasReplicateSuccess)"
-              :pulse="getDotVariant(lang.value) === 'yellow'"
-            />
+            <template v-if="lang.value !== 'en-US'">
+              <GreenLed
+                class="lang-dot"
+                :active="selectedLanguages.includes(lang.value) && completedLanguages.has(lang.value)"
+                :pulse="getDotVariant(lang.value) === 'yellow'"
+              />
+              <RedLed
+                class="lang-dot"
+                :active="selectedLanguages.includes(lang.value) && failedLanguages.has(lang.value)"
+              />
+            </template>
             <n-checkbox 
               :checked="selectedLanguages.includes(lang.value)" 
               :disabled="lang.value === 'en-US'"
@@ -227,7 +233,7 @@
 
 <script lang="ts">
 import { computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router';
 import {
   NButton,
   NButtonGroup,
@@ -271,6 +277,7 @@ import { useRadioStationStore } from '../../../stores/kneo/radioStationStore';
 import apiClient from '../../../api/apiClient';
 import AclTable from '../../common/AclTable.vue';
 import GreenLed from '../../common/GreenLed.vue';
+import RedLed from '../../common/RedLed.vue';
 import { InfoCircle } from '@vicons/tabler';
 import { useDialogBackground } from '../../../composables/useDialogBackground';
 
@@ -305,9 +312,13 @@ export default defineComponent({
     NNumberAnimation,
     CodeMirror,
     AclTable,
-    GreenLed
+    GreenLed,
+    RedLed
   },
   setup() {
+    let eventSource: EventSource | null = null;
+    let isUnmounting = false;
+    
     const loadingBar = useLoadingBar();
     const themeVars = useThemeVars();
     const message = useMessage();
@@ -326,7 +337,14 @@ export default defineComponent({
       isWideScreen.value = window.innerWidth >= 1200;
     };
     onMounted(() => window.addEventListener('resize', handleResize));
-    onUnmounted(() => window.removeEventListener('resize', handleResize));
+    onUnmounted(() => {
+      isUnmounting = true;
+      window.removeEventListener('resize', handleResize);
+      if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+      }
+    });
 
     const activeTab = ref('properties');
     const aclData = ref<any[]>([]);
@@ -337,8 +355,8 @@ export default defineComponent({
     const hasReplicateError = ref(false);
     const hasReplicateSuccess = ref(false);
     const completedLanguages = ref<Set<string>>(new Set());
+    const failedLanguages = ref<Set<string>>(new Set());
     const allDone = ref(false);
-    let eventSource: EventSource | null = null;
     const showTestDialog = ref(false);
     const testSongId = ref<string | null>(null);
     const testAgentId = ref<string | null>(null);
@@ -514,6 +532,7 @@ export default defineComponent({
       hasReplicateError.value = false;
       hasReplicateSuccess.value = false;
       completedLanguages.value.clear();
+      failedLanguages.value.clear();
       allDone.value = false;
       showReplicateDialog.value = true;
     };
@@ -524,6 +543,7 @@ export default defineComponent({
         isReplicating.value = true;
         hasReplicateError.value = false;
         completedLanguages.value.clear();
+        failedLanguages.value.clear();
         allDone.value = false;
         message.info(`Replicating prompt to ${selectedLanguages.value.length} language(s)...`);
         const payload = selectedLanguages.value.map((lang) => ({
@@ -542,24 +562,33 @@ export default defineComponent({
         const apiServer = import.meta.env.VITE_API_SERVER;
         eventSource = new EventSource(`${apiServer}/prompts/translate/stream?jobId=${jobId}`, { withCredentials: true } as any);
         eventSource.addEventListener('language_done', (e: MessageEvent) => {
+          if (isUnmounting) return;
           const data = JSON.parse((e as any).data);
+          console.log('language_done event:', data);
           if (data.success) {
             completedLanguages.value.add(data.language);
+            console.log('Added to completedLanguages:', data.language, 'Set:', Array.from(completedLanguages.value));
+          } else {
+            failedLanguages.value.add(data.language);
+            console.log('Added to failedLanguages:', data.language, 'Set:', Array.from(failedLanguages.value));
           }
         });
-        eventSource.addEventListener('done', (e: MessageEvent) => {
-          const data = JSON.parse((e as any).data);
+        eventSource.addEventListener('done', () => {
+          if (isUnmounting) return;
           allDone.value = true;
-          hasReplicateSuccess.value = true;
+          hasReplicateSuccess.value = completedLanguages.value.size > 0;
           isReplicating.value = false;
           loadingBar.finish();
-          message.success(`Prompt replicated: ${data.success}/${data.total} succeeded`);
+          const actualSuccess = completedLanguages.value.size;
+          const total = selectedLanguages.value.length;
+          message.success(`Prompt replicated: ${actualSuccess}/${total} succeeded`);
           if (eventSource) {
             eventSource.close();
             eventSource = null;
           }
         });
         eventSource.addEventListener('error', () => {
+          if (isUnmounting) return;
           hasReplicateError.value = true;
           isReplicating.value = false;
           loadingBar.finish();
@@ -582,7 +611,7 @@ export default defineComponent({
       const isSelected = selectedLanguages.value.includes(langValue);
       if (!isSelected) return 'gray';
       if (completedLanguages.value.has(langValue)) return 'green';
-      if (hasReplicateError.value) return 'red';
+      if (failedLanguages.value.has(langValue)) return 'red';
       if (isReplicating.value) return 'yellow';
       return 'gray';
     };
@@ -760,6 +789,14 @@ export default defineComponent({
       }
     });
 
+    onBeforeRouteLeave(() => {
+      isUnmounting = true;
+      if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+      }
+    });
+
     watch(showReasoning, (value) => {
       localStorage.setItem(STORAGE_KEY_SHOW_REASONING, String(value));
     });
@@ -789,6 +826,8 @@ export default defineComponent({
       isReplicating,
       hasReplicateError,
       hasReplicateSuccess,
+      completedLanguages,
+      failedLanguages,
       allDone,
       getDotVariant,
       toggleLanguage,

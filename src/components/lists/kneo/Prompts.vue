@@ -27,7 +27,7 @@
       <n-collapse-transition :show="showFilters">
         <div :style="{ width: isMobile ? '100%' : '50%' }">
           <n-space size="small" align="center">
-            <n-select v-model:value="filters.languageCode" :options="langOptions" filterable placeholder="Language"
+            <n-select v-model:value="filters.languageTag" :options="langOptions" filterable placeholder="Language"
               clearable style="width: 200px;" />
             <n-radio-group v-model:value="filters.promptType" name="prompt-type-filter-group" style="margin-left: 8px;">
               <n-radio-button value="SONG">Song</n-radio-button>
@@ -83,7 +83,7 @@ export default defineComponent( {
     const STORAGE_SHOW_KEY = 'prompts.list.showFilters';
     const showFilters = ref( false );
     const filters = ref( {
-      languageCode: null as string | null,
+      languageTag: null as string | null,
       promptType: null as string | null,
       enabled: false,
       master: false,
@@ -91,7 +91,7 @@ export default defineComponent( {
     } );
 
     const hasActiveFilters = computed( () =>
-      !!( filters.value.languageCode || filters.value.promptType || filters.value.enabled || filters.value.master || filters.value.locked )
+      !!( filters.value.languageTag || filters.value.promptType || filters.value.enabled || filters.value.master || filters.value.locked )
     );
 
     const loadSavedFilters = () => {
@@ -100,7 +100,7 @@ export default defineComponent( {
         if ( s ) {
           const obj = JSON.parse( s );
           filters.value = {
-            languageCode: obj.languageCode || null,
+            languageTag: obj.languageTag || null,
             promptType: obj.promptType || null,
             enabled: !!obj.enabled,
             master: !!obj.master,
@@ -150,7 +150,7 @@ export default defineComponent( {
         loading.value = true;
         let activeFilters: any = {};
         if ( showFilters.value ) {
-          const hasFilters = filters.value.languageCode ||
+          const hasFilters = filters.value.languageTag ||
             filters.value.promptType ||
             filters.value.enabled ||
             filters.value.master ||
@@ -159,8 +159,8 @@ export default defineComponent( {
             activeFilters = {
               activated: true
             };
-            if ( filters.value.languageCode ) {
-              activeFilters.languageCode = filters.value.languageCode;
+            if ( filters.value.languageTag ) {
+              activeFilters.languageTag = filters.value.languageTag;
             }
             if ( filters.value.promptType ) {
               activeFilters.promptType = filters.value.promptType;
@@ -224,7 +224,7 @@ export default defineComponent( {
 
     const clearFilters = () => {
       filters.value = {
-        languageCode: null,
+        languageTag: null,
         promptType: null,
         enabled: false,
         master: false,
@@ -251,7 +251,7 @@ export default defineComponent( {
 
     const hasSelection = computed( () => checkedRowKeys.value.length > 0 );
 
-    const rowKeyFn = ( row: BroadcastPrompt ) => row.id ?? `${row.promptType || 'type'}-${row.languageCode || 'lang'}-${( row.prompt || '' ).slice( 0, 20 )}`;
+    const rowKeyFn = ( row: BroadcastPrompt ) => row.id ?? `${row.promptType || 'type'}-${row.languageTag || 'lang'}-${( row.prompt || '' ).slice( 0, 20 )}`;
 
     const handleNewClick = () => {
       router.push( '/outline/prompts/new' );
@@ -300,7 +300,7 @@ export default defineComponent( {
     const columns = computed<DataTableColumns<BroadcastPrompt>>( () => {
       const baseColumns: DataTableColumns<BroadcastPrompt> = [
         { type: 'selection', fixed: 'left', width: 40 },
-        { title: 'Lang', key: 'languageCode', width: 70 },
+        { title: 'Lang', key: 'languageTag', width: 70 },
         { title: 'Ver', key: 'version', width: 70 },
         {
           title: 'Flags',
@@ -361,7 +361,7 @@ export default defineComponent( {
               const text = row.prompt || '';
               return h( 'div', { style: 'display: flex; flex-direction: column; gap: 4px;' }, [
                 h( 'div', { style: 'display: flex; align-items: center; gap: 8px;' }, [
-                  h( 'div', { style: 'font-weight: bold;' }, row.languageCode || '' ),
+                  h( 'div', { style: 'font-weight: bold;' }, row.languageTag || '' ),
                   h( 'div', { style: 'font-size: 0.9rem;' }, `v${row.version || '0.0'}` )
                 ] ),
                 h( 'div', { style: 'font-weight: 500;' }, row.title || 'Untitled' ),

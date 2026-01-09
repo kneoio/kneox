@@ -110,6 +110,12 @@ const darkThemeOverrides = {
     titleTextColor: '#f0f0f0',
     subtitleTextColor: '#d0d0d0',
     footerTextColor: '#d0d0d0'
+  },
+  Checkbox: {
+    border: '1px solid #888',
+    borderChecked: '1px solid #60a5fa',
+    borderFocus: '1px solid #60a5fa',
+    colorChecked: '#60a5fa'
   }
 }
 
