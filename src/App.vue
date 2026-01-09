@@ -143,7 +143,7 @@ const initTheme = () => {
   if (savedTheme) {
     isDarkTheme.value = savedTheme === 'dark'
   } else if (window.matchMedia) {
-    isDarkTheme.value = false
+    isDarkTheme.value = true
   }
 }
 

@@ -9,6 +9,8 @@
           Registered: {{ localFormData.regDate }}, Last Modified: {{ localFormData.lastModifiedDate }}
           <br>
           Author: {{ localFormData.author }}, Last Modifier: {{ localFormData.lastModifier }}
+          <br>
+          Version: {{ localFormData.version || 0 }}
         </template>
       </n-page-header>
     </n-gi>
@@ -46,16 +48,6 @@
               <n-gi>
                 <n-form-item label="Language">
                   <n-select v-model:value="localFormData.languageTag" :options="langOptions" style="width: 25%; max-width: 300px;" />
-                </n-form-item>
-              </n-gi>
-              <n-gi>
-                <n-form-item label="Version">
-                  <n-input-number
-                    v-model:value="localFormData.version"
-                    :step="0.1"
-                    :precision="1"
-                    style="width: 15%; max-width: 180px;"
-                  />
                 </n-form-item>
               </n-gi>
               <n-gi v-if="!localFormData.master">
@@ -464,7 +456,7 @@ export default defineComponent({
           master: localFormData.master,
           locked: localFormData.locked,
           podcast: localFormData.podcast,
-          version: localFormData.version,
+          version: (localFormData.version || 0) + 0.1,
         };
         (saveData as any).draftId = selectedDraftId.value || null;
         (saveData as any).masterId = localFormData.master ? null : (selectedMasterId.value || null);

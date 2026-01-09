@@ -9,6 +9,8 @@
           Registered: {{ localFormData.regDate }}, Last Modified: {{ localFormData.lastModifiedDate }}
           <br>
           Author: {{ localFormData.author }}, Last Modifier: {{ localFormData.lastModifier }}
+          <br>
+          Version: {{ localFormData.version || 0 }}
         </template>
       </n-page-header>
     </n-gi>
@@ -46,16 +48,6 @@
                 <n-form-item label="Language">
                   <n-select v-model:value="localFormData.languageCode" :options="langOptions"
                             style="width: 25%; max-width: 300px;"/>
-                </n-form-item>
-              </n-gi>
-              <n-gi>
-                <n-form-item label="Version">
-                  <n-input-number
-                    v-model:value="localFormData.version"
-                    :step="0.1"
-                    :precision="1"
-                    style="width: 15%; max-width: 180px;"
-                  />
                 </n-form-item>
               </n-gi>
               <n-gi>
@@ -355,7 +347,7 @@ export default defineComponent({
       try {
         testLoading.value = true;
         const payload = {
-          languageCode: localFormData.languageCode,
+          languageTag: localFormData.languageCode,
           songId: testSongId.value,
           agentId: testAgentId.value,
           stationId: testStationId.value,
@@ -395,14 +387,11 @@ export default defineComponent({
           title: localFormData.title,
           description: localFormData.description,
           content: localFormData.content,
-          languageCode: localFormData.languageCode,
+          languageTag: localFormData.languageCode,
           archived: localFormData.archived,
           enabled: localFormData.enabled,
           locked: localFormData.locked,
-          version: localFormData.version,
-          localizedName: {
-            en: localFormData.title || 'Default Title'
-          }
+          version: (localFormData.version || 0) + 0.1
         };
         (saveData as any).master = localFormData.isMaster;
         const id = localFormData.id ? localFormData.id : null;
@@ -442,6 +431,10 @@ export default defineComponent({
         if (id) {
           await store.fetch(id);
           const data = {...store.getCurrent} as Draft;
+          // Map server response languageTag to form's languageCode
+          if ((data as any).languageTag && !(data as any).languageCode) {
+            (data as any).languageCode = (data as any).languageTag;
+          }
           Object.assign(localFormData, data);
           if ((data as any).master !== undefined) {
             localFormData.isMaster = Boolean((data as any).master);
