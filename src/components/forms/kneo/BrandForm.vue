@@ -1,7 +1,7 @@
 <template>
-  <n-grid cols="6" x-gap="12" y-gap="12" class="m-5">
-    <n-gi span="6">
-      <n-page-header subtitle="Stream" @back="goBack">
+  <n-grid :cols="isMobile ? 1 : 6" x-gap="12" y-gap="12" :style="{ padding: isMobile ? '0' : undefined }" :class="isMobile ? '' : 'm-5'">
+    <n-gi :span="isMobile ? 1 : 6">
+      <n-page-header subtitle="Stream" @back="goBack" :style="{ marginLeft: isMobile ? '60px' : '0', padding: isMobile ? '8px' : undefined }">
         <template #title>
           {{ store.getCurrent.country || store.getCurrent.slugName }}
           <span v-if=" localFormData.timeZone && getCurrentTimeInTimezone "
@@ -29,13 +29,13 @@
         </template>
       </n-page-header>
     </n-gi>
-    <n-gi class="mt-2" span="6">
-      <n-button-group>
-        <n-button type="primary" @click="handleSave" size="large">Save</n-button>
-        <n-button type="default" disabled @click="handleArchive" size="large">Archive</n-button>
+    <n-gi :span="isMobile ? 1 : 6" class="mt-2">
+      <n-button-group :style="{ width: isMobile ? '100%' : 'auto' }">
+        <n-button type="primary" @click="handleSave" :size="isMobile ? 'medium' : 'large'" :style="{ flex: isMobile ? 1 : 'none' }">Save</n-button>
+        <n-button type="default" disabled @click="handleArchive" :size="isMobile ? 'medium' : 'large'" :style="{ flex: isMobile ? 1 : 'none' }">Archive</n-button>
       </n-button-group>
     </n-gi>
-    <n-gi span="6">
+    <n-gi :span="isMobile ? 1 : 6">
       <n-tabs v-model:value="activeTab">
         <n-tab-pane name="properties" tab="Properties">
           <n-form label-placement="left" label-width="auto">
@@ -43,7 +43,7 @@
               <n-gi>
                 <n-form-item label="Localized Names">
                   <n-dynamic-input v-model:value="localizedNameArray" :on-create="createLocalizedName"
-                    style="width: 50%; max-width: 600px;">
+                    :style="{ width: isMobile ? '100%' : '50%', maxWidth: isMobile ? '100%' : '600px' }">
                     <template #default=" { value, index } ">
                       <n-space align="center" style="width: 100%;">
                         <n-select v-model:value="value.language" :options="languageOptions"
@@ -57,19 +57,19 @@
               <n-gi>
                 <n-form-item label="Country">
                   <n-select v-model:value="localFormData.country" :options="countryOptions"
-                    style="width: 25%; max-width: 300px;" />
+                    :style="{ width: isMobile ? '100%' : '25%', maxWidth: isMobile ? '100%' : '300px' }" />
                 </n-form-item>
               </n-gi>
               <n-gi>
                 <n-form-item label="Description">
                   <n-input v-model:value="localFormData.description" type="textarea" placeholder=""
-                    :autosize="{ minRows: 3, maxRows: 6 }" style="width: 50%; max-width: 600px;" />
+                    :autosize="{ minRows: 3, maxRows: 6 }" :style="{ width: isMobile ? '100%' : '50%', maxWidth: isMobile ? '100%' : '600px' }" />
                 </n-form-item>
               </n-gi>
               <n-gi>
                 <n-form-item label="Time Zone">
                   <n-select v-model:value="localFormData.timeZone" :options="timezones"
-                    style="width: 25%; max-width: 300px;" />
+                    :style="{ width: isMobile ? '100%' : '25%', maxWidth: isMobile ? '100%' : '300px' }" />
                 </n-form-item>
               </n-gi>
               <n-gi>
@@ -77,12 +77,12 @@
                   <n-slider v-model:value="localFormData.bitRate" 
                     :marks="{ 128000: '128 kbps', 192000: '192 kbps', 256000: '256 kbps', 320000: '320 kbps' }"
                     :min="128000" :max="320000" :step="64000"
-                    style="width: 50%; max-width: 400px;" />
+                    :style="{ width: isMobile ? '100%' : '50%', maxWidth: isMobile ? '100%' : '400px' }" />
                 </n-form-item>
               </n-gi>
               <n-gi>
                 <n-form-item label="HLS URL">
-                  <n-text style="width: 50%; max-width: 600px; font-family: monospace; cursor: pointer; color: #1890ff;"
+                  <n-text :style="{ width: isMobile ? '100%' : '50%', maxWidth: isMobile ? '100%' : '600px', fontFamily: 'monospace', cursor: 'pointer', color: '#1890ff', wordBreak: isMobile ? 'break-all' : 'normal' }"
                     @click="openUrl( localFormData.hlsUrl )">
                     {{ localFormData.hlsUrl }}
                   </n-text>
@@ -99,7 +99,7 @@
               
               <n-gi>
                 <n-form-item label="MP3 URL">
-                  <n-text style="width: 50%; max-width: 600px; font-family: monospace; cursor: pointer; color: #1890ff;"
+                  <n-text :style="{ width: isMobile ? '100%' : '50%', maxWidth: isMobile ? '100%' : '600px', fontFamily: 'monospace', cursor: 'pointer', color: '#1890ff', wordBreak: isMobile ? 'break-all' : 'normal' }"
                     @click="openUrl( localFormData.mp3Url )">
                     {{ localFormData.mp3Url }}
                   </n-text>
@@ -115,7 +115,7 @@
               </n-gi>
               <n-gi>
                 <n-form-item label="Mixpla URL">
-                  <n-text style="width: 50%; max-width: 600px; font-family: monospace; cursor: pointer; color: #1890ff;"
+                  <n-text :style="{ width: isMobile ? '100%' : '50%', maxWidth: isMobile ? '100%' : '600px', fontFamily: 'monospace', cursor: 'pointer', color: '#1890ff', wordBreak: isMobile ? 'break-all' : 'normal' }"
                     @click="openUrl( localFormData.mixplaUrl )">
                     {{ localFormData.mixplaUrl }}
                   </n-text>
@@ -140,7 +140,7 @@
                 <n-form-item label="Name">
                   <n-select v-model:value="localFormData.aiAgentId" :options="agentOptions"
                     :disabled="aiOverrideEnabled"
-                    style="width: 50%; max-width: 600px;" />
+                    :style="{ width: isMobile ? '100%' : '50%', maxWidth: isMobile ? '100%' : '600px' }" />
                   <n-text v-if="aiOverrideEnabled" depth="3" style="font-size: 12px; margin-top: 4px; display: block;">
                     ⚠️ AI agent values are overridden
                   </n-text>
@@ -159,7 +159,7 @@
                 <n-form-item label="Override Name">
                   <n-input v-model:value="localFormData.aiOverriding.name" 
                     placeholder=""
-                    style="width: 50%; max-width: 600px;" />
+                    :style="{ width: isMobile ? '100%' : '50%', maxWidth: isMobile ? '100%' : '600px' }" />
                 </n-form-item>
               </n-gi>
 
@@ -169,7 +169,7 @@
                     type="textarea" 
                     placeholder=""
                     :autosize="{ minRows: 3, maxRows: 5 }"
-                    style="width: 50%; max-width: 600px;" />
+                    :style="{ width: isMobile ? '100%' : '50%', maxWidth: isMobile ? '100%' : '600px' }" />
                 </n-form-item>
               </n-gi>
 
@@ -178,7 +178,7 @@
                   <n-select v-model:value="localFormData.aiOverriding.primaryVoice" 
                     :options="voiceOptions"
                     filterable
-                    style="width: 30%; max-width: 300px;" />
+                    :style="{ width: isMobile ? '100%' : '30%', maxWidth: isMobile ? '100%' : '300px' }" />
                 </n-form-item>
               </n-gi>
             </n-grid>
@@ -191,12 +191,12 @@
               <n-gi>
                 <n-form-item label="Script">
                   <n-select v-model:value="localFormData.scriptId" :options="scriptOptions" :render-label="renderScriptLabel"
-                    style="width: 50%; max-width: 600px;" />
+                    :style="{ width: isMobile ? '100%' : '50%', maxWidth: isMobile ? '100%' : '600px' }" />
                 </n-form-item>
               </n-gi>
               <n-gi v-if="selectedScript">
                 <n-form-item label="Description">
-                  <n-anchor type="block" :show-background="false" :show-rail="true" style="width: 50%; max-width: 600px;">
+                  <n-anchor type="block" :show-background="false" :show-rail="true" :style="{ width: isMobile ? '100%' : '50%', maxWidth: isMobile ? '100%' : '600px' }">
                     <n-anchor-link>
                       {{ selectedScript.description }}
                     </n-anchor-link>
@@ -205,7 +205,7 @@
               </n-gi>
               <n-gi v-if="selectedScript?.requiredVariables?.length">
                 <n-form-item label="Variables">
-                  <div style="width: 50%; max-width: 600px;">
+                  <div :style="{ width: isMobile ? '100%' : '50%', maxWidth: isMobile ? '100%' : '600px' }">
                     <div v-for="variable in selectedScript.requiredVariables" :key="variable.name" style="margin-bottom: 12px;">
                       <div style="margin-bottom: 4px; font-size: 13px;">
                         <strong>{{ formatVariableName(variable.name) }}</strong>
@@ -229,12 +229,12 @@
               <n-gi>
                 <n-form-item label="Audience Type">
                   <n-select v-model:value="localFormData.profileId" :options="profileOptions"
-                    style="width: 50%; max-width: 600px;" />
+                    :style="{ width: isMobile ? '100%' : '50%', maxWidth: isMobile ? '100%' : '600px' }" />
                 </n-form-item>
               </n-gi>
               <n-gi v-if="selectedProfile">
                 <n-form-item label="Description">
-                  <n-anchor type="block" :show-background="false" show-rail style="width: 50%; max-width: 600px;">
+                  <n-anchor type="block" :show-background="false" show-rail :style="{ width: isMobile ? '100%' : '50%', maxWidth: isMobile ? '100%' : '600px' }">
                     <n-anchor-link>
                       {{ selectedProfile.description }}
                     </n-anchor-link>
@@ -246,7 +246,7 @@
                 <n-form-item label="Local Name (optional)">
                   <n-input v-model:value="localFormData.profileOverriding!.name" 
                     placeholder=""
-                    style="width: 50%; max-width: 600px;" />
+                    :style="{ width: isMobile ? '100%' : '50%', maxWidth: isMobile ? '100%' : '600px' }" />
                 </n-form-item>
               </n-gi>
 
@@ -256,7 +256,7 @@
                     type="textarea" 
                     placeholder=""
                     :autosize="{ minRows: 3, maxRows: 5 }"
-                    style="width: 50%; max-width: 600px;" />
+                    :style="{ width: isMobile ? '100%' : '50%', maxWidth: isMobile ? '100%' : '600px' }" />
                 </n-form-item>
               </n-gi>
             </n-grid>
@@ -268,19 +268,19 @@
               <n-gi>
                 <n-form-item label="Messaging">
                   <n-select v-model:value="localFormData.messagingPolicy" :options="referencesStore.messagingPolicyOptions"
-                    style="width: 25%; max-width: 300px;" />
+                    :style="{ width: isMobile ? '100%' : '25%', maxWidth: isMobile ? '100%' : '300px' }" />
                 </n-form-item>
               </n-gi>
               <n-gi>
                 <n-form-item label="One-Time Stream">
                   <n-select v-model:value="localFormData.oneTimeStreamPolicy" :options="referencesStore.submissionPolicyOptions"
-                    style="width: 25%; max-width: 300px;" />
+                    :style="{ width: isMobile ? '100%' : '25%', maxWidth: isMobile ? '100%' : '300px' }" />
                 </n-form-item>
               </n-gi>
               <n-gi>
                 <n-form-item label="Song Submission">
                   <n-select v-model:value="localFormData.submissionPolicy" :options="referencesStore.submissionPolicyOptions"
-                    style="width: 25%; max-width: 300px;" />
+                    :style="{ width: isMobile ? '100%' : '25%', maxWidth: isMobile ? '100%' : '300px' }" />
                 </n-form-item>
               </n-gi>
             </n-grid>
@@ -292,9 +292,9 @@
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
               <n-gi v-if="stationTitlePreview">
                 <n-form-item label="Preview">
-                  <n-anchor type="block" :show-background="false" :show-rail="true" style="width: 50%; max-width: 600px;">
+                  <n-anchor type="block" :show-background="false" :show-rail="true" :style="{ width: isMobile ? '100%' : '50%', maxWidth: isMobile ? '100%' : '600px' }">
                     <n-anchor-link>
-                      <div :style="{ fontFamily: localFormData.titleFont || undefined, fontSize: '34px', lineHeight: 1.1 }">
+                      <div :style="{ fontFamily: localFormData.titleFont || undefined, fontSize: isMobile ? '24px' : '34px', lineHeight: 1.1 }">
                         {{ stationTitlePreview }}
                       </div>
                     </n-anchor-link>
@@ -304,7 +304,7 @@
               <n-gi>
                 <n-form-item label="Title Font">
                   <n-select v-model:value="localFormData.titleFont" :options="stationFontOptions"
-                    style="width: 25%; max-width: 300px;" />
+                    :style="{ width: isMobile ? '100%' : '25%', maxWidth: isMobile ? '100%' : '300px' }" />
                 </n-form-item>
               </n-gi>
               <n-gi>
@@ -428,6 +428,7 @@ export default defineComponent( {
     const profileOverrideEnabled = ref( false );
     const aiOverrideEnabled = ref( false );
     const userVariables = ref<Record<string, any>>( {} );
+    const isMobile = ref(window.innerWidth < 768);
     
 
     const toBool = (v: any): boolean => {
@@ -807,6 +808,10 @@ export default defineComponent( {
       }
     };
 
+    const handleResize = () => {
+      isMobile.value = window.innerWidth < 768;
+    };
+
     watch(() => route.params.id, async (newId, oldId) => {
       if (newId && newId !== oldId) {
         await loadFormData();
@@ -816,10 +821,12 @@ export default defineComponent( {
     onMounted( async () => {
       startClockUpdate();
       await loadFormData();
+      window.addEventListener('resize', handleResize);
     } );
 
     onUnmounted( () => {
       stopClockUpdate();
+      window.removeEventListener('resize', handleResize);
     } );
 
     return {
@@ -861,7 +868,8 @@ export default defineComponent( {
       aiOverrideEnabled,
       voiceOptions,
       userVariables,
-      formatVariableName
+      formatVariableName,
+      isMobile
     };
   }
 } );

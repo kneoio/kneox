@@ -164,7 +164,7 @@ export default defineComponent({
     });
 
     const isMobile = ref(window.innerWidth <= 768);
-    const isDrawerOpen = ref(!isMobile.value);
+    const isDrawerOpen = ref(false);
     const drawerWidth = ref(300);
     const active = ref(window.innerWidth > 768);
     const viewTitle = ref<string | null>(null);
@@ -640,6 +640,7 @@ export default defineComponent({
 @media (max-width: 768px) {
   .content {
     margin-left: 0 !important;
+    padding: 8px;
   }
 }
 </style>

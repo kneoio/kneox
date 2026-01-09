@@ -1,8 +1,10 @@
 <template>
-  <n-grid :cols="isMobile ? 1 : 6" x-gap="12" y-gap="12" class="p-4">
-    <n-gi>
-      <n-page-header>
-        <template #title>Brands</template>
+  <n-grid :cols="isMobile ? 1 : 6" x-gap="12" y-gap="12" :style="{ padding: isMobile ? '0' : '1rem' }">
+    <n-gi :span="isMobile ? 1 : 6">
+      <n-page-header :style="{ padding: isMobile ? '8px' : undefined, marginLeft: isMobile ? '60px' : '0' }">
+        <template #title>
+          <span :style="{ fontSize: isMobile ? '20px' : undefined }">Brands</span>
+        </template>
         <template #footer>
           Total: {{ store.getPagination.itemCount }}
         </template>
@@ -10,13 +12,14 @@
     </n-gi>
 
     <n-gi :span="isMobile ? 1 : 6">
-      <n-button-group>
-        <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
+      <n-button-group :style="{ width: isMobile ? '100%' : 'auto' }">
+        <n-button @click="handleNewClick" type="primary" :size="isMobile ? 'medium' : 'large'" :style="{ flex: isMobile ? 1 : 'none' }">New</n-button>
         <n-button
             type="error"
             :disabled="!hasSelection"
             @click="handleDelete"
-            size="large"
+            :size="isMobile ? 'medium' : 'large'"
+            :style="{ flex: isMobile ? 1 : 'none' }"
         >
           Delete ({{ checkedRowKeys.length }})
         </n-button>
@@ -49,9 +52,9 @@
     preset="dialog"
     :title="selectedOneTimeStreamScript?.name || 'One-Time stream'"
     :close-on-esc="true"
-    :style="{ width: isMobile ? '90vw' : '900px', backgroundColor: dialogBackgroundColor, maxHeight: isMobile ? '85vh' : '80vh' }"
+    :style="{ width: isMobile ? '95vw' : '900px', backgroundColor: dialogBackgroundColor, maxHeight: isMobile ? '90vh' : '80vh' }"
   >
-    <div style="min-height: 420px; max-height: 62vh; overflow: auto; padding-right: 8px;">
+    <div :style="{ minHeight: isMobile ? '300px' : '420px', maxHeight: isMobile ? '60vh' : '62vh', overflow: 'auto', paddingRight: '8px' }">
       <n-space vertical>
         <n-form-item label="Script">
           <n-select
@@ -59,13 +62,13 @@
             :options="oneTimeStreamScriptOptions"
             :render-label="renderScriptLabel"
             filterable
-            style="width: 50%; max-width: 600px;"
+            :style="{ width: isMobile ? '100%' : '50%', maxWidth: isMobile ? '100%' : '600px' }"
             placeholder="Select script..."
           />
         </n-form-item>
 
         <n-form-item label="Description">
-          <div style="width: 50%; max-width: 600px; min-height: 90px;">
+          <div :style="{ width: isMobile ? '100%' : '50%', maxWidth: isMobile ? '100%' : '600px', minHeight: '90px' }">
             <n-anchor v-if="selectedOneTimeStreamScript" type="block" :show-background="false" :show-rail="true" style="width: 100%;">
               <n-anchor-link>
                 {{ selectedOneTimeStreamScript.description }}
@@ -79,13 +82,13 @@
             v-model:value="selectedOneTimeStreamBrandId"
             :options="oneTimeStreamBrandOptions"
             filterable
-            style="width: 50%; max-width: 450px;"
+            :style="{ width: isMobile ? '100%' : '50%', maxWidth: isMobile ? '100%' : '450px' }"
             placeholder="Select brand..."
           />
         </n-form-item>
 
         <n-form-item v-if="selectedOneTimeStreamScript?.requiredVariables?.length" label="Variables">
-          <div style="width: 100%; max-width: 900px;">
+          <div :style="{ width: '100%', maxWidth: isMobile ? '100%' : '900px' }">
             <div v-for="variable in selectedOneTimeStreamScript.requiredVariables" :key="variable.name" style="margin-bottom: 12px;">
               <div style="margin-bottom: 4px; font-size: 13px;">
                 <strong>{{ formatVariableName(variable.name) }}</strong>
@@ -691,5 +694,9 @@ export default defineComponent({
 <style scoped>
 .p-4 {
   padding: 1rem;
+}
+
+.p-2 {
+  padding: 0.5rem;
 }
 </style>
