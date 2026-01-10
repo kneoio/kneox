@@ -125,7 +125,7 @@ const isAuthenticated = ref(false)
 const displayNickname = ref('')
 const stationColor = ref('#2196F3')
 
-const stationSlug = computed(() => (route.query.brand as string) || '')
+const stationSlug = computed(() => (route.query.brand as string) || (route.params.brand as string) || '')
 
 
 const canRegister = computed(() => {

@@ -77,6 +77,24 @@ const routes: Array<RouteRecordRaw> = [
         meta: { requiresAuth: false }
     },
     {
+        path: '/:brand/chat',
+        name: 'BrandChat',
+        component: Chat,
+        meta: { requiresAuth: false }
+    },
+    {
+        path: '/:brand/submit-song',
+        name: 'BrandSubmitSong',
+        component: SubmitSongM,
+        meta: { requiresAuth: false }
+    },
+    {
+        path: '/:brand/create-stream',
+        name: 'BrandCreateOneTimeStream',
+        component: CreateOneTimeStreamM,
+        meta: { requiresAuth: false }
+    },
+    {
         path: '/:brand',
         name: 'StationPage',
         component: StationPage,

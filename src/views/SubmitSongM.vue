@@ -238,7 +238,7 @@ const artistInputRef = ref<any | null>(null)
 const sendingCode = ref(false)
 const codeSent = ref(false)
 const policy = ref<string>('')
-const stationSlug = route.query.brand as string
+const stationSlug = (route.query.brand as string) || (route.params.brand as string) || ''
 
 const agreeHighlightStyle = computed(() => {
   const isOk = !!form.value.agree

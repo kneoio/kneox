@@ -127,7 +127,7 @@
                       <n-icon size="32" color="#666666">
                         <ExternalLink />
                       </n-icon>
-                      <n-text strong>Open Player</n-text>
+                      <n-text strong>Open Mixpla Player</n-text>
                     </n-space>
                   </n-card>
                 </n-grid-item>
@@ -151,7 +151,7 @@
                       <n-icon size="32" color="#666666">
                         <MessageCircle />
                       </n-icon>
-                      <n-text strong>Chat with DJ</n-text>
+                      <n-text strong>Chat with {{ station.djName || 'DJ' }}</n-text>
                     </n-space>
                   </n-card>
                 </n-grid-item>
@@ -199,7 +199,7 @@
                       <n-icon size="32" color="#666666">
                         <Radio />
                       </n-icon>
-                      <n-text strong>Create Stream</n-text>
+                      <n-text strong>Create Your Stream</n-text>
                     </n-space>
                   </n-card>
                 </n-grid-item>
@@ -285,15 +285,15 @@ function goHome() {
 }
 
 function goToChat() {
-  router.push({ name: 'PostMessage', query: { brand: brandSlug.value } })
+  router.push(`/${brandSlug.value}/chat`)
 }
 
 function goToSubmitSong() {
-  router.push({ name: 'SubmitSong', query: { brand: brandSlug.value } })
+  router.push(`/${brandSlug.value}/submit-song`)
 }
 
 function goToCreateOneTimeStream() {
-  router.push({ name: 'CreateOneTimeStream', query: { brand: brandSlug.value } })
+  router.push(`/${brandSlug.value}/create-stream`)
 }
 
 function togglePlay() {

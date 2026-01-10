@@ -33,7 +33,6 @@ export const useReferencesStore = defineStore('references', () => {
     { label: "Português (PT)", value: "pt-PT" },
     { label: "Português (BR)", value: "pt-BR" },
     { label: "Русский (RU)", value: "ru-RU" },
-    { label: "Русский (KZ)", value: "ru-KZ" },
     { label: "Қазақша", value: "kk-KZ" },
     { label: "Deutsch", value: "de-DE" },
     { label: "Français", value: "fr-FR" },
