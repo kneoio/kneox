@@ -70,6 +70,15 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
+                <n-form-item label="Email" path="email">
+                  <n-input
+                      v-model:value="localFormData.email"
+                      placeholder=""
+                      style="width: 25%; max-width: 300px;"
+                  />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
                 <n-form-item label="Telegram name" path="telegramName">
                   <n-input
                       v-model:value="localFormData.telegramName"
@@ -155,6 +164,7 @@ interface LocalListenerFormData {
   localizedName: LocalizedName;
   country: string;
   nickName: LocalizedName;
+  email: string;
   telegramName: string;
   archived: number;
   listenerOf: string[];
@@ -203,6 +213,8 @@ export default defineComponent({
       archived: 0,
       listenerOf: [],
       listenerType: "",
+      userId: "",
+      email: "",
     });
 
     const formTitle = computed(() => localFormData.id ? 'Edit Listener' : 'Create New Listener');
@@ -280,6 +292,7 @@ export default defineComponent({
           archived: localFormData.archived,
           listenerOf: localFormData.listenerOf,
           telegramName: localFormData.telegramName,
+          email: localFormData.email,
         };
 
         console.log('Data to save:', dataToSave);

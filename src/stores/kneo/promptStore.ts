@@ -5,12 +5,12 @@ import { ApiFormResponse, ApiViewPageResponse } from "../../types";
 import { BroadcastPrompt, BroadcastPromptSave, PromptType } from "../../types/kneoBroadcasterTypes";
 
 interface PromptFilterDTO {
-  languageCode?: string;
+  activated?: boolean;
+  languageTag?: string;
+  promptType?: PromptType | string;
   enabled?: boolean;
   master?: boolean;
   locked?: boolean;
-  activated?: boolean;
-  promptType?: PromptType | string;
 }
 
 function normalizeFilter(filter?: PromptFilterDTO | string) {

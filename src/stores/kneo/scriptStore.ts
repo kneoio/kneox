@@ -5,11 +5,11 @@ import {ApiFormResponse, ApiViewPageResponse} from "../../types";
 import { SceneTimingMode, Script, ScriptSave } from "../../types/kneoBroadcasterTypes";
 
 interface ScriptFilterDTO {
+    activated?: boolean;
     labels?: string[];
     timingMode?: SceneTimingMode;
-    languageCode?: string;
+    languageTag?: string;
     searchTerm?: string;
-    activated?: boolean;
 }
 
 function buildScriptsUrl(basePath: string, { page = 1, size = 10, filter }: { page?: number; size?: number; filter?: ScriptFilterDTO } = {}) {

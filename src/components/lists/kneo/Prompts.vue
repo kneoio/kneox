@@ -37,7 +37,7 @@
             </n-radio-group>
             <n-button-group>
               <n-button :type="filters.enabled ? 'primary' : 'default'" @click="filters.enabled = !filters.enabled">Enabled</n-button>
-              <n-button :type="filters.master ? 'primary' : 'default'" @click="filters.master = !filters.master">Master</n-button>
+              <n-button :type="filters.master ? 'primary' : 'default'" @click="toggleMaster">Master</n-button>
               <n-button :type="filters.locked ? 'primary' : 'default'" @click="filters.locked = !filters.locked">Locked</n-button>
             </n-button-group>
           </n-space>
@@ -220,6 +220,11 @@ export default defineComponent( {
       showFilters.value = !showFilters.value;
       saveFilters();
       fetchData( 1, store.getPagination.pageSize );
+    };
+
+    const toggleMaster = () => {
+      filters.value.master = !filters.value.master;
+      filters.value.languageTag = null;
     };
 
     const clearFilters = () => {
@@ -406,6 +411,7 @@ export default defineComponent( {
       showFilters,
       filters,
       toggleFilters,
+      toggleMaster,
       clearFilters,
       applyFilters,
       langOptions

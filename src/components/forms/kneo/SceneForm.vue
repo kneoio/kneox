@@ -102,6 +102,7 @@
                     <n-select
                       v-model:value="scenePrompts[index].promptId"
                       :options="promptOptions"
+                      :render-label="renderPromptLabel"
                       placeholder=""
                       style="min-width: 600px;"
                     />
@@ -131,7 +132,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, onMounted, reactive, ref, watch } from 'vue';
+import { computed, defineComponent, h, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
   NButton,
@@ -154,6 +155,7 @@ import {
   NInputNumber,
   NRadioGroup,
   NRadioButton,
+  NTag,
   useLoadingBar,
   useMessage
 } from 'naive-ui';
@@ -190,6 +192,7 @@ export default defineComponent({
     NInputNumber,
     NRadioGroup,
     NRadioButton,
+    NTag,
     ChevronRight,
     AclTable,
     PlaylistFields
@@ -219,16 +222,28 @@ export default defineComponent({
         .filter((p: any) => typeof p.id === 'string' && p.id)
         .map((p: any) => ({
           label: p.title || p.id,
-          value: p.id as string
+          value: p.id as string,
+          master: p.master,
+          podcast: p.podcast,
+          promptType: p.promptType
         }))
     );
 
-    const formTitle = computed(() => (localFormData.id ? 'Edit Scene' : 'Create New Scene'));
+    const renderPromptLabel = (option: any) => {
+      return h('span', { style: 'display: flex; align-items: center; gap: 8px;' }, [
+        option.master ? h(NTag, { type: 'info', size: 'small' }, { default: () => 'Master' }) : null,
+        option.podcast ? h(NTag, { type: 'warning', size: 'small' }, { default: () => 'Podcast' }) : null,
+        option.promptType ? h(NTag, { type: 'success', size: 'small' }, { default: () => option.promptType }) : null,
+        h('span', option.label)
+      ]);
+    };
     
     const timingModeOptions = [
       { label: 'Absolute Time', value: SceneTimingMode.RELATIVE_TO_STREAM_START },
       { label: 'Relative to Stream Start', value: SceneTimingMode.ABSOLUTE_TIME }
     ];
+    
+    const formTitle = computed(() => (localFormData.id ? 'Edit Scene' : 'Create New Scene'));
 
     const localFormData = reactive<Partial<ScriptScene>>({
       id: '',
@@ -419,7 +434,7 @@ export default defineComponent({
     onMounted(async () => {
       try {
         loadingBar.start();
-        await promptStore.fetchAll(1, 100);
+        await promptStore.fetchAll(1, 100, { master: true });
         await load();
       } catch (e) {
         message.error(getErrorMessage(e));
@@ -444,6 +459,7 @@ export default defineComponent({
       selectedWeekdays,
       promptOptions,
       scriptOptions,
+      renderPromptLabel,
       goToPrompt,
       createScenePrompt,
       activeTab,

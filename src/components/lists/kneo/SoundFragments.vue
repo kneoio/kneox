@@ -379,11 +379,10 @@ export default defineComponent( {
       try {
         loading.value = true;
         let activeFilters = {};
-        if ( showFilters.value ) {
-          const hasFilters = filters.value.searchTerm || filters.value.genre?.length > 0 || filters.value.labels?.length > 0 || filters.value.type?.length > 0 || filters.value.source?.length > 0;
-          if ( hasFilters ) {
-            activeFilters = filters.value;
-          }
+        const hasSearchTerm = filters.value.searchTerm;
+        const hasDialogFilters = filters.value.genre?.length > 0 || filters.value.labels?.length > 0 || filters.value.type?.length > 0 || filters.value.source?.length > 0;
+        if ( hasSearchTerm || hasDialogFilters ) {
+          activeFilters = filters.value;
         }
         await store.fetchAll( page, pageSize, activeFilters );
       } catch ( error ) {

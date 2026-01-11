@@ -758,7 +758,7 @@ export default defineComponent( {
         loadingBar.start();
         await aiAgentStore.fetchAllUnsecured( 1, 100 );
         await profileStore.fetchAllUnsecured( 1, 100 );
-        await scriptStore.fetchAllShared( 1, 100 );
+        await scriptStore.fetchAllShared( 1, 100, { timingMode: 'ABSOLUTE_TIME' } );
         await referencesStore.fetchVoices();
         await store.fetch( id );
         await nextTick();
