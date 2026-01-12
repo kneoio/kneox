@@ -46,7 +46,7 @@
                     :style="{ width: isMobile ? '100%' : '50%', maxWidth: isMobile ? '100%' : '600px' }">
                     <template #default=" { value, index } ">
                       <n-space align="center" style="width: 100%;">
-                        <n-select v-model:value="value.language" :options="languageOptions"
+                        <n-select v-model:value="value.language" :options="referencesStore.localizedLanguageOptions"
                           style="width: 120px;" />
                         <n-input v-model:value="value.name" style="flex: 1;" placeholder="" />
                       </n-space>
@@ -840,8 +840,8 @@ export default defineComponent( {
       editorExtensions,
       localizedNameArray,
       createLocalizedName,
+      referencesStore,
       countryOptions: referencesStore.countryOptions,
-      languageOptions: referencesStore.languageOptions,
       bitRateOptions: referencesStore.bitRateOptions,
       agentOptions,
       profileOptions,

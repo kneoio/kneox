@@ -52,6 +52,29 @@ export const useReferencesStore = defineStore('references', () => {
     { label: "Українська", value: "uk-UA" }
   ];
 
+  const localizedLanguageOptions = [
+    { label: "English", value: "en" },
+    { label: "Português", value: "pt" },
+    { label: "Русский", value: "ru" },
+    { label: "Қазақша", value: "kk" },
+    { label: "Deutsch", value: "de" },
+    { label: "Français", value: "fr" },
+    { label: "Español", value: "es" },
+    { label: "Italiano", value: "it" },
+    { label: "Latviešu", value: "lv" },
+    { label: "Suomi", value: "fi" },
+    { label: "Norsk", value: "no" },
+    { label: "Svenska", value: "sv" },
+    { label: "Polski", value: "pl" },
+    { label: "Türkçe", value: "tr" },
+    { label: "ქართული", value: "ka" },
+    { label: "日本語", value: "ja" },
+    { label: "中文", value: "zh" },
+    { label: "한국어", value: "ko" },
+    { label: "हिंदी", value: "hi" },
+    { label: "Українська", value: "uk" }
+  ];
+
   const languageToCountryMap: Record<string, string> = {
     'en-US': 'US',
     'en-GB': 'GB',
@@ -363,6 +386,7 @@ export const useReferencesStore = defineStore('references', () => {
   return {
     countryOptions,
     languageOptions,
+    localizedLanguageOptions,
     languageToCountryMap,
     voiceOptions,
     timezones,

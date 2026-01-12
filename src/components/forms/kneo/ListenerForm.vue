@@ -34,7 +34,7 @@
                       <n-space align="center" style="width: 100%;">
                         <n-select
                             v-model:value="value.language"
-                            :options="languageOptions"
+                            :options="referencesStore.localizedLanguageOptions"
 
                             style="width: 120px;"
                         />
@@ -55,7 +55,7 @@
                       <n-space align="center" style="width: 100%;">
                         <n-select
                             v-model:value="value.language"
-                            :options="languageOptions"
+                            :options="referencesStore.localizedLanguageOptions"
 
                             style="width: 120px;"
                         />
@@ -389,13 +389,12 @@ export default defineComponent({
       handleArchive,
       goBack,
       formTitle,
-      isSaving,
       radioStationOptions,
       localizedNameArray,
       nickNameArray,
       createLocalizedName,
       createNickName,
-      languageOptions: referencesStore.languageOptions,
+      referencesStore,
       countryOptions: referencesStore.countryOptions,
       activeTab,
       aclData,
