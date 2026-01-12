@@ -41,11 +41,17 @@
         </n-space>
       </div>
       <div class="drawer-content" style="overflow-y: auto; max-height: calc(100vh - 80px);">
-        <n-menu
-            :options="dynamicMenuOptions"
-            :value="activeMenuKey"
-            @update:value="handleMenuSelect"
+        <n-tree
+            :data="treeData"
+            :selected-keys="[activeMenuKey]"
+            :default-expanded-keys="defaultExpandedKeys"
+            :show-line="true"
+            :block-node="true"
+            :expand-on-click="true"
+            :animated="true"
+            @update:selected-keys="handleTreeSelect"
             style="min-width: 250px;"
+            :render-label="renderTreeLabel"
         />
       </div>
     </div>
@@ -70,15 +76,16 @@ import {
   NDrawer,
   NDrawerContent,
   NMenu,
+  NTree,
   NSelect,
   NIcon,
   NH2,
   NH3,
   NH6,
   NSpace,
+  NSwitch,
   MenuOption,
-  useThemeVars,
-  NSwitch
+  useThemeVars
 } from 'naive-ui';
 import {
   defineComponent,
@@ -137,6 +144,7 @@ export default defineComponent({
     NDrawer,
     NDrawerContent,
     NMenu,
+    NTree,
     NSelect,
     NIcon,
     NH2,
@@ -544,15 +552,126 @@ export default defineComponent({
       backgroundColor: themeVars.value.baseColor
     }));
 
+    // Tree data structure
+    const treeData = computed(() => {
+      const userRoles = keycloakInst.tokenParsed?.realm_access?.roles || [];
+      const isSupervisor = userRoles.includes('supervisor');
+
+      const stationNodes = radioStations.value.map((station: RadioStation) => ({
+        key: `radiostation-${station.slugName}`,
+        label: station.localizedName.en,
+        children: [
+          { key: `station-${station.slugName}-dashboard`, label: 'Dashboard' },
+          { key: `station-${station.slugName}-playlist`, label: 'Playlist' },
+          { key: `station-${station.slugName}-listeners`, label: 'Listeners' },
+          { key: `station-${station.slugName}-chat`, label: 'Chat' },
+          { key: `station-${station.slugName}-settings`, label: 'Settings' }
+        ]
+      }));
+
+      const baseNodes = [
+        { key: 'home', label: 'Home' },
+        { key: 'brands', label: 'Brands' },
+        { key: 'streams', label: 'Streams' }
+      ];
+
+      const supervisorNodes = [
+        { key: 'listeners', label: 'Listeners' },
+        { key: 'fragments', label: 'Sound Fragments' },
+        { key: 'environment_profiles', label: 'Environment Profiles' },
+        { key: 'events', label: 'Events' },
+        { key: 'ai_agents', label: 'AiAgents' },
+        { key: 'document-tree', label: 'Flows' },
+        { key: 'scripts', label: 'Scripts' },
+        { key: 'scenes', label: 'Scenes' },
+        { key: 'prompts', label: 'Prompts' },
+        { key: 'drafts', label: 'Drafts' }
+      ];
+
+      const endNodes = [
+        { key: 'profile', label: 'Profile' },
+        { key: 'logout', label: 'Logout' }
+      ];
+
+      return [
+        ...stationNodes,
+        { key: 'brands', label: 'Brands' },
+        { key: 'streams', label: 'Streams' },
+        ...(isSupervisor ? supervisorNodes : []),
+        { key: 'home', label: 'Home' },
+        ...endNodes
+      ];
+    });
+
+    const defaultExpandedKeys = computed(() => {
+      return radioStations.value.map(station => `radiostation-${station.slugName}`);
+    });
+
+    const handleTreeSelect = async (keys: Array<string | number>) => {
+      const key = keys[0] as string;
+      if (key) {
+        await handleMenuSelect(key);
+      }
+    };
+
+    const renderTreeLabel = ({ option }: { option: any }) => {
+      if (option.key?.startsWith('radiostation-')) {
+        const station = radioStations.value.find(s => `radiostation-${s.slugName}` === option.key);
+        if (station) {
+          return h('div', {
+            style: 'display: flex; align-items: center; gap: 8px; width: 100%;'
+          }, [
+            h(StatusLed, {
+              status: station.status,
+              active: true,
+              size: 12
+            }),
+            h('span', {}, option.label),
+            h('span', {
+              style: 'font-size: 0.75rem; color: #666; margin-left: auto;'
+            }, station.country || '')
+          ]);
+        }
+      }
+      
+      // Add icons for other nodes
+      let iconComponent = null;
+      if (option.key === 'home') iconComponent = h(NIcon, { size: 25 }, () => h(BuildingSkyscraper));
+      else if (option.key === 'brands') iconComponent = h(NIcon, { size: 25 }, () => h(PictureInPictureTop));
+      else if (option.key === 'streams') iconComponent = h(NIcon, { size: 25 }, () => h(Ripple));
+      else if (option.key === 'listeners') iconComponent = h(NIcon, { size: 25 }, () => h(Headphones));
+      else if (option.key === 'fragments') iconComponent = h(NIcon, { size: 25 }, () => h(Music));
+      else if (option.key === 'events') iconComponent = h(NIcon, { size: 25 }, () => h(Calendar));
+      else if (option.key === 'ai_agents') iconComponent = h(NIcon, { size: 25 }, () => h(Robot));
+      else if (option.key === 'document-tree') iconComponent = h(NIcon, { size: 25 }, () => h(Tornado));
+      else if (option.key === 'scripts') iconComponent = h(NIcon, { size: 25 }, () => h(LayersLinked));
+      else if (option.key === 'scenes') iconComponent = h(NIcon, { size: 25 }, () => h(Gauge));
+      else if (option.key === 'prompts') iconComponent = h(NIcon, { size: 25 }, () => h(Prompt));
+      else if (option.key === 'drafts') iconComponent = h(NIcon, { size: 25 }, () => h(ToiletPaper));
+      else if (option.key === 'environment_profiles') iconComponent = h(NIcon, { size: 25 }, () => h(BrandAirtable));
+      else if (option.key === 'profile') iconComponent = h(NIcon, { size: 25 }, () => h(Fall));
+      else if (option.key === 'logout') iconComponent = h(NIcon, { size: 25 }, () => h(Logout));
+      
+      return h('div', {
+        style: 'display: flex; align-items: center; gap: 8px; width: 100%;'
+      }, [
+        iconComponent,
+        h('span', {}, option.label)
+      ]);
+    };
+
     return {
       active,
       dynamicMenuOptions,
+      treeData,
+      defaultExpandedKeys,
       toggleDrawer,
       isMobile,
       viewTitle,
       isDrawerOpen,
       activeMenuKey,
       handleMenuSelect,
+      handleTreeSelect,
       handleContentClick,
       drawerWidth,
       AlignJustified,
@@ -561,8 +680,8 @@ export default defineComponent({
       isDarkTheme,
       toggleTheme,
       Sun,
-      Moon
-
+      Moon,
+      renderTreeLabel
     };
   }
 });
