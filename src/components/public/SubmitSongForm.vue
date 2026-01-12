@@ -21,7 +21,7 @@
             </n-grid-item>
             <n-grid-item>
               <n-form-item label="Genres">
-                <n-select v-model:value="form.genres" :options="referencesStore.genreOptions" multiple filterable placeholder="" />
+                <n-tree-select v-model:value="form.genres" :options="referencesStore.genreOptions" multiple checkable filterable placeholder="" default-expand-all />
               </n-form-item>
             </n-grid-item>
           </n-grid>
@@ -119,7 +119,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref } from 'vue'
+import { computed, h, nextTick, onMounted, ref } from 'vue'
 import type { UploadCustomRequestOptions, UploadFileInfo } from 'naive-ui'
 import {
   NAlert,
@@ -133,9 +133,10 @@ import {
   NGridItem,
   NInput,
   NSelect,
+  NSpace,
+  NTreeSelect,
   NUpload,
-  useMessage,
-  NSpace
+  useMessage
 } from 'naive-ui'
 import { useSubmissionStore } from '../../stores/public/submissionStore'
 import { useReferencesStore } from '../../stores/kneo/referencesStore'
@@ -409,6 +410,15 @@ function reset() {
   uploadStatus.value = null
   codeSent.value = false
 }
+
+const renderGenreLabel = ({ option }: any) => {
+  return h('span', {
+    style: {
+      paddingLeft: option.level > 0 ? `${option.level * 20}px` : '0',
+      color: option.level > 0 ? '#666' : 'inherit'
+    }
+  }, option.label);
+};
 </script>
 
 <style scoped>

@@ -101,7 +101,7 @@ export const useReferencesStore = defineStore('references', () => {
     'uk-UA': 'UA'
   };
 
-  const genreOptions = ref<Array<{label: string, value: string}>>([]);
+  const genreOptions = ref<Array<{label: string, value: string, type?: string, children?: any[]}>>([]);
   const voiceOptions = ref<Array<{label: string, value: string}>>([]);
   const labelOptions = ref<Array<{ label: string; value: string; color?: string; fontColor?: string; style?: Record<string, string> }>>([]);
 
@@ -149,14 +149,31 @@ export const useReferencesStore = defineStore('references', () => {
   ].join(',');
 
   const fetchGenres = async () => {
-    const response = await apiClient.get('/dictionary/genres?page=1&size=1000');
+    const response = await apiClient.get('/genres?page=1&size=1000');
     if (!response?.data?.payload) throw new Error('Invalid API response');
 
-    genreOptions.value = response.data.payload.viewData.entries
-        .map((entry: any) => ({
-            label: entry.identifier,
-            value: entry.id
-        }))
+    const processGenreEntry = (entry: any): any => {
+      const baseOption = {
+        label: entry.localizedName?.en || entry.identifier,
+        key: entry.id
+      };
+
+      if (entry.children && entry.children.length > 0) {
+        return {
+          ...baseOption,
+          children: entry.children
+            .map((child: any) => processGenreEntry(child))
+            .sort((a: {label: string}, b: {label: string}) =>
+              a.label.localeCompare(b.label))
+        };
+      }
+
+      return baseOption;
+    };
+
+    const rootEntries = response.data.payload.viewData.entries.filter((entry: any) => !entry.parent);
+    genreOptions.value = rootEntries
+        .map(processGenreEntry)
         .sort((a: {label: string}, b: {label: string}) =>
             a.label.localeCompare(b.label));
   };

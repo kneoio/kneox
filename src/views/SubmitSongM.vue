@@ -75,7 +75,7 @@
             </n-grid-item>
             <n-grid-item>
               <n-form-item label="Genres">
-                <n-select v-model:value="form.genres" :options="referencesStore.genreOptions" multiple filterable placeholder="" />
+                <n-tree-select v-model:value="form.genres" :options="referencesStore.genreOptions" multiple checkable filterable placeholder="" default-expand-all />
               </n-form-item>
             </n-grid-item>
             <n-grid-item :span="12">
@@ -185,6 +185,7 @@ import {
   NSelect,
   NSpace,
   NTag,
+  NTreeSelect,
   NUpload,
   useMessage,
   darkTheme
@@ -500,6 +501,15 @@ const renderLabelTag = ({ option, handleClose }: any) => {
 
 const renderLabel = (option: any) => {
   return h('span', null, option?.label as string);
+};
+
+const renderGenreLabel = ({ option }: any) => {
+  return h('span', {
+    style: {
+      paddingLeft: option.level > 0 ? `${option.level * 20}px` : '0',
+      color: option.level > 0 ? '#666' : 'inherit'
+    }
+  }, option.label);
 };
 </script>
 

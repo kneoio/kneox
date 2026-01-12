@@ -45,11 +45,13 @@
                 <n-grid :cols="2" x-gap="12">
                   <n-gi>
                     <n-form-item label="Genres">
-                      <n-select
+                      <n-tree-select
                         v-model:value="localFormData.genres"
                         :options="referencesStore.genreOptions"
                         multiple
+                        checkable
                         filterable
+                        default-expand-all
                         style="width: 50%; max-width: 600px;"
                         placeholder=""
                       />
@@ -148,6 +150,7 @@ import {
   NTabPane,
   NTabs,
   NText,
+  NTreeSelect,
   NUpload,
   useLoadingBar,
   useMessage,
@@ -179,6 +182,7 @@ export default defineComponent({
     NSelect,
     NTag,
     NText,
+    NTreeSelect,
     NDataTable,
     NIcon,
     AclTable,
@@ -593,6 +597,15 @@ export default defineComponent({
       }
     });
 
+    const renderGenreLabel = ({ option }: any) => {
+      return h('span', {
+        style: {
+          paddingLeft: option.level > 0 ? `${option.level * 20}px` : '0',
+          color: option.level > 0 ? '#666' : 'inherit'
+        }
+      }, option.label);
+    };
+
     return {
       store,
       localFormData,
@@ -616,6 +629,7 @@ export default defineComponent({
       aclLoading,
       renderLabelTag,
       renderLabel,
+      renderGenreLabel,
       originalUploadedFileNames,
       formatDuration
     };
