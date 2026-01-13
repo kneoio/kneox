@@ -47,7 +47,7 @@
               <n-gi>
                 <n-form-item label="Language">
                   <n-select v-model:value="localFormData.languageCode" :options="langOptions"
-                            style="width: 25%; max-width: 300px;"/>
+                            style="width: 25%; max-width: 300px;" disabled/>
                 </n-form-item>
               </n-gi>
               <n-gi>
