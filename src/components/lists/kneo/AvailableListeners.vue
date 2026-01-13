@@ -101,8 +101,9 @@ export default defineComponent({
           if (!nn) return 'N/A';
           if (typeof nn === 'string') return nn;
           const en = nn.en;
-          if (en) return en;
-          const vals = Object.values(nn || {} as any).filter(Boolean) as string[];
+          if (Array.isArray(en)) return en.join(', ');
+          const vals = Object.values(nn || {} as any).filter(Boolean);
+          if (Array.isArray(vals[0])) return vals[0].join(', ');
           return vals[0] || 'N/A';
         }
       },
@@ -168,10 +169,6 @@ export default defineComponent({
       } finally {
         loading.value = false;
       }
-    };
-
-    const handleSearch = () => {
-      fetchData(1, store.getPagination.pageSize);
     };
 
     preFetch();

@@ -135,10 +135,17 @@ export default defineComponent({
 
     const columns: DataTableColumns<ListenerEntry> = [
       { type: 'selection' },
-      { title: 'Name', key: 'localizedName.en' },
-      { title: 'Nickname', key: 'nickName.en' },
-      { title: 'Country', key: 'country' },
-      { title: 'Registered', key: 'regDate' }
+      { title: 'Name', key: 'listener.localizedName.en' },
+      { 
+        title: 'Nickname', 
+        key: 'listener.nickName.en',
+        render: (row) => {
+          const nicknames = row.listener?.nickName?.en || [];
+          return Array.isArray(nicknames) ? nicknames.join(', ') : nicknames;
+        }
+      },
+      { title: 'Country', key: 'listener.country' },
+      { title: 'Registered', key: 'listener.regDate' }
     ];
 
     const rowKey = (row: ListenerEntry): string => {

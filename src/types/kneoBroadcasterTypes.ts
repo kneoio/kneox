@@ -249,18 +249,22 @@ export interface LocalizedName {
 
 export interface ListenerEntry {
     id: string;
-    author: string;
-    regDate: string;
-    lastModifier: string;
-    lastModifiedDate: string;
-    localizedName: LocalizedName;
-    userId: number;
-    telegramName: string;
-    country: string;
-    nickName: LocalizedName;
-    slugName: string;
-    archived: number;
-    listenerType?: string;
+    listener: {
+        id: string;
+        author: string;
+        regDate: string;
+        lastModifier: string;
+        lastModifiedDate: string;
+        localizedName: LocalizedName;
+        userId: number;
+        telegramName: string;
+        country: string;
+        nickName: Record<string, string[]>;
+        slugName: string;
+        archived: number;
+        listenerType?: string;
+        listenerOf?: string[];
+    };
 }
 
 export interface ListenerViewData {
@@ -273,7 +277,7 @@ export interface ListenerViewData {
 
 export interface ListenerSave {
     localizedName?: LocalizedName;
-    nickName?: LocalizedName;
+    nickName?: Record<string, string[]>;
     country?: string;
     telegramName?: string;
     slugName?: string;

@@ -56,12 +56,12 @@
                         <n-select
                             v-model:value="value.language"
                             :options="referencesStore.localizedLanguageOptions"
-
                             style="width: 120px;"
                         />
-                        <n-input
-                            v-model:value="value.name"
-                            placeholder=""
+                        <n-dynamic-input
+                            v-model:value="value.names"
+                            :on-create="() => ''"
+                            placeholder="Enter nickname"
                             style="flex: 1;"
                         />
                       </n-space>
@@ -163,7 +163,7 @@ interface LocalListenerFormData {
   lastModifiedDate: string;
   localizedName: LocalizedName;
   country: string;
-  nickName: LocalizedName;
+  nickName: Record<string, string[]>;
   email: string;
   telegramName: string;
   archived: number;
@@ -208,13 +208,13 @@ export default defineComponent({
       lastModifiedDate: "",
       localizedName: { en: "" },
       country: "",
-      nickName: { en: "" },
+      nickName: {},
+      email: "",
       telegramName: "",
       archived: 0,
       listenerOf: [],
       listenerType: "",
       userId: "",
-      email: "",
     });
 
     const formTitle = computed(() => localFormData.id ? 'Edit Listener' : 'Create New Listener');
@@ -227,7 +227,7 @@ export default defineComponent({
     });
 
     const localizedNameArray = ref<{ language: string; name: string }[]>([]);
-    const nickNameArray = ref<{ language: string; name: string }[]>([]);
+    const nickNameArray = ref<{ language: string; names: string[] }[]>([]);
     const activeTab = ref('properties');
     const aclData = ref<any[]>([]);
     const aclLoading = ref(false);
@@ -245,7 +245,7 @@ export default defineComponent({
       localFormData.nickName = {};
       newValue.forEach(item => {
         if (item.language && item.language.trim() !== '') {
-          localFormData.nickName[item.language] = item.name || "";
+          localFormData.nickName[item.language] = item.names || [];
         }
       });
     }, { deep: true });
@@ -257,13 +257,13 @@ export default defineComponent({
 
     const createNickName = () => ({
       language: "",
-      name: ""
+      names: [""]
     });
 
     watch(() => store.getCurrent, (currentListener) => {
       if (currentListener && currentListener.id) {
         Object.assign(localFormData, currentListener);
-        if (!localFormData.nickName) localFormData.nickName = { en: '' };
+        if (!localFormData.nickName) localFormData.nickName = {};
         if (!localFormData.localizedName) localFormData.localizedName = { en: '' };
 
         if (localFormData.localizedName) {
@@ -273,9 +273,9 @@ export default defineComponent({
           }));
         }
         if (localFormData.nickName) {
-          nickNameArray.value = Object.entries(localFormData.nickName).map(([language, name]) => ({
+          nickNameArray.value = Object.entries(localFormData.nickName).map(([language, names]) => ({
             language,
-            name
+            names
           }));
         }
       }
@@ -362,9 +362,9 @@ export default defineComponent({
           }));
         }
         if (localFormData.nickName) {
-          nickNameArray.value = Object.entries(localFormData.nickName).map(([language, name]) => ({
+          nickNameArray.value = Object.entries(localFormData.nickName).map(([language, names]) => ({
             language,
-            name
+            names
           }));
         }
       } catch (error) {

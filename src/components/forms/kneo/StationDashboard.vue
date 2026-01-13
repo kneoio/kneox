@@ -11,21 +11,19 @@
       <n-space vertical size="medium">
         <n-space align="center" size="medium">
           <n-h2 style="margin: 0; cursor: pointer;" @click="copyBrandNameToClipboard">{{ brandName }}</n-h2>
-          <span
-            class="live-status"
-            :class="{ 'live-on-air': isHeartbeatActive }"
-            :style="isHeartbeatActive
-              ? 'color: #ef4444 !important; text-shadow: 0 0 10px rgba(239, 68, 68, 1), 0 0 18px rgba(239, 68, 68, 0.6); font-weight: 600 !important; font-size: 18px;'
-              : 'font-weight: 400; font-size: 18px; color: inherit;'"
-          >
-            On Air
-          </span>
         </n-space>
 
         <n-space align="center" size="small">
-          <n-tag :type="getStatusInfo.type" size="large" :bordered="false">
-            {{ getStatusInfo.text }}
-          </n-tag>
+          <GlowingStatus 
+            :online="['ON_LINE', 'QUEUE_SATURATED', 'WARMING_UP', 'IDLE'].includes(stationDetails?.status || '')" 
+            :name="getStatusInfo.text" 
+            :status="stationDetails?.status" 
+          />
+          <GlowingStatus 
+            :online="isHeartbeatActive" 
+            :name="'On Air'" 
+            :status="isHeartbeatActive ? 'on_air' : 'off_air'"
+          />
           <n-text depth="3" style="font-size: 14px;">
             {{ currentListeners }} listeners
           </n-text>
@@ -72,8 +70,8 @@
           
         </n-space>
 
-        <n-tabs v-model:value="activeTab" type="line">
-          <n-tab-pane name="dashboard" tab="Dashboard">
+       
+
             <n-space vertical size="large">
               <n-card title="Status History" size="small">
                 <n-timeline horizontal v-if=" statusHistoryTimeline.length > 0 ">
@@ -248,8 +246,8 @@
                 </div>
               </n-card>
             </n-space>
-          </n-tab-pane>
-        </n-tabs>
+        
+        
       </n-space>
     </n-card>
   </n-space>
@@ -284,6 +282,7 @@ import { ExternalLink, PlayerPlay, PlayerStop, Activity } from '@vicons/tabler';
 import { MIXPLA_PLAYER_URL } from '../../../constants/config';
 import GreenLed from '../../common/GreenLed.vue';
 import YellowLed from '../../common/YellowLed.vue';
+import GlowingStatus from '../../common/GlowingStatus.vue';
 
 export default defineComponent({
   name: 'StationDashboard',
@@ -292,7 +291,8 @@ export default defineComponent({
     NTimeline, NTimelineItem, NButtonGroup,
     NMarquee, NTabs, NTabPane, NSelect, NScrollbar, NInput, NBadge, PlayerPlay, PlayerStop, ExternalLink, Activity,
     GreenLed,
-    YellowLed
+    YellowLed,
+    GlowingStatus
   },
   props: {
     brandName: {
