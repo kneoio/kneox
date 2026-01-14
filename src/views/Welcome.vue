@@ -413,6 +413,14 @@ watch( stations, ( newStations ) => {
       previousPlayingStation.value = null
     }
   }
+  
+  // Stop playback if currently playing station goes offline
+  if ( playingStation.value ) {
+    const currentStation = newStations.find( s => s.slugName === playingStation.value )
+    if ( currentStation && currentStation.currentStatus === 'OFF_LINE' ) {
+      stopPlayback()
+    }
+  }
 }, { deep: true } )
 
 onUnmounted( () => {
