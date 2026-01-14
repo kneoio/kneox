@@ -476,19 +476,7 @@ export default defineComponent({
           await router.push("/outline/soundfragments");
         }
       } catch (error: unknown) {
-        if (isErrorWithResponse(error) && error.response?.status === 400) {
-          const errorData = error.response.data as ErrorResponse;
-
-          if (errorData.errors?.length) {
-            errorData.errors.forEach(err => {
-              message.error(`${capitalizeFirstLetter(err.field)}: ${err.message}`);
-            });
-          } else {
-            message.error(errorData.message || "Validation failed");
-          }
-        } else {
-          message.error(`Save failed: ${getErrorMessage(error)}`);
-        }
+        handleFormSaveError(error, message);
       } finally {
         loadingBar.finish();
       }
