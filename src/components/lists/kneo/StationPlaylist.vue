@@ -371,7 +371,7 @@ export default defineComponent( {
     });
 
     const rateSoundFragment = async ( row: any, action: 'LIKE' | 'DISLIKE' ) => {
-      const id = row.soundfragment.id;
+      const id = row.id;
       try {
         await store.rateSoundFragment( id, props.brandName, action );
         await fetchAvailableFragments( getAvailablePagination.value?.page, getAvailablePagination.value?.pageSize );
@@ -387,10 +387,29 @@ export default defineComponent( {
 
     const columns = computed<DataTableColumns<any>>( () => [
       { type: 'selection' },
-      { title: 'Title', key: 'soundfragment.title', width: 300 },
-      { title: 'Artist', key: 'soundfragment.artist', width: 300 },
-      { title: 'Album', key: 'soundfragment.album', width: 300 },
-      { title: 'Source', key: 'soundfragment.source', width: 140, render: ( row: any ) => store.formatSource( row.soundfragment?.source ) },
+      { title: 'Title', key: 'title', width: 300 },
+      { title: 'Artist', key: 'artist', width: 300 },
+      { title: 'Genres', key: 'genres', width: 200, render: ( row: any ) => {
+        if (!row.genres || row.genres.length === 0) return '';
+        return h('div', { style: 'display: flex; flex-wrap: wrap; gap: 4px;' }, 
+          row.genres.map((genre: any) => 
+            h('span', { 
+              style: `background-color: ${genre.color}; color: ${genre.fontColor}; padding: 2px 8px; border-radius: 2px; font-size: 12px; white-space: nowrap;` 
+            }, genre.identifier)
+          )
+        );
+      }},
+      { title: 'Labels', key: 'labels', width: 200, render: ( row: any ) => {
+        if (!row.labels || row.labels.length === 0) return '';
+        return h('div', { style: 'display: flex; flex-wrap: wrap; gap: 4px;' }, 
+          row.labels.map((label: any) => 
+            h('span', { 
+              style: `background-color: ${label.color}; color: ${label.fontColor}; padding: 2px 8px; border-radius: 2px; font-size: 12px; white-space: nowrap;` 
+            }, label.identifier)
+          )
+        );
+      }},
+      { title: 'Source', key: 'source', width: 140, render: ( row: any ) => store.formatSource( row?.source ) },
       { title: 'Played Count', key: 'playedByBrandCount', width: 120, render: ( row: any ) => row.playedByBrandCount ?? 0 },
       { 
         title: 'Rating', 
@@ -423,7 +442,7 @@ export default defineComponent( {
           ] );
         }
       },
-      { title: 'Description', key: 'soundfragment.description', ellipsis: { tooltip: true }, minWidth: 200 }
+      { title: 'Description', key: 'description', ellipsis: { tooltip: true }, minWidth: 200 }
     ] );
 
     return {
