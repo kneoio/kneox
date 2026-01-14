@@ -148,15 +148,20 @@ onMounted(async () => {
   try {
     const savedToken = window.localStorage.getItem('chatToken')
     if (savedToken) {
-      const result = await publicChatStore.validateToken(savedToken)
-      console.debug('[Chat] validateToken result for saved chatToken:', result)
-      if (result && result.success && result.valid && result.registered) {
-        userToken.value = savedToken
-        displayNickname.value = result.username || form.value.nickname || form.value.email
-        isAuthenticated.value = true
-      } else if (result && !result.valid) {
-        console.warn('[Chat] saved chatToken is not valid, removing from storage')
-        window.localStorage.removeItem('chatToken')
+      const loadingMessage = nMessage.loading('Checking session...', { duration: 0 })
+      try {
+        const result = await publicChatStore.validateToken(savedToken)
+        console.debug('[Chat] validateToken result for saved chatToken:', result)
+        if (result && result.success && result.valid && result.registered) {
+          userToken.value = savedToken
+          displayNickname.value = result.username || form.value.nickname || form.value.email
+          isAuthenticated.value = true
+        } else if (result && !result.valid) {
+          console.warn('[Chat] saved chatToken is not valid, removing from storage')
+          window.localStorage.removeItem('chatToken')
+        }
+      } finally {
+        loadingMessage.destroy()
       }
     }
   } catch (_) {
