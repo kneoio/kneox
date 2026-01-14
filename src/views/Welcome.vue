@@ -190,6 +190,7 @@ let hls: Hls | null = null
 let audio: HTMLAudioElement | null = null
 let songRefreshInterval: NodeJS.Timeout | null = null
 let offlineWaitTimeout: NodeJS.Timeout | null = null
+let stationRefreshInterval: NodeJS.Timeout | null = null
 
 
 function statusText( s?: Station['currentStatus'] ) {
@@ -374,20 +375,29 @@ function handleOnlineOnlyUpdate( value: boolean ) {
   fetchStations()
 }
 
-async function fetchStations() {
+async function fetchStations( silent: boolean = false ) {
   try {
-    loading.value = true
+    if ( !silent ) {
+      loading.value = true
+    }
     const result = await referencesStore.fetchRadioStations( onlineOnly.value )
     stations.value = result || []
   } catch ( e ) {
     error.value = e
   } finally {
-    loading.value = false
+    if ( !silent ) {
+      loading.value = false
+    }
   }
 }
 
 onMounted( () => {
   fetchStations()
+  
+  // Start silent station refresh every 30 seconds
+  stationRefreshInterval = setInterval( () => {
+    fetchStations( true )
+  }, 30000 )
 } )
 
 // Watch for station status changes
@@ -407,6 +417,12 @@ watch( stations, ( newStations ) => {
 
 onUnmounted( () => {
   stopPlayback()
+  
+  // Clear station refresh interval
+  if ( stationRefreshInterval ) {
+    clearInterval( stationRefreshInterval )
+    stationRefreshInterval = null
+  }
 } )
 </script>
 
