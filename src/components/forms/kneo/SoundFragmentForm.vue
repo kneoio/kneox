@@ -42,34 +42,32 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
-                <n-grid :cols="2" x-gap="12">
-                  <n-gi>
-                    <n-form-item label="Genres">
-                      <n-tree-select
-                        v-model:value="localFormData.genres"
-                        :options="referencesStore.genreOptions"
-                        multiple
-                        checkable
-                        filterable
-                        default-expand-all
-                        style="width: 50%; max-width: 600px;"
-                        placeholder=""
-                      />
-                    </n-form-item>
-                    <n-form-item label="Labels">
-                      <n-select
-                        v-model:value="localFormData.labels"
-                        :options="referencesStore.labelOptions"
-                        :render-tag="renderLabelTag"
-                        :render-label="renderLabel"
-                        multiple
-                        filterable
-                        style="width: 50%; max-width: 600px;"
-                        placeholder=""
-                      />
-                    </n-form-item>
-                  </n-gi>                  
-                </n-grid>
+                <n-form-item label="Genres">
+                  <n-tree-select
+                    v-model:value="localFormData.genres"
+                    :options="referencesStore.genreOptions"
+                    multiple
+                    checkable
+                    filterable
+                    default-expand-all
+                    style="width: 50%; max-width: 600px;"
+                    placeholder=""
+                  />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="Labels">
+                  <n-select
+                    v-model:value="localFormData.labels"
+                    :options="referencesStore.labelOptions"
+                    :render-tag="renderLabelTag"
+                    :render-label="renderLabel"
+                    multiple
+                    filterable
+                    style="width: 50%; max-width: 600px;"
+                    placeholder=""
+                  />
+                </n-form-item>
               </n-gi>
               <n-gi>
                 <n-form-item label="Album">

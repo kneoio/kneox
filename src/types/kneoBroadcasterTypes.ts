@@ -278,8 +278,7 @@ export interface ListenerViewData {
 export interface ListenerSave {
     localizedName?: LocalizedName;
     nickName?: Record<string, string[]>;
-    country?: string;
-    telegramName?: string;
+    userData?: Record<string, string>;
     slugName?: string;
     archived?: number;
     userId?: number;

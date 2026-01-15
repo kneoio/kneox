@@ -402,6 +402,7 @@ export default defineComponent( {
       { title: 'Labels', key: 'labels', width: 200, render: ( row: any ) => {
         if (!row.labels || row.labels.length === 0) return '';
         return h('div', { style: 'display: flex; flex-wrap: wrap; gap: 4px;' }, 
+        
           row.labels.map((label: any) => 
             h('span', { 
               style: `background-color: ${label.color}; color: ${label.fontColor}; padding: 2px 8px; border-radius: 2px; font-size: 12px; white-space: nowrap;` 

@@ -45,14 +45,6 @@
               </n-form-item>
             </n-gi>
             <n-gi>
-              <n-form-item label="Country" size="small" :show-feedback="false">
-                <n-select
-                    v-model:value="filters.country"
-                    :options="referencesStore.countryOptions"
-                    placeholder="Select country"
-                    clearable
-                />
-              </n-form-item>
             </n-gi>
           </n-grid>
         </div>
@@ -128,24 +120,44 @@ export default defineComponent({
     const debounceTimer = ref<number | null>(null);
     const showFilters = ref(false);
     const filters = ref({
-      country: undefined
+      userData: undefined
     });
 
-    const hasActiveFilters = computed(() => !!(filters.value.country || searchQuery.value));
+    const hasActiveFilters = computed(() => !!(filters.value.userData || searchQuery.value));
 
     const columns: DataTableColumns<ListenerEntry> = [
       { type: 'selection' },
-      { title: 'Name', key: 'listener.localizedName.en' },
+      { title: 'Name', key: 'localizedName.en' },
       { 
         title: 'Nickname', 
-        key: 'listener.nickName.en',
+        key: 'nickName.en',
         render: (row) => {
-          const nicknames = row.listener?.nickName?.en || [];
+          const nicknames = row.nickName?.en || [];
           return Array.isArray(nicknames) ? nicknames.join(', ') : nicknames;
         }
       },
-      { title: 'Country', key: 'listener.country' },
-      { title: 'Registered', key: 'listener.regDate' }
+      { 
+        title: 'User Data', 
+        key: 'userData',
+        width: 300,
+        render: (row: any) => {
+          const userData = row.userData;
+          if (!userData || typeof userData !== 'object') return 'N/A';
+          
+          const entries = Object.entries(userData);
+          if (entries.length === 0) return 'N/A';
+          
+          const limitedEntries = entries.slice(0, 5);
+          const pairs = limitedEntries.map(([key, value]) => `${key}: ${value}`);
+          
+          if (entries.length > 5) {
+            pairs.push('...');
+          }
+          
+          return pairs.join(', ');
+        }
+      },
+      { title: 'Registered', key: 'regDate' }
     ];
 
     const rowKey = (row: ListenerEntry): string => {
@@ -195,9 +207,8 @@ export default defineComponent({
         loading.value = true;
         let activeFilters = {};
         if (showFilters.value) {
-          const hasFilters = filters.value.country;
-          if (hasFilters) {
-            activeFilters = filters.value;
+          if (searchQuery.value) {
+            activeFilters = {};
           } else {
             return;
           }
@@ -292,7 +303,7 @@ export default defineComponent({
       }
     });
 
-    watch(() => filters.value.country, () => {
+    watch(() => filters.value.userData, () => {
       if (showFilters.value) {
         fetchData(1, listenersStore.getPagination.pageSize);
       }

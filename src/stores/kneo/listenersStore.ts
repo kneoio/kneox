@@ -7,23 +7,29 @@ import type {  ListenerEntry, ListenerSave } from "../../types/kneoBroadcasterTy
 export const useListenersStore = defineStore('listenersStore', () => {
     const apiViewResponse = ref<ApiViewPageResponse<ListenerEntry> | null>(null);
     const apiFormResponse = ref<ApiFormResponse<ListenerEntry> | null>(null);
+    const apiBrandFormResponse = ref<any | null>(null);
 
     const getEntries = computed(() => apiViewResponse.value?.viewData.entries || []);
     const getCurrent = computed(() => apiFormResponse.value?.docData || {
         id: '',
-        author: '',
-        regDate: '',
-        lastModifier: '',
-        lastModifiedDate: '',
-        localizedName: { en: '' },
-        userId: 0,
-        telegramName: '',
-        country: '',
-        nickName: { en: '' },
-        slugName: '',
-        archived: 0,
-        listenerType: '',
+        listener: {
+            id: '',
+            author: '',
+            regDate: '',
+            lastModifier: '',
+            lastModifiedDate: '',
+            localizedName: { en: '' },
+            userId: 0,
+            telegramName: '',
+            country: '',
+            nickName: { en: [''] },
+            slugName: '',
+            archived: 0,
+            listenerType: '',
+        }
     } as ListenerEntry);
+
+    const getCurrentBrandListener = computed(() => apiBrandFormResponse.value || null);
 
     const getPagination = computed(() => {
         if (!apiViewResponse.value?.viewData) {
@@ -115,17 +121,34 @@ export const useListenersStore = defineStore('listenersStore', () => {
         return response.data;
     };
 
+    const fetchBrandListener = async (brandName: string, id: string) => {
+        const response = await apiClient.get(`listeners/available-listeners/${id}?brand=${brandName}`);
+        if (!response?.data?.payload) throw new Error('Invalid API response for brand listener');
+        apiBrandFormResponse.value = response.data.payload;
+    };
+
+    const saveBrandListener = async (data: ListenerSave, _brandName: string, id: string | null) => {
+        const response = await apiClient.post(`listeners/${id || ''}`, data);
+        if (!response?.data) throw new Error('Invalid API response');
+        apiBrandFormResponse.value = response.data;
+        return apiBrandFormResponse.value;
+    };
+
     return {
         apiViewResponse,
         apiFormResponse,
+        apiBrandFormResponse,
         getEntries,
         getCurrent,
+        getCurrentBrandListener,
         getPagination,
         fetchListeners,
         fetchAllListeners,
         fetchAvailableListeners,
         fetchListener,
+        fetchBrandListener,
         saveListener,
+        saveBrandListener,
         deleteListener,
         fetchAccessList,
     };

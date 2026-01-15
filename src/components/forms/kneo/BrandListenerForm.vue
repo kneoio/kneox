@@ -2,12 +2,12 @@
   <n-grid cols="6" x-gap="12" y-gap="12" class="m-5">
     <n-gi span="6">
       <n-page-header :subtitle="formTitle" @back="goBack">
-        <template #title>{{ localFormData.localizedName?.en || 'New Listener' }}</template>
+        <template #title>{{ localFormData.listener?.localizedName?.en || 'New Brand Listener' }}</template>
         <template #footer>
-          <span v-if="localFormData.id">
-            Registered: {{ localFormData.regDate }}, Last Modified: {{ localFormData.lastModifiedDate }}
+          <span v-if="localFormData.listener?.id">
+            Registered: {{ localFormData.listener?.regDate }}, Last Modified: {{ localFormData.listener?.lastModifiedDate }}
             <br>
-            Author: {{ localFormData.author }}, Last Modifier: {{ localFormData.lastModifier }}
+            Author: {{ localFormData.listener?.author }}, Last Modifier: {{ localFormData.listener?.lastModifier }}
           </span>
         </template>
       </n-page-header>
@@ -15,14 +15,24 @@
     <n-gi class="mt-2" span="6">
       <n-button-group>
         <n-button type="primary" @click="handleSave" size="large">Save</n-button>
-        <n-button type="default" @click="handleArchive" size="large" :disabled="!localFormData.id">Archive</n-button>
+        <n-button type="default" @click="handleArchive" size="large" :disabled="!localFormData.listener?.id">Archive</n-button>
       </n-button-group>
     </n-gi>
     <n-gi span="6">
       <n-tabs v-model:value="activeTab">
         <n-tab-pane name="properties" tab="Main properties">
-          <n-form label-placement="left" label-width="auto" :model="localFormData">
+          <n-form label-placement="left" label-width="auto" :model="localFormData.listener">
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
+              <n-gi>
+                <n-form-item label="Listener Type">
+                  <n-select
+                      v-model:value="localFormData.listenerType"
+                      :options="listenerTypeOptions"
+                      style="width: 25%; max-width: 300px;"
+                      disabled
+                  />
+                </n-form-item>
+              </n-gi>
               <n-gi>
                 <n-form-item label="Localized Names">
                   <n-dynamic-input
@@ -35,7 +45,6 @@
                         <n-select
                             v-model:value="value.language"
                             :options="referencesStore.localizedLanguageOptions"
-
                             style="width: 120px;"
                         />
                         <n-input v-model:value="value.name" style="flex: 2;" placeholder=""/>
@@ -95,7 +104,7 @@
               </n-gi>
               <n-gi>
                 <n-form-item label="Listener of" path="listenerOf">
-                  <n-select v-model:value="localFormData.listenerOf" :options="radioStationOptions" filterable
+                  <n-select v-model:value="localFormData.listener.listenerOf" :options="radioStationOptions" filterable
                             multiple style="width: 50%; max-width: 600px;" />
                 </n-form-item>
               </n-gi>
@@ -138,21 +147,26 @@ import { useReferencesStore } from "../../../stores/kneo/referencesStore";
 import { ListenerSave, LocalizedName } from "../../../types/kneoBroadcasterTypes";
 import { handleFormSaveError, getErrorMessage } from '../../../utils/errorHandling';
 
-interface LocalListenerFormData {
+interface LocalBrandListenerFormData {
   id: string | null;
-  author: string;
-  regDate: string;
-  lastModifier: string;
-  lastModifiedDate: string;
-  localizedName: LocalizedName;
-  nickName: Record<string, string[]>;
-  userData: Record<string, string>;
-  archived: number;
-  listenerOf: string[];
+  listenerType: string;
+  listener: {
+    id: string | null;
+    author: string;
+    regDate: string;
+    lastModifier: string;
+    lastModifiedDate: string;
+    localizedName: LocalizedName;
+    nickName: Record<string, string[]>;
+    userData: Record<string, string>;
+    archived: number;
+    listenerOf: string[];
+    userId?: string;
+  };
 }
 
 export default defineComponent({
-  name: "ListenerForm",
+  name: "BrandListenerForm",
   components: {
     NPageHeader,
     NButtonGroup,
@@ -180,21 +194,25 @@ export default defineComponent({
     const loadingBar = useLoadingBar();
     const isSaving = ref(false);
 
-    const localFormData = reactive<LocalListenerFormData>({
+    const localFormData = reactive<LocalBrandListenerFormData>({
       id: null,
-      author: "",
-      regDate: "",
-      lastModifier: "",
-      lastModifiedDate: "",
-      localizedName: { en: "" },
-      nickName: {},
-      userData: {},
-      archived: 0,
-      listenerOf: [],
-      userId: "",
+      listenerType: "",
+      listener: {
+        id: null,
+        author: "",
+        regDate: "",
+        lastModifier: "",
+        lastModifiedDate: "",
+        localizedName: { en: "" },
+        nickName: {},
+        userData: {},
+        archived: 0,
+        listenerOf: [],
+        userId: "",
+      },
     });
 
-    const formTitle = computed(() => localFormData.id ? 'Edit Listener' : 'Create New Listener');
+    const formTitle = computed(() => localFormData.id ? 'Edit Brand Listener' : 'Create New Brand Listener');
 
     const radioStationOptions = computed(() => {
       return radioStationStore.getEntries.map(station => ({
@@ -202,6 +220,12 @@ export default defineComponent({
         value: station.id
       }));
     });
+
+    const listenerTypeOptions = [
+      { label: "OWNER", value: "OWNER" },
+      { label: "REGULAR", value: "REGULAR" },
+      { label: "CONTRIBUTOR", value: "CONTRIBUTOR" },
+    ];
 
     const localizedNameArray = ref<{ language: string; name: string }[]>([]);
     const nickNameArray = ref<{ language: string; names: string[] }[]>([]);
@@ -211,30 +235,36 @@ export default defineComponent({
     const aclLoading = ref(false);
 
     watch(localizedNameArray, (newValue) => {
-      localFormData.localizedName = {};
-      newValue.forEach(item => {
-        if (item.language && item.language.trim() !== '') {
-          localFormData.localizedName[item.language] = item.name || "";
-        }
-      });
+      if (localFormData.listener) {
+        localFormData.listener.localizedName = {};
+        newValue.forEach(item => {
+          if (item.language && item.language.trim() !== '') {
+            localFormData.listener.localizedName[item.language] = item.name || "";
+          }
+        });
+      }
     }, { deep: true });
 
     watch(nickNameArray, (newValue) => {
-      localFormData.nickName = {};
-      newValue.forEach(item => {
-        if (item.language && item.language.trim() !== '') {
-          localFormData.nickName[item.language] = item.names || [];
-        }
-      });
+      if (localFormData.listener) {
+        localFormData.listener.nickName = {};
+        newValue.forEach(item => {
+          if (item.language && item.language.trim() !== '') {
+            localFormData.listener.nickName[item.language] = item.names || [];
+          }
+        });
+      }
     }, { deep: true });
 
     watch(userDataArray, (newValue) => {
-      localFormData.userData = {};
-      newValue.forEach(item => {
-        if (item.key && item.key.trim() !== '') {
-          localFormData.userData[item.key] = item.value || "";
-        }
-      });
+      if (localFormData.listener) {
+        localFormData.listener.userData = {};
+        newValue.forEach(item => {
+          if (item.key && item.key.trim() !== '') {
+            localFormData.listener.userData[item.key] = item.value || "";
+          }
+        });
+      }
     }, { deep: true });
 
     const createLocalizedName = () => ({
@@ -252,54 +282,23 @@ export default defineComponent({
       value: ""
     });
 
-    watch(() => store.getCurrent, (currentListener) => {
-      if (currentListener && currentListener.id) {
-        Object.assign(localFormData, currentListener);
-        if (!localFormData.nickName) localFormData.nickName = {};
-        if (!localFormData.localizedName) localFormData.localizedName = { en: '' };
-
-        if (localFormData.localizedName) {
-          localizedNameArray.value = Object.entries(localFormData.localizedName).map(([language, name]) => ({
-            language,
-            name
-          }));
-        }
-        if (localFormData.nickName) {
-          nickNameArray.value = Object.entries(localFormData.nickName).map(([language, names]) => ({
-            language,
-            names
-          }));
-        }
-        if (localFormData.userData) {
-          userDataArray.value = Object.entries(localFormData.userData).map(([key, value]) => ({
-            key,
-            value
-          }));
-        }
-      }
-    }, { immediate: true, deep: true });
-
     const handleSave = async () => {
       isSaving.value = true;
       loadingBar.start();
       try {
         const dataToSave: ListenerSave = {
-          nickName: localFormData.nickName,
-          localizedName: localFormData.localizedName,
-          archived: localFormData.archived,
-          listenerOf: localFormData.listenerOf,
-          userData: localFormData.userData,
+          nickName: localFormData.listener.nickName,
+          localizedName: localFormData.listener.localizedName,
+          archived: localFormData.listener.archived,
+          listenerOf: localFormData.listener.listenerOf,
+          userData: localFormData.listener.userData,
         };
 
         console.log('Data to save:', dataToSave);
 
-        await store.saveListener(dataToSave, localFormData.id);
-        message.success("Listener saved successfully");
-        if (route.params.brandName) {
-          router.push("/outline/station/" + route.params.brandName + "/listeners");
-        } else {
-          router.push("/outline/listeners");
-        }
+        await store.saveBrandListener(dataToSave, route.params.brandName as string, localFormData.id);
+        message.success("Brand listener saved successfully");
+        router.push("/outline/station/" + route.params.brandName + "/listeners");
       } catch (error: any) {
         handleFormSaveError(error, message);
       } finally {
@@ -309,7 +308,7 @@ export default defineComponent({
     };
 
     const handleArchive = () => {
-      message.info("Archive functionality not implemented yet for listeners.");
+      message.info("Archive functionality not implemented yet for brand listeners.");
     };
 
     const goBack = () => {
@@ -344,33 +343,57 @@ export default defineComponent({
 
     onMounted(async () => {
       const id = route.params.id as string;
+      const brandName = route.params.brandName as string;
       
       try {
         loadingBar.start();
         
-        await store.fetchListener(id);
-        Object.assign(localFormData, store.getCurrent);
+        if (id !== 'new') {
+          await store.fetchBrandListener(brandName, id);
+          watch(() => store.getCurrentBrandListener, (currentBrandListener) => {
+            if (currentBrandListener && currentBrandListener.docData) {
+              const data = currentBrandListener.docData;
+              
+              // Set top-level fields
+              localFormData.listenerType = data.listenerType || '';
+              
+              // Set listener nested fields
+              if (data.listener) {
+                localFormData.id = data.listener.id || null;
+                localFormData.author = data.listener.author || '';
+                localFormData.regDate = data.listener.regDate || '';
+                localFormData.lastModifier = data.listener.lastModifier || '';
+                localFormData.lastModifiedDate = data.listener.lastModifiedDate || '';
+                localFormData.localizedName = data.listener.localizedName || { en: '' };
+                localFormData.nickName = data.listener.nickName || {};
+                localFormData.userData = data.listener.userData || {};
+                localFormData.archived = data.listener.archived || 0;
+                localFormData.listener.listenerOf = data.listener.listenerOf || [];
+              }
 
-        if (localFormData.localizedName) {
-          localizedNameArray.value = Object.entries(localFormData.localizedName).map(([language, name]) => ({
-            language,
-            name
-          }));
-        }
-        if (localFormData.nickName) {
-          nickNameArray.value = Object.entries(localFormData.nickName).map(([language, names]) => ({
-            language,
-            names
-          }));
-        }
-        if (localFormData.userData) {
-          userDataArray.value = Object.entries(localFormData.userData).map(([key, value]) => ({
-            key,
-            value
-          }));
+              if (localFormData.localizedName) {
+                localizedNameArray.value = Object.entries(localFormData.localizedName).map(([language, name]) => ({
+                  language,
+                  name
+                }));
+              }
+              if (localFormData.nickName) {
+                nickNameArray.value = Object.entries(localFormData.nickName).map(([language, names]) => ({
+                  language,
+                  names
+                }));
+              }
+              if (localFormData.userData) {
+                userDataArray.value = Object.entries(localFormData.userData).map(([key, value]) => ({
+                  key,
+                  value
+                }));
+              }
+            }
+          }, { immediate: true, deep: true });
         }
       } catch (error) {
-        console.error('Failed to fetch listener:', error);
+        console.error('Failed to fetch brand listener:', error);
         message.error(getErrorMessage(error));
       } finally {
         loadingBar.finish();
@@ -392,6 +415,7 @@ export default defineComponent({
       goBack,
       formTitle,
       radioStationOptions,
+      listenerTypeOptions,
       localizedNameArray,
       nickNameArray,
       userDataArray,

@@ -108,9 +108,30 @@ export default defineComponent({
         }
       },
       { 
-        title: 'Country', 
-        key: 'listener.country',
-        render: (row: any) => row.listener?.country || 'N/A'
+        title: 'Listener Type', 
+        key: 'listenerType',
+        render: (row: any) => row.listenerType || 'N/A'
+      },
+      { 
+        title: 'User Data', 
+        key: 'listener.userData',
+        width: 300,
+        render: (row: any) => {
+          const userData = row.listener?.userData;
+          if (!userData || typeof userData !== 'object') return 'N/A';
+          
+          const entries = Object.entries(userData);
+          if (entries.length === 0) return 'N/A';
+          
+          const limitedEntries = entries.slice(0, 5);
+          const pairs = limitedEntries.map(([key, value]) => `${key}: ${value}`);
+          
+          if (entries.length > 5) {
+            pairs.push('...');
+          }
+          
+          return pairs.join(', ');
+        }
       },
       { 
         title: 'Registered', 
@@ -196,19 +217,19 @@ export default defineComponent({
           if (target.closest('.n-checkbox') || target.closest('[data-n-checkbox]')) {
             return;
           }
-          // Navigate to the EditListener route for brand-specific listeners
-          const listenerId = row.listener?.id || row.id;
+          // Navigate to the EditBrandListener route for brand-specific listeners
+          const brandListenerId = row.id;
           
-          if (!listenerId) {
-            console.error('No listener ID found in row data');
+          if (!brandListenerId) {
+            console.error('No brand listener ID found in row data');
             return;
           }
           
           router.push({ 
-            name: 'EditListener', 
+            name: 'EditBrandListener', 
             params: { 
               brandName: props.brandName, 
-              id: listenerId 
+              id: brandListenerId 
             } 
           });
         }

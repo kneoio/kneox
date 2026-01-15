@@ -135,17 +135,17 @@ const routes: Array<RouteRecordRaw> = [
                 props: true,
             },
             {
+                path: 'station/:brandName/listeners/:id',
+                name: 'EditBrandListener',
+                component: () => import('../components/forms/kneo/BrandListenerForm.vue'),
+                props: true,
+            },           
+            {
                 path: 'station/:brandName/chat',
                 name: 'StationChat',
                 component: ChatForm,
                 props: true,
             },           
-            {
-                path: 'station/:brandName/listeners/:id',
-                name: 'EditListener',
-                component: ListenerForm,
-                props: true,
-            },
             {
                 path: 'station/:brandName/soundfragments',
                 name: 'StationSoundFragments',
