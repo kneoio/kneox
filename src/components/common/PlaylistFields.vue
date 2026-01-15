@@ -51,12 +51,14 @@
         </n-gi>
         <n-gi>
           <n-form-item label="Genres" label-width="80">
-            <n-select
+            <n-tree-select
                 :value="modelValue?.genres"
                 @update:value="updateField('genres', $event)"
                 :options="genreOptions"
                 multiple
+                checkable
                 filterable
+                default-expand-all
                 placeholder="Select genres"
                 clearable
                 style="width: 50%; max-width: 600px;"
@@ -110,7 +112,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
-import { NForm, NFormItem, NInput, NSelect, NGrid, NGi, NRadioGroup, NRadioButton, NText } from 'naive-ui';
+import { NForm, NFormItem, NInput, NSelect, NGrid, NGi, NRadioGroup, NRadioButton, NText, NTreeSelect } from 'naive-ui';
 import { useReferencesStore } from '../../stores/kneo/referencesStore';
 import { useSoundFragmentStore } from '../../stores/kneo/soundFragmentStore';
 
