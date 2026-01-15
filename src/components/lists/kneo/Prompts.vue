@@ -212,6 +212,12 @@ export default defineComponent( {
       }
     }, { deep: true } );
 
+    watch( () => filters.value.languageTag, (newValue) => {
+      if (newValue) {
+        filters.value.master = false;
+      }
+    } );
+
     watch( showFilters, () => {
       saveFilters();
     } );
