@@ -94,7 +94,7 @@
 import { defineComponent, ref, watch, computed, h } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
-import { NPageHeader, NPagination, NInput, NDataTable, NEmpty, NButton, NButtonGroup, NFormItem, NSelect, NGrid, NGi, NCollapseTransition, NModal, NSpace, useMessage } from 'naive-ui';
+import { NPageHeader, NPagination, NInput, NDataTable, NEmpty, NButton, NButtonGroup, NFormItem, NSelect, NGrid, NGi, NCollapseTransition, NModal, NSpace, useMessage, type DataTableColumns } from 'naive-ui';
 import { useDialogBackground } from '../../../composables/useDialogBackground';
 import { useSoundFragmentStore } from '../../../stores/kneo/soundFragmentStore';
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
