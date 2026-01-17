@@ -2,7 +2,7 @@
   <n-grid cols="6" x-gap="12" y-gap="12" class="m-5">
     <n-gi span="6">
       <n-page-header :subtitle="formTitle" @back="goBack">
-        <template #title>{{ localFormData.listener?.localizedName?.en || 'New Brand Listener' }}</template>
+        <template #title>{{ localFormData.listener.slugName || localFormData.listener.localizedName?.en || 'New Listener' }}</template>
         <template #footer>
           <span v-if="localFormData.listener?.id">
             Registered: {{ localFormData.listener?.regDate }}, Last Modified: {{ localFormData.listener?.lastModifiedDate }}
@@ -15,7 +15,6 @@
     <n-gi class="mt-2" span="6">
       <n-button-group>
         <n-button type="primary" @click="handleSave" size="large">Save</n-button>
-        <n-button type="default" @click="handleArchive" size="large" :disabled="!localFormData.listener?.id">Archive</n-button>
       </n-button-group>
     </n-gi>
     <n-gi span="6">
@@ -23,16 +22,6 @@
         <n-tab-pane name="properties" tab="Main properties">
           <n-form label-placement="left" label-width="auto" :model="localFormData.listener">
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
-              <n-gi>
-                <n-form-item label="Listener Type">
-                  <n-select
-                      v-model:value="localFormData.listenerType"
-                      :options="listenerTypeOptions"
-                      style="width: 25%; max-width: 300px;"
-                      disabled
-                  />
-                </n-form-item>
-              </n-gi>
               <n-gi>
                 <n-form-item label="Localized Names">
                   <n-dynamic-input
@@ -79,6 +68,11 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
+                <n-form-item label="Email">
+                  <n-input v-model:value="localFormData.listener.email" placeholder="listener@example.com" style="width: 50%; max-width: 600px;" />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
                 <n-form-item label="User Data">
                   <n-dynamic-input
                       v-model:value="userDataArray"
@@ -100,12 +94,6 @@
                       </n-space>
                     </template>
                   </n-dynamic-input>
-                </n-form-item>
-              </n-gi>
-              <n-gi>
-                <n-form-item label="Listener of" path="listenerOf">
-                  <n-select v-model:value="localFormData.listener.listenerOf" :options="radioStationOptions" filterable
-                            multiple style="width: 50%; max-width: 600px;" />
                 </n-form-item>
               </n-gi>
             </n-grid>
@@ -149,7 +137,6 @@ import { handleFormSaveError, getErrorMessage } from '../../../utils/errorHandli
 
 interface LocalBrandListenerFormData {
   id: string | null;
-  listenerType: string;
   listener: {
     id: string | null;
     author: string;
@@ -161,7 +148,9 @@ interface LocalBrandListenerFormData {
     userData: Record<string, string>;
     archived: number;
     listenerOf: string[];
-    userId?: string;
+    userId: string | number;
+    slugName: string;
+    email: string;
   };
 }
 
@@ -196,7 +185,6 @@ export default defineComponent({
 
     const localFormData = reactive<LocalBrandListenerFormData>({
       id: null,
-      listenerType: "",
       listener: {
         id: null,
         author: "",
@@ -209,6 +197,8 @@ export default defineComponent({
         archived: 0,
         listenerOf: [],
         userId: "",
+        slugName: "",
+        email: "",
       },
     });
 
@@ -221,11 +211,6 @@ export default defineComponent({
       }));
     });
 
-    const listenerTypeOptions = [
-      { label: "OWNER", value: "OWNER" },
-      { label: "REGULAR", value: "REGULAR" },
-      { label: "CONTRIBUTOR", value: "CONTRIBUTOR" },
-    ];
 
     const localizedNameArray = ref<{ language: string; name: string }[]>([]);
     const nickNameArray = ref<{ language: string; names: string[] }[]>([]);
@@ -286,17 +271,23 @@ export default defineComponent({
       isSaving.value = true;
       loadingBar.start();
       try {
+        // Validate email is not empty
+        if (!localFormData.listener.email || localFormData.listener.email.trim() === '') {
+          message.error('Email is required');
+          return;
+        }
+
         const dataToSave: ListenerSave = {
           nickName: localFormData.listener.nickName,
           localizedName: localFormData.listener.localizedName,
           archived: localFormData.listener.archived,
-          listenerOf: localFormData.listener.listenerOf,
           userData: localFormData.listener.userData,
+          email: localFormData.listener.email,
         };
 
         console.log('Data to save:', dataToSave);
 
-        await store.saveBrandListener(dataToSave, route.params.brandName as string, localFormData.id);
+        await store.saveBrandListener(dataToSave, route.params.brandName as string, localFormData.id, localFormData.listener.listenerOf);
         message.success("Brand listener saved successfully");
         router.push("/outline/station/" + route.params.brandName + "/listeners");
       } catch (error: any) {
@@ -357,34 +348,46 @@ export default defineComponent({
               // Set top-level fields
               localFormData.listenerType = data.listenerType || '';
               
+              // Set brandId in listenerOf for display
+              if (data.brandId) {
+                localFormData.listener.listenerOf = [data.brandId];
+              }
+              
               // Set listener nested fields
               if (data.listener) {
                 localFormData.id = data.listener.id || null;
-                localFormData.author = data.listener.author || '';
-                localFormData.regDate = data.listener.regDate || '';
-                localFormData.lastModifier = data.listener.lastModifier || '';
-                localFormData.lastModifiedDate = data.listener.lastModifiedDate || '';
-                localFormData.localizedName = data.listener.localizedName || { en: '' };
-                localFormData.nickName = data.listener.nickName || {};
-                localFormData.userData = data.listener.userData || {};
-                localFormData.archived = data.listener.archived || 0;
-                localFormData.listener.listenerOf = data.listener.listenerOf || [];
+                localFormData.listener.id = data.listener.id || null;
+                localFormData.listener.author = data.listener.author || '';
+                localFormData.listener.regDate = data.listener.regDate || '';
+                localFormData.listener.lastModifier = data.listener.lastModifier || '';
+                localFormData.listener.lastModifiedDate = data.listener.lastModifiedDate || '';
+                localFormData.listener.localizedName = data.listener.localizedName || { en: '' };
+                localFormData.listener.nickName = data.listener.nickName || {};
+                localFormData.listener.userData = data.listener.userData || {};
+                localFormData.listener.archived = data.listener.archived || 0;
+                localFormData.listener.userId = data.listener.userId || '';
+                localFormData.listener.slugName = data.listener.slugName || '';
+                localFormData.listener.email = data.listener.email || '';
+                // Don't override listenerOf, keep the brandId from top level
+                if (!data.brandId && data.listener.listenerOf) {
+                  localFormData.listener.listenerOf = data.listener.listenerOf;
+                }
               }
 
-              if (localFormData.localizedName) {
-                localizedNameArray.value = Object.entries(localFormData.localizedName).map(([language, name]) => ({
+              if (localFormData.listener.localizedName) {
+                localizedNameArray.value = Object.entries(localFormData.listener.localizedName).map(([language, name]) => ({
                   language,
                   name
                 }));
               }
-              if (localFormData.nickName) {
-                nickNameArray.value = Object.entries(localFormData.nickName).map(([language, names]) => ({
+              if (localFormData.listener.nickName) {
+                nickNameArray.value = Object.entries(localFormData.listener.nickName).map(([language, names]) => ({
                   language,
                   names
                 }));
               }
-              if (localFormData.userData) {
-                userDataArray.value = Object.entries(localFormData.userData).map(([key, value]) => ({
+              if (localFormData.listener.userData) {
+                userDataArray.value = Object.entries(localFormData.listener.userData).map(([key, value]) => ({
                   key,
                   value
                 }));
@@ -415,7 +418,6 @@ export default defineComponent({
       goBack,
       formTitle,
       radioStationOptions,
-      listenerTypeOptions,
       localizedNameArray,
       nickNameArray,
       userDataArray,

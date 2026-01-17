@@ -3,12 +3,11 @@
     <div class="chat-container">
       <div class="chat-header">
         <h2>Station Chat for {{ brandName }}</h2>
-        <n-text v-if="!isConnected" depth="3" type="warning" style="font-size: 12px;">
-          Connecting...
-        </n-text>
-        <n-text v-else depth="3" type="success" style="font-size: 12px;">
-          ● Connected
-        </n-text>
+        <GlowingStatus 
+          :online="isConnected" 
+          :name="isConnected ? 'Connected' : 'Connecting...'" 
+          :status="isConnected ? 'online' : 'offline'"
+        />
       </div>
 
       <div class="chat-messages">
@@ -85,6 +84,7 @@ import { computed, defineComponent, ref, nextTick, watch, onMounted, onUnmounted
 import { useChatWebSocketStore } from '../../../stores/kneo/chatWebSocketStore';
 import { NButton, NText, NInput, NScrollbar, NSpin, useThemeVars } from 'naive-ui';
 import { GridDots } from '@vicons/tabler';
+import GlowingStatus from '../../common/GlowingStatus.vue';
 
 export default defineComponent({
   name: 'ChatForm',
@@ -94,7 +94,8 @@ export default defineComponent({
     NInput,
     NScrollbar,
     NSpin,
-    GridDots
+    GridDots,
+    GlowingStatus
   },
   props: {
     brandName: {

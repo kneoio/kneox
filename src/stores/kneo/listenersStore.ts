@@ -127,8 +127,15 @@ export const useListenersStore = defineStore('listenersStore', () => {
         apiBrandFormResponse.value = response.data.payload;
     };
 
-    const saveBrandListener = async (data: ListenerSave, _brandName: string, id: string | null) => {
-        const response = await apiClient.post(`listeners/${id || ''}`, data);
+    const saveBrandListener = async (data: ListenerSave, brandName: string, id: string | null, listenerOf?: string[]) => {
+        const queryParams = new URLSearchParams();
+        queryParams.append('contextBrandSlug', brandName);
+        if (listenerOf && listenerOf.length > 0) {
+            queryParams.append('listenerOf', listenerOf.join(','));
+        }
+        
+        const url = `listeners/${id || ''}${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+        const response = await apiClient.post(url, data);
         if (!response?.data) throw new Error('Invalid API response');
         apiBrandFormResponse.value = response.data;
         return apiBrandFormResponse.value;

@@ -2,7 +2,7 @@
   <n-grid cols="6" x-gap="12" y-gap="12" class="m-5">
     <n-gi span="6">
       <n-page-header :subtitle="formTitle" @back="goBack">
-        <template #title>{{ localFormData.localizedName?.en || 'New Listener' }}</template>
+        <template #title>{{ localFormData.slugName || localFormData.localizedName?.en || 'New Listener' }} (ID: {{ localFormData.userId }})</template>
         <template #footer>
           <span v-if="localFormData.id">
             Registered: {{ localFormData.regDate }}, Last Modified: {{ localFormData.lastModifiedDate }}
@@ -94,9 +94,14 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
+                <n-form-item label="Email">
+                  <n-input v-model:value="localFormData.email" placeholder="listener@example.com" style="width: 50%; max-width: 600px;" />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
                 <n-form-item label="Listener of" path="listenerOf">
                   <n-select v-model:value="localFormData.listenerOf" :options="radioStationOptions" filterable
-                            multiple style="width: 50%; max-width: 600px;" />
+                            multiple style="width: 50%; max-width: 600px;" placeholder="Select brands to associate with this listener" />
                 </n-form-item>
               </n-gi>
             </n-grid>
@@ -148,6 +153,9 @@ interface LocalListenerFormData {
   nickName: Record<string, string[]>;
   userData: Record<string, string>;
   archived: number;
+  userId: string | number;
+  slugName: string;
+  email: string;
   listenerOf: string[];
 }
 
@@ -190,8 +198,10 @@ export default defineComponent({
       nickName: {},
       userData: {},
       archived: 0,
-      listenerOf: [],
       userId: "",
+      slugName: "",
+      email: "",
+      listenerOf: [],
     });
 
     const formTitle = computed(() => localFormData.id ? 'Edit Listener' : 'Create New Listener');
@@ -254,9 +264,23 @@ export default defineComponent({
 
     watch(() => store.getCurrent, (currentListener) => {
       if (currentListener && currentListener.id) {
-        Object.assign(localFormData, currentListener);
-        if (!localFormData.nickName) localFormData.nickName = {};
-        if (!localFormData.localizedName) localFormData.localizedName = { en: '' };
+        const listener = currentListener as any;
+        localFormData.id = listener.id;
+        localFormData.author = listener.author || '';
+        localFormData.regDate = listener.regDate || '';
+        localFormData.lastModifier = listener.lastModifier || '';
+        localFormData.lastModifiedDate = listener.lastModifiedDate || '';
+        localFormData.localizedName = listener.localizedName || { en: '' };
+        localFormData.nickName = listener.nickName || {};
+        localFormData.userData = listener.userData || {};
+        localFormData.archived = listener.archived || 0;
+        localFormData.userId = listener.userId || '';
+        localFormData.slugName = listener.slugName || '';
+        localFormData.email = listener.email || '';
+        // Set listenerOf directly from payload
+        if (listener.listenerOf && Array.isArray(listener.listenerOf)) {
+          localFormData.listenerOf = listener.listenerOf;
+        }
 
         if (localFormData.localizedName) {
           localizedNameArray.value = Object.entries(localFormData.localizedName).map(([language, name]) => ({
@@ -283,12 +307,20 @@ export default defineComponent({
       isSaving.value = true;
       loadingBar.start();
       try {
+        // Validate email is not empty
+        if (!localFormData.email || localFormData.email.trim() === '') {
+          message.error('Email is required');
+          return;
+        }
+
         const dataToSave: ListenerSave = {
           nickName: localFormData.nickName,
           localizedName: localFormData.localizedName,
           archived: localFormData.archived,
-          listenerOf: localFormData.listenerOf,
           userData: localFormData.userData,
+          listenerOf: localFormData.listenerOf,
+          email: localFormData.email,
+          userId: localFormData.userId,
         };
 
         console.log('Data to save:', dataToSave);
@@ -349,38 +381,51 @@ export default defineComponent({
         loadingBar.start();
         
         await store.fetchListener(id);
-        Object.assign(localFormData, store.getCurrent);
+        const currentData = store.getCurrent;
+        
+        if (currentData && currentData.id) {
+          const listener = currentData as any;
+          localFormData.id = listener.id;
+          localFormData.author = listener.author || '';
+          localFormData.regDate = listener.regDate || '';
+          localFormData.lastModifier = listener.lastModifier || '';
+          localFormData.lastModifiedDate = listener.lastModifiedDate || '';
+          localFormData.localizedName = listener.localizedName || { en: '' };
+          localFormData.nickName = listener.nickName || {};
+          localFormData.userData = listener.userData || {};
+          localFormData.archived = listener.archived || 0;
+          localFormData.userId = listener.userId || '';
+          localFormData.slugName = listener.slugName || '';
+          localFormData.email = listener.email || '';
+          // Map listenerOf to newlyListenerOf for editing (extract UUIDs)
+          if (listener.listenerOf && Array.isArray(listener.listenerOf)) {
+            localFormData.newlyListenerOf = listener.listenerOf.map((item: any) => item.brandId || item.id);
+          }
 
-        if (localFormData.localizedName) {
-          localizedNameArray.value = Object.entries(localFormData.localizedName).map(([language, name]) => ({
-            language,
-            name
-          }));
-        }
-        if (localFormData.nickName) {
-          nickNameArray.value = Object.entries(localFormData.nickName).map(([language, names]) => ({
-            language,
-            names
-          }));
-        }
-        if (localFormData.userData) {
-          userDataArray.value = Object.entries(localFormData.userData).map(([key, value]) => ({
-            key,
-            value
-          }));
+          if (localFormData.localizedName) {
+            localizedNameArray.value = Object.entries(localFormData.localizedName).map(([language, name]) => ({
+              language,
+              name
+            }));
+          }
+          if (localFormData.nickName) {
+            nickNameArray.value = Object.entries(localFormData.nickName).map(([language, names]) => ({
+              language,
+              names
+            }));
+          }
+          if (localFormData.userData) {
+            userDataArray.value = Object.entries(localFormData.userData).map(([key, value]) => ({
+              key,
+              value
+            }));
+          }
         }
       } catch (error) {
         console.error('Failed to fetch listener:', error);
         message.error(getErrorMessage(error));
       } finally {
         loadingBar.finish();
-      }
-
-      try {
-        await radioStationStore.fetchAll();
-      } catch (error) {
-        console.error('Failed to fetch data:', error);
-        message.error(getErrorMessage(error));
       }
     });
 

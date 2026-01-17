@@ -264,6 +264,7 @@ export interface ListenerEntry {
         archived: number;
         listenerType?: string;
         listenerOf?: string[];
+        userData?: Record<string, string>;
     };
 }
 
@@ -279,9 +280,9 @@ export interface ListenerSave {
     localizedName?: LocalizedName;
     nickName?: Record<string, string[]>;
     userData?: Record<string, string>;
-    slugName?: string;
     archived?: number;
-    userId?: number;
+    userId?: number | string | undefined;
+    email?: string;
     listenerOf?: string[];
 }
 

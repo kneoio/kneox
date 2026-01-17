@@ -3,12 +3,11 @@
     <div class="chat-container">
       <div class="chat-header">
         <h2>Chat</h2>
-        <n-text v-if="!isConnected" depth="3" type="warning" style="font-size: 12px;">
-          Connecting...
-        </n-text>
-        <n-text v-else depth="3" type="success" style="font-size: 12px;">
-          ● Connected
-        </n-text>
+        <GlowingStatus 
+          :online="isConnected" 
+          :name="isConnected ? 'Connected' : 'Connecting...'" 
+          :status="isConnected ? 'online' : 'offline'"
+        />
       </div>
 
       <div class="chat-messages">
@@ -84,6 +83,7 @@
 import { computed, defineComponent, ref, nextTick, watch, onMounted, onUnmounted } from 'vue'
 import { usePublicChatWebSocketStore } from '../../../stores/public/publicChatWebSocketStore'
 import { NButton, NText, NInput, NScrollbar, useThemeVars } from 'naive-ui'
+import GlowingStatus from '../../common/GlowingStatus.vue'
 
 export default defineComponent({
   name: 'PublicChatForm',
@@ -91,7 +91,8 @@ export default defineComponent({
     NButton,
     NText,
     NInput,
-    NScrollbar
+    NScrollbar,
+    GlowingStatus
   },
   props: {
     stationSlug: {

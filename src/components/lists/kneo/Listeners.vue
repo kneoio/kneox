@@ -130,12 +130,14 @@ export default defineComponent({
       { title: 'Name', key: 'localizedName.en' },
       { 
         title: 'Nickname', 
-        key: 'nickName.en',
+        key: 'nickName',
         render: (row) => {
-          const nicknames = row.nickName?.en || [];
-          return Array.isArray(nicknames) ? nicknames.join(', ') : nicknames;
+          const nicknames = row.nickName || {};
+          const allNicknames = Object.values(nicknames).flat();
+          return allNicknames.length > 0 ? allNicknames.join(', ') : 'N/A';
         }
       },
+      { title: 'User ID', key: 'userId' },
       { 
         title: 'User Data', 
         key: 'userData',
