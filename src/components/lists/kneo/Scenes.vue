@@ -241,6 +241,7 @@ export default defineComponent({
       { type: 'selection' },
       { title: 'Script Title', key: 'scriptTitle', width: 200 },
       { title: 'Name', key: 'name' },
+      { title: 'Start Time', key: 'startTime', width: 100 },
       {
         title: 'Timing',
         key: 'timing',
@@ -291,16 +292,35 @@ export default defineComponent({
 
     const pagination = ref({ page: 1, pageSize: 10, itemCount: 0, pageCount: 1, showSizePicker: true, pageSizes: [10, 20, 30, 40] });
 
-    const getRowProps = (row: any) => ({
-      style: 'cursor: pointer;',
-      onClick: (e: MouseEvent) => {
-        const target = e.target as HTMLElement;
-        if (target.closest('.n-checkbox') || target.closest('[data-n-checkbox]')) {
-          return;
-        }
-        router.push({ name: 'SceneForm', params: { id: row.id } });
-      }
+    const scriptTitleIndexMap = computed(() => {
+      const map = new Map<string, number>();
+      const scriptTitles = Array.from(new Set(rows.value.map(r => r.scriptTitle).filter(Boolean)));
+      scriptTitles.forEach((title, index) => {
+        map.set(title, index);
+      });
+      return map;
     });
+
+    const getRowProps = (row: any) => {
+      const classList = [];
+      if (row.scriptTitle && scriptTitleIndexMap.value.has(row.scriptTitle)) {
+        const index = scriptTitleIndexMap.value.get(row.scriptTitle)!;
+        classList.push(`script-stripe-${index % 2}`);
+      }
+      
+      return {
+        style: 'cursor: pointer;',
+        'data-script-title': row.scriptTitle,
+        class: classList.join(' '),
+        onClick: (e: MouseEvent) => {
+          const target = e.target as HTMLElement;
+          if (target.closest('.n-checkbox') || target.closest('[data-n-checkbox]')) {
+            return;
+          }
+          router.push({ name: 'SceneForm', params: { id: row.id } });
+        }
+      };
+    };
 
     return {
       columns,
@@ -325,3 +345,19 @@ export default defineComponent({
   }
 });
 </script>
+
+<style>
+/* Global styles for script title stripes */
+.script-stripe-0 td {
+  background-color: rgba(24, 160, 88, 0.08) !important;
+}
+
+.script-stripe-1 td {
+  background-color: rgba(51, 54, 179, 0.08) !important;
+}
+
+.script-stripe-0:hover td,
+.script-stripe-1:hover td {
+  background-color: var(--n-td-color-hover) !important;
+}
+</style>

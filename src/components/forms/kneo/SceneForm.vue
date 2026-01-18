@@ -370,39 +370,30 @@ export default defineComponent({
         const saveData: ScriptSceneSave = {
           title: localFormData.title as any,
           prompts: scenePrompts.value,
+          scriptId: selectedScriptId.value || undefined,
           startTime: startTimeMs.value != null ? formatTimeFromMs(startTimeMs.value) : undefined,
           durationSeconds: localFormData.durationSeconds as any,
           seqNum: localFormData.seqNum as any,
-          oneTimeRun: localFormData.oneTimeRun as any,
-          weekdays: selectedWeekdays.value,
           talkativity: localFormData.talkativity as any,
-          stagePlaylist: localFormData.stagePlaylist ? {
-            sourcing: localFormData.stagePlaylist.sourcing,
-            searchTerm: (localFormData.stagePlaylist as any).searchTerm,
-            genres: localFormData.stagePlaylist.genres,
-            labels: localFormData.stagePlaylist.labels,
-            type: (localFormData.stagePlaylist as any).type,
-            source: (localFormData.stagePlaylist as any).source,
-            staticList: (localFormData.stagePlaylist as any).staticList
-          } : undefined,
+          podcastMode: localFormData.podcastMode as any,
+          stagePlaylist: localFormData.stagePlaylist as any,
+          weekdays: localFormData.weekdays as any,
+          oneTimeRun: localFormData.oneTimeRun as any,
+          timingMode: localFormData.timingMode as any
         };
-        const id = route.params.id as string;
-        if (!id || id === 'new') {
-          if (!selectedScriptId.value) {
-            message.error('Script is required');
-            loadingBar.error();
-            return;
-          }
-          await store.upsertForScript(selectedScriptId.value, saveData);
-        } else {
+
+        const id = localFormData.id;
+        if (id) {
           await store.upsert(id, saveData);
+        } else {
+          await store.upsertForScript(selectedScriptId.value || '', saveData);
         }
         message.success('Scene saved successfully');
         const previousRoute = router.options.history.state.back;
         if (previousRoute && previousRoute.toString().includes('/outline/document-tree')) {
           await router.push('/outline/document-tree');
         } else {
-          await router.push({ name: 'Scripts' });
+          await router.push({ name: 'Scenes' });
         }
       } catch (error: any) {
         handleFormSaveError(error, message);
