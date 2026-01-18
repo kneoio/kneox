@@ -2,7 +2,38 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import apiClient from '../../api/apiClient';
 import { ApiViewPageResponse, ApiFormResponse } from '../../types';
-import { ScriptScene, ScriptSceneSave } from '../../types/kneoBroadcasterTypes';
+import { ScriptScene, ScriptSceneSave, SceneTimingMode } from '../../types/kneoBroadcasterTypes';
+
+interface SceneFilterDTO {
+  activated?: boolean;
+  timingMode?: SceneTimingMode | string;
+}
+
+function normalizeFilter(filter?: SceneFilterDTO | string) {
+  if (!filter) return undefined;
+  if (typeof filter === 'string') {
+    let val = filter;
+    if (val.startsWith('%')) {
+      try {
+        val = decodeURIComponent(val);
+      } catch {
+      }
+    }
+    return val;
+  }
+  return JSON.stringify(filter);
+}
+
+function buildScenesUrl(basePath: string, { page = 1, size = 10, filter }: { page?: number; size?: number; filter?: SceneFilterDTO | string } = {}) {
+  const params = new URLSearchParams();
+  params.set('page', String(page));
+  params.set('size', String(size));
+  const normalized = normalizeFilter(filter);
+  if (normalized && normalized !== '{}') {
+    params.set('filter', normalized);
+  }
+  return `${basePath}?${params.toString()}`;
+}
 
 export const useScriptSceneStore = defineStore('scriptSceneStore', () => {
   const apiViewResponse = ref<ApiViewPageResponse<ScriptScene> | null>(null);
@@ -24,8 +55,13 @@ export const useScriptSceneStore = defineStore('scriptSceneStore', () => {
     };
   });
 
-  const fetchAll = async (page = 1, size = 10) => {
-    const res = await apiClient.get(`/scenes?page=${page}&size=${size}`);
+  const fetchAll = async (page = 1, size = 10, filters: SceneFilterDTO = {}) => {
+    const url = buildScenesUrl('/scenes', {
+      page,
+      size,
+      filter: filters && Object.keys(filters).length ? filters : undefined
+    });
+    const res = await apiClient.get(url);
     const payload = res?.data?.payload?.payload || res?.data?.payload;
     if (payload) {
       apiViewResponse.value = payload as ApiViewPageResponse<ScriptScene>;
