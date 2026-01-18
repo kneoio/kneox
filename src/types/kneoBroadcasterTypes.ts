@@ -81,6 +81,11 @@ export interface AiOverriding {
     primaryVoice: string;
 }
 
+export interface Owner {
+    name?: string;
+    email?: string;
+}
+
 export interface RadioStation {
     id: string;
     author: string;

@@ -1,7 +1,7 @@
 <template>
   <n-grid :cols="isMobile ? 1 : 6" x-gap="12" y-gap="12" :style="{ padding: isMobile ? '0' : undefined }" :class="isMobile ? '' : 'm-5'">
     <n-gi :span="isMobile ? 1 : 6">
-      <n-page-header subtitle="Stream" @back="goBack" :style="{ marginLeft: isMobile ? '60px' : '0', padding: isMobile ? '8px' : undefined }">
+      <n-page-header subtitle="Brand" @back="goBack" :style="{ marginLeft: isMobile ? '60px' : '0', padding: isMobile ? '8px' : undefined }">
         <template #title>
           {{ store.getCurrent.country || store.getCurrent.slugName }}
           <span v-if=" localFormData.timeZone && getCurrentTimeInTimezone "
@@ -80,7 +80,9 @@
                     :style="{ width: isMobile ? '100%' : '50%', maxWidth: isMobile ? '100%' : '400px' }" />
                 </n-form-item>
               </n-gi>
+              
               <n-gi>
+                <n-divider :style="{ width: isMobile ? '100%' : '50%', maxWidth: isMobile ? '100%' : '1200px' }" />
                 <n-form-item label="HLS URL">
                   <n-text :style="{ width: isMobile ? '100%' : '50%', maxWidth: isMobile ? '100%' : '600px', fontFamily: 'monospace', cursor: 'pointer', color: '#1890ff', wordBreak: isMobile ? 'break-all' : 'normal' }"
                     @click="openUrl( localFormData.hlsUrl )">
@@ -315,6 +317,24 @@
             </n-grid>
           </n-form>
         </n-tab-pane>
+        <n-tab-pane name="owner" tab="Owner">
+          <n-form label-placement="left" label-width="auto">
+            <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
+              <n-gi>
+                <n-form-item label="Owner Name">
+                  <n-input :value="localFormData.owner?.name" @update:value="(val) => { if (localFormData.owner) localFormData.owner.name = val; }" placeholder="Owner name"
+                    :style="{ width: isMobile ? '100%' : '25%', maxWidth: isMobile ? '100%' : '300px' }" />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="Owner Email">
+                  <n-input :value="localFormData.owner?.email" @update:value="(val) => { if (localFormData.owner) localFormData.owner.email = val; }" placeholder="owner@example.com"
+                    :style="{ width: isMobile ? '100%' : '25%', maxWidth: isMobile ? '100%' : '300px' }" />
+                </n-form-item>
+              </n-gi>
+            </n-grid>
+          </n-form>
+        </n-tab-pane>
         <n-tab-pane name="acl" tab="ACL">
           <AclTable :acl-data="aclData" :loading="aclLoading" />
         </n-tab-pane>
@@ -354,6 +374,7 @@ import {
   NUpload,
   NIcon,
   NTag,
+  NDivider,
   UploadFileInfo,
   useLoadingBar,
   useMessage
@@ -366,8 +387,7 @@ import {
   RadioStation,
   BrandStatus,
   RadioStationSave,
-  ManagedBy,
-  AiAgentMode
+  ManagedBy
 } from "../../../types/kneoBroadcasterTypes";
 import { useRadioStationStore } from "../../../stores/kneo/radioStationStore";
 import { useAiAgentStore } from "../../../stores/kneo/aiAgentStore";
@@ -407,6 +427,7 @@ export default defineComponent( {
     NSwitch,
     NTag,
     NIcon,
+    NDivider,
     Copy,
     HandRock,
     CodeMirror,
@@ -525,7 +546,8 @@ export default defineComponent( {
       submissionPolicy: undefined,
       messagingPolicy: undefined,
       aiOverriding: { name: "", prompt: "", primaryVoice: "" },
-      profileOverriding: { name: "", description: "" }
+      profileOverriding: { name: "", description: "" },
+      owner: { name: "", email: "" }
     } );
 
     const localizedNameArray = ref<{ language: string; name: string }[]>( [] );
@@ -700,7 +722,8 @@ export default defineComponent( {
           messagingPolicy: localFormData.messagingPolicy,
           aiOverriding: aiOverrideEnabled.value ? localFormData.aiOverriding : undefined,
           profileOverriding: profileOverrideEnabled.value ? localFormData.profileOverriding : undefined,
-          scripts: localFormData.scriptId ? [{ scriptId: localFormData.scriptId, userVariables: userVariables.value }] : undefined
+          scripts: localFormData.scriptId ? [{ scriptId: localFormData.scriptId, userVariables: userVariables.value }] : undefined,
+          owner: localFormData.owner
         };
 
 
@@ -762,7 +785,7 @@ export default defineComponent( {
         await referencesStore.fetchVoices();
         await store.fetch( id );
         await nextTick();
-        const currentData = store.getCurrent;
+        const currentData = store.getCurrent as any;
         Object.assign( localFormData, currentData );
         (localFormData as any).managedBy = ManagedBy.MIX;
 
@@ -774,6 +797,9 @@ export default defineComponent( {
         }
         if (profileOverrideEnabled.value && !localFormData.profileOverriding) {
           (localFormData as any).profileOverriding = { name: '', description: '' };
+        }
+        if (!localFormData.owner) {
+          (localFormData as any).owner = { name: '', email: '' };
         }
 
         const normalizeNumericFields = () => {
