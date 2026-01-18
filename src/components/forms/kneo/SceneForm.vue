@@ -426,6 +426,8 @@ export default defineComponent({
       const previousRoute = router.options.history.state.back;
       if (previousRoute && previousRoute.toString().includes('/outline/document-tree')) {
         router.push('/outline/document-tree');
+      } else if (previousRoute && previousRoute.toString().includes('/outline/scenes')) {
+        router.push({ name: 'Scenes' });
       } else {
         router.push({ name: 'Scripts' });
       }

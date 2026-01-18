@@ -61,12 +61,11 @@
                   <n-space vertical style="min-width: 0; flex: 1;">
                     <n-space align="center" size="small">
                       <n-text style="font-size: 12px; opacity: 0.7;">{{ station?.countryCode }}</n-text>
-                      <span
-                        :class="{ 'status-online': ['ON_LINE','WARMING_UP','IDLE'].includes(station.currentStatus as any) }"
-                        style="font-weight: 400; font-size: 12px;"
-                      >
-                        {{ statusText(station.currentStatus) }}
-                      </span>
+                      <GlowingStatus 
+                        :online="['ON_LINE','WARMING_UP','IDLE'].includes(station.currentStatus as any)"
+                        :name="statusText(station.currentStatus)" 
+                        :status="station.currentStatus" 
+                      />
                       <n-text v-if="station.djName" style="font-weight: 400; font-size: 12px;">
                         DJ: {{ station.djName }}
                       </n-text>
@@ -236,6 +235,7 @@ import { ArrowLeft, Alien, MessageCircle, Music, PlayerPlay, Radio, ExternalLink
 import { useReferencesStore } from '../stores/kneo/referencesStore'
 import { MIXPLA_PLAYER_URL } from '../constants/config'
 import GlowLine from '../components/common/GlowLine.vue'
+import GlowingStatus from '../components/common/GlowingStatus.vue'
 import Hls from 'hls.js'
 
 interface Station {

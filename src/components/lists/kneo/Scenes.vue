@@ -20,13 +20,14 @@
 
     <n-gi :span="isMobile ? 1 : 6">
       <n-data-table
+        remote
         :columns="columns"
         :row-key="rowKey"
         :data="rows"
         :bordered="false"
         :row-props="getRowProps"
         :loading="loading"
-        :pagination="sceneStore.getPagination"
+        :pagination="pagination"
         v-model:checked-row-keys="checkedRowKeys"
         @update:page="handlePageChange"
         @update:page-size="handlePageSizeChange"
@@ -104,7 +105,8 @@ export default defineComponent({
     const preFetch = async () => {
       try {
         loading.value = true;
-        await sceneStore.fetchAll(1, sceneStore.getPagination.pageSize);
+        await sceneStore.fetchAll();
+        pagination.value = sceneStore.getPagination;
       } catch (error) {
         console.error('Failed to load Scenes:', error);
         message.error('Failed to load Scenes.');
@@ -115,11 +117,13 @@ export default defineComponent({
 
     const handlePageChange = async (newPage: number) => {
       await sceneStore.fetchAll(newPage, sceneStore.getPagination.pageSize);
+      pagination.value = sceneStore.getPagination;
       checkedRowKeys.value = [];
     };
 
     const handlePageSizeChange = async (newSize: number) => {
       await sceneStore.fetchAll(1, newSize);
+      pagination.value = sceneStore.getPagination;
       checkedRowKeys.value = [];
     };
 
@@ -138,6 +142,7 @@ export default defineComponent({
         message.success(`Deleted ${checkedRowKeys.value.length} item(s) successfully`);
         checkedRowKeys.value = [];
         await sceneStore.fetchAll(sceneStore.getPagination.page, sceneStore.getPagination.pageSize);
+        pagination.value = sceneStore.getPagination;
       } catch (error) {
         message.error('Failed to delete Scenes.');
       } finally {
@@ -194,6 +199,8 @@ export default defineComponent({
       { title: 'Weekdays', key: 'weekdays' }
     ]));
 
+    const pagination = ref({ page: 1, pageSize: 10, itemCount: 0, pageCount: 1, showSizePicker: true, pageSizes: [10, 20, 30, 40] });
+
     const getRowProps = (row: any) => ({
       style: 'cursor: pointer;',
       onClick: (e: MouseEvent) => {
@@ -218,6 +225,7 @@ export default defineComponent({
       handleDelete,
       checkedRowKeys,
       hasSelection,
+      pagination,
       getRowProps
     };
   }

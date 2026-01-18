@@ -87,7 +87,6 @@
           :row-props="getRowProps"
           :loading="loading"
           v-model:checked-row-keys="checkedRowKeys"
-          default-expand-all
       >
         <template #loading>
           <loader-icon/>
@@ -127,7 +126,6 @@ import {
   DataTableColumns,
   NButton,
   NButtonGroup,
-  NCheckbox,
   NDataTable,
   NDropdown,
   NFormItem,
@@ -144,9 +142,8 @@ import {
 import {useRouter} from 'vue-router';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
 import RedLed from '../../common/RedLed.vue';
-import { SceneTimingMode, Script, ScriptScene } from "../../../types/kneoBroadcasterTypes";
+import { SceneTimingMode, Script } from "../../../types/kneoBroadcasterTypes";
 import {useScriptStore} from "../../../stores/kneo/scriptStore";
-import { useScriptSceneStore } from "../../../stores/kneo/scriptSceneStore";
 import { useReferencesStore } from "../../../stores/kneo/referencesStore";
 import { handleFormSaveError } from '../../../utils/errorHandling';
 import apiClient from '../../../api/apiClient';
@@ -159,7 +156,6 @@ export default defineComponent({
     const message = useMessage();
     const { dialogBackgroundColor } = useDialogBackground();
     const store = useScriptStore();
-    const sceneStore = useScriptSceneStore();
     const referencesStore = useReferencesStore();
     const isMobile = ref(window.innerWidth < 768);
     const loading = ref(false);
@@ -265,7 +261,7 @@ export default defineComponent({
         searchTerm: '',
         labels: [],
         timingMode: '',
-        languageCode: ''
+        languageTag: ''
       };
     };
 
@@ -274,7 +270,7 @@ export default defineComponent({
         searchTerm: '',
         labels: [],
         timingMode: '',
-        languageCode: ''
+        languageTag: ''
       };
       saveFilters();
       fetchData();
@@ -317,50 +313,15 @@ export default defineComponent({
 
         await store.fetchAll(1, 100, activeFilters);
         const scripts = store.getEntries || [];
-        const childrenPromises = scripts.map(async (s: Script) => {
-          try {
-            await sceneStore.fetchForScript(s.id as string, 1, 50);
-            const scenes = (sceneStore.apiViewResponse?.viewData?.entries || []) as ScriptScene[];
-            const children = scenes.map(sc => {
-              const map = ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-              const w = (sc as any).weekdays || [];
-              const weekdaysText = Array.isArray(w) && w.length > 0
-                ? w.filter((n: any) => Number.isInteger(n) && n >= 1 && n <= 7).map((n: number) => map[n]).join(', ')
-                : '';
-              return {
-                id: sc.id,
-                name: sc.title || sc.type || '',
-                tags: '',
-                description: '',
-                startTime: sc.startTime || '',
-                seqNum: (sc as any).seqNum || 0,
-                weekdays: weekdaysText,
-                oneTimeRun: !!(sc as any).oneTimeRun
-              };
-            });
-            return {
-              id: s.id,
-              name: s.name,
-              tags: resolveLabelNames((s as any).labels || []),
-              labelUuids: (s as any).labels || [],
-              description: s.description || '',
-              accessLevel: (s as any).accessLevel,
-              timingMode: (s as any).timingMode,
-              children
-            };
-          } catch {
-            return {
-              id: s.id,
-              name: s.name,
-              tags: resolveLabelNames((s as any).labels || []),
-              labelUuids: (s as any).labels || [],
-              description: s.description || '',
-              accessLevel: (s as any).accessLevel,
-              timingMode: (s as any).timingMode
-            };
-          }
-        });
-        treeData.value = await Promise.all(childrenPromises);
+        treeData.value = scripts.map((s: Script) => ({
+          id: s.id,
+          name: s.name,
+          tags: resolveLabelNames((s as any).labels || []),
+          labelUuids: (s as any).labels || [],
+          description: s.description || '',
+          accessLevel: (s as any).accessLevel,
+          timingMode: (s as any).timingMode
+        }));
       } catch (error) {
         console.error('Failed to fetch Scripts:', error);
         message.error('Failed to load Scripts.');
@@ -378,7 +339,7 @@ export default defineComponent({
       } finally {
         loading.value = false;
       }
-    }
+    };
 
     const startPeriodicRefresh = () => {
       if (!intervalId.value) {
@@ -443,7 +404,7 @@ export default defineComponent({
           if (topLevelIds.has(key)) {
             return store.deleteScript(key);
           }
-          return sceneStore.remove(key);
+          return;
         });
         await Promise.all(deletePromises);
         message.success(`${checkedRowKeys.value.length} item(s) deleted successfully.`);
@@ -615,61 +576,37 @@ export default defineComponent({
           ) {
             return;
           }
-          const routeTo = row.children 
-            ? { name: 'ScriptForm', params: { id: row.id } }
-            : { name: 'SceneForm', params: { id: row.id } };
-          router.push(routeTo).catch((err) => {
+          router.push({ name: 'ScriptForm', params: { id: row.id } }).catch((err) => {
             console.error('Navigation error:', err);
           });
         }
       };
     };
 
-    const labelMap = computed(() => new Map(scriptLabelOptions.value.map(opt => [opt.value, opt])));
-
     const columns = computed<DataTableColumns<any>>(() => ([
       { type: 'selection' },
-      { title: 'name', key: 'name' },
+      { title: 'Name', key: 'name' },
       {
-        title: 'Start Time',
-        key: 'startTime',
+        title: 'Mode',
+        key: 'timingMode',
+        width: 200,
         render: (row: any) => {
-          const content: any[] = [];
-          if (row.startTime) content.push(h('span', row.startTime));
-          if (!row.children && row.oneTimeRun) {
-            content.push(h(NTag, { type: 'success', size: 'small', style: 'margin-left:8px;' }, { default: () => 'One-time' }));
+          const modeLabel = timingModeLabel(row.timingMode);
+          const isPublic = row.accessLevel === 1;
+          const tags: any[] = [];
+          
+          if (modeLabel) {
+            tags.push(h(NTag, { type: row.timingMode === SceneTimingMode.RELATIVE_TO_STREAM_START ? 'warning' : 'info', size: 'small' }, { default: () => modeLabel }));
           }
-          return content.length > 0 ? h('div', { style: 'display:flex; align-items:center;' }, content) : null;
+          if (isPublic) {
+            tags.push(h(NTag, { type: 'success', size: 'small' }, { default: () => 'Public' }));
+          }
+          
+          return tags.length
+            ? h('div', { style: 'display:flex; gap:6px; flex-wrap:wrap;' }, tags)
+            : null;
         }
       },
-      {
-        title: 'Sequence Number',
-        key: 'seqNum',
-        width: 140,
-        render: (row: any) => row.children ? null : (row.seqNum ?? '-')
-      },
-      {
-        title: 'Flags',
-        key: 'accessLevel',
-        render: (row: any) => {
-          if (row.children) {
-            const isPublic = row.accessLevel === 1;
-            const tags: any[] = [];
-            if (isPublic) {
-              tags.push(h(NTag, { type: 'success', size: 'small' }, { default: () => 'Public' }));
-            }
-            const modeLabel = timingModeLabel(row.timingMode);
-            if (modeLabel) {
-              tags.push(h(NTag, { type: row.timingMode === SceneTimingMode.RELATIVE_TO_STREAM_START ? 'warning' : 'info', size: 'small' }, { default: () => modeLabel }));
-            }
-            return tags.length
-              ? h('div', { style: 'display:flex; gap:6px; flex-wrap:wrap;' }, tags)
-              : null;
-          }
-          return null;
-        }
-      },
-      { title: 'Weekdays', key: 'weekdays' },
       { title: 'Description', key: 'description' }
     ]));
 

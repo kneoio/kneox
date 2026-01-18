@@ -5,7 +5,7 @@
         <h2>Chat</h2>
         <GlowingStatus 
           :online="isConnected" 
-          :name="isConnected ? 'Connected' : 'Connecting...'" 
+          name="Connected" 
           :status="isConnected ? 'online' : 'offline'"
         />
       </div>
@@ -301,7 +301,7 @@ export default defineComponent({
   position: absolute;
   top: -24px;
   left: 24px;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .chat-input-area :deep(.n-input) {

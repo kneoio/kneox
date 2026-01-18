@@ -141,3 +141,15 @@
   src: url('./yonder.ttf') format('truetype');
   font-display: swap;
 }
+
+@font-face {
+  font-family: 'Doto';
+  src: url('./Doto-VariableFont_ROND,wght.ttf') format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'PerfectLed';
+  src: url('./PerfectLed123.ttf') format('truetype');
+  font-display: swap;
+}
