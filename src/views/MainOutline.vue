@@ -43,7 +43,7 @@
       <div class="drawer-content" style="overflow-y: auto; max-height: calc(100vh - 80px);">
         <n-tree
             :data="treeData"
-            :selected-keys="[activeMenuKey]"
+            :selected-keys="activeMenuKey ? [activeMenuKey] : []"
             :default-expanded-keys="defaultExpandedKeys"
             :show-line="true"
             :block-node="true"
@@ -364,7 +364,25 @@ export default defineComponent({
         {
           label: 'Prompts',
           key: 'prompts',
-          icon: () => h(Prompt)
+          icon: () => h(Prompt),
+          children: [
+            {
+              label: 'Song',
+              key: 'prompts-song'
+            },
+            {
+              label: 'Advertisement',
+              key: 'prompts-advertisement'
+            },
+            {
+              label: 'Reminder',
+              key: 'prompts-reminder'
+            },
+            {
+              label: 'Generator',
+              key: 'prompts-generator'
+            }
+          ]
         },
         {
           label: 'Drafts',
@@ -410,7 +428,16 @@ export default defineComponent({
       if (route.name === 'AiAgents') return 'ai_agents';
       if (route.name === 'Scripts') return 'scripts';
       if (route.name === 'Scenes') return 'scenes';
-      if (route.name === 'Prompts') return 'prompts';
+      if (route.name === 'AbsoluteTimeScenes' || route.name === 'AbsoluteTimeSceneForm') return 'scenes-absolute-time';
+      if (route.name === 'RelativeTimeScenes' || route.name === 'RelativeTimeSceneForm') return 'scenes-relative-time';
+      if (route.name === 'Prompts') {
+        if (route.query.promptType === 'SONG') return 'prompts-song';
+        if (route.query.promptType === 'ADVERTISEMENT') return 'prompts-advertisement';
+        if (route.query.promptType === 'REMINDER') return 'prompts-reminder';
+        if (route.query.promptType === 'GENERATOR') return 'prompts-generator';
+        return 'prompts';
+      }
+      if (route.name === 'PromptForm') return 'prompts';
       if (route.name === 'Drafts') return 'drafts';
       if (route.name === 'EnvironmentProfiles') return 'environment_profiles';
       if (route.name === 'Listeners') return 'listeners';
@@ -484,10 +511,20 @@ export default defineComponent({
         await router.push({name: 'AiAgents'});
       } else if (key === 'scripts') {
         await router.push({name: 'Scripts'});
-      } else if (key === 'scenes') {
-        await router.push({name: 'Scenes'});
+      } else if (key === 'scenes-absolute-time') {
+        await router.push({name: 'AbsoluteTimeScenes'});
+      } else if (key === 'scenes-relative-time') {
+        await router.push({name: 'RelativeTimeScenes'});
       } else if (key === 'prompts') {
         await router.push({name: 'Prompts'});
+      } else if (key === 'prompts-song') {
+        await router.push({ name: 'Prompts', query: { promptType: 'SONG' } });
+      } else if (key === 'prompts-advertisement') {
+        await router.push({ name: 'Prompts', query: { promptType: 'ADVERTISEMENT' } });
+      } else if (key === 'prompts-reminder') {
+        await router.push({ name: 'Prompts', query: { promptType: 'REMINDER' } });
+      } else if (key === 'prompts-generator') {
+        await router.push({ name: 'Prompts', query: { promptType: 'GENERATOR' } });
       } else if (key === 'drafts') {
         await router.push({name: 'Drafts'});
       } else if (key === 'environment_profiles') {
@@ -583,8 +620,24 @@ export default defineComponent({
         { key: 'ai_agents', label: 'AiAgents' },
         { key: 'document-tree', label: 'Flows' },
         { key: 'scripts', label: 'Scripts' },
-        { key: 'scenes', label: 'Scenes' },
-        { key: 'prompts', label: 'Prompts' },
+        { 
+          key: 'scenes', 
+          label: 'Scenes',
+          children: [
+            { key: 'scenes-absolute-time', label: 'Absolute Time Scenes' },
+            { key: 'scenes-relative-time', label: 'Relative Time Scenes' }
+          ]
+        },
+        {
+          key: 'prompts',
+          label: 'Prompts',
+          children: [
+            { key: 'prompts-song', label: 'Song' },
+            { key: 'prompts-advertisement', label: 'Advertisement' },
+            { key: 'prompts-reminder', label: 'Reminder' },
+            { key: 'prompts-generator', label: 'Generator' }
+          ]
+        },
         { key: 'drafts', label: 'Drafts' }
       ];
 
@@ -604,7 +657,11 @@ export default defineComponent({
     });
 
     const defaultExpandedKeys = computed(() => {
-      return radioStations.value.map(station => `radiostation-${station.slugName}`);
+      return [
+        ...radioStations.value.map(station => `radiostation-${station.slugName}`),
+        'scenes',
+        'prompts'
+      ];
     });
 
     const handleTreeSelect = async (keys: Array<string | number>) => {

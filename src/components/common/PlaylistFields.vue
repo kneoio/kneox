@@ -9,8 +9,9 @@
               name="radiobuttongroup1"
           >
             <n-radio-button value="RANDOM" label="Random" />
-            <n-radio-button v-if="!hideStaticList" value="STATIC_LIST" label="Static List" />
+            <n-radio-button value="STATIC_LIST" label="Static List" />
             <n-radio-button value="QUERY" label="Query" />
+            <n-radio-button v-if="!hideGenerated" value="GENERATED" label="Generated" />
           </n-radio-group>
         </n-form-item>
       </n-gi>
@@ -20,19 +21,48 @@
         <n-text depth="3">Server will randomly select songs from the brand's available sound fragments.</n-text>
       </n-gi>
 
-      <!-- STATIC_LIST: Show multi-select for specific sound fragments -->
       <n-gi v-if="modelValue?.sourcing === 'STATIC_LIST'">
         <n-form-item label="Sound Fragments">
           <n-select
-              :value="modelValue?.staticList"
-              @update:value="updateField('staticList', $event)"
+              :value="modelValue?.soundFragments"
+              @update:value="updateField('soundFragments', $event)"
               :options="soundFragmentOptions"
               multiple
               filterable
-              placeholder="Select sound fragments"
-              :loading="loadingFragments"
-              style="width: 80%; max-width: 800px;"
+              remote
+              clearable
+              :loading="loadingSoundFragments"
+              @search="handleSoundFragmentSearch"
+              @focus="handleSoundFragmentFocus"
+              placeholder=""
+              style="width: 50%; max-width: 600px;"
           />
+        </n-form-item>
+      </n-gi>
+
+      <!-- GENERATED: Show prompts field -->
+      <n-gi v-if="modelValue?.sourcing === 'GENERATED'">
+        <n-form-item label="Prompts">
+          <n-dynamic-input
+              :value="modelValue?.prompts || []"
+              @update:value="updateField('prompts', $event)"
+              :on-create="createPrompt"
+              placeholder=""
+              style="width: 50%; max-width: 600px;"
+          >
+            <template #default="{ index }">
+              <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;">
+                <n-select
+                    :value="(modelValue?.prompts || [])[index]?.promptId"
+                    @update:value="updatePromptAt(index, $event)"
+                    :options="promptOptions"
+                    :render-label="renderPromptLabel"
+                    placeholder=""
+                    style="min-width: 600px;"
+                />
+              </div>
+            </template>
+          </n-dynamic-input>
         </n-form-item>
       </n-gi>
 
@@ -111,10 +141,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
-import { NForm, NFormItem, NInput, NSelect, NGrid, NGi, NRadioGroup, NRadioButton, NText, NTreeSelect } from 'naive-ui';
+import { ref, computed, onMounted, watch, h } from 'vue';
+import { NForm, NFormItem, NInput, NSelect, NGrid, NGi, NRadioGroup, NRadioButton, NText, NTreeSelect, NDynamicInput, NTag } from 'naive-ui';
+import apiClient from '../../api/apiClient';
 import { useReferencesStore } from '../../stores/kneo/referencesStore';
-import { useSoundFragmentStore } from '../../stores/kneo/soundFragmentStore';
+import { usePromptStore } from '../../stores/kneo/promptStore';
 
 interface PlaylistData {
   sourcing?: string;
@@ -124,6 +155,8 @@ interface PlaylistData {
   type?: string[];
   source?: string[];
   staticList?: string[];
+  soundFragments?: string[];
+  prompts?: Array<{ promptId: string; active?: boolean; rank?: number; weight?: number }>;
 }
 
 const props = defineProps<{
@@ -132,6 +165,8 @@ const props = defineProps<{
   genreOptions: Array<{label: string, value: string}>;
   labelOptions: Array<{ label: string; value: string; color?: string; fontColor?: string }>;
   hideStaticList?: boolean;
+  hideGenerated?: boolean;
+  promptOptions?: Array<{ label: string; value: string; master?: boolean; podcast?: boolean; promptType?: string }>;
 }>();
 
 const emit = defineEmits<{
@@ -139,15 +174,46 @@ const emit = defineEmits<{
 }>();
 
 const referencesStore = useReferencesStore();
-const soundFragmentStore = useSoundFragmentStore();
-const loadingFragments = ref(false);
-const brandSoundFragments = ref<Array<{ id: string; title: string; artist?: string }>>([]);
+const promptStore = usePromptStore();
+const loadingSoundFragments = ref(false);
+const lastSoundFragmentQuery = ref('');
+const soundFragmentSearchResults = ref<Array<{ id: string; title: string; artist?: string }>>([]);
+const soundFragmentCache = ref<Array<{ id: string; title: string; artist?: string }>>([]);
+const generatorPrompts = ref<Array<any>>([]);
 
 const soundFragmentOptions = computed(() => {
-  return brandSoundFragments.value.map(sf => ({
+  const merged = new Map<string, { id: string; title: string; artist?: string }>();
+  for (const sf of soundFragmentCache.value) merged.set(sf.id, sf);
+  for (const sf of soundFragmentSearchResults.value) merged.set(sf.id, sf);
+  return Array.from(merged.values()).map(sf => ({
     label: sf.artist ? `${sf.title} - ${sf.artist}` : sf.title,
     value: sf.id
   }));
+});
+
+const promptOptions = computed(() => {
+  const allPrompts = (promptStore.getEntries || [])
+    .filter((p: any) => typeof p.id === 'string' && p.id)
+    .map((p: any) => ({
+      label: p.title || p.description || p.prompt || p.id,
+      value: p.id as string,
+      master: p.master,
+      podcast: p.podcast,
+      promptType: p.promptType
+    }));
+  
+  // If sourcing is GENERATED, return stored generator prompts
+  if (props.modelValue?.sourcing === 'GENERATED') {
+    return generatorPrompts.value.map((p: any) => ({
+      label: p.title || p.description || p.prompt || p.id,
+      value: p.id as string,
+      master: p.master,
+      podcast: p.podcast,
+      promptType: p.promptType
+    }));
+  }
+  
+  return props.promptOptions || allPrompts;
 });
 
 const updateField = (field: keyof PlaylistData, value: any) => {
@@ -157,43 +223,119 @@ const updateField = (field: keyof PlaylistData, value: any) => {
   });
 };
 
-const fetchBrandSoundFragments = async () => {
-  if (!props.brandId) {
-    brandSoundFragments.value = [];
-    return;
-  }
-  
-  loadingFragments.value = true;
+const updatePromptAt = (index: number, value: string) => {
+  const prompts = [...(props.modelValue?.prompts || [])];
+  prompts[index] = { ...prompts[index], promptId: value };
+  updateField('prompts', prompts);
+};
+
+const createPrompt = () => ({
+  promptId: '',
+  active: true,
+  rank: 0,
+  weight: 0.5
+});
+
+const renderPromptLabel = (option: any) => {
+  return h('span', { style: 'display: flex; align-items: center; gap: 8px;' }, [
+    option.master ? h(NTag, { type: 'info', size: 'small' }, { default: () => 'Master' }) : null,
+    option.podcast ? h(NTag, { type: 'warning', size: 'small' }, { default: () => 'Podcast' }) : null,
+    option.promptType ? h(NTag, { type: 'success', size: 'small' }, { default: () => option.promptType }) : null,
+    h('span', option.label)
+  ]);
+};
+
+const fetchSoundFragments = async (q: string) => {
+  loadingSoundFragments.value = true;
+  lastSoundFragmentQuery.value = q;
   try {
-    await soundFragmentStore.fetchAvailableSoundFragments(props.brandId, 1, 500);
-    const entries = soundFragmentStore.getAvailableSoundFragments;
-    brandSoundFragments.value = entries.map((entry: any) => ({
-      id: entry.soundfragment?.id || entry.id,
-      title: entry.soundfragment?.title || entry.title || 'Untitled',
-      artist: entry.soundfragment?.artist || entry.artist
+    const params = new URLSearchParams();
+    params.set('page', '1');
+    params.set('size', '10');
+    params.set('q', q);
+    const response = await apiClient.get(`/soundfragments?${params.toString()}`);
+    const entries = response?.data?.payload?.viewData?.entries || [];
+    if (lastSoundFragmentQuery.value !== q) return;
+    soundFragmentSearchResults.value = entries.map((entry: any) => ({
+      id: entry.id,
+      title: entry.title,
+      artist: entry.artist
     }));
   } catch (error) {
     console.error('Failed to fetch sound fragments:', error);
-    brandSoundFragments.value = [];
+    if (lastSoundFragmentQuery.value === q) soundFragmentSearchResults.value = [];
   } finally {
-    loadingFragments.value = false;
+    if (lastSoundFragmentQuery.value === q) loadingSoundFragments.value = false;
   }
 };
 
-watch(() => props.brandId, (newBrandId) => {
-  if (newBrandId && props.modelValue?.sourcing === 'STATIC_LIST') {
-    fetchBrandSoundFragments();
-  }
-}, { immediate: true });
+const fetchSoundFragmentById = async (id: string) => {
+  const response = await apiClient.get(`/soundfragments/${id}`);
+  const docData = response?.data?.payload?.docData;
+  if (!docData?.id) return;
+  const existing = soundFragmentCache.value.find(sf => sf.id === docData.id);
+  if (existing) return;
+  soundFragmentCache.value = [
+      ...soundFragmentCache.value,
+      {
+        id: docData.id,
+        title: docData.title,
+        artist: docData.artist
+      }
+    ];
+};
+
+const preloadSelectedSoundFragments = async () => {
+  const ids = props.modelValue?.soundFragments || [];
+  await Promise.all(ids.map((id) => fetchSoundFragmentById(id)));
+};
+
+const handleSoundFragmentSearch = (q: string) => {
+  fetchSoundFragments(q);
+};
+
+const handleSoundFragmentFocus = () => {};
 
 watch(() => props.modelValue?.sourcing, (newSourcing) => {
-  if (newSourcing === 'STATIC_LIST' && props.brandId) {
-    fetchBrandSoundFragments();
+  if (newSourcing === 'STATIC_LIST') {
+    fetchSoundFragments('');
+  }
+  if (newSourcing === 'GENERATED') {
+    fetchGeneratorPrompts();
   }
 });
 
+watch(() => props.modelValue?.soundFragments, async () => {
+  await preloadSelectedSoundFragments();
+});
+
+const fetchGeneratorPrompts = async () => {
+  try {
+    const params = new URLSearchParams();
+    params.set('page', '1');
+    params.set('size', '100');
+    params.set('filter', JSON.stringify({ promptType: 'GENERATOR' }));
+
+    const response = await apiClient.get(`/prompts?${params.toString()}`);
+    if (response?.data?.payload?.viewData?.entries) {
+      generatorPrompts.value = response.data.payload.viewData.entries;
+    } else {
+      generatorPrompts.value = [];
+    }
+  } catch (error) {
+    console.error('Failed to fetch generator prompts:', error);
+  }
+};
+
 onMounted(async () => {
-  await referencesStore.fetchGenres();
-  await referencesStore.fetchLabels();
+  if (!props.promptOptions) {
+    await promptStore.fetchAll(1, 100, { master: true });
+  }
+  // If initial sourcing is GENERATED, fetch generator prompts
+  if (props.modelValue?.sourcing === 'GENERATED') {
+    await fetchGeneratorPrompts();
+  }
+
+  await preloadSelectedSoundFragments();
 });
 </script>

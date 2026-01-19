@@ -123,8 +123,8 @@
                       <span v-if="stationDetails?.aiDjStats?.djName"> - {{ stationDetails.aiDjStats.djName }}</span>
                     </span>
                     <n-space align="center" size="small">
-                      <n-tag v-if="stationDetails?.schedule?.[0] && (stationDetails.schedule[0] as any).status" size="small" :bordered="false">
-                        {{ (stationDetails.schedule[0] as any).status }}
+                      <n-tag v-if="stationDetails?.schedule?.entries?.[0] && (stationDetails.schedule.entries[0] as any).status" size="small" :bordered="false">
+                        {{ (stationDetails.schedule.entries[0] as any).status }}
                       </n-tag>
                       <n-tag v-if="isDjActive" type="info" size="small">Active</n-tag>
                       <n-tag v-else-if="isDjOffline" type="error" size="small">DJ is offline</n-tag>
@@ -135,19 +135,19 @@
                   <n-space vertical size="small">
                     <n-space justify="space-between">
                       <n-text strong>Current Scene:</n-text>
-                      <n-text strong style="font-size: 18px;">{{ stationDetails.schedule[0]?.sceneTitle || 'N/A' }}</n-text>
+                      <n-text strong style="font-size: 18px;">{{ stationDetails.schedule.entries[0]?.sceneTitle || 'N/A' }}</n-text>
                     </n-space>
-                    <n-space justify="space-between" v-if="stationDetails.schedule[0] && (stationDetails.schedule[0] as any).actualStartTime">
+                    <n-space justify="space-between" v-if="stationDetails.schedule.entries[0] && (stationDetails.schedule.entries[0] as any).actualStartTime">
                       <n-text depth="3">Started:</n-text>
-                      <n-text>{{ formatTimestamp((stationDetails.schedule[0] as any).actualStartTime) }}</n-text>
+                      <n-text>{{ formatTimestamp((stationDetails.schedule.entries[0] as any).actualStartTime) }}</n-text>
                     </n-space>
                     <n-space justify="space-between">
                       <n-text depth="3">Songs:</n-text>
-                      <n-text>{{ stationDetails.schedule[0]?.songsCount || 0 }}</n-text>
+                      <n-text>{{ stationDetails.schedule.entries[0]?.songsCount || 0 }}</n-text>
                     </n-space>
-                    <n-space justify="space-between" v-if="stationDetails.schedule[0] && (stationDetails.schedule[0] as any).timingOffsetSeconds !== null">
+                    <n-space justify="space-between" v-if="stationDetails.schedule.entries[0] && (stationDetails.schedule.entries[0] as any).timingOffsetSeconds !== null">
                       <n-text depth="3">Timing Offset:</n-text>
-                      <n-text>{{ (stationDetails.schedule[0] as any).timingOffsetSeconds }}s</n-text>
+                      <n-text>{{ (stationDetails.schedule.entries[0] as any).timingOffsetSeconds }}s</n-text>
                     </n-space>
                   </n-space>
                 </n-space>
@@ -157,7 +157,7 @@
           </n-space>
 
           <n-card title="Schedule" size="small" style="width: 100%;">
-            <div v-if="stationDetails?.schedule && stationDetails.schedule.length">
+            <div v-if="stationDetails?.schedule?.entries && stationDetails.schedule.entries.length">
               <n-timeline>
                 <n-timeline-item
                   v-for="(s, index) in sortedSchedule"
@@ -720,7 +720,7 @@ export default defineComponent({
     const isDestroyed = ref(false);
 
     const sortedSchedule = computed(() => {
-      const schedule = stationDetails.value?.schedule || [];
+      const schedule = stationDetails.value?.schedule?.entries || [];
       return schedule.slice();
     });
 

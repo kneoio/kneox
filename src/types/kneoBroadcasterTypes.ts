@@ -9,7 +9,8 @@ export enum FragmentType {
 export enum PromptType {
     SONG = "SONG",
     ADVERTISEMENT = "ADVERTISEMENT",
-    REMINDER = "REMINDER"
+    REMINDER = "REMINDER",
+    GENERATOR = "GENERATOR"
 }
 
 export enum BrandStatus {
@@ -443,7 +444,7 @@ export interface ScriptScene {
         labels?: string[];
         type?: string[];
         source?: string[];
-        staticList?: string[];
+        soundFragments?: string[];
     };
 }
 
@@ -476,7 +477,7 @@ export interface ScriptSceneSave {
         labels?: string[];
         type?: string[];
         source?: string[];
-        staticList?: string[];
+        soundFragments?: string[];
     };
 }
 

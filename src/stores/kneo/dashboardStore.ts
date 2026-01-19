@@ -165,6 +165,27 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
         }
     };
 
+    const generateSceneContent = async (brandName: string, sceneId: string) => {
+        isStartingBroadcast.value = true;
+        try {
+            const response = await apiClient.put(
+                `/${brandName}/queue/action`,
+                { action: 'generate_content', sceneId },
+                {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+            return response.status === 200;
+        } catch (error) {
+            console.error('Error triggering broadcast generate_content:', error);
+            return false;
+        } finally {
+            isStartingBroadcast.value = false;
+        }
+    };
+
     // Centralized polling management
     const globalPollingInterval = ref<NodeJS.Timeout | null>(null);
     const stationPollingIntervals = ref<Record<string, NodeJS.Timeout>>({});
@@ -267,7 +288,7 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
                     isGlobalConnected.value = false;
                 }
 
-                if ([1000, 1001, 1006].includes(event.code)) {
+                if ([1001, 1006].includes(event.code)) {
                     console.log(`Reconnecting ${options.type} ${options.brandName || ''} in 3s...`);
                     setTimeout(() => {
                         if (options.type === 'dashboard' && isGlobalPollingActive.value) {
@@ -286,41 +307,41 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
             }
         };
     };
+return {
+    // Global dashboard
+    globalDashboardResponse,
+    globalWebsocket,
+    isGlobalConnected,
+    globalLastUpdate,
+    globalStats,
+    globalStationsList,
+    globalVersion,
+    connectGlobal,
+    disconnectGlobal,
+    fetchGlobalDashboard,
+    getGlobalLastUpdate,
 
-    return {
-        // Global dashboard
-        globalDashboardResponse,
-        globalWebsocket,
-        isGlobalConnected,
-        globalLastUpdate,
-        globalStats,
-        globalStationsList,
-        globalVersion,
-        connectGlobal,
-        disconnectGlobal,
-        fetchGlobalDashboard,
-        getGlobalLastUpdate,
+    // Station-specific
+    stationResponse,
+    stationWebsockets,
+    stationLastUpdate,
+    connectStation,
+    disconnectStation,
+    ensureStationConnected,
+    fetchStation,
+    getStationDetails,
+    getStationLastUpdate,
 
-        // Station-specific
-        stationResponse,
-        stationWebsockets,
-        stationLastUpdate,
-        connectStation,
-        disconnectStation,
-        ensureStationConnected,
-        fetchStation,
-        getStationDetails,
-        getStationLastUpdate,
+    // Centralized polling
+    startGlobalPolling,
+    stopGlobalPolling,
+    startStationPolling,
+    stopStationPolling,
+    stopAllPolling,
 
-        // Centralized polling
-        startGlobalPolling,
-        stopGlobalPolling,
-        startStationPolling,
-        stopStationPolling,
-        stopAllPolling,
-
-        // Shared
-        isStartingBroadcast,
-        triggerBroadcastAction
-    };
+    // Shared
+    isStartingBroadcast,
+    triggerBroadcastAction,
+    generateSceneContent
+};
 });

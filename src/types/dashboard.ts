@@ -152,24 +152,27 @@ export interface StationDetails {
         timestamp: string;
         status: string;
     }[];
-    schedule: Array<{
-        sceneTitle: string;
-        startTime: string;
-        endTime: string;
-        active: boolean;
-        songsCount: number;
-        playlistRequest?: {
-            sourcing?: string;
-            playlistTitle?: string;
-            artist?: string;
-            genres?: string[];
-            labels?: string[];
-            playlistItemTypes?: string[];
-            sourceTypes?: string[];
-            searchTerm?: string;
-            soundFragments?: string[];
-        };
-    }>;
+    schedule: {
+        createdAt: string;
+        entries: Array<{
+            sceneId: string;
+            sceneTitle: string;
+            startTime: string;
+            endTime: string;
+            active: boolean;
+            sourcing: string;
+            playlistTitle: string | null;
+            artist: string | null;
+            searchTerm: string;
+            songsCount: number;
+            fetchedSongsCount: number;
+            generatedSoundFragmentId: string | null;
+            actualStartTime: string | null;
+            actualEndTime: string | null;
+            status: string;
+            timingOffsetSeconds: number | null;
+        }>;
+    };
     runningTasks?: Array<{
         taskType: string;
         target: string;

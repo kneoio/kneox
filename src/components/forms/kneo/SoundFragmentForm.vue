@@ -2,7 +2,12 @@
   <n-grid cols="6" x-gap="12" y-gap="12" class="m-5">
     <n-gi span="6">
       <n-page-header :subtitle="formTitle" @back="goBack">
-        <template #title>{{ localFormData.title || 'New Sound Fragment' }}</template>
+        <template #title>
+          {{ localFormData.title || 'New Sound Fragment' }}
+          <n-tag v-if="localFormData.expiresAt" type="error" style="margin-left: 8px;">
+            Expires at: {{ formatExpiresAt(localFormData.expiresAt) }}
+          </n-tag>
+        </template>
         <template #footer>
           Source: {{ sourceDisplayValue }}
           <br>
@@ -78,6 +83,11 @@
                 <n-form-item label="Assign To">
                   <n-select v-model:value="localFormData.representedInBrands" :options="radioStationOptions" filterable
                             multiple style="width: 50%; max-width: 600px;"/>
+                </n-form-item>
+              </n-gi>
+              <n-gi v-if="localFormData.expiresAt">
+                <n-form-item label="Expires At">
+                  <n-input v-model:value="localFormData.expiresAt" style="width: 25%; max-width: 300px;" placeholder=""/>
                 </n-form-item>
               </n-gi>
               <n-gi>
@@ -219,7 +229,8 @@ export default defineComponent({
       actionUrl: "",
       defaultBrandId: "",
       representedInBrands: [],
-      uploadedFiles: []
+      uploadedFiles: [],
+      expiresAt: null
     });
 
     const radioStationOptions = computed(() => {
@@ -238,6 +249,8 @@ export default defineComponent({
     const sourceDisplayValue = computed(() => store.formatSource(localFormData.source));
 
     const formTitle = computed(() => localFormData.id ? 'Edit Sound Fragment' : 'Create New Sound Fragment');
+
+    const formatExpiresAt = (value: string) => value.replace('T', ' ');
 
     const formatDuration = (duration: string | number | undefined): string => {
       if (!duration) return '';
@@ -342,7 +355,7 @@ export default defineComponent({
         const entityId = localFormData.id || "temp";
         const uploadId = crypto.randomUUID();
         const originalFileName = file.name;
-      //logWithTimestamp(`Start upload session, uploadId: ${uploadId}, originalFileName: ${originalFileName}`);
+        //logWithTimestamp(`Start upload session, uploadId: ${uploadId}, originalFileName: ${originalFileName}`);
         if (!file.file) {
           throw new Error('No file content to upload');
         }
@@ -534,8 +547,6 @@ export default defineComponent({
       }
     };
 
-    
-
     watch(activeTab, (newTab) => {
       if (newTab === 'acl') {
         fetchAclData();
@@ -554,15 +565,11 @@ export default defineComponent({
         console.error("Failed to preload references:", error);
       }
 
-      
-
       if (id && id !== 'new') {
         try {
           loadingBar.start();
           await store.fetch(id);
           Object.assign(localFormData, store.getCurrent);
-          
-
           if (localFormData.uploadedFiles?.length) {
             fileList.value = localFormData.uploadedFiles.map(f => ({
               id: f.name,
@@ -610,6 +617,7 @@ export default defineComponent({
       typeOptions,
       sourceDisplayValue,
       formTitle,
+      formatExpiresAt,
       referencesStore,
       aclData,
       aclLoading,

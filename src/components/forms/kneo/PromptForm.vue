@@ -82,6 +82,7 @@
                       <n-radio-button :value="PromptType.SONG">Song</n-radio-button>
                       <n-radio-button :value="PromptType.ADVERTISEMENT">Advertisement</n-radio-button>
                       <n-radio-button :value="PromptType.REMINDER">Reminder</n-radio-button>
+                      <n-radio-button :value="PromptType.GENERATOR">Generator</n-radio-button>
                     </n-radio-group>
                   </div>
                 </n-form-item>

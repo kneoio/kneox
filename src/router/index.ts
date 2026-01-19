@@ -23,8 +23,11 @@ import Prompts from '../components/lists/kneo/Prompts.vue';
 import PromptForm from '../components/forms/kneo/PromptForm.vue';
 import Drafts from '../components/lists/kneo/Drafts.vue';
 import DraftForm from '../components/forms/kneo/DraftForm.vue';
-import SceneForm from '../components/forms/kneo/SceneForm.vue';
+import AbsoluteTimeSceneForm from '../components/forms/kneo/AbsoluteTimeSceneForm.vue';
+import RelativeTimeSceneForm from '../components/forms/kneo/RelativeTimeSceneForm.vue';
 import Scenes from '../components/lists/kneo/Scenes.vue';
+import AbsoluteTimeScenes from '../components/lists/kneo/AbsoluteTimeScenes.vue';
+import RelativeTimeScenes from '../components/lists/kneo/RelativeTimeScenes.vue';
 import EnvironmentProfiles from '../components/lists/kneo/EnvironmentProfiles.vue';
 import ProfileForm from '../components/forms/kneo/EnvironmentProfileForm.vue';
 import Events from '../components/lists/kneo/Events.vue';
@@ -219,7 +222,19 @@ const routes: Array<RouteRecordRaw> = [
             {
                 path: 'scenes',
                 name: 'Scenes',
-                component: Scenes
+                component: Scenes,
+                children: [
+                    {
+                        path: 'absolute-time',
+                        name: 'AbsoluteTimeScenes',
+                        component: AbsoluteTimeScenes
+                    },
+                    {
+                        path: 'relative-time',
+                        name: 'RelativeTimeScenes',
+                        component: RelativeTimeScenes
+                    }
+                ]
             },
             {
                 path: 'scripts/:id',
@@ -228,9 +243,15 @@ const routes: Array<RouteRecordRaw> = [
                 props: true
             },
             {
-                path: 'scenes/:id',
-                name: 'SceneForm',
-                component: SceneForm,
+                path: 'scenes/absolute-time/:id',
+                name: 'AbsoluteTimeSceneForm',
+                component: AbsoluteTimeSceneForm,
+                props: true
+            },
+            {
+                path: 'scenes/relative-time/:id',
+                name: 'RelativeTimeSceneForm',
+                component: RelativeTimeSceneForm,
                 props: true
             },
             {

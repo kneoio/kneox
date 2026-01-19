@@ -58,6 +58,9 @@
               </template>
               Stop Station
             </n-button>
+            <n-button :loading="isRebuildingSchedule" @click="handleRebuildSchedule">
+              Rebuild Schedule
+            </n-button>
           </n-button-group>
           <n-space size="large" style="margin-left: 30px;">
             <a :href="mixplaUrl" target="_blank" rel="noopener noreferrer" class="mixpla-link">
@@ -234,7 +237,8 @@
               </n-space>
 
               <n-card title="Schedule" size="small" style="width: 100%;">
-                <div v-if="stationDetails?.schedule && stationDetails.schedule.length">
+                <n-text depth="3" style="font-size: 12px; margin-bottom: 8px; display: block;">Created: {{ formatTimestamp(stationDetails?.schedule?.createdAt) }}</n-text>
+                <div v-if="stationDetails?.schedule?.entries && stationDetails.schedule.entries.length">
                   <n-timeline>
                     <n-timeline-item
                       v-for="(s, index) in sortedSchedule"
@@ -249,7 +253,17 @@
                       <template #default>
                         <n-text style="font-weight: 500;">{{ s.sceneTitle }}</n-text>
                         <div style="margin-top: 4px; color: #9ca3af; font-size: 12px;">
-                          {{ s.playlistRequest?.sourcing }} ({{ s.songsCount }} songs)
+                          {{ (s as any).sourcing }} ({{ s.songsCount }} songs)
+                        </div>
+                        <div v-if="(s as any).sourcing === 'GENERATED'" style="margin-top: 8px;">
+                          <n-button size="tiny" :loading="generatingScenes[s.sceneId]" @click="handleGenerateContent(s.sceneId)">
+                            Generate
+                          </n-button>
+                        </div>
+                        <div v-if="(s as any).generatedSoundFragmentId !== null" style="margin-top: 8px;">
+                          <n-button size="tiny" @click="openGeneratedSoundFragment((s as any).generatedSoundFragmentId)">
+                            Open Sound Fragment
+                          </n-button>
                         </div>
                       </template>
                     </n-timeline-item>
@@ -266,9 +280,11 @@
 
 <script lang="ts">
 import { computed, defineComponent, onMounted, onUnmounted, ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { useDashboardStore } from '../../../stores/kneo/dashboardStore';
 import {
   NButton,
+  // NH1,
   NCard,
   NH2,
   NIcon,
@@ -313,14 +329,21 @@ export default defineComponent({
   },
   setup(props: { brandName: string }) {
     const dashboardStore = useDashboardStore();
+    const router = useRouter();
     const message = useMessage();
     const isStartingStation = ref(false);
     const isStoppingStation = ref(false);
+    const isRebuildingSchedule = ref(false);
+    const generatingScenes = ref<Record<string, boolean>>({});
     const now = ref(new Date());
 
     const copyBrandNameToClipboard = async () => {
       await navigator.clipboard.writeText(props.brandName);
       message.success('Copied');
+    };
+
+    const openGeneratedSoundFragment = (id: string) => {
+      router.push({ name: 'EditSoundFragment', params: { brandName: props.brandName, id } });
     };
 
     const activeTab = ref<'dashboard'>('dashboard');
@@ -659,6 +682,40 @@ export default defineComponent({
       }
     };
 
+    const handleRebuildSchedule = async () => {
+      if (isRebuildingSchedule.value) return;
+      isRebuildingSchedule.value = true;
+      try {
+        await sendCommand(props.brandName, 'rebuild_schedule');
+      } finally {
+        isRebuildingSchedule.value = false;
+      }
+    };
+
+    const handleGenerateContent = async (sceneId: string) => {
+      if (generatingScenes.value[sceneId]) return;
+      generatingScenes.value = {
+        ...generatingScenes.value,
+        [sceneId]: true
+      };
+      try {
+        const success = await dashboardStore.generateSceneContent(props.brandName, sceneId);
+        if (success) {
+          message.success('generate_content command sent successfully');
+        } else {
+          message.error('Failed to send generate_content command');
+        }
+      } catch (error) {
+        console.error('Error sending generate_content command:', error);
+        message.error('Error sending generate_content command');
+      } finally {
+        generatingScenes.value = {
+          ...generatingScenes.value,
+          [sceneId]: false
+        };
+      }
+    };
+
     const cleanTitle = (title: string | undefined | null): string => {
       if (!title || typeof title !== 'string') return 'N/A';
       return title.replace(/^(#+|--+)\s*/, '').replace(/[#-]/g, '|').trim();
@@ -824,7 +881,7 @@ export default defineComponent({
     const isDestroyed = ref(false);
 
     const sortedSchedule = computed(() => {
-      const schedule = stationDetails.value?.schedule || [];
+      const schedule = stationDetails.value?.schedule?.entries || [];
       return schedule.slice();
     });
 
@@ -873,6 +930,8 @@ export default defineComponent({
       dashboardStore,
       isStartingStation,
       isStoppingStation,
+      isRebuildingSchedule,
+      generatingScenes,
       isOnline,
       isDjActive,
       isDjOffline,
@@ -900,6 +959,9 @@ export default defineComponent({
       stationDetails,
       handleStart,
       handleStop,
+      handleRebuildSchedule,
+      handleGenerateContent,
+      openGeneratedSoundFragment,
       formatDuration,
       formatTime,
       formatScheduleStart,

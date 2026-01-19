@@ -32,11 +32,6 @@
             </n-form-item>
           </n-gi>
           <n-gi>
-            <n-form-item label="Start time">
-              <n-time-picker v-model:value="startTimeMs" format="HH:mm:ss" style="width: 12.5%; max-width: 150px;" />
-            </n-form-item>
-          </n-gi>
-          <n-gi>
             <n-form-item label="Duration (minutes)">
               <n-radio-group v-model:value="durationMinutes" name="duration-group">
                 <n-radio-button :value="2">2</n-radio-button>
@@ -65,28 +60,10 @@
             </n-form-item>
           </n-gi>
           <n-gi>
-            <n-form-item label="One-time run">
-              <n-checkbox v-model:checked="localFormData.oneTimeRun">Activated</n-checkbox>
-            </n-form-item>
-          </n-gi>
-          <n-gi>
             <n-form-item label="Talkativity">
               <n-slider v-model:value="localFormData.talkativity" :min="0" :max="1" :step="0.05" :tooltip="false"
                 style="width: 50%; max-width: 600px;" />
               <span style="margin-left: 12px;">{{ localFormData.talkativity || 0 }}</span>
-            </n-form-item>
-          </n-gi>
-          <n-gi>
-            <n-form-item label="Weekdays">
-              <n-checkbox-group v-model:value="selectedWeekdays" style="width: 50%; max-width: 600px;">
-                <n-checkbox :value="1" label="Mon" />
-                <n-checkbox :value="2" label="Tue" />
-                <n-checkbox :value="3" label="Wed" />
-                <n-checkbox :value="4" label="Thu" />
-                <n-checkbox :value="5" label="Fri" />
-                <n-checkbox :value="6" label="Sat" />
-                <n-checkbox :value="7" label="Sun" />
-              </n-checkbox-group>
             </n-form-item>
           </n-gi>
           <n-gi>
@@ -120,7 +97,8 @@
               @update:model-value="(val) => Object.assign(localFormData.stagePlaylist!, val)"
               :genre-options="referencesStore.genreOptions"
               :label-options="referencesStore.labelOptions"
-              :hide-static-list="true"
+              :prompt-options="promptOptions"
+              :hide-generated="true"
           />
         </n-tab-pane>
         <n-tab-pane name="acl" tab="ACL">
@@ -170,7 +148,7 @@ import AclTable from '../../common/AclTable.vue';
 import PlaylistFields from '../../common/PlaylistFields.vue';
 
 export default defineComponent({
-  name: 'SceneForm',
+  name: 'RelativeTimeSceneForm',
   components: {
     NPageHeader,
     NButtonGroup,
@@ -221,7 +199,7 @@ export default defineComponent({
       (promptStore.getEntries || [])
         .filter((p: any) => typeof p.id === 'string' && p.id)
         .map((p: any) => ({
-          label: p.title || p.id,
+          label: p.title || p.description || p.prompt || p.id,
           value: p.id as string,
           master: p.master,
           podcast: p.podcast,
@@ -261,8 +239,9 @@ export default defineComponent({
         labels: [],
         type: [],
         source: [],
-        staticList: []
-      }
+        soundFragments: [],
+        prompts: []
+      } as any
     });
 
     const startTimeMs = ref<number | null>(null);
@@ -286,14 +265,6 @@ export default defineComponent({
       const d = new Date(1970, 0, 1, hh, mm, ss);
       const ms = d.getTime();
       return Number.isNaN(ms) ? null : ms;
-    };
-
-    const formatTimeFromMs = (ms: number): string => {
-      const d = new Date(ms);
-      const hh = String(d.getHours()).padStart(2, '0');
-      const mm = String(d.getMinutes()).padStart(2, '0');
-      const ss = String(d.getSeconds()).padStart(2, '0');
-      return `${hh}:${mm}:${ss}`;
     };
 
     const load = async () => {
@@ -329,8 +300,9 @@ export default defineComponent({
               labels: data.stagePlaylist.labels || [],
               type: (data.stagePlaylist as any).type || [],
               source: (data.stagePlaylist as any).source || [],
-              staticList: (data.stagePlaylist as any).staticList || []
-            };
+              soundFragments: (data.stagePlaylist as any).soundFragments || [],
+              prompts: (data.stagePlaylist as any).prompts || []
+            } as any;
           } else {
             localFormData.stagePlaylist = {
               sourcing: 'RANDOM',
@@ -339,8 +311,9 @@ export default defineComponent({
               labels: [],
               type: [],
               source: [],
-              staticList: []
-            };
+              soundFragments: [],
+              prompts: []
+            } as any;
           }
         }
       }
@@ -370,15 +343,16 @@ export default defineComponent({
         const saveData: ScriptSceneSave = {
           title: localFormData.title as any,
           prompts: scenePrompts.value,
-          scriptId: selectedScriptId.value || undefined,
-          startTime: startTimeMs.value != null ? formatTimeFromMs(startTimeMs.value) : undefined,
+          startTime: undefined,
           durationSeconds: localFormData.durationSeconds as any,
           seqNum: localFormData.seqNum as any,
           talkativity: localFormData.talkativity as any,
-          podcastMode: localFormData.podcastMode as any,
-          stagePlaylist: localFormData.stagePlaylist as any,
-          weekdays: localFormData.weekdays as any,
-          oneTimeRun: localFormData.oneTimeRun as any,
+          stagePlaylist: {
+            ...localFormData.stagePlaylist as any,
+            prompts: (localFormData.stagePlaylist as any)?.prompts || []
+          } as any,
+          weekdays: undefined,
+          oneTimeRun: undefined,
           timingMode: localFormData.timingMode as any
         };
 
@@ -393,7 +367,7 @@ export default defineComponent({
         if (previousRoute && previousRoute.toString().includes('/outline/document-tree')) {
           await router.push('/outline/document-tree');
         } else {
-          await router.push({ name: 'Scenes' });
+          await router.push({ name: 'RelativeTimeScenes' });
         }
       } catch (error: any) {
         handleFormSaveError(error, message);
@@ -418,7 +392,7 @@ export default defineComponent({
       if (previousRoute && previousRoute.toString().includes('/outline/document-tree')) {
         router.push('/outline/document-tree');
       } else if (previousRoute && previousRoute.toString().includes('/outline/scenes')) {
-        router.push({ name: 'Scenes' });
+        router.push({ name: 'RelativeTimeScenes' });
       } else {
         router.push({ name: 'Scripts' });
       }
@@ -427,7 +401,7 @@ export default defineComponent({
     onMounted(async () => {
       try {
         loadingBar.start();
-        await promptStore.fetchAll(1, 100, { master: true });
+        await promptStore.fetchAll(1, 100);
         await load();
       } catch (e) {
         message.error(getErrorMessage(e));
@@ -436,8 +410,12 @@ export default defineComponent({
       }
     });
 
-    watch(activeTab, (val) => {
+    watch(activeTab, async (val) => {
       if (val === 'acl') fetchAclData();
+      if (val === 'playlist' && localFormData.stagePlaylist?.sourcing === 'QUERY') {
+        await referencesStore.fetchGenres();
+        await referencesStore.fetchLabels();
+      }
     });
 
     return {

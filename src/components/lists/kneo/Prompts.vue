@@ -10,39 +10,35 @@
     </n-gi>
 
     <n-gi :span="isMobile ? 1 : 6">
-      <n-button-group>
-        <n-button @click="handleNewClick" type="primary" :size="isMobile ? 'medium' : 'large'">New</n-button>
-        <n-button type="error" :disabled="!hasSelection" @click="handleDelete" :size="isMobile ? 'medium' : 'large'">
-          Delete ({{ checkedRowKeys.length }})
-        </n-button>
-        <n-button @click="toggleFilters" type="default" :size="isMobile ? 'medium' : 'large'" class="mr-4">
-          <red-led :active="hasActiveFilters" style="margin-right: 8px;" />
-          Filter
-        </n-button>
-      </n-button-group>
+      <div style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; margin-top: 12px; overflow-x: auto;">
+        <n-button-group>
+          <n-button @click="handleNewClick" type="primary" :size="isMobile ? 'medium' : 'large'">New</n-button>
+          <n-button type="error" :disabled="!hasSelection" @click="handleDelete" :size="isMobile ? 'medium' : 'large'">
+            Delete ({{ checkedRowKeys.length }})
+          </n-button>
+          <n-button @click="toggleFilters" type="default" :size="isMobile ? 'medium' : 'large'">
+            <red-led :active="hasActiveFilters" style="margin-right: 8px;" />
+            Filter
+          </n-button>
+        </n-button-group>
 
-    </n-gi>
-
-    <n-gi :span="isMobile ? 1 : 6">
-      <n-collapse-transition :show="showFilters">
-        <div :style="{ width: isMobile ? '100%' : '50%' }">
-          <n-space size="small" align="center">
-            <n-select v-model:value="filters.languageTag" :options="langOptions" filterable placeholder="Language"
-              clearable style="width: 200px;" />
-            <n-radio-group v-model:value="filters.promptType" name="prompt-type-filter-group" style="margin-left: 8px;">
-              <n-radio-button value="SONG">Song</n-radio-button>
-              <n-radio-button value="ADVERTISEMENT">Advertisement</n-radio-button>
-              <n-radio-button value="REMINDER">Reminder</n-radio-button>
-              <n-radio-button :value="null" :disabled="!filters.promptType" type="warning">All types</n-radio-button>
-            </n-radio-group>
-            <n-button-group>
-              <n-button :type="filters.enabled ? 'primary' : 'default'" @click="filters.enabled = !filters.enabled">Enabled</n-button>
-              <n-button :type="filters.master ? 'primary' : 'default'" @click="toggleMaster">Master</n-button>
-              <n-button :type="filters.locked ? 'primary' : 'default'" @click="filters.locked = !filters.locked">Locked</n-button>
-            </n-button-group>
-          </n-space>
-        </div>
-      </n-collapse-transition>
+        <n-select v-model:value="filters.languageTag" :options="langOptions" filterable placeholder="Language"
+          clearable style="width: 200px;" :size="isMobile ? 'medium' : 'large'" />
+        
+        <n-radio-group v-model:value="filters.promptType" name="prompt-type-filter-group" :size="isMobile ? 'medium' : 'large'">
+          <n-radio-button value="SONG">Song</n-radio-button>
+          <n-radio-button value="ADVERTISEMENT">Advertisement</n-radio-button>
+          <n-radio-button value="REMINDER">Reminder</n-radio-button>
+          <n-radio-button value="GENERATOR">Generator</n-radio-button>
+          <n-radio-button :value="null" :type="!filters.promptType ? 'warning' : 'default'">All types</n-radio-button>
+        </n-radio-group>
+        
+        <n-button-group>
+          <n-button :type="filters.enabled ? 'primary' : 'default'" @click="filters.enabled = !filters.enabled" :size="isMobile ? 'medium' : 'large'">Enabled</n-button>
+          <n-button :type="filters.master ? 'primary' : 'default'" @click="toggleMaster" :size="isMobile ? 'medium' : 'large'">Master</n-button>
+          <n-button :type="filters.locked ? 'primary' : 'default'" @click="filters.locked = !filters.locked" :size="isMobile ? 'medium' : 'large'">Locked</n-button>
+        </n-button-group>
+      </div>
     </n-gi>
 
     <n-gi :span="isMobile ? 1 : 6">
@@ -61,7 +57,7 @@
 <script lang="ts">
 import { computed, defineComponent, h, onMounted, onUnmounted, ref, watch } from 'vue';
 import { DataTableColumns, NButton, NButtonGroup, NDataTable, NGi, NGrid, NPageHeader, NTag, NFormItem, NSelect, NSpace, NCollapseTransition, NRadioGroup, NRadioButton, useMessage } from 'naive-ui';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
 import RedLed from '../../common/RedLed.vue';
 import { BroadcastPrompt } from '../../../types/kneoBroadcasterTypes';
@@ -72,6 +68,7 @@ export default defineComponent( {
   components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, RedLed, NTag, NFormItem, NSelect, NSpace, NCollapseTransition, NRadioGroup, NRadioButton },
   setup() {
     const router = useRouter();
+    const route = useRoute();
     const message = useMessage();
     const store = usePromptStore();
     const referencesStore = useReferencesStore();
@@ -112,6 +109,11 @@ export default defineComponent( {
       } catch { }
     };
 
+    const syncPromptTypeFromRoute = () => {
+      const pt = route.query.promptType as string | undefined;
+      filters.value.promptType = pt || null;
+    };
+
     const saveFilters = () => {
       try {
         localStorage.setItem( STORAGE_KEY, JSON.stringify( filters.value ) );
@@ -123,6 +125,7 @@ export default defineComponent( {
       try {
         loading.value = true;
         loadSavedFilters();
+        syncPromptTypeFromRoute();
         await ( referencesStore as any ).fetchLanguages?.();
         await fetchData( 1, store.getPagination.pageSize );
       } catch ( error ) {
@@ -149,6 +152,13 @@ export default defineComponent( {
       try {
         loading.value = true;
         let activeFilters: any = {};
+        if ( filters.value.promptType ) {
+          activeFilters = {
+            ...activeFilters,
+            activated: true,
+            promptType: filters.value.promptType
+          };
+        }
         if ( showFilters.value ) {
           const hasFilters = filters.value.languageTag ||
             filters.value.promptType ||
@@ -216,6 +226,11 @@ export default defineComponent( {
       if (newValue) {
         filters.value.master = false;
       }
+    } );
+
+    watch( () => route.query.promptType, () => {
+      syncPromptTypeFromRoute();
+      fetchData( 1, store.getPagination.pageSize );
     } );
 
     watch( showFilters, () => {
