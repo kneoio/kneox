@@ -3,7 +3,9 @@ import { UploadFileInfo } from "naive-ui/es/upload/src/public-types";
 export enum FragmentType {
     SONG = "SONG",
     ADVERTISEMENT = "ADVERTISEMENT",
-    JINGLE = "JINGLE"
+    JINGLE = "JINGLE",
+    NEWS = "NEWS",
+    WEATHER = "WEATHER"
 }
 
 export enum PromptType {

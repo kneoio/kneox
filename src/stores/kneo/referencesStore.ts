@@ -359,8 +359,10 @@ export const useReferencesStore = defineStore('references', () => {
 
   const fragmentTypeOptions = [
     { label: 'Song', value: 'SONG' },
-    { label: 'Advertisiment', value: 'ADVERTISEMENT' },
-    { label: 'Jingle', value: 'JINGLE' }
+    { label: 'Advertisement', value: 'ADVERTISEMENT' },
+    { label: 'Jingle', value: 'JINGLE' },
+    { label: 'News', value: 'NEWS' },
+    { label: 'Weather', value: 'WEATHER' }
   ];
 
 
