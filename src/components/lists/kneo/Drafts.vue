@@ -9,34 +9,27 @@
       </n-page-header>
     </n-gi>
 
-    <n-gi :span="isMobile ? 1 : 6" class="flex items-center flex-wrap gap-2">
-      <n-button-group class="mr-4">
-        <n-button @click="handleNewClick" type="primary" :size="isMobile ? 'medium' : 'large'">New</n-button>
-        <n-button type="error" :disabled="!hasSelection" @click="handleDelete" :size="isMobile ? 'medium' : 'large'">
-          Delete ({{ checkedRowKeys.length }})
-        </n-button>
-        <n-button @click="toggleFilters" type="default" :size="isMobile ? 'medium' : 'large'" class="mr-4">
-          <red-led :active="hasActiveFilters" style="margin-right: 8px;" />
-          Filter
-        </n-button>
-      </n-button-group>
-
-
-    </n-gi>
-
     <n-gi :span="isMobile ? 1 : 6">
-      <n-collapse-transition :show="showFilters">
-        <div :style="{ width: isMobile ? '100%' : '50%' }">
-          <n-space size="small" align="center">
-            <n-select v-model:value="filters.languageTag" :options="langOptions" filterable placeholder="Language"
-              clearable style="width: 200px;" />
-            <n-checkbox v-model:checked="filters.enabled">Enabled</n-checkbox>
-            <n-checkbox v-model:checked="filters.isMaster">Master</n-checkbox>
-            <n-checkbox v-model:checked="filters.locked">Locked</n-checkbox>
-            <n-checkbox v-model:checked="filters.archived">Archived</n-checkbox>
-          </n-space>
-        </div>
-      </n-collapse-transition>
+      <div style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; margin-top: 12px; overflow-x: auto;">
+        <n-button-group>
+          <n-button @click="handleNewClick" type="primary" :size="isMobile ? 'medium' : 'large'">New</n-button>
+          <n-button type="error" :disabled="!hasSelection" @click="handleDelete" :size="isMobile ? 'medium' : 'large'">
+            Delete ({{ checkedRowKeys.length }})
+          </n-button>
+          <n-button @click="toggleFilters" type="default" :size="isMobile ? 'medium' : 'large'">
+            <red-led :active="hasActiveFilters" style="margin-right: 8px;" />
+            Filter
+          </n-button>
+        </n-button-group>
+
+        <n-select v-model:value="filters.languageTag" :options="langOptions" filterable placeholder="Language" clearable
+          style="width: 200px;" :size="isMobile ? 'medium' : 'large'" />
+
+        <n-checkbox v-model:checked="filters.enabled">Enabled</n-checkbox>
+        <n-checkbox v-model:checked="filters.isMaster">Master</n-checkbox>
+        <n-checkbox v-model:checked="filters.locked">Locked</n-checkbox>
+        <n-checkbox v-model:checked="filters.archived">Archived</n-checkbox>
+      </div>
     </n-gi>
 
     <n-gi :span="isMobile ? 1 : 6">
@@ -54,7 +47,7 @@
 
 <script lang="ts">
 import { computed, defineComponent, h, onMounted, onUnmounted, ref, watch } from 'vue';
-import { DataTableColumns, NButton, NButtonGroup, NCheckbox, NDataTable, NGi, NGrid, NPageHeader, NTag, NFormItem, NSelect, NSpace, NCollapseTransition, useMessage } from 'naive-ui';
+import { DataTableColumns, NButton, NButtonGroup, NCheckbox, NDataTable, NGi, NGrid, NPageHeader, NTag, NFormItem, NSelect, useMessage } from 'naive-ui';
 import { useRouter } from 'vue-router';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
 import RedLed from '../../common/RedLed.vue';
@@ -63,7 +56,7 @@ import { useDraftStore } from '../../../stores/kneo/draftStore';
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 
 export default defineComponent( {
-  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, RedLed, NTag, NFormItem, NSelect, NSpace, NCollapseTransition, NCheckbox },
+  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, RedLed, NTag, NFormItem, NSelect, NCheckbox },
   setup() {
     const router = useRouter();
     const message = useMessage();

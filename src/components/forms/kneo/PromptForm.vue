@@ -68,7 +68,7 @@
               </n-gi>
               <n-gi>
                 <n-form-item label="Draft">
-                  <n-select v-model:value="selectedDraftId" :options="draftOptions" style="width: 25%; max-width: 300px;" />
+                  <n-select v-model:value="selectedDraftId" :options="draftOptions" style="width: 50%; max-width: 600px;" />
                 </n-form-item>
               </n-gi>
               <n-gi>
