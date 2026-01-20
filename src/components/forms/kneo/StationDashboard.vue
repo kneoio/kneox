@@ -253,7 +253,19 @@
                       <template #default>
                         <n-text style="font-weight: 500;">{{ s.sceneTitle }}</n-text>
                         <div style="margin-top: 4px; color: #9ca3af; font-size: 12px;">
+                          {{ formatScheduleStart(s.startTime) }} - {{ formatScheduleStart(s.endTime) }}
+                        </div>
+                        <div style="margin-top: 4px; color: #9ca3af; font-size: 12px;">
                           {{ (s as any).sourcing }} ({{ s.songsCount }} songs)
+                        </div>
+                        <div style="margin-top: 4px; color: #9ca3af; font-size: 12px;">
+                          Status: {{ (s as any).status }}, Active: {{ s.active }}, Fetched: {{ (s as any).fetchedSongsCount }}/{{ s.songsCount }}
+                        </div>
+                        <div style="margin-top: 4px; color: #9ca3af; font-size: 12px;">
+                          Actual: {{ formatTimestamp((s as any).actualStartTime) }} - {{ formatTimestamp((s as any).actualEndTime) }}, Offset: {{ (s as any).timingOffsetSeconds }}
+                        </div>
+                        <div style="margin-top: 4px; color: #9ca3af; font-size: 12px;">
+                          Playlist: {{ (s as any).playlistTitle }}, Artist: {{ (s as any).artist }}, Search: {{ (s as any).searchTerm }}
                         </div>
                         <div v-if="(s as any).sourcing === 'GENERATED'" style="margin-top: 8px;">
                           <n-button size="tiny" :loading="generatingScenes[s.sceneId]" @click="handleGenerateContent(s.sceneId)">
