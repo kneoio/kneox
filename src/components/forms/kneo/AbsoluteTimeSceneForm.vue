@@ -37,11 +37,6 @@
             </n-form-item>
           </n-gi>
           <n-gi>
-            <n-form-item label="One-time run">
-              <n-checkbox v-model:checked="localFormData.oneTimeRun">Activated</n-checkbox>
-            </n-form-item>
-          </n-gi>
-          <n-gi>
             <n-form-item label="Talkativity">
               <n-slider v-model:value="localFormData.talkativity" :min="0" :max="1" :step="0.05" :tooltip="false"
                 style="width: 50%; max-width: 600px;" />
@@ -355,7 +350,6 @@ export default defineComponent({
             prompts: (localFormData.stagePlaylist as any)?.prompts || []
           },
           weekdays: localFormData.weekdays as any,
-          oneTimeRun: localFormData.oneTimeRun as any,
           timingMode: localFormData.timingMode as any
         };
 

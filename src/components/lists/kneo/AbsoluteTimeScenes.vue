@@ -53,7 +53,6 @@ import {
   NGi,
   NGrid,
   NPageHeader,
-  NTag,
   useMessage
 } from 'naive-ui';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
@@ -184,7 +183,6 @@ export default defineComponent({
             const seconds = row.durationSeconds % 60;
             content.push(h('span', seconds > 0 ? `${minutes}m ${seconds}s` : `${minutes}m`));
           }
-          if (row.oneTimeRun) content.push(h(NTag, { type: 'success', size: 'small', style: 'margin-left:8px;' }, { default: () => 'One-time' }));
           return content.length > 0 ? h('div', { style: 'display:flex; align-items:center;' }, content) : null;
         }
       },

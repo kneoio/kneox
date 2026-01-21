@@ -139,17 +139,6 @@
                   <n-text depth="3" v-else>No playlist items available.</n-text>
                 </n-card>
 
-                <n-card title="Queued Songs" size="small" style="width: 400px; flex-shrink: 0;">
-                  <div v-if="playedSongs.length > 0">
-                    <div v-for="(song, index) in playedSongs" :key="index" style="padding: 4px 0;">
-                      <div style="max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.875rem;">
-                        {{ formatArtistTitle(song) }}<span v-if="song.duration" style="margin-left: 8px; opacity: 0.6; font-size: 0.75rem;">{{ formatDuration(song.duration) }}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <n-text depth="3" v-else>No played songs available.</n-text>
-                </n-card>
-
                 <n-card title="Listeners Today" size="small" style="flex: 1; min-width: 0;">
                   <n-space vertical v-if="stationDetails?.listenersByCountry && stationDetails.listenersByCountry.length > 0" size="small">
                     <n-space v-for="(c, idx) in stationDetails.listenersByCountry" :key="idx" justify="space-between" align="center">
@@ -286,7 +275,7 @@
                             Actual: {{ (s as any).actualStartTime ? formatTimestamp((s as any).actualStartTime) : '' }}{{ ((s as any).actualStartTime && (s as any).actualEndTime) ? ' - ' : '' }}{{ (s as any).actualEndTime ? formatTimestamp((s as any).actualEndTime) : '' }}, Offset: {{ (s as any).timingOffsetSeconds }}
                           </div>
                           <div v-if="((s as any).searchInfo || (s as any).sourcing).includes('GENERATED')" style="margin-top: 8px;">
-                            <n-button size="tiny" :loading="generatingScenes[s.sceneId]" @click="handleGenerateContent(s.sceneId)">
+                            <n-button type="primary" size="tiny" :loading="generatingScenes[s.sceneId]" @click="handleGenerateContent(s.sceneId)">
                               Generate
                             </n-button>
                           </div>
@@ -424,10 +413,6 @@ export default defineComponent({
       ];
 
       return combined;
-    });
-
-    const playedSongs = computed(() => {
-      return (stationDetails.value?.playlistManagerStats?.playedSongs || []) as any[];
     });
 
     const formattedTime = computed(() => {
@@ -969,7 +954,6 @@ export default defineComponent({
       currentListeners,
       lastUpdateTime,
       combinedPlaylist,
-      playedSongs,
       timelineDisplay,
       timelineItems,
       stationColor,

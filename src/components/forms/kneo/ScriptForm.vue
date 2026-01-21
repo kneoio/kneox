@@ -214,7 +214,6 @@
       <n-form-item label="Start time">
         <div style="display: flex; align-items: center; gap: 24px;">
           <n-time-picker v-model:value="sceneStartTimeMs" format="HH:mm:ss" style="width: 200px;" />
-          <n-checkbox v-model:checked="selectedScene.oneTimeRun">One-time run</n-checkbox>
         </div>
       </n-form-item>
       <n-form-item label="Talkativity">
@@ -417,15 +416,6 @@ export default defineComponent({
         render: (row: any) => {
           const content: any[] = [];
           if (row.startTime) content.push(h('span', row.startTime));
-          if (row.oneTimeRun) {
-            content.push(
-              h(
-                NTag,
-                { type: 'success', size: 'small', style: 'margin-left:8px;' },
-                { default: () => 'One-time' }
-              )
-            );
-          }
           return content.length > 0
             ? h('div', { style: 'display:flex; align-items:center;' }, content)
             : null;
@@ -457,7 +447,6 @@ export default defineComponent({
           podcastMode: scene.podcastMode,
           prompts: scene.prompts,
           startTime: scene.startTime,
-          oneTimeRun: scene.oneTimeRun,
           weekdays: scene.weekdays,
           durationSeconds: scene.durationSeconds,
           seqNum: scene.seqNum,
