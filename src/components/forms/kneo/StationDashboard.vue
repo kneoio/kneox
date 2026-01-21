@@ -285,7 +285,7 @@
                           <div v-if="(s as any).actualStartTime || (s as any).actualEndTime" style="margin-top: 4px; color: #9ca3af; font-size: 12px;">
                             Actual: {{ (s as any).actualStartTime ? formatTimestamp((s as any).actualStartTime) : '' }}{{ ((s as any).actualStartTime && (s as any).actualEndTime) ? ' - ' : '' }}{{ (s as any).actualEndTime ? formatTimestamp((s as any).actualEndTime) : '' }}, Offset: {{ (s as any).timingOffsetSeconds }}
                           </div>
-                          <div v-if="(s as any).sourcing === 'GENERATED'" style="margin-top: 8px;">
+                          <div v-if="((s as any).searchInfo || (s as any).sourcing).includes('GENERATED')" style="margin-top: 8px;">
                             <n-button size="tiny" :loading="generatingScenes[s.sceneId]" @click="handleGenerateContent(s.sceneId)">
                               Generate
                             </n-button>
