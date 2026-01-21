@@ -1,10 +1,13 @@
-.time-fixed {
-  display: inline-block;
-  width: 8ch;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
-}
+<style scoped>
+  .time-fixed {
+    display: inline-block;
+    width: 8ch;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+  }
+</style>
+
 <template>
   <n-space vertical size="large" style="padding: 24px;">
     <n-card>
@@ -234,60 +237,75 @@
                     </n-space>
                   </n-card>
                 </div>
+
+                <n-card title="Schedule" size="small" style="width: 100%;">
+                  <n-text depth="3" style="font-size: 12px; margin-bottom: 8px; display: block;">Created: {{ formatTimestamp(stationDetails?.schedule?.createdAt) }}</n-text>
+                  <div v-if="stationDetails?.schedule?.entries && stationDetails.schedule.entries.length">
+                    <n-timeline>
+                      <n-timeline-item
+                        v-for="(s, index) in sortedSchedule"
+                        :key="index"
+                      >
+                        <template #icon>
+                          <YellowLed v-if="s.active" :active="s.active" :pulse="s.active" :size="16" />
+                          <YellowLed v-else-if="pastSchedule.includes(s)" :active="s.active" :size="14" />
+                          <GreenLed v-else :active="s.active" :size="14" />
+                        </template>
+
+                        <template #default>
+                          <n-text style="font-weight: 500;">{{ s.sceneTitle }}</n-text>
+                          <div style="margin-top: 4px; color: #9ca3af; font-size: 12px;">
+                            {{ formatScheduleStart(s.startTime) }} - {{ formatScheduleStart(s.endTime) }}
+                          </div>
+                          <div style="margin-top: 4px; color: #9ca3af; font-size: 12px;">
+                            {{ (s as any).searchInfo ?? (s as any).sourcing }} ({{ s.songsCount }} songs)
+                          </div>
+                          <div style="margin-top: 6px; display: flex; align-items: center; gap: 8px;">
+                            <div style="display: flex; gap: 2px;">
+                              <BlueLed
+                                v-for="i in (s as any).songsCount"
+                                :key="i"
+                                :active="i <= (s as any).fetchedSongsCount"
+                                :size="12"
+                              />
+                            </div>
+                            <span style="font-size: 11px; color: #6b7280;">
+                              {{ (s as any).fetchedSongsCount }}/{{ (s as any).songsCount }} queued
+                            </span>
+                          </div>
+                          <div v-if="(s as any).songs && (s as any).songs.length" style="margin-top: 6px; color: #9ca3af; font-size: 12px;">
+                            <div style="font-weight: 500; margin-bottom: 2px;">Songs:</div>
+                            <div v-for="song in (s as any).songs" :key="song.songId">
+                              {{ formatTimestamp(song.scheduledStartTime) }} - {{ song.title }}{{ song.artist ? ' — ' + song.artist : '' }}
+                            </div>
+                          </div>
+                          <div v-if="(s as any).generatedContentTimestamp !== null" style="margin-top: 4px; color: #9ca3af; font-size: 12px;">
+                            Generated: {{ formatTimestamp((s as any).generatedContentTimestamp) }}
+                          </div>
+                          <div v-if="(s as any).actualStartTime || (s as any).actualEndTime" style="margin-top: 4px; color: #9ca3af; font-size: 12px;">
+                            Actual: {{ (s as any).actualStartTime ? formatTimestamp((s as any).actualStartTime) : '' }}{{ ((s as any).actualStartTime && (s as any).actualEndTime) ? ' - ' : '' }}{{ (s as any).actualEndTime ? formatTimestamp((s as any).actualEndTime) : '' }}, Offset: {{ (s as any).timingOffsetSeconds }}
+                          </div>
+                          <div v-if="(s as any).sourcing === 'GENERATED'" style="margin-top: 8px;">
+                            <n-button size="tiny" :loading="generatingScenes[s.sceneId]" @click="handleGenerateContent(s.sceneId)">
+                              Generate
+                            </n-button>
+                          </div>
+                          <div v-if="(s as any).generatedSoundFragmentId !== null" style="margin-top: 8px;">
+                            <n-button size="tiny" @click="openGeneratedSoundFragment((s as any).generatedSoundFragmentId)">
+                              Open Sound Fragment
+                            </n-button>
+                          </div>
+                        </template>
+                      </n-timeline-item>
+                    </n-timeline>
+                  </div>
+                </n-card>
               </n-space>
-
-              <n-card title="Schedule" size="small" style="width: 100%;">
-                <n-text depth="3" style="font-size: 12px; margin-bottom: 8px; display: block;">Created: {{ formatTimestamp(stationDetails?.schedule?.createdAt) }}</n-text>
-                <div v-if="stationDetails?.schedule?.entries && stationDetails.schedule.entries.length">
-                  <n-timeline>
-                    <n-timeline-item
-                      v-for="(s, index) in sortedSchedule"
-                      :key="index"
-                    >
-                      <template #icon>
-                        <YellowLed v-if="s.active" :active="s.active" :pulse="s.active" :size="16" />
-                        <YellowLed v-else-if="pastSchedule.includes(s)" :active="s.active" :size="14" />
-                        <GreenLed v-else :active="s.active" :size="14" />
-                      </template>
-
-                      <template #default>
-                        <n-text style="font-weight: 500;">{{ s.sceneTitle }}</n-text>
-                        <div style="margin-top: 4px; color: #9ca3af; font-size: 12px;">
-                          {{ formatScheduleStart(s.startTime) }} - {{ formatScheduleStart(s.endTime) }}
-                        </div>
-                        <div style="margin-top: 4px; color: #9ca3af; font-size: 12px;">
-                          {{ (s as any).sourcing }} ({{ s.songsCount }} songs)
-                        </div>
-                        <div style="margin-top: 4px; color: #9ca3af; font-size: 12px;">
-                          Status: {{ (s as any).status }}, Active: {{ s.active }}, Fetched: {{ (s as any).fetchedSongsCount }}/{{ s.songsCount }}
-                        </div>
-                        <div style="margin-top: 4px; color: #9ca3af; font-size: 12px;">
-                          Actual: {{ formatTimestamp((s as any).actualStartTime) }} - {{ formatTimestamp((s as any).actualEndTime) }}, Offset: {{ (s as any).timingOffsetSeconds }}
-                        </div>
-                        <div style="margin-top: 4px; color: #9ca3af; font-size: 12px;">
-                          Playlist: {{ (s as any).playlistTitle }}, Artist: {{ (s as any).artist }}, Search: {{ (s as any).searchTerm }}
-                        </div>
-                        <div v-if="(s as any).sourcing === 'GENERATED'" style="margin-top: 8px;">
-                          <n-button size="tiny" :loading="generatingScenes[s.sceneId]" @click="handleGenerateContent(s.sceneId)">
-                            Generate
-                          </n-button>
-                        </div>
-                        <div v-if="(s as any).generatedSoundFragmentId !== null" style="margin-top: 8px;">
-                          <n-button size="tiny" @click="openGeneratedSoundFragment((s as any).generatedSoundFragmentId)">
-                            Open Sound Fragment
-                          </n-button>
-                        </div>
-                      </template>
-                    </n-timeline-item>
-                  </n-timeline>
-                </div>
-              </n-card>
             </n-space>
-        
-        
+          </n-space>
+        </n-card>
       </n-space>
-    </n-card>
-  </n-space>
+
 </template>
 
 <script lang="ts">
@@ -296,7 +314,6 @@ import { useRouter } from 'vue-router';
 import { useDashboardStore } from '../../../stores/kneo/dashboardStore';
 import {
   NButton,
-  // NH1,
   NCard,
   NH2,
   NIcon,
@@ -321,6 +338,7 @@ import { ExternalLink, PlayerPlay, PlayerStop, Activity } from '@vicons/tabler';
 import { MIXPLA_PLAYER_URL } from '../../../constants/config';
 import GreenLed from '../../common/GreenLed.vue';
 import YellowLed from '../../common/YellowLed.vue';
+import BlueLed from '../../common/BlueLed.vue';
 import GlowingStatus from '../../common/GlowingStatus.vue';
 
 export default defineComponent({
@@ -331,6 +349,7 @@ export default defineComponent({
     NMarquee, NTabs, NTabPane, NSelect, NScrollbar, NInput, NBadge, PlayerPlay, PlayerStop, ExternalLink, Activity,
     GreenLed,
     YellowLed,
+    BlueLed,
     GlowingStatus
   },
   props: {

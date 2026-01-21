@@ -102,6 +102,14 @@ export interface PlaylistManagerStats {
         obtained?: boolean;
         mergingType?: string;
     }>;
+    playedSongs?: Array<{
+        title?: string;
+        artist?: string;
+        source?: string;
+        obtained?: boolean;
+        mergingType?: string;
+        duration?: number;
+    }>;
 }
 
 export interface AiDjStats {
@@ -161,9 +169,10 @@ export interface StationDetails {
             endTime: string;
             active: boolean;
             sourcing: string;
-            playlistTitle: string | null;
-            artist: string | null;
-            searchTerm: string;
+            searchInfo?: string | null;
+            playlistTitle?: string | null;
+            artist?: string | null;
+            searchTerm?: string | null;
             songsCount: number;
             fetchedSongsCount: number;
             generatedSoundFragmentId: string | null;
@@ -171,6 +180,15 @@ export interface StationDetails {
             actualEndTime: string | null;
             status: string;
             timingOffsetSeconds: number | null;
+            generatedFragmentId: string | null;
+            generatedContentTimestamp: string | null;
+            generatedContentStatus: string | null;
+            songs: Array<{
+                songId: string;
+                title: string;
+                artist: string;
+                scheduledStartTime: string;
+            }>;
         }>;
     };
     runningTasks?: Array<{
