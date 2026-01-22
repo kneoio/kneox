@@ -197,6 +197,24 @@ export interface Voice {
     name: string;
 }
 
+export enum TTSEngineType {
+    ELEVENLABS = 'ELEVENLABS',
+    MODELSLAB = 'MODELSLAB'
+}
+
+export interface VoiceDTO {
+    id: string;
+    name: string;
+    engineType: TTSEngineType | null;
+}
+
+export interface TTSSettingDTO {
+    dj?: VoiceDTO;
+    copilot?: VoiceDTO;
+    newsReporter?: VoiceDTO;
+    weatherReporter?: VoiceDTO;
+}
+
 export interface Tool {
     id: string;
     name: string;
@@ -218,6 +236,7 @@ export interface AiAgent {
     llmType?: string;
     searchEngineType?: string;
     primaryVoice: Voice[];
+    ttsSetting?: TTSSettingDTO;
     copilot?: string;
     talkativity: number;
     podcastMode: number;
@@ -233,6 +252,7 @@ export interface AiAgentSave {
     llmType?: string;
     searchEngineType?: string;
     primaryVoice: Voice[];
+    ttsSetting?: TTSSettingDTO;
     copilot?: string;
     talkativity: number;
     podcastMode: number;

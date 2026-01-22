@@ -90,6 +90,90 @@
                   />
                 </n-form-item>
               </n-gi>
+              <n-gi>
+                <n-form-item label="DJ">
+                  <n-space :size="8">
+                    <n-select
+                      :value="localFormData.ttsSetting?.dj?.engineType || null"
+                      :options="ttsEngineTypeOptions"
+                      clearable
+                      style="width: 200px;"
+                      @update:value="setTtsEngineType('dj', $event as TTSEngineType | null)"
+                    />
+                    <n-select
+                      :value="localFormData.ttsSetting?.dj?.id || null"
+                      :options="ttsVoiceOptionsFor('dj')"
+                      filterable
+                      clearable
+                      style="width: 300px;"
+                      @update:value="setTtsVoice('dj', $event as string | null)"
+                    />
+                  </n-space>
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="Copilot">
+                  <n-space :size="8">
+                    <n-select
+                      :value="localFormData.ttsSetting?.copilot?.engineType || null"
+                      :options="ttsEngineTypeOptions"
+                      clearable
+                      style="width: 200px;"
+                      @update:value="setTtsEngineType('copilot', $event as TTSEngineType | null)"
+                    />
+                    <n-select
+                      :value="localFormData.ttsSetting?.copilot?.id || null"
+                      :options="ttsVoiceOptionsFor('copilot')"
+                      filterable
+                      clearable
+                      style="width: 300px;"
+                      @update:value="setTtsVoice('copilot', $event as string | null)"
+                    />
+                  </n-space>
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="News Reporter">
+                  <n-space :size="8">
+                    <n-select
+                      :value="localFormData.ttsSetting?.newsReporter?.engineType || null"
+                      :options="ttsEngineTypeOptions"
+                      clearable
+                      style="width: 200px;"
+                      @update:value="setTtsEngineType('newsReporter', $event as TTSEngineType | null)"
+                    />
+                    <n-select
+                      :value="localFormData.ttsSetting?.newsReporter?.id || null"
+                      :options="ttsVoiceOptionsFor('newsReporter')"
+                      filterable
+                      clearable
+                      style="width: 300px;"
+                      @update:value="setTtsVoice('newsReporter', $event as string | null)"
+                    />
+                  </n-space>
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="Weather Reporter">
+                  <n-space :size="8">
+                    <n-select
+                      :value="localFormData.ttsSetting?.weatherReporter?.engineType || null"
+                      :options="ttsEngineTypeOptions"
+                      clearable
+                      style="width: 200px;"
+                      @update:value="setTtsEngineType('weatherReporter', $event as TTSEngineType | null)"
+                    />
+                    <n-select
+                      :value="localFormData.ttsSetting?.weatherReporter?.id || null"
+                      :options="ttsVoiceOptionsFor('weatherReporter')"
+                      filterable
+                      clearable
+                      style="width: 300px;"
+                      @update:value="setTtsVoice('weatherReporter', $event as string | null)"
+                    />
+                  </n-space>
+                </n-form-item>
+              </n-gi>
             </n-grid>
           </n-form>
         </n-tab-pane>
@@ -126,7 +210,7 @@ import {
 import { useAiAgentStore } from '../../../stores/kneo/aiAgentStore';
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 import AclTable from '../../common/AclTable.vue';
-import { AiAgentSave, AiAgentForm } from '../../../types/kneoBroadcasterTypes';
+import { AiAgentSave, AiAgentForm, TTSEngineType, TTSSettingDTO, VoiceDTO } from '../../../types/kneoBroadcasterTypes';
 import { getErrorMessage, handleFormSaveError } from '../../../utils/errorHandling';
 
 export default defineComponent({
@@ -170,6 +254,27 @@ export default defineComponent({
       }))
     );
 
+    const ttsEngineTypeOptions = [
+      { label: 'elevenlabs', value: TTSEngineType.ELEVENLABS },
+      { label: 'modelslab', value: TTSEngineType.MODELSLAB }
+    ];
+
+    const modelslabVoiceOptions = [
+      { label: 'Tara', value: 'Tara' },
+      { label: 'Leah', value: 'Leah' },
+      { label: 'Jess', value: 'Jess' },
+      { label: 'Mia', value: 'Mia' },
+      { label: 'Zoe', value: 'Zoe' },
+      { label: 'Leo', value: 'Leo' },
+      { label: 'Dan', value: 'Dan' },
+      { label: 'Zac', value: 'Zac' }
+    ];
+
+    const ttsVoiceOptionsFor = (key: keyof TTSSettingDTO) => {
+      const engineType = (localFormData.ttsSetting as any)?.[key]?.engineType as TTSEngineType | null | undefined;
+      return engineType === TTSEngineType.MODELSLAB ? modelslabVoiceOptions : voiceOptions.value;
+    };
+
     const copilotOptions = computed(() => {
       const list = store.getEntries || [];
       return (list as any[]).map((a: any) => ({
@@ -189,6 +294,7 @@ export default defineComponent({
       llmType: "",
       primaryVoice: [],
       primaryVoiceId: "",
+      ttsSetting: {},
       copilotId: "",
       talkativity: 0,
       podcastMode: 0
@@ -207,6 +313,47 @@ export default defineComponent({
 
     const createLangPrefItem = () => ({ languageTag: 'en-US', weight: 1 });
 
+    const setTtsVoice = (key: keyof TTSSettingDTO, voiceId: string | null) => {
+      if (!localFormData.ttsSetting) {
+        (localFormData as any).ttsSetting = {};
+      }
+
+      if (!voiceId) {
+        delete (localFormData.ttsSetting as any)[key];
+        return;
+      }
+
+      const existing = (localFormData.ttsSetting as any)[key] as VoiceDTO | undefined;
+      const modelslab = modelslabVoiceOptions.some(v => v.value === voiceId);
+      const engineType = modelslab
+        ? TTSEngineType.MODELSLAB
+        : (existing?.engineType ?? TTSEngineType.ELEVENLABS);
+      const options = engineType === TTSEngineType.MODELSLAB ? modelslabVoiceOptions : voiceOptions.value;
+      const opt = options.find((v: { label: string; value: string }) => v.value === voiceId);
+      (localFormData.ttsSetting as any)[key] = {
+        id: voiceId,
+        name: opt?.label || '',
+        engineType
+      } as VoiceDTO;
+    };
+
+    const setTtsEngineType = (key: keyof TTSSettingDTO, engineType: TTSEngineType | null) => {
+      if (!localFormData.ttsSetting) {
+        (localFormData as any).ttsSetting = {};
+      }
+
+      const existing = (localFormData.ttsSetting as any)[key] as VoiceDTO | undefined;
+      if (!existing) {
+        (localFormData.ttsSetting as any)[key] = {
+          id: '',
+          name: '',
+          engineType
+        } as VoiceDTO;
+        return;
+      }
+      (localFormData.ttsSetting as any)[key] = { ...existing, engineType } as VoiceDTO;
+    };
+
     const handleSave = async () => {
       try {
         loadingBar.start();
@@ -217,6 +364,7 @@ export default defineComponent({
           llmType: localFormData.llmType || '',
           searchEngineType: (localFormData as any).searchEngineType || undefined,
           primaryVoice: [],
+          ttsSetting: localFormData.ttsSetting,
           talkativity: (localFormData as any).talkativity || 0,
           podcastMode: (localFormData as any).podcastMode || 0
         };
@@ -314,6 +462,10 @@ export default defineComponent({
       langOptions: referencesStore.languageOptions,
       llmTypeOptions: referencesStore.llmTypeOptions,
       voiceOptions,
+      ttsEngineTypeOptions,
+      ttsVoiceOptionsFor,
+      setTtsVoice,
+      setTtsEngineType,
       copilotOptions,
       referencesStore,
       formTitle,
@@ -325,8 +477,8 @@ export default defineComponent({
       activeTab,
       aclData,
       aclLoading,
-      
     };
+
   }
 });
 </script>
