@@ -159,7 +159,7 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
             return response.status === 200;
         } catch (error) {
             console.error(`Error triggering broadcast ${action}:`, error);
-            return false;
+            throw error;
         } finally {
             isStartingBroadcast.value = false;
         }
@@ -180,7 +180,7 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
             return response.status === 200;
         } catch (error) {
             console.error('Error triggering broadcast generate_content:', error);
-            return false;
+            throw error;
         } finally {
             isStartingBroadcast.value = false;
         }
@@ -289,6 +289,13 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
                 }
 
                 if ([1001, 1006].includes(event.code)) {
+                    if (options.type === 'dashboard') {
+                        globalDashboardResponse.value = null;
+                        globalLastUpdate.value = null;
+                    } else if (options.brandName) {
+                        delete stationResponse.value[options.brandName];
+                        delete stationLastUpdate.value[options.brandName];
+                    }
                     console.log(`Reconnecting ${options.type} ${options.brandName || ''} in 3s...`);
                     setTimeout(() => {
                         if (options.type === 'dashboard' && isGlobalPollingActive.value) {

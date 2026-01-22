@@ -278,6 +278,9 @@
                             <n-button type="primary" size="tiny" :loading="generatingScenes[s.sceneId]" @click="handleGenerateContent(s.sceneId)">
                               Generate
                             </n-button>
+                            <div v-if="generateErrors[s.sceneId]" style="margin-top: 6px; color: #d03050; font-size: 12px;">
+                              {{ generateErrors[s.sceneId] }}
+                            </div>
                           </div>
                           <div v-if="(s as any).generatedSoundFragmentId !== null" style="margin-top: 8px;">
                             <n-button size="tiny" @click="openGeneratedSoundFragment((s as any).generatedSoundFragmentId)">
@@ -355,6 +358,7 @@ export default defineComponent({
     const isStoppingStation = ref(false);
     const isRebuildingSchedule = ref(false);
     const generatingScenes = ref<Record<string, boolean>>({});
+    const generateErrors = ref<Record<string, any>>({});
     const now = ref(new Date());
 
     const copyBrandNameToClipboard = async () => {
@@ -666,15 +670,11 @@ export default defineComponent({
 
     const sendCommand = async (brandName: string, command: string) => {
       try {
-        const success = await dashboardStore.triggerBroadcastAction(brandName, command);
-        if (success) {
-          message.success(`${command} command sent successfully`);
-        } else {
-          message.error(`Failed to send ${command} command`);
-        }
+        await dashboardStore.triggerBroadcastAction(brandName, command);
+        message.success(`${command} command sent successfully`);
       } catch (error) {
         console.error(`Error sending ${command} command:`, error);
-        message.error(`Error sending ${command} command`);
+        message.error((error as any)?.response?.data ?? error);
       }
     };
 
@@ -714,16 +714,25 @@ export default defineComponent({
         ...generatingScenes.value,
         [sceneId]: true
       };
+      generateErrors.value = {
+        ...generateErrors.value,
+        [sceneId]: null
+      };
       try {
-        const success = await dashboardStore.generateSceneContent(props.brandName, sceneId);
-        if (success) {
-          message.success('generate_content command sent successfully');
-        } else {
-          message.error('Failed to send generate_content command');
-        }
+        await dashboardStore.generateSceneContent(props.brandName, sceneId);
+        generateErrors.value = {
+          ...generateErrors.value,
+          [sceneId]: null
+        };
+        message.success('generate_content command sent successfully');
       } catch (error) {
         console.error('Error sending generate_content command:', error);
-        message.error('Error sending generate_content command');
+        const payload = (error as any)?.response?.data ?? error;
+        generateErrors.value = {
+          ...generateErrors.value,
+          [sceneId]: payload
+        };
+        message.error(payload);
       } finally {
         generatingScenes.value = {
           ...generatingScenes.value,
@@ -948,6 +957,7 @@ export default defineComponent({
       isStoppingStation,
       isRebuildingSchedule,
       generatingScenes,
+      generateErrors,
       isOnline,
       isDjActive,
       isDjOffline,
