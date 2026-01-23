@@ -96,7 +96,6 @@
                     <n-select
                       :value="localFormData.ttsSetting?.dj?.engineType || null"
                       :options="ttsEngineTypeOptions"
-                      clearable
                       style="width: 200px;"
                       @update:value="setTtsEngineType('dj', $event as TTSEngineType | null)"
                     />
@@ -104,7 +103,6 @@
                       :value="localFormData.ttsSetting?.dj?.id || null"
                       :options="ttsVoiceOptionsFor('dj')"
                       filterable
-                      clearable
                       style="width: 300px;"
                       @update:value="setTtsVoice('dj', $event as string | null)"
                     />
@@ -117,7 +115,6 @@
                     <n-select
                       :value="localFormData.ttsSetting?.copilot?.engineType || null"
                       :options="ttsEngineTypeOptions"
-                      clearable
                       style="width: 200px;"
                       @update:value="setTtsEngineType('copilot', $event as TTSEngineType | null)"
                     />
@@ -125,7 +122,6 @@
                       :value="localFormData.ttsSetting?.copilot?.id || null"
                       :options="ttsVoiceOptionsFor('copilot')"
                       filterable
-                      clearable
                       style="width: 300px;"
                       @update:value="setTtsVoice('copilot', $event as string | null)"
                     />
@@ -138,7 +134,6 @@
                     <n-select
                       :value="localFormData.ttsSetting?.newsReporter?.engineType || null"
                       :options="ttsEngineTypeOptions"
-                      clearable
                       style="width: 200px;"
                       @update:value="setTtsEngineType('newsReporter', $event as TTSEngineType | null)"
                     />
@@ -146,7 +141,6 @@
                       :value="localFormData.ttsSetting?.newsReporter?.id || null"
                       :options="ttsVoiceOptionsFor('newsReporter')"
                       filterable
-                      clearable
                       style="width: 300px;"
                       @update:value="setTtsVoice('newsReporter', $event as string | null)"
                     />
@@ -159,7 +153,6 @@
                     <n-select
                       :value="localFormData.ttsSetting?.weatherReporter?.engineType || null"
                       :options="ttsEngineTypeOptions"
-                      clearable
                       style="width: 200px;"
                       @update:value="setTtsEngineType('weatherReporter', $event as TTSEngineType | null)"
                     />
@@ -167,7 +160,6 @@
                       :value="localFormData.ttsSetting?.weatherReporter?.id || null"
                       :options="ttsVoiceOptionsFor('weatherReporter')"
                       filterable
-                      clearable
                       style="width: 300px;"
                       @update:value="setTtsVoice('weatherReporter', $event as string | null)"
                     />
@@ -256,23 +248,22 @@ export default defineComponent({
 
     const ttsEngineTypeOptions = [
       { label: 'elevenlabs', value: TTSEngineType.ELEVENLABS },
-      { label: 'modelslab', value: TTSEngineType.MODELSLAB }
+      { label: 'modelslab', value: TTSEngineType.MODELSLAB },
+      { label: 'google', value: TTSEngineType.GOOGLE }
     ];
 
-    const modelslabVoiceOptions = [
-      { label: 'Tara', value: 'Tara' },
-      { label: 'Leah', value: 'Leah' },
-      { label: 'Jess', value: 'Jess' },
-      { label: 'Mia', value: 'Mia' },
-      { label: 'Zoe', value: 'Zoe' },
-      { label: 'Leo', value: 'Leo' },
-      { label: 'Dan', value: 'Dan' },
-      { label: 'Zac', value: 'Zac' }
-    ];
+    const engineParamFor = (engineType: TTSEngineType | null | undefined) => {
+      if (engineType === TTSEngineType.ELEVENLABS) return 'elevenlabs';
+      if (engineType === TTSEngineType.MODELSLAB) return 'modelslab';
+      if (engineType === TTSEngineType.GOOGLE) return 'google';
+      return null;
+    };
 
     const ttsVoiceOptionsFor = (key: keyof TTSSettingDTO) => {
       const engineType = (localFormData.ttsSetting as any)?.[key]?.engineType as TTSEngineType | null | undefined;
-      return engineType === TTSEngineType.MODELSLAB ? modelslabVoiceOptions : voiceOptions.value;
+      const engine = engineParamFor(engineType);
+      if (!engine) return [];
+      return (referencesStore.voiceOptionsByEngine as any)?.[engine] || [];
     };
 
     const copilotOptions = computed(() => {
@@ -324,11 +315,9 @@ export default defineComponent({
       }
 
       const existing = (localFormData.ttsSetting as any)[key] as VoiceDTO | undefined;
-      const modelslab = modelslabVoiceOptions.some(v => v.value === voiceId);
-      const engineType = modelslab
-        ? TTSEngineType.MODELSLAB
-        : (existing?.engineType ?? TTSEngineType.ELEVENLABS);
-      const options = engineType === TTSEngineType.MODELSLAB ? modelslabVoiceOptions : voiceOptions.value;
+      const engineType = existing?.engineType ?? null;
+      const engine = engineParamFor(engineType);
+      const options = engine ? (referencesStore.voiceOptionsByEngine as any)?.[engine] || [] : [];
       const opt = options.find((v: { label: string; value: string }) => v.value === voiceId);
       (localFormData.ttsSetting as any)[key] = {
         id: voiceId,
@@ -337,9 +326,19 @@ export default defineComponent({
       } as VoiceDTO;
     };
 
-    const setTtsEngineType = (key: keyof TTSSettingDTO, engineType: TTSEngineType | null) => {
+    const setTtsEngineType = async (key: keyof TTSSettingDTO, engineType: TTSEngineType | null) => {
       if (!localFormData.ttsSetting) {
         (localFormData as any).ttsSetting = {};
+      }
+
+      const existingForClear = (localFormData.ttsSetting as any)[key] as VoiceDTO | undefined;
+      if (existingForClear) {
+        (localFormData.ttsSetting as any)[key] = { ...existingForClear, id: '', name: '', engineType } as VoiceDTO;
+      }
+
+      const engine = engineParamFor(engineType);
+      if (engine) {
+        await referencesStore.fetchVoices(engine);
       }
 
       const existing = (localFormData.ttsSetting as any)[key] as VoiceDTO | undefined;
@@ -439,6 +438,14 @@ export default defineComponent({
             agentData.copilotId = agentData.copilot;
           }
           Object.assign(localFormData, agentData);
+
+          const entries = Object.values((agentData.ttsSetting || {}) as any);
+          for (const entry of entries) {
+            const engine = engineParamFor(entry?.engineType as TTSEngineType | null | undefined);
+            if (engine) {
+              await referencesStore.fetchVoices(engine);
+            }
+          }
         } else {
         }
       } catch (error: any) {

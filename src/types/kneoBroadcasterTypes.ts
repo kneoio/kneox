@@ -199,7 +199,8 @@ export interface Voice {
 
 export enum TTSEngineType {
     ELEVENLABS = 'ELEVENLABS',
-    MODELSLAB = 'MODELSLAB'
+    MODELSLAB = 'MODELSLAB',
+    GOOGLE = 'GOOGLE'
 }
 
 export interface VoiceDTO {

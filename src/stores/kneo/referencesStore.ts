@@ -103,6 +103,7 @@ export const useReferencesStore = defineStore('references', () => {
 
   const genreOptions = ref<Array<{label: string, value: string, type?: string, children?: any[]}>>([]);
   const voiceOptions = ref<Array<{label: string, value: string}>>([]);
+  const voiceOptionsByEngine = ref<Record<'elevenlabs' | 'google' | 'modelslab', Array<{label: string, value: string}>>>({} as any);
   const labelOptions = ref<Array<{ label: string; value: string; color?: string; fontColor?: string; style?: Record<string, string> }>>([]);
 
   const musicUploadAgreement = ref<{ title: string; clause: string; version: string }>({
@@ -178,17 +179,24 @@ export const useReferencesStore = defineStore('references', () => {
             a.label.localeCompare(b.label));
   };
 
-  const fetchVoices = async () => {
-    const response = await unsecuredClient.get('/dictionary/voices?page=1&size=100');
+  const fetchVoices = async (engine?: 'elevenlabs' | 'google' | 'modelslab') => {
+    const response = await unsecuredClient.get('/dictionary/voices', { params: { engine, page: 1, size: 100 } });
     if (!response?.data?.payload) throw new Error('Invalid API response');
 
-    voiceOptions.value = response.data.payload.viewData.entries
+    const list = response.data.payload.viewData.entries
         .map((entry: any) => ({
             label: entry.name,
             value: entry.id
         }))
         .sort((a: {label: string}, b: {label: string}) =>
             a.label.localeCompare(b.label));
+
+    if (engine) {
+      voiceOptionsByEngine.value[engine] = list;
+      return;
+    }
+
+    voiceOptions.value = list;
   };
 
   const fetchLabels = async () => {
@@ -408,6 +416,7 @@ export const useReferencesStore = defineStore('references', () => {
     localizedLanguageOptions,
     languageToCountryMap,
     voiceOptions,
+    voiceOptionsByEngine,
     timezones,
     genreOptions,
     labelOptions,
@@ -428,9 +437,9 @@ export const useReferencesStore = defineStore('references', () => {
     fetchGenres,
     fetchLabels,
     fetchLabelsByCategory,
-    fetchVoices,
     fetchDictionary,
     fetchStation,
-    fetchRadioStations
+    fetchRadioStations,
+    fetchVoices,
   };
 });
