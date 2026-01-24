@@ -274,9 +274,9 @@
                         :key="index"
                       >
                         <template #icon>
-                          <YellowLed v-if="s.active" :active="s.active" :pulse="s.active" :size="16" />
-                          <YellowLed v-else-if="pastSchedule.includes(s)" :active="s.active" :size="14" />
-                          <GreenLed v-else :active="s.active" :size="14" />
+                          <YellowLed v-if="s.status === 'ACTIVE'" :active="true" :pulse="true" :size="16" />
+                          <YellowLed v-else-if="pastSchedule.includes(s)" :active="false" :size="14" />
+                          <GreenLed v-else :active="false" :size="14" />
                         </template>
 
                         <template #default>
