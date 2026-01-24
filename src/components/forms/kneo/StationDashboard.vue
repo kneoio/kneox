@@ -85,7 +85,7 @@
               :key="index"
               :style="{
                 width: Math.max(s.dayPercentage * 100, 2) + '%',
-                backgroundColor: s.active ? '#18a058' : (pastSchedule.includes(s) ? '#8b5cf6' : '#2080f0'),
+                backgroundColor: s.status === 'ACTIVE' ? '#18a058' : (pastSchedule.includes(s) ? '#8b5cf6' : '#2080f0'),
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -958,26 +958,23 @@ export default defineComponent({
 
     const sortedSchedule = computed(() => {
       const schedule = stationDetails.value?.schedule?.entries || [];
+      console.log('Schedule entries:', schedule.map(s => ({ title: s.sceneTitle, active: s.active, status: s.status })));
       return schedule.slice();
     });
 
     const currentSchedule = computed(() => {
-      return sortedSchedule.value.find((s: any) => s.active);
+      return sortedSchedule.value.find((s: any) => s.status === 'ACTIVE');
     });
 
     const pastSchedule = computed(() => {
-      const currentIdx = sortedSchedule.value.findIndex((s: any) => s.active);
+      const currentIdx = sortedSchedule.value.findIndex((s: any) => s.status === 'ACTIVE');
       return sortedSchedule.value.slice(0, currentIdx);
     });
 
     const futureSchedule = computed(() => {
-      const currentIdx = sortedSchedule.value.findIndex((s: any) => s.active);
+      const currentIdx = sortedSchedule.value.findIndex((s: any) => s.status === 'ACTIVE');
       return sortedSchedule.value.slice(currentIdx + 1);
     });
-
-    const scheduleItemId = (s: any) => {
-      return `${s.startTime}|${s.endTime}|${s.sceneTitle}`;
-    };
 
     onMounted(() => {
       console.log('StationDetail mounted for brand:', props.brandName);
