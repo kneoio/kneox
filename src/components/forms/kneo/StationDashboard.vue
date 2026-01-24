@@ -958,7 +958,6 @@ export default defineComponent({
 
     const sortedSchedule = computed(() => {
       const schedule = stationDetails.value?.schedule?.entries || [];
-      console.log('Schedule entries:', schedule.map(s => ({ title: s.sceneTitle, active: s.active, status: s.status })));
       return schedule.slice();
     });
 
@@ -975,6 +974,10 @@ export default defineComponent({
       const currentIdx = sortedSchedule.value.findIndex((s: any) => s.status === 'ACTIVE');
       return sortedSchedule.value.slice(currentIdx + 1);
     });
+
+    const scheduleItemId = (s: any) => {
+      return `${s.startTime}|${s.endTime}|${s.sceneTitle}`;
+    };
 
     onMounted(() => {
       console.log('StationDetail mounted for brand:', props.brandName);
