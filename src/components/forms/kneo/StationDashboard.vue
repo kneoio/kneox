@@ -280,7 +280,12 @@
                         </template>
 
                         <template #default>
-                          <n-text style="font-weight: 500;">{{ s.sceneTitle }}</n-text>
+                          <n-space align="center" justify="space-between" style="width: 100%;">
+                            <n-text style="font-weight: 500;">{{ s.sceneTitle }}</n-text>
+                            <n-tag size="tiny" :type="s.status === 'ACTIVE' ? 'success' : (s.status === 'SKIPPED' ? 'default' : 'info')">
+                              {{ s.status }}
+                            </n-tag>
+                          </n-space>
                           <div style="margin-top: 4px; color: #9ca3af; font-size: 12px;">
                             {{ formatScheduleStart(s.startTime) }} - {{ formatScheduleStart(s.endTime) }}
                           </div>
