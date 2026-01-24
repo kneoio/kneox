@@ -240,10 +240,7 @@ export default defineComponent({
     const formTitle = computed(() => localFormData.id ? 'Edit AI Agent' : 'Create New AI Agent');
 
     const voiceOptions = computed(() => 
-      (referencesStore.voiceOptions || []).map(voice => ({
-        label: voice.label,
-        value: voice.value
-      }))
+      (referencesStore.voiceOptionsByEngine as any)?.elevenlabs || []
     );
 
     const ttsEngineTypeOptions = [
@@ -425,7 +422,7 @@ export default defineComponent({
     onMounted(async () => {
       try {
         loadingBar.start();
-        await referencesStore.fetchVoices();
+        await referencesStore.fetchVoices('elevenlabs');
         try { await store.fetchAllUnsecured(1, 1000); } catch {}
         const id = route.params.id as string;
         if (id) {

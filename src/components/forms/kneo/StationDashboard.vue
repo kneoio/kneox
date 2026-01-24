@@ -76,7 +76,44 @@
           
         </n-space>
 
-       
+        <!-- Day percentage visualization -->
+        <n-card size="small" style="margin-top: 16px;">
+          <n-text depth="3" style="font-size: 12px; margin-bottom: 8px; display: block;">Day Time Distribution</n-text>
+          <div style="display: flex; height: 32px; border-radius: 4px; overflow: hidden; background: #f5f5f5;">
+            <div
+              v-for="(s, index) in sortedSchedule"
+              :key="index"
+              :style="{
+                width: Math.max(s.dayPercentage * 100, 2) + '%',
+                backgroundColor: s.active ? '#18a058' : (pastSchedule.includes(s) ? '#8b5cf6' : '#2080f0'),
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRight: index < sortedSchedule.length - 1 ? '1px solid #fff' : 'none'
+              }"
+              :title="`${s.sceneTitle}: ${(s.dayPercentage * 100).toFixed(1)}%`"
+            >
+              <n-space align="center" justify="center" size="small">
+                <n-icon v-if="getSceneIcon(s.sceneTitle)" size="14" color="white">
+                  <component :is="getSceneIcon(s.sceneTitle)" />
+                </n-icon>
+                <n-text
+                  v-if="s.dayPercentage * 100 > 5"
+                  style="color: white; font-size: 11px; font-weight: 500;"
+                >
+                  {{ (s.dayPercentage * 100).toFixed(0) }}%
+                </n-text>
+              </n-space>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-top: 4px;">
+            <n-text depth="3" style="font-size: 11px;">00:00</n-text>
+            <n-text depth="3" style="font-size: 11px;">06:00</n-text>
+            <n-text depth="3" style="font-size: 11px;">12:00</n-text>
+            <n-text depth="3" style="font-size: 11px;">18:00</n-text>
+            <n-text depth="3" style="font-size: 11px;">24:00</n-text>
+          </div>
+        </n-card>
 
             <n-space vertical size="large">
               <n-card title="Status History" size="small">
@@ -165,23 +202,23 @@
                       <n-space vertical size="small">
                         <n-space justify="space-between">
                           <n-text strong>Current Scene:</n-text>
-                          <n-text strong style="font-size: 18px;">{{ stationDetails.aiDjStats.currentSceneTitle }}</n-text>
+                          <n-text strong style="font-size: 18px;">{{ currentSchedule?.sceneTitle }}</n-text>
                         </n-space>
                         <n-space justify="space-between" v-if="isDjActive">
                           <n-text depth="3">Time:</n-text>
-                          <n-text>{{ formatTime(stationDetails.aiDjStats.sceneStartTime) }} - {{ formatTime(stationDetails.aiDjStats.sceneEndTime) }}</n-text>
+                          <n-text>{{ formatTime(currentSchedule?.startTime) }} - {{ formatTime(currentSchedule?.endTime) }}</n-text>
                         </n-space>
                         <n-space justify="space-between">
                           <n-text depth="3">Duration:</n-text>
-                          <n-text>{{ formatSceneDuration(stationDetails.aiDjStats.sceneStartTime, stationDetails.aiDjStats.sceneEndTime, stationDetails.aiDjStats.nextSceneTitle, stationDetails.aiDjStats.currentSceneTitle) }}</n-text>
+                          <n-text>{{ formatSceneDuration(currentSchedule?.startTime, currentSchedule?.endTime, futureSchedule[0]?.sceneTitle, currentSchedule?.sceneTitle) }}</n-text>
                         </n-space>
                         <n-space justify="space-between">
                           <n-text depth="3">Prompts:</n-text>
-                          <n-text>{{ stationDetails.aiDjStats.promptCount }}</n-text>
+                          <n-text>{{ currentSchedule?.songs?.length || 0 }}</n-text>
                         </n-space>
                         <n-space justify="space-between" v-if="isDjActive">
                           <n-text depth="3">Next Scene:</n-text>
-                          <n-text>{{ stationDetails.aiDjStats.nextSceneTitle }}</n-text>
+                          <n-text>{{ futureSchedule[0]?.sceneTitle }}</n-text>
                         </n-space>
                         <n-space vertical v-if="stationDetails.aiDjStats.messages && stationDetails.aiDjStats.messages.length" size="small">
                           <n-text strong>Messages:</n-text>
@@ -229,6 +266,7 @@
 
                 <n-card title="Schedule" size="small" style="width: 100%;">
                   <n-text depth="3" style="font-size: 12px; margin-bottom: 8px; display: block;">Created: {{ formatTimestamp(stationDetails?.schedule?.createdAt) }}</n-text>
+                  
                   <div v-if="stationDetails?.schedule?.entries && stationDetails.schedule.entries.length">
                     <n-timeline>
                       <n-timeline-item
@@ -326,7 +364,7 @@ import {
   NInput,
   NBadge
 } from 'naive-ui';
-import { ExternalLink, PlayerPlay, PlayerStop, Activity } from '@vicons/tabler';
+import { ExternalLink, PlayerPlay, PlayerStop, Activity, News, Cloud, Sun, Moon, Coffee, Tool, Music, Wind, MessageCircle, Home } from '@vicons/tabler';
 import { MIXPLA_PLAYER_URL } from '../../../constants/config';
 import GreenLed from '../../common/GreenLed.vue';
 import YellowLed from '../../common/YellowLed.vue';
@@ -339,6 +377,7 @@ export default defineComponent({
     NButton, NCard, NIcon, NTag, NStatistic, NProgress, NSpace, NH2, NText,
     NTimeline, NTimelineItem, NButtonGroup,
     NMarquee, NTabs, NTabPane, NSelect, NScrollbar, NInput, NBadge, PlayerPlay, PlayerStop, ExternalLink, Activity,
+    News, Cloud, Sun, Moon, Coffee, Tool, Music, Wind, MessageCircle, Home,
     GreenLed,
     YellowLed,
     BlueLed,
@@ -787,8 +826,20 @@ export default defineComponent({
       return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
     };
 
+    const getSceneIcon = (title: string): any => {
+      const lowerTitle = title.toLowerCase();
+      if (lowerTitle.includes('news')) return News;
+      if (lowerTitle.includes('weather') || lowerTitle.includes('climat')) return Cloud;
+      if (lowerTitle.includes('morning') && lowerTitle.includes('greeting')) return Sun;
+      if (lowerTitle.includes('evening') && lowerTitle.includes('greeting')) return Moon;
+      if (lowerTitle.includes('greeting') || lowerTitle.includes('salut')) return MessageCircle;
+      if (lowerTitle.includes('night') || lowerTitle.includes('late')) return Moon;
+      return null;
+    };
+
     const formatTimestamp = (timestamp: string): string => {
       const date = new Date(timestamp);
+      if (isNaN(date.getTime())) return '';
       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     };
 
@@ -981,6 +1032,7 @@ export default defineComponent({
       getPlaylistItemType,
       getPlaylistItemColor,
       formatArtistTitle,
+      getSceneIcon,
       stationDetails,
       handleStart,
       handleStop,

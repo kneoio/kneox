@@ -401,10 +401,9 @@ export default defineComponent({
         if (a.match !== b.match) return a.match ? -1 : 1;
         return String(a.label).localeCompare(String(b.label));
       });
-      return items.map(({ label, value, match }: any) => ({
+      return items.map(({ label, value }: any) => ({
         label,
-        value,
-        style: match ? { fontWeight: '600', color: '#3b82f6' } : undefined
+        value
       }));
     });
 
@@ -732,7 +731,7 @@ export default defineComponent({
       try {
         loadingBar.start();
         try { await (referencesStore as any).fetchLanguages?.(); } catch {}
-        try { await draftStore.fetchAll(1, 100); } catch {}
+        try { await draftStore.fetchAll(1, 100, { enabled: true, activated: true }); } catch {}
         try { await store.fetchAll(1, 100, { master: true }); } catch {}
         const id = route.params.id as string;
         if (id) {

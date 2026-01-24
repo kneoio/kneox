@@ -618,10 +618,7 @@ export default defineComponent( {
     });
 
     const voiceOptions = computed(() => 
-      (referencesStore.voiceOptions || []).map(voice => ({
-        label: voice.label,
-        value: voice.value
-      }))
+      (referencesStore.voiceOptionsByEngine as any)?.elevenlabs || []
     );
 
     const agentOptions = computed( () => {
@@ -772,7 +769,7 @@ export default defineComponent( {
         await aiAgentStore.fetchAllUnsecured( 1, 100 );
         await profileStore.fetchAllUnsecured( 1, 100 );
         await scriptStore.fetchAllShared(1, 100, { timingMode: 'RELATIVE_TO_STREAM_START' });
-        await referencesStore.fetchVoices();
+        await referencesStore.fetchVoices('elevenlabs');
         await store.fetch( id );
         await nextTick();
         const currentData = store.getCurrent;

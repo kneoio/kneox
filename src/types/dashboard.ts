@@ -113,12 +113,6 @@ export interface PlaylistManagerStats {
 }
 
 export interface AiDjStats {
-    currentSceneId: string;
-    currentSceneTitle: string;
-    sceneStartTime: string;
-    sceneEndTime: string;
-    promptCount: number;
-    nextSceneTitle: string;
     lastRequestTime: string;
     djName: string;
     messages?: Array<{

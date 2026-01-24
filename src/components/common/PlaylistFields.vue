@@ -314,7 +314,7 @@ const fetchGeneratorPrompts = async () => {
     const params = new URLSearchParams();
     params.set('page', '1');
     params.set('size', '100');
-    params.set('filter', JSON.stringify({ promptType: 'GENERATOR' }));
+    params.set('filter', JSON.stringify({ activated: true, master: true, promptType: 'GENERATOR' }));
 
     const response = await apiClient.get(`/prompts?${params.toString()}`);
     if (response?.data?.payload?.viewData?.entries) {

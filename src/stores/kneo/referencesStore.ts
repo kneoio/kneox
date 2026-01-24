@@ -102,7 +102,6 @@ export const useReferencesStore = defineStore('references', () => {
   };
 
   const genreOptions = ref<Array<{label: string, value: string, type?: string, children?: any[]}>>([]);
-  const voiceOptions = ref<Array<{label: string, value: string}>>([]);
   const voiceOptionsByEngine = ref<Record<'elevenlabs' | 'google' | 'modelslab', Array<{label: string, value: string}>>>({} as any);
   const labelOptions = ref<Array<{ label: string; value: string; color?: string; fontColor?: string; style?: Record<string, string> }>>([]);
 
@@ -179,7 +178,7 @@ export const useReferencesStore = defineStore('references', () => {
             a.label.localeCompare(b.label));
   };
 
-  const fetchVoices = async (engine?: 'elevenlabs' | 'google' | 'modelslab') => {
+  const fetchVoices = async (engine: 'elevenlabs' | 'google' | 'modelslab') => {
     const response = await unsecuredClient.get('/dictionary/voices', { params: { engine, page: 1, size: 100 } });
     if (!response?.data?.payload) throw new Error('Invalid API response');
 
@@ -191,12 +190,7 @@ export const useReferencesStore = defineStore('references', () => {
         .sort((a: {label: string}, b: {label: string}) =>
             a.label.localeCompare(b.label));
 
-    if (engine) {
-      voiceOptionsByEngine.value[engine] = list;
-      return;
-    }
-
-    voiceOptions.value = list;
+    voiceOptionsByEngine.value[engine] = list;
   };
 
   const fetchLabels = async () => {
@@ -415,7 +409,6 @@ export const useReferencesStore = defineStore('references', () => {
     languageOptions,
     localizedLanguageOptions,
     languageToCountryMap,
-    voiceOptions,
     voiceOptionsByEngine,
     timezones,
     genreOptions,

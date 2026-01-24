@@ -187,6 +187,7 @@ export default defineComponent({
     const promptOptions = computed(() =>
       (promptStore.getEntries || [])
         .filter((p: any) => typeof p.id === 'string' && p.id)
+        .filter((p: any) => p?.master === true && p?.enabled === true)
         .map((p: any) => ({
           label: p.title || p.description || p.prompt || p.id,
           value: p.id as string,
@@ -398,7 +399,7 @@ export default defineComponent({
     onMounted(async () => {
       try {
         loadingBar.start();
-        await promptStore.fetchAll(1, 500);
+        await promptStore.fetchAll(1, 500, { master: true, enabled: true });
         await load();
       } catch (e) {
         message.error(getErrorMessage(e));
