@@ -264,8 +264,14 @@
                   </n-card>
                 </div>
 
-                <n-card title="Schedule" size="small" style="width: 100%;">
+                <n-card title="Agenda" size="small" style="width: 100%;">
                   <n-text depth="3" style="font-size: 12px; margin-bottom: 8px; display: block;">Created: {{ formatTimestamp(stationDetails?.schedule?.createdAt) }}</n-text>
+                  
+                  <div style="margin-bottom: 12px;">
+                    <n-checkbox v-model:checked="showPlaylist">
+                      Show playlist
+                    </n-checkbox>
+                  </div>
                   
                   <div v-if="stationDetails?.schedule?.entries && stationDetails.schedule.entries.length">
                     <n-timeline>
@@ -305,7 +311,7 @@
                               {{ (s as any).fetchedSongsCount }}/{{ (s as any).songsCount }} queued
                             </span>
                           </div>
-                          <div v-if="(s as any).songs && (s as any).songs.length" style="margin-top: 6px; color: #9ca3af; font-size: 12px;">
+                          <div v-if="showPlaylist && (s as any).songs && (s as any).songs.length" style="margin-top: 6px; color: #9ca3af; font-size: 12px;">
                             <div style="font-weight: 500; margin-bottom: 2px;">Songs:</div>
                             <div v-for="song in (s as any).songs" :key="song.songId">
                               {{ formatTimestamp(song.scheduledStartTime) }} - {{ song.title }}{{ song.artist ? ' — ' + song.artist : '' }}
@@ -350,6 +356,7 @@ import { useDashboardStore } from '../../../stores/kneo/dashboardStore';
 import {
   NButton,
   NCard,
+  NCheckbox,
   NH2,
   NIcon,
   NProgress,
@@ -379,7 +386,7 @@ import GlowingStatus from '../../common/GlowingStatus.vue';
 export default defineComponent({
   name: 'StationDashboard',
   components: {
-    NButton, NCard, NIcon, NTag, NStatistic, NProgress, NSpace, NH2, NText,
+    NButton, NCard, NCheckbox, NIcon, NTag, NStatistic, NProgress, NSpace, NH2, NText,
     NTimeline, NTimelineItem, NButtonGroup,
     NMarquee, NTabs, NTabPane, NSelect, NScrollbar, NInput, NBadge, PlayerPlay, PlayerStop, ExternalLink, Activity,
     News, Cloud, Sun, Moon, Coffee, Tool, Music, Wind, MessageCircle, Home,
@@ -404,6 +411,7 @@ export default defineComponent({
     const generatingScenes = ref<Record<string, boolean>>({});
     const generateErrors = ref<Record<string, any>>({});
     const now = ref(new Date());
+    const showPlaylist = ref(false);
 
     const copyBrandNameToClipboard = async () => {
       await navigator.clipboard.writeText(props.brandName);
@@ -1059,7 +1067,8 @@ export default defineComponent({
       scheduleItemId,
       currentSchedule,
       pastSchedule,
-      futureSchedule
+      futureSchedule,
+      showPlaylist
     };
   },
 });
