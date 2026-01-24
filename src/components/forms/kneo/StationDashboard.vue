@@ -265,9 +265,8 @@
                 </div>
 
                 <n-card title="Agenda" size="small" style="width: 100%;">
-                  <n-text depth="3" style="font-size: 12px; margin-bottom: 8px; display: block;">Created: {{ formatTimestamp(stationDetails?.schedule?.createdAt) }}</n-text>
-                  
-                  <div style="margin-bottom: 12px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <n-text depth="3" style="font-size: 12px;">Created: {{ formatTimestamp(stationDetails?.schedule?.createdAt) }}</n-text>
                     <n-checkbox v-model:checked="showPlaylist">
                       Show playlist
                     </n-checkbox>
