@@ -79,32 +79,49 @@
         <!-- Day percentage visualization -->
         <n-card size="small" style="margin-top: 16px;">
           <n-text depth="3" style="font-size: 12px; margin-bottom: 8px; display: block;">Day Time Distribution</n-text>
-          <div style="display: flex; height: 32px; border-radius: 4px; overflow: hidden; background: #f5f5f5;">
-            <div
-              v-for="(s, index) in sortedSchedule"
-              :key="index"
-              :style="{
-                width: Math.max(s.dayPercentage * 100, 2) + '%',
-                backgroundColor: s.status === 'ACTIVE' ? '#18a058' : (pastSchedule.includes(s) ? '#8b5cf6' : '#2080f0'),
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRight: index < sortedSchedule.length - 1 ? '1px solid #fff' : 'none'
-              }"
-              :title="`${s.sceneTitle}: ${(s.dayPercentage * 100).toFixed(1)}%`"
-            >
-              <n-space align="center" justify="center" size="small">
-                <n-icon v-if="getSceneIcon(s.sceneTitle)" size="14" color="white">
-                  <component :is="getSceneIcon(s.sceneTitle)" />
-                </n-icon>
-                <n-text
-                  v-if="s.dayPercentage * 100 > 5"
-                  style="color: white; font-size: 11px; font-weight: 500;"
-                >
-                  {{ (s.dayPercentage * 100).toFixed(0) }}%
-                </n-text>
-              </n-space>
+          <div style="position: relative;">
+            <div style="display: flex; height: 32px; border-radius: 4px; overflow: hidden; background: #f5f5f5;">
+              <div
+                v-for="(s, index) in sortedSchedule"
+                :key="index"
+                :style="{
+                  width: Math.max(s.dayPercentage * 100, 2) + '%',
+                  backgroundColor: s.status === 'ACTIVE' ? '#18a058' : (pastSchedule.includes(s) ? '#8b5cf6' : '#2080f0'),
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRight: index < sortedSchedule.length - 1 ? '1px solid #fff' : 'none'
+                }"
+                :title="`${s.sceneTitle}: ${(s.dayPercentage * 100).toFixed(1)}%`"
+              >
+                <n-space align="center" justify="center" size="small">
+                  <n-icon v-if="getSceneIcon(s.sceneTitle)" size="14" color="white">
+                    <component :is="getSceneIcon(s.sceneTitle)" />
+                  </n-icon>
+                  <n-text
+                    v-if="s.dayPercentage * 100 > 5"
+                    style="color: white; font-size: 11px; font-weight: 500;"
+                  >
+                    {{ (s.dayPercentage * 100).toFixed(0) }}%
+                  </n-text>
+                </n-space>
+              </div>
             </div>
+            <!-- Real-time pointer -->
+            <div
+              :style="{
+                position: 'absolute',
+                top: '0',
+                left: currentTimePercentage + '%',
+                width: '2px',
+                height: '32px',
+                backgroundColor: '#ef4444',
+                transform: 'translateX(-1px)',
+                boxShadow: '0 0 4px rgba(239, 68, 68, 0.5)',
+                zIndex: 10,
+                pointerEvents: 'none'
+              }"
+            />
           </div>
           <div style="display: flex; justify-content: space-between; margin-top: 4px;">
             <n-text depth="3" style="font-size: 11px;">00:00</n-text>
@@ -478,6 +495,36 @@ export default defineComponent({
         second: '2-digit',
         hour12: false
       });
+    });
+
+    const currentTimePercentage = computed(() => {
+      const now = new Date();
+      // Use station's timezone if available, otherwise local time
+      const timeZone = stationDetails.value?.zoneId;
+      let hours, minutes, seconds;
+      
+      if (timeZone) {
+        // Format time in station's timezone
+        const timeString = now.toLocaleTimeString('en-US', {
+          timeZone,
+          hour12: false,
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
+        const parts = timeString.split(':');
+        hours = parseInt(parts[0], 10);
+        minutes = parseInt(parts[1], 10);
+        seconds = parseInt(parts[2], 10);
+      } else {
+        // Use local time
+        hours = now.getHours();
+        minutes = now.getMinutes();
+        seconds = now.getSeconds();
+      }
+      
+      const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+      return (totalSeconds / 86400) * 100; // 86400 = 24 * 60 * 60
     });
 
     const timeWithDot = computed(() => formattedTime.value.split(':').join('_'));
@@ -1060,6 +1107,7 @@ export default defineComponent({
       calculatePreviousSceneEnd,
       getMergingTypeText,
       formattedTime,
+      currentTimePercentage,
       timeWithDot,
       activeTab,
       copyBrandNameToClipboard,
