@@ -383,10 +383,14 @@ async function fetchStations( silent: boolean = false ) {
     if ( !silent ) {
       loading.value = true
     }
+    error.value = null
     const result = await referencesStore.fetchRadioStations( onlineOnly.value )
     stations.value = result || []
   } catch ( e ) {
     error.value = e
+    if ( !silent ) {
+      stations.value = []
+    }
   } finally {
     if ( !silent ) {
       loading.value = false
