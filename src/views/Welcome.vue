@@ -9,8 +9,10 @@
           </n-icon>
           <n-text v-if=" playingStation || previousPlayingStation "
             :style="{ fontSize: '14px', opacity: 0.8, flex: 1, fontFamily: 'Goldman' as any }">
-            {{stations.find( s => s.slugName === ( playingStation || previousPlayingStation ) )?.name || ( playingStation ||
-            previousPlayingStation) }} - {{ currentSong || 'Loading...' }}
+            <span>{{stations.find( s => s.slugName === ( playingStation || previousPlayingStation ) )?.name || ( playingStation ||
+            previousPlayingStation) }}</span>
+            <SeparatorDot />
+            <span>{{ currentSong || 'Loading...' }}</span>
           </n-text>
         </div>
         <GlowLine :color="hoveredColor" />
@@ -158,6 +160,7 @@ import {
 import { Plus, Alien, InfoSquare, PlayerPlay } from '@vicons/tabler'
 import { useReferencesStore } from '../stores/kneo/referencesStore'
 import GlowLine from '../components/common/GlowLine.vue'
+import SeparatorDot from '../components/common/SeparatorDot.vue'
 import Hls from 'hls.js'
 import GlowingStatus from '../components/common/GlowingStatus.vue'
 

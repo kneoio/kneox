@@ -320,7 +320,7 @@
                             Generated: {{ formatTimestamp((s as any).generatedContentTimestamp) }}
                           </div>
                           <div v-if="(s as any).actualStartTime || (s as any).actualEndTime" style="margin-top: 4px; color: #9ca3af; font-size: 12px;">
-                            Actual: {{ (s as any).actualStartTime ? formatTimestamp((s as any).actualStartTime) : '' }}{{ ((s as any).actualStartTime && (s as any).actualEndTime) ? ' - ' : '' }}{{ (s as any).actualEndTime ? formatTimestamp((s as any).actualEndTime) : '' }}, Offset: {{ (s as any).timingOffsetSeconds }}
+                            Actual: {{ (s as any).actualStartTime ? formatScheduleStart((s as any).actualStartTime) : '' }}{{ ((s as any).actualStartTime && (s as any).actualEndTime) ? ' - ' : '' }}{{ (s as any).actualEndTime ? formatScheduleStart((s as any).actualEndTime) : '' }}, Offset: {{ Math.round((s as any).timingOffsetSeconds / 60) }}m
                           </div>
                           <div v-if="((s as any).searchInfo || (s as any).sourcing).includes('GENERATED')" style="margin-top: 8px;">
                             <n-button type="primary" size="tiny" :loading="generatingScenes[s.sceneId]" @click="handleGenerateContent(s.sceneId)">
@@ -619,7 +619,7 @@ export default defineComponent({
       try {
         const date = new Date(timeString);
         if (isNaN(date.getTime())) return timeString; // Invalid date
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       } catch (e) {
         return timeString; // Return original if parsing fails
       }
@@ -629,6 +629,7 @@ export default defineComponent({
       const t = formatTime(timeString);
       if (!t) return t;
       if (/^\d{2}:\d{2}:\d{2}$/.test(t)) return t.slice(0, 5);
+      if (/^\d{2}:\d{2}:\d{2}\./.test(t)) return t.slice(0, 5);
       return t;
     };
 

@@ -72,7 +72,9 @@
                     </n-space>
                     <div :style="{ minHeight: '18px' }">
                       <n-text v-if="isPlaying" :style="{ fontSize: '12px', opacity: 0.8, fontFamily: 'Goldman' as any }">
-                        {{ currentSong || 'Loading...' }}
+                        <span>{{ station.name }}</span>
+                        <SeparatorDot />
+                        <span>{{ currentSong || 'Loading...' }}</span>
                       </n-text>
                     </div>
                   </n-space>
@@ -235,6 +237,7 @@ import { ArrowLeft, Alien, MessageCircle, Music, PlayerPlay, Radio, ExternalLink
 import { useReferencesStore } from '../stores/kneo/referencesStore'
 import { MIXPLA_PLAYER_URL } from '../constants/config'
 import GlowLine from '../components/common/GlowLine.vue'
+import SeparatorDot from '../components/common/SeparatorDot.vue'
 import GlowingStatus from '../components/common/GlowingStatus.vue'
 import Hls from 'hls.js'
 

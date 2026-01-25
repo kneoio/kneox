@@ -81,10 +81,23 @@
           <n-form label-placement="left" label-width="auto">
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
               <n-gi>
+                <n-form-item label="Voice Search">
+                  <n-input
+                    v-model:value="voiceSearchQuery"
+                    placeholder="Search voices..."
+                    clearable
+                    style="width: 30%; max-width: 300px;"
+                    @keydown.enter="handleVoiceSearch"
+                    @clear="handleVoiceSearch"
+                  />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
                 <n-form-item label="Primary Voice">
                   <n-select 
                     v-model:value="localFormData.primaryVoiceId" 
                     :options="voiceOptions" 
+                    :render-label="renderVoiceLabel"
                     filterable
                     style="width: 30%; max-width: 300px;"
                   />
@@ -102,6 +115,7 @@
                     <n-select
                       :value="localFormData.ttsSetting?.dj?.id || null"
                       :options="ttsVoiceOptionsFor('dj')"
+                      :render-label="renderVoiceLabel"
                       filterable
                       style="width: 300px;"
                       @update:value="setTtsVoice('dj', $event as string | null)"
@@ -121,6 +135,7 @@
                     <n-select
                       :value="localFormData.ttsSetting?.copilot?.id || null"
                       :options="ttsVoiceOptionsFor('copilot')"
+                      :render-label="renderVoiceLabel"
                       filterable
                       style="width: 300px;"
                       @update:value="setTtsVoice('copilot', $event as string | null)"
@@ -140,6 +155,7 @@
                     <n-select
                       :value="localFormData.ttsSetting?.newsReporter?.id || null"
                       :options="ttsVoiceOptionsFor('newsReporter')"
+                      :render-label="renderVoiceLabel"
                       filterable
                       style="width: 300px;"
                       @update:value="setTtsVoice('newsReporter', $event as string | null)"
@@ -159,6 +175,7 @@
                     <n-select
                       :value="localFormData.ttsSetting?.weatherReporter?.id || null"
                       :options="ttsVoiceOptionsFor('weatherReporter')"
+                      :render-label="renderVoiceLabel"
                       filterable
                       style="width: 300px;"
                       @update:value="setTtsVoice('weatherReporter', $event as string | null)"
@@ -178,7 +195,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, onMounted, reactive, ref, watch } from "vue";
+import { computed, defineComponent, onMounted, reactive, ref, watch, h } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
   NButton,
@@ -196,6 +213,7 @@ import {
   NSpace,
   NTabPane,
   NTabs,
+  NTag,
   useLoadingBar,
   useMessage
 } from 'naive-ui';
@@ -223,6 +241,7 @@ export default defineComponent({
     NDynamicInput,
     NSpace,
     NInputNumber,
+    NTag,
     AclTable
   },
   setup() {
@@ -236,12 +255,32 @@ export default defineComponent({
     const activeTab = ref("properties");
     const aclData = ref([]);
     const aclLoading = ref(false);
+    const voiceSearchQuery = ref('');
+    const voiceLanguageFilter = ref<string[]>([]);
 
     const formTitle = computed(() => localFormData.id ? 'Edit AI Agent' : 'Create New AI Agent');
 
-    const voiceOptions = computed(() => 
-      (referencesStore.voiceOptionsByEngine as any)?.elevenlabs || []
-    );
+    const voiceOptions = computed(() => {
+      const voices = (referencesStore.voiceOptionsByEngine as any)?.elevenlabs || [];
+      return voices.map((v: any) => ({
+        id: v.id,
+        name: v.name,
+        language: v.language,
+        labels: v.labels,
+        label: v.name,
+        value: v.id
+      }));
+    });
+
+    const renderVoiceLabel = (option: any) => {
+      return h('span', { style: 'display: flex; align-items: center; gap: 8px;' }, [
+        option.language ? h(NTag, { type: 'info', size: 'small' }, { default: () => option.language }) : null,
+        ...(option.labels || []).filter((label: string) => label).map((label: string) => 
+          h(NTag, { type: 'success', size: 'small' }, { default: () => label })
+        ),
+        h('span', option.name)
+      ].filter(Boolean));
+    };
 
     const ttsEngineTypeOptions = [
       { label: 'elevenlabs', value: TTSEngineType.ELEVENLABS },
@@ -260,7 +299,15 @@ export default defineComponent({
       const engineType = (localFormData.ttsSetting as any)?.[key]?.engineType as TTSEngineType | null | undefined;
       const engine = engineParamFor(engineType);
       if (!engine) return [];
-      return (referencesStore.voiceOptionsByEngine as any)?.[engine] || [];
+      const voices = (referencesStore.voiceOptionsByEngine as any)?.[engine] || [];
+      return voices.map((v: any) => ({
+        id: v.id,
+        name: v.name,
+        language: v.language,
+        labels: v.labels,
+        label: v.name,
+        value: v.id
+      }));
     };
 
     const copilotOptions = computed(() => {
@@ -335,7 +382,7 @@ export default defineComponent({
 
       const engine = engineParamFor(engineType);
       if (engine) {
-        await referencesStore.fetchVoices(engine);
+        await referencesStore.fetchVoices(engine, 1, '', { languages: voiceLanguageFilter.value });
       }
 
       const existing = (localFormData.ttsSetting as any)[key] as VoiceDTO | undefined;
@@ -419,15 +466,39 @@ export default defineComponent({
       }
     });
 
+    const handleVoiceSearch = async () => {
+      await referencesStore.fetchVoices('elevenlabs', 1, voiceSearchQuery.value, { languages: voiceLanguageFilter.value });
+    };
+
+    watch([voiceLanguageFilter], () => {
+      handleVoiceSearch();
+    });
+
     onMounted(async () => {
       try {
         loadingBar.start();
-        await referencesStore.fetchVoices('elevenlabs');
+        if (localFormData.preferredLang && localFormData.preferredLang.length > 0) {
+          voiceLanguageFilter.value = (localFormData.preferredLang as any[]).map((p: any) => p.languageTag || p);
+        }
+        await referencesStore.fetchVoices('elevenlabs', 1, '', { languages: voiceLanguageFilter.value });
         try { await store.fetchAllUnsecured(1, 1000); } catch {}
         const id = route.params.id as string;
         if (id) {
           await store.fetch(id);
           const agentData = { ...store.getCurrent } as AiAgentForm;
+          
+          if (agentData.preferredLang && agentData.preferredLang.length > 0) {
+            voiceLanguageFilter.value = (agentData.preferredLang as any[]).map((p: any) => p.languageTag || p);
+          }
+          
+          const entries = Object.values((agentData.ttsSetting || {}) as any);
+          for (const entry of entries) {
+            const engine = engineParamFor((entry as any)?.engineType as TTSEngineType | null | undefined);
+            if (engine) {
+              await referencesStore.fetchVoices(engine, 1, '', { languages: voiceLanguageFilter.value });
+            }
+          }
+          
           if (agentData.primaryVoice && agentData.primaryVoice.length > 0) {
             agentData.primaryVoiceId = agentData.primaryVoice[0]?.id || '';
           }
@@ -435,14 +506,6 @@ export default defineComponent({
             agentData.copilotId = agentData.copilot;
           }
           Object.assign(localFormData, agentData);
-
-          const entries = Object.values((agentData.ttsSetting || {}) as any);
-          for (const entry of entries) {
-            const engine = engineParamFor(entry?.engineType as TTSEngineType | null | undefined);
-            if (engine) {
-              await referencesStore.fetchVoices(engine);
-            }
-          }
         } else {
         }
       } catch (error: any) {
@@ -466,6 +529,7 @@ export default defineComponent({
       langOptions: referencesStore.languageOptions,
       llmTypeOptions: referencesStore.llmTypeOptions,
       voiceOptions,
+      renderVoiceLabel,
       ttsEngineTypeOptions,
       ttsVoiceOptionsFor,
       setTtsVoice,
@@ -481,6 +545,9 @@ export default defineComponent({
       activeTab,
       aclData,
       aclLoading,
+      voiceSearchQuery,
+      voiceLanguageFilter,
+      handleVoiceSearch
     };
 
   }

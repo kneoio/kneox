@@ -102,7 +102,7 @@ export const useReferencesStore = defineStore('references', () => {
   };
 
   const genreOptions = ref<Array<{label: string, value: string, type?: string, children?: any[]}>>([]);
-  const voiceOptionsByEngine = ref<Record<'elevenlabs' | 'google' | 'modelslab', Array<{label: string, value: string}>>>({} as any);
+  const voiceOptionsByEngine = ref<Record<'elevenlabs' | 'google' | 'modelslab', Array<any>>>({} as any);
   const labelOptions = ref<Array<{ label: string; value: string; color?: string; fontColor?: string; style?: Record<string, string> }>>([]);
 
   const musicUploadAgreement = ref<{ title: string; clause: string; version: string }>({
@@ -178,19 +178,55 @@ export const useReferencesStore = defineStore('references', () => {
             a.label.localeCompare(b.label));
   };
 
-  const fetchVoices = async (engine: 'elevenlabs' | 'google' | 'modelslab') => {
-    const response = await unsecuredClient.get('/dictionary/voices', { params: { engine, page: 1, size: 100 } });
+  const fetchVoices = async (
+    engine: 'elevenlabs' | 'google' | 'modelslab', 
+    page: number = 1,
+    searchQuery: string = '',
+    filters: { languages?: string[] } = {}
+  ) => {
+    const params = new URLSearchParams();
+    params.append('page', page.toString());
+    params.append('size', '100');
+    
+    const filterObj: any = { engineType: engine.toUpperCase() };
+    
+    if (searchQuery) {
+      filterObj.searchTerm = searchQuery;
+    }
+    
+    if (filters.languages && filters.languages.length > 0) {
+      filterObj.languages = filters.languages;
+    }
+    
+    params.append('filter', JSON.stringify(filterObj));
+    
+    const response = await unsecuredClient.get(`/dictionary/voices?${params.toString()}`);
     if (!response?.data?.payload) throw new Error('Invalid API response');
 
     const list = response.data.payload.viewData.entries
         .map((entry: any) => ({
-            label: entry.name,
-            value: entry.id
+            id: entry.id,
+            name: entry.name,
+            language: entry.language,
+            labels: entry.labels,
+            gender: entry.gender,
+            engineType: entry.engineType
         }))
-        .sort((a: {label: string}, b: {label: string}) =>
-            a.label.localeCompare(b.label));
+        .sort((a: {name: string}, b: {name: string}) =>
+            a.name.localeCompare(b.name));
 
-    voiceOptionsByEngine.value[engine] = list;
+    if (page === 1) {
+      voiceOptionsByEngine.value[engine] = list;
+    } else {
+      voiceOptionsByEngine.value[engine] = [...(voiceOptionsByEngine.value[engine] || []), ...list];
+    }
+
+    return {
+      count: response.data.payload.viewData.count,
+      pageNum: response.data.payload.viewData.pageNum,
+      maxPage: response.data.payload.viewData.maxPage,
+      pageSize: response.data.payload.viewData.pageSize
+    };
   };
 
   const fetchLabels = async () => {
