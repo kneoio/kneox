@@ -64,26 +64,14 @@
         <n-tab-pane name="tts" tab="TTS">
           <n-form label-placement="left" label-width="auto">
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
-              <n-gi>
-                <n-form-item label="Primary Voice">
-                  <n-space :size="8" vertical>
-                    <n-select v-model:value="languageFilters.primaryVoice" :options="languageOptions" multiple clearable
-                      placeholder="Filter by language" size="small" style="width: 300px;"
-                      @update:value="fetchFilteredVoices( 'primaryVoice', 'elevenlabs' )" />
-                    <n-select v-model:value="localFormData.primaryVoiceId"
-                      :options="filteredVoiceOptions( 'primaryVoice' )" :render-label="renderVoiceLabel" filterable
-                      style="width: 300px;" />
-                  </n-space>
-                </n-form-item>
-              </n-gi>
-              <n-gi>
+                            <n-gi>
                 <n-form-item label="DJ">
                   <n-space :size="8" vertical>
                     <n-select v-model:value="languageFilters.dj" :options="languageOptions" multiple clearable
-                      placeholder="Filter by language" size="small" style="width: 300px;"
+                      placeholder="Filter lang" size="small" style="width: 200px; margin-left: auto;"
                       @update:value="fetchFilteredVoicesForTts( 'dj' )" />
                     <n-space :size="8">
-                      <n-select :value="localFormData.ttsSetting?.dj?.engineType || null"
+                      <n-select :value="localFormData.ttsSetting?.dj?.engineType?.toString().toUpperCase() || null"
                         :options="ttsEngineTypeOptions" style="width: 150px;"
                         @update:value="setTtsEngineType( 'dj', $event as TTSEngineType | null )" />
                       <n-select :value="localFormData.ttsSetting?.dj?.id || null"
@@ -94,30 +82,13 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
-                <n-form-item label="Copilot">
-                  <n-space :size="8" vertical>
-                    <n-select v-model:value="languageFilters.copilot" :options="languageOptions" multiple clearable
-                      placeholder="Filter by language" size="small" style="width: 300px;"
-                      @update:value="fetchFilteredVoicesForTts( 'copilot' )" />
-                    <n-space :size="8">
-                      <n-select :value="localFormData.ttsSetting?.copilot?.engineType || null"
-                        :options="ttsEngineTypeOptions" style="width: 150px;"
-                        @update:value="setTtsEngineType( 'copilot', $event as TTSEngineType | null )" />
-                      <n-select :value="localFormData.ttsSetting?.copilot?.id || null"
-                        :options="filteredTtsVoiceOptions( 'copilot' )" :render-label="renderVoiceLabel" filterable
-                        style="width: 300px;" @update:value="setTtsVoice( 'copilot', $event as string | null )" />
-                    </n-space>
-                  </n-space>
-                </n-form-item>
-              </n-gi>
-              <n-gi>
                 <n-form-item label="News Reporter">
                   <n-space :size="8" vertical>
-                    <n-select v-model:value="languageFilters.newsReporter" :options="languageOptions" multiple clearable
-                      placeholder="Filter by language" size="small" style="width: 300px;"
+                    <n-select v-model:value="languageFilters.newsReporter" :options="languageOptions" multiple
+                      clearable placeholder="Filter lang" size="small" style="width: 200px; margin-left: auto;"
                       @update:value="fetchFilteredVoicesForTts( 'newsReporter' )" />
                     <n-space :size="8">
-                      <n-select :value="localFormData.ttsSetting?.newsReporter?.engineType || null"
+                      <n-select :value="localFormData.ttsSetting?.newsReporter?.engineType?.toString().toUpperCase() || null"
                         :options="ttsEngineTypeOptions" style="width: 150px;"
                         @update:value="setTtsEngineType( 'newsReporter', $event as TTSEngineType | null )" />
                       <n-select :value="localFormData.ttsSetting?.newsReporter?.id || null"
@@ -131,10 +102,10 @@
                 <n-form-item label="Weather Reporter">
                   <n-space :size="8" vertical>
                     <n-select v-model:value="languageFilters.weatherReporter" :options="languageOptions" multiple
-                      clearable placeholder="Filter by language" size="small" style="width: 300px;"
+                      clearable placeholder="Filter lang" size="small" style="width: 200px; margin-left: auto;"
                       @update:value="fetchFilteredVoicesForTts( 'weatherReporter' )" />
                     <n-space :size="8">
-                      <n-select :value="localFormData.ttsSetting?.weatherReporter?.engineType || null"
+                      <n-select :value="localFormData.ttsSetting?.weatherReporter?.engineType?.toString().toUpperCase() || null"
                         :options="ttsEngineTypeOptions" style="width: 150px;"
                         @update:value="setTtsEngineType( 'weatherReporter', $event as TTSEngineType | null )" />
                       <n-select :value="localFormData.ttsSetting?.weatherReporter?.id || null"
@@ -218,34 +189,12 @@ export default defineComponent( {
     const aclData = ref( [] );
     const aclLoading = ref( false );
     const languageFilters = reactive<Record<string, string[]>>( {
-      primaryVoice: [],
       dj: [],
-      copilot: [],
       newsReporter: [],
       weatherReporter: []
     } );
 
     const formTitle = computed( () => localFormData.id ? 'Edit AI Agent' : 'Create New AI Agent' );
-
-    const voiceOptions = computed( () => {
-      const voices = ( referencesStore.voiceOptionsByEngine as any )?.elevenlabs || [];
-      return voices.map( ( v: any ) => ( {
-        id: v.id,
-        name: v.name,
-        language: v.language,
-        labels: v.labels,
-        label: v.name,
-        value: v.id
-      } ) );
-    } );
-
-    const filteredVoiceOptions = ( field: string ) => {
-      const filters = languageFilters[field] || [];
-      if ( filters.length === 0 ) return voiceOptions.value;
-      return voiceOptions.value.filter( ( v: any ) =>
-        filters.some( lang => v.language?.startsWith( lang.split( '-' )[0] ) )
-      );
-    };
 
     const filteredTtsVoiceOptions = ( key: keyof TTSSettingDTO ) => {
       const filters = languageFilters[key as string] || [];
@@ -254,11 +203,6 @@ export default defineComponent( {
       return options.filter( ( v: any ) =>
         filters.some( lang => v.language?.startsWith( lang.split( '-' )[0] ) )
       );
-    };
-
-    const fetchFilteredVoices = async ( field: string, engine: 'elevenlabs' | 'google' | 'modelslab' ) => {
-      const filters = languageFilters[field] || [];
-      await referencesStore.fetchVoices( engine, 1, '', { languages: filters } );
     };
 
     const fetchFilteredVoicesForTts = async ( key: keyof TTSSettingDTO ) => {
@@ -287,9 +231,11 @@ export default defineComponent( {
     ];
 
     const engineParamFor = ( engineType: TTSEngineType | null | undefined ) => {
-      if ( engineType === TTSEngineType.ELEVENLABS ) return 'elevenlabs';
-      if ( engineType === TTSEngineType.MODELSLAB ) return 'modelslab';
-      if ( engineType === TTSEngineType.GOOGLE ) return 'google';
+      if ( !engineType ) return null;
+      const upperType = engineType.toString().toUpperCase();
+      if ( upperType === TTSEngineType.ELEVENLABS ) return 'elevenlabs';
+      if ( upperType === TTSEngineType.MODELSLAB ) return 'modelslab';
+      if ( upperType === TTSEngineType.GOOGLE ) return 'google';
       return null;
     };
 
@@ -325,8 +271,6 @@ export default defineComponent( {
       name: "",
       preferredLang: [],
       llmType: "",
-      primaryVoice: [],
-      primaryVoiceId: "",
       ttsSetting: {},
       copilotId: "",
       talkativity: 0,
@@ -397,25 +341,36 @@ export default defineComponent( {
     };
 
     const loadFormData = async ( agentData: AiAgentForm ) => {
-      const entries = Object.entries( ( agentData.ttsSetting || {} ) as any );
-      const voiceFetchPromises = [];
-
-      for ( const [key, entry] of entries ) {
-        const engine = engineParamFor( ( entry as any )?.engineType as TTSEngineType | null | undefined );
-        if ( engine ) {
-          voiceFetchPromises.push( referencesStore.fetchVoices( engine, 1, '', {} ) );
-        }
-      }
-
-      await Promise.all( voiceFetchPromises );
-
-      if ( agentData.primaryVoice && agentData.primaryVoice.length > 0 ) {
-        agentData.primaryVoiceId = agentData.primaryVoice[0]?.id || '';
-      }
+      // First assign the data to localFormData
       if ( agentData.copilot ) {
         agentData.copilotId = agentData.copilot;
       }
       Object.assign( localFormData, agentData );
+      
+      // Set initial language filter for DJ based on preferredLang
+      if ( localFormData.preferredLang && localFormData.preferredLang.length > 0 ) {
+        languageFilters.dj = localFormData.preferredLang.map( ( lang: any ) => lang.languageTag );
+      }
+
+      // Then fetch voices for each engine type
+      const entries = Object.entries( ( localFormData.ttsSetting || {} ) as any );
+      const voiceFetchPromises = [];
+
+      for ( const [, entry] of entries ) {
+        const engine = engineParamFor( ( entry as any )?.engineType as TTSEngineType | null | undefined );
+        if ( engine ) {
+          const key = entry as keyof TTSSettingDTO;
+          const filters = key === 'dj' ? languageFilters.dj || [] : [];
+          voiceFetchPromises.push( referencesStore.fetchVoices( engine, 1, '', { languages: filters } ) );
+        }
+      }
+
+      await Promise.all( voiceFetchPromises );
+      
+      // After initial fetch, refresh DJ voices with the language filter
+      if ( localFormData.ttsSetting?.dj?.engineType ) {
+        await fetchFilteredVoicesForTts( 'dj' );
+      }
     };
 
     const handleSave = async () => {
@@ -427,20 +382,10 @@ export default defineComponent( {
           preferredLang: localFormData.preferredLang || [],
           llmType: localFormData.llmType || '',
           searchEngineType: ( localFormData as any ).searchEngineType || undefined,
-          primaryVoice: [],
           ttsSetting: localFormData.ttsSetting,
           talkativity: ( localFormData as any ).talkativity || 0,
           podcastMode: ( localFormData as any ).podcastMode || 0
         };
-
-        if ( localFormData.primaryVoiceId ) {
-          const selectedVoice = voiceOptions.value.find(
-            ( v: { label: string; value: string } ) => v.value === localFormData.primaryVoiceId
-          );
-          if ( selectedVoice ) {
-            saveData.primaryVoice = [{ id: selectedVoice.value, name: selectedVoice.label }];
-          }
-        }
 
         if ( localFormData.copilotId ) {
           saveData.copilot = localFormData.copilotId;
@@ -528,10 +473,7 @@ export default defineComponent( {
       langOptions: referencesStore.languageOptions,
       languageOptions: referencesStore.languageOptions,
       llmTypeOptions: referencesStore.llmTypeOptions,
-      voiceOptions,
-      filteredVoiceOptions,
       filteredTtsVoiceOptions,
-      fetchFilteredVoices,
       fetchFilteredVoicesForTts,
       renderVoiceLabel,
       ttsEngineTypeOptions,

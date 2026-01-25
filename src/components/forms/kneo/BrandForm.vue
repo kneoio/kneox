@@ -586,7 +586,7 @@ export default defineComponent( {
     watch( selectedAgent, ( newAgent ) => {
       if ( newAgent && localFormData.aiOverriding && !aiOverrideEnabled.value ) {
         localFormData.aiOverriding.name = newAgent.name || "";
-        localFormData.aiOverriding.primaryVoice = newAgent.primaryVoice[0]?.id || "";
+        localFormData.aiOverriding.primaryVoice = newAgent.primaryVoice?.[0]?.id || "";
       }
     } );
 
