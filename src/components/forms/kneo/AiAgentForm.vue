@@ -27,12 +27,6 @@
                 </n-form-item>
               </n-gi>
               <n-gi>
-                <n-form-item label="Copilot">
-                  <n-select v-model:value="localFormData.copilotId" :options="copilotOptions" filterable clearable
-                    style="width: 25%; max-width: 300px;" />
-                </n-form-item>
-              </n-gi>
-              <n-gi>
                 <n-form-item label="Preferred Languages">
                   <n-dynamic-input v-model:value="localFormData.preferredLang" :on-create="createLangPrefItem"
                     style="width: 40%;">
@@ -61,11 +55,11 @@
             </n-grid>
           </n-form>
         </n-tab-pane>
-        <n-tab-pane name="tts" tab="TTS">
+        <n-tab-pane name="tts" tab="Team">
           <n-form label-placement="left" label-width="auto">
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
-                            <n-gi>
-                <n-form-item label="DJ">
+              <n-gi>
+                <n-form-item :label="`DJ ${localFormData.name}`">
                   <n-space :size="8" vertical>
                     <n-select v-model:value="languageFilters.dj" :options="languageOptions" multiple clearable
                       placeholder="Filter lang" size="small" style="width: 200px; margin-left: auto;"
@@ -114,6 +108,12 @@
                         @update:value="setTtsVoice( 'weatherReporter', $event as string | null )" />
                     </n-space>
                   </n-space>
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="Copilot">
+                  <n-select v-model:value="localFormData.copilotId" :options="copilotOptions" filterable clearable
+                    style="width: 25%; max-width: 300px;" />
                 </n-form-item>
               </n-gi>
             </n-grid>
@@ -271,6 +271,7 @@ export default defineComponent( {
       name: "",
       preferredLang: [],
       llmType: "",
+      primaryVoice: [],
       ttsSetting: {},
       copilotId: "",
       talkativity: 0,
@@ -382,6 +383,7 @@ export default defineComponent( {
           preferredLang: localFormData.preferredLang || [],
           llmType: localFormData.llmType || '',
           searchEngineType: ( localFormData as any ).searchEngineType || undefined,
+          primaryVoice: ( localFormData as any ).primaryVoice || [],
           ttsSetting: localFormData.ttsSetting,
           talkativity: ( localFormData as any ).talkativity || 0,
           podcastMode: ( localFormData as any ).podcastMode || 0

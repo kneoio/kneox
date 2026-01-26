@@ -82,15 +82,15 @@
           <div style="position: relative;">
             <div style="display: flex; height: 32px; border-radius: 4px; overflow: hidden; background: #f5f5f5;">
               <div
-                v-for="(s, index) in sortedSchedule"
+                v-for="(s, index) in daySegments"
                 :key="index"
                 :style="{
                   width: Math.max(s.dayPercentage * 100, 2) + '%',
-                  backgroundColor: s.status === 'ACTIVE' ? '#18a058' : (pastSchedule.includes(s) ? '#8b5cf6' : '#2080f0'),
+                  backgroundColor: s.backgroundColor,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  borderRight: index < sortedSchedule.length - 1 ? '1px solid #fff' : 'none'
+                  borderRight: index < daySegments.length - 1 ? '1px solid #fff' : 'none'
                 }"
                 :title="`${s.sceneTitle}: ${(s.dayPercentage * 100).toFixed(1)}%`"
               >
@@ -124,11 +124,11 @@
             />
           </div>
           <div style="display: flex; justify-content: space-between; margin-top: 4px;">
-            <n-text depth="3" style="font-size: 11px;">00:00</n-text>
             <n-text depth="3" style="font-size: 11px;">06:00</n-text>
             <n-text depth="3" style="font-size: 11px;">12:00</n-text>
             <n-text depth="3" style="font-size: 11px;">18:00</n-text>
             <n-text depth="3" style="font-size: 11px;">24:00</n-text>
+            <n-text depth="3" style="font-size: 11px;">06:00</n-text>
           </div>
         </n-card>
 
@@ -502,7 +502,7 @@ export default defineComponent({
       // Use station's timezone if available, otherwise local time
       const timeZone = stationDetails.value?.zoneId;
       let hours, minutes, seconds;
-      
+
       if (timeZone) {
         // Format time in station's timezone
         const timeString = now.toLocaleTimeString('en-US', {
@@ -524,7 +524,9 @@ export default defineComponent({
       }
       
       const totalSeconds = hours * 3600 + minutes * 60 + seconds;
-      return (totalSeconds / 86400) * 100; // 86400 = 24 * 60 * 60
+      const startOffsetSeconds = 6 * 3600;
+      const shiftedSeconds = (totalSeconds - startOffsetSeconds + 86400) % 86400;
+      return (shiftedSeconds / 86400) * 100; // 86400 = 24 * 60 * 60
     });
 
     const timeWithDot = computed(() => formattedTime.value.split(':').join('_'));
@@ -1035,6 +1037,59 @@ export default defineComponent({
       return sortedSchedule.value.slice(currentIdx + 1);
     });
 
+    const daySegments = computed(() => {
+      const startOffsetMinutes = 6 * 60;
+      const dayMinutes = 24 * 60;
+      const segments: any[] = [];
+
+      const toTimelineMinutes = (m: number) => (m - startOffsetMinutes + dayMinutes) % dayMinutes;
+
+      for (const entry of sortedSchedule.value as any[]) {
+        const startMinutes = parseTimeToMinutes(entry.startTime) % dayMinutes;
+        const endMinutes = parseTimeToMinutes(entry.endTime) % dayMinutes;
+
+        let duration = (endMinutes - startMinutes + dayMinutes) % dayMinutes;
+        if (duration === 0) duration = dayMinutes;
+
+        const color = entry.status === 'ACTIVE'
+          ? '#18a058'
+          : (pastSchedule.value.includes(entry) ? '#8b5cf6' : '#2080f0');
+
+        const relStart = toTimelineMinutes(startMinutes);
+        const relEnd = relStart + duration;
+
+        if (relEnd <= dayMinutes) {
+          segments.push({
+            ...entry,
+            backgroundColor: color,
+            relStart,
+            relEnd,
+            dayPercentage: duration / dayMinutes
+          });
+        } else {
+          const firstDuration = dayMinutes - relStart;
+          const secondDuration = relEnd - dayMinutes;
+
+          segments.push({
+            ...entry,
+            backgroundColor: color,
+            relStart,
+            relEnd: dayMinutes,
+            dayPercentage: firstDuration / dayMinutes
+          });
+          segments.push({
+            ...entry,
+            backgroundColor: color,
+            relStart: 0,
+            relEnd: secondDuration,
+            dayPercentage: secondDuration / dayMinutes
+          });
+        }
+      }
+
+      return segments.sort((a, b) => a.relStart - b.relStart);
+    });
+
     const scheduleItemId = (s: any) => {
       return `${s.startTime}|${s.endTime}|${s.sceneTitle}`;
     };
@@ -1112,6 +1167,7 @@ export default defineComponent({
       activeTab,
       copyBrandNameToClipboard,
       sortedSchedule,
+      daySegments,
       scheduleItemId,
       currentSchedule,
       pastSchedule,
