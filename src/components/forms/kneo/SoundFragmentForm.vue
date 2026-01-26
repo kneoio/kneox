@@ -85,11 +85,6 @@
                             multiple style="width: 50%; max-width: 600px;"/>
                 </n-form-item>
               </n-gi>
-              <n-gi v-if="localFormData.expiresAt">
-                <n-form-item label="Expires At">
-                  <n-input v-model:value="localFormData.expiresAt" style="width: 25%; max-width: 300px;" placeholder=""/>
-                </n-form-item>
-              </n-gi>
               <n-gi>
                 <n-form-item label="Upload File">
                   <n-upload

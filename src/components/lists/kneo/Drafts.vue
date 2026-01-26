@@ -264,6 +264,7 @@ export default defineComponent( {
         await Promise.all( deletePromises );
         message.success( `${checkedRowKeys.value.length} Draft(s) deleted successfully.` );
         checkedRowKeys.value = [];
+        await fetchData( store.getPagination.page, store.getPagination.pageSize );
       } catch ( error: any ) {
         const data = error?.response?.data;
         if ( data ) {

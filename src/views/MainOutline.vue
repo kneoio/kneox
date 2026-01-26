@@ -511,12 +511,14 @@ export default defineComponent({
         await router.push({name: 'AiAgents'});
       } else if (key === 'scripts') {
         await router.push({name: 'Scripts'});
+      } else if (key === 'scenes') {
+        // Do nothing - parent item is not clickable, user must choose a category
       } else if (key === 'scenes-absolute-time') {
         await router.push({name: 'AbsoluteTimeScenes'});
       } else if (key === 'scenes-relative-time') {
         await router.push({name: 'RelativeTimeScenes'});
       } else if (key === 'prompts') {
-        await router.push({name: 'Prompts'});
+        // Do nothing - parent item is not clickable, user must choose a category
       } else if (key === 'prompts-song') {
         await router.push({ name: 'Prompts', query: { promptType: 'SONG' } });
       } else if (key === 'prompts-advertisement') {

@@ -2,7 +2,7 @@
   <n-grid :cols="isMobile ? 1 : 6" x-gap="12" y-gap="12" class="p-4">
     <n-gi>
       <n-page-header>
-        <template #title>Prompts</template>
+        <template #title>Prompts - {{ filters.promptType || 'All' }}</template>
         <template #footer>
           Total: {{ store.getPagination.itemCount }}
         </template>
@@ -24,14 +24,7 @@
 
         <n-select v-model:value="filters.languageTag" :options="langOptions" filterable placeholder="Language"
           clearable style="width: 200px;" :size="isMobile ? 'medium' : 'large'" />
-        
-        <n-radio-group v-model:value="filters.promptType" name="prompt-type-filter-group" :size="isMobile ? 'medium' : 'large'">
-          <n-radio-button value="SONG">Song</n-radio-button>
-          <n-radio-button value="ADVERTISEMENT">Advertisement</n-radio-button>
-          <n-radio-button value="REMINDER">Reminder</n-radio-button>
-          <n-radio-button value="GENERATOR">Generator</n-radio-button>
-          <n-radio-button :value="null" :type="!filters.promptType ? 'warning' : 'default'">All types</n-radio-button>
-        </n-radio-group>
+              
         
         <n-button-group>
           <n-button :type="filters.enabled ? 'primary' : 'default'" @click="filters.enabled = !filters.enabled" :size="isMobile ? 'medium' : 'large'">Enabled</n-button>
@@ -345,7 +338,7 @@ export default defineComponent( {
             ] );
           }
         },
-        { title: 'Title', key: 'title', width: 250, ellipsis: { tooltip: true } },
+        { title: 'Title', key: 'title', width: 350, ellipsis: { tooltip: true } },
         {
           title: 'Prompt',
           key: 'prompt',
