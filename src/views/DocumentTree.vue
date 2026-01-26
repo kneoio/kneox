@@ -116,7 +116,13 @@ export default defineComponent({
                 routeTo = { path: `/outline/scripts/${option.entityId}` };
                 break;
               case 'scene':
-                routeTo = { path: `/outline/scenes/${option.entityId}` };
+                if (option.openTarget === 'absolute-time') {
+                  routeTo = { path: `/outline/scenes/absolute-time/${option.entityId}` };
+                } else if (option.openTarget === 'relative-time') {
+                  routeTo = { path: `/outline/scenes/relative-time/${option.entityId}` };
+                } else {
+                  routeTo = { path: `/outline/scenes/${option.entityId}` };
+                }
                 break;
               case 'prompt':
                 routeTo = { path: `/outline/prompts/${option.entityId}` };

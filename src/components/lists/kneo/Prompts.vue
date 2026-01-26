@@ -324,12 +324,13 @@ export default defineComponent( {
         {
           title: 'Flags',
           key: 'flags',
-          width: 180,
+          width: 280,
           render: ( r: BroadcastPrompt ) => {
             const line1: any[] = [];
             if ( r.enabled ) line1.push( h( NTag as any, { type: 'info', size: 'small' }, { default: () => 'ENABLED' } ) );
             if ( r.master ) line1.push( h( NTag as any, { type: 'success', size: 'small' }, { default: () => 'MASTER' } ) );
             if ( r.locked ) line1.push( h( NTag as any, { type: 'error', size: 'small' }, { default: () => 'LOCKED' } ) );
+            if ( r.promptType ) line1.push( h( NTag as any, { type: 'warning', size: 'small' }, { default: () => r.promptType } ) );
             const line2: any[] = [];
             if ( r.podcast ) line2.push( h( NTag as any, { type: 'warning', size: 'small' }, { default: () => 'MINIPODCAST' } ) );
             return h( 'div', { style: 'display: flex; flex-direction: column; gap: 4px; white-space: normal; max-width: 100%; overflow: hidden;' }, [
