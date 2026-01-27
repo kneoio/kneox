@@ -918,11 +918,18 @@ export default defineComponent({
     };
 
     const formatTimestamp = (timestamp: string): string => {
-      const date = new Date(timestamp);
+      const date = new Date(timestamp + 'Z');
       if (isNaN(date.getTime())) return '';
-      const hours = date.getUTCHours();
-      const minutes = date.getUTCMinutes();
-      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+      const timeZone = stationDetails.value?.zoneId;
+      if (timeZone) {
+        return date.toLocaleTimeString('en-US', { 
+          timeZone, 
+          hour12: false, 
+          hour: '2-digit', 
+          minute: '2-digit'
+        });
+      }
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
 
     const formatTaskType = (taskType: string): string => {
