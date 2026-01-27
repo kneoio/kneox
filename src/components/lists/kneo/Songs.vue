@@ -2,7 +2,7 @@
   <n-grid :cols="1" x-gap="12" y-gap="12" class="p-4">
     <n-gi>
       <n-page-header>
-        <template #title>{{ brandName ? `${brandName} Songs` : 'Songs' }}</template>
+        <template #title>Songs</template>
         <template #footer>
           Total: {{ store.getPagination.itemCount }}
         </template>
@@ -15,9 +15,6 @@
           <n-button @click="handleNewClick" type="primary" :size="isMobile ? 'medium' : 'large'">New</n-button>
           <n-button type="error" :disabled="!hasSelection" @click="handleDelete" :size="isMobile ? 'medium' : 'large'">
             Del ({{ checkedRowKeys.length }})
-          </n-button>
-          <n-button type="primary" :disabled="!hasSelection" @click="handleBulkBrandUpdate" :size="isMobile ? 'medium' : 'large'">
-            Brands ({{ checkedRowKeys.length }})
           </n-button>
           <n-button @click="openFilterDialog" type="default" :size="isMobile ? 'medium' : 'large'">
             <red-led :active="hasActiveFilters" style="margin-right: 8px;" />
