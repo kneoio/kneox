@@ -136,17 +136,25 @@
                 backgroundColor: segment.color,
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
+                justifyContent: 'space-between',
+                padding: '0 6px',
                 overflow: 'hidden'
               }"
               :title="`${segment.statusText}: ${segment.startTime} - ${segment.endTime}`"
             >
+              <n-text
+                v-if="segment.widthPercentage > 10"
+                style="color: white; font-size: 9px; font-weight: 400; white-space: nowrap; opacity: 0.9;"
+              >
+                {{ segment.startTime }}
+              </n-text>
               <n-text
                 v-if="segment.widthPercentage > 5"
                 style="color: white; font-size: 10px; font-weight: 500; white-space: nowrap;"
               >
                 {{ segment.statusText }}
               </n-text>
+              <span v-if="segment.widthPercentage > 10"></span>
             </div>
           </div>
           <div style="display: flex; justify-content: space-between; margin-top: 4px;">
