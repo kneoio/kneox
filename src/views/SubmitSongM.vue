@@ -291,7 +291,7 @@ onMounted(async () => {
   }
 
   try {
-    await referencesStore.fetchGenres()
+    await referencesStore.fetchDictionaryGenres()
     await referencesStore.fetchLabels()
   } catch (_) { /* ignore */ }
 })
