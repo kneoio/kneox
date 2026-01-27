@@ -123,6 +123,32 @@
               }"
             />
           </div>
+          <!-- Status History Strip -->
+          <div style="position: relative; height: 24px; border-radius: 4px; overflow: hidden; background: transparent; margin-top: 4px;">
+            <div
+              v-for="(segment, index) in statusHistorySegments"
+              :key="index"
+              :style="{
+                position: 'absolute',
+                left: segment.startPercentage + '%',
+                width: segment.widthPercentage + '%',
+                height: '100%',
+                backgroundColor: segment.color,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden'
+              }"
+              :title="`${segment.statusText}: ${segment.startTime} - ${segment.endTime}`"
+            >
+              <n-text
+                v-if="segment.widthPercentage > 5"
+                style="color: white; font-size: 10px; font-weight: 500; white-space: nowrap;"
+              >
+                {{ segment.statusText }}
+              </n-text>
+            </div>
+          </div>
           <div style="display: flex; justify-content: space-between; margin-top: 4px;">
             <n-text depth="3" style="font-size: 11px;">06:00</n-text>
             <n-text depth="3" style="font-size: 11px;">12:00</n-text>
@@ -133,22 +159,6 @@
         </n-card>
 
             <n-space vertical size="large">
-              <n-card title="Status History" size="small">
-                <n-timeline horizontal v-if=" statusHistoryTimeline.length > 0 ">
-                  <n-timeline-item v-for=" ( event, index ) in statusHistoryTimeline " :key="index"
-                    :type="getStatusTimelineType( event.status )" :title="formatStatus( event.status )"
-                    :content="formatTimestamp( event.timestamp ) + ( event.timeDiff ? ' (' + event.timeDiff + ')' : '' )">
-                    <template #icon>
-                      <GreenLed v-if="getStatusTimelineType(event.status) === 'success' && index === statusHistoryTimeline.length - 1" :active="true" :size="14" />
-                      <YellowLed v-else-if="getStatusTimelineType(event.status) === 'warning' && index === statusHistoryTimeline.length - 1" :active="true" :size="14" />
-                      <YellowLed v-else-if="getStatusTimelineType(event.status) === 'error' && index === statusHistoryTimeline.length - 1" :active="true" :size="14" />
-                      <GreenLed v-else :active="false" :size="14" />
-                    </template>
-                  </n-timeline-item>
-                </n-timeline>
-                <n-text depth="3" v-else>No status history available</n-text>
-              </n-card>
-
               <n-space size="medium" style="align-items: flex-start;">
                 <n-card title="Live Playlist" size="small" style="width: 400px; flex-shrink: 0;">
                   <n-timeline v-if="combinedPlaylist.length > 0">
@@ -1016,6 +1026,119 @@ export default defineComponent({
       });
     });
 
+    const timestampToTimelinePercentage = (timestamp?: string): number => {
+      if (!timestamp) return 0;
+      const date = new Date(timestamp);
+      if (isNaN(date.getTime())) return 0;
+
+      const timeZone = stationDetails.value?.zoneId;
+      let hours, minutes, seconds;
+
+      if (timeZone) {
+        const timeString = date.toLocaleTimeString('en-US', {
+          timeZone,
+          hour12: false,
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
+        const parts = timeString.split(':');
+        hours = parseInt(parts[0], 10);
+        minutes = parseInt(parts[1], 10);
+        seconds = parseInt(parts[2], 10);
+      } else {
+        hours = date.getHours();
+        minutes = date.getMinutes();
+        seconds = date.getSeconds();
+      }
+
+      const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+      const startOffsetSeconds = 6 * 3600;
+      const shiftedSeconds = (totalSeconds - startOffsetSeconds + 86400) % 86400;
+      return (shiftedSeconds / 86400) * 100;
+    };
+
+    const getStatusColor = (status?: string): string => {
+      if (!status) return '#9ca3af';
+      switch (status.toUpperCase()) {
+        case 'ON_LINE':
+        case 'QUEUE_SATURATED':
+          return '#18a058';
+        case 'WARMING_UP':
+          return '#f0a020';
+        case 'IDLE':
+          return '#f0a020';
+        case 'SYSTEM_ERROR':
+        case 'ERROR':
+          return '#d03050';
+        case 'OFF_LINE':
+        default:
+          return '#606266';
+      }
+    };
+
+    const statusHistorySegments = computed(() => {
+      const history = stationDetails.value?.statusHistory || [];
+      if (history.length === 0) return [];
+
+      const segments: any[] = [];
+      const now = new Date();
+      const timeZone = stationDetails.value?.zoneId;
+      const startOffsetMinutes = 6 * 60;
+      const dayMinutes = 24 * 60;
+
+      const getLocalMinutes = (timestamp: string): number => {
+        const date = new Date(timestamp);
+        if (timeZone) {
+          const timeString = date.toLocaleTimeString('en-US', {
+            timeZone,
+            hour12: false,
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+          const parts = timeString.split(':');
+          const hours = parseInt(parts[0], 10);
+          const minutes = parseInt(parts[1], 10);
+          return hours * 60 + minutes;
+        } else {
+          return date.getHours() * 60 + date.getMinutes();
+        }
+      };
+
+      const toTimelineMinutes = (m: number) => (m - startOffsetMinutes + dayMinutes) % dayMinutes;
+
+      for (let i = 0; i < history.length; i++) {
+        const event = history[i] as any;
+        const nextEvent = i < history.length - 1 ? history[i + 1] as any : null;
+        const nextTimestamp = nextEvent ? nextEvent.timestamp : now.toISOString();
+
+        const startMinutes = getLocalMinutes(event.timestamp);
+        const endMinutes = getLocalMinutes(nextTimestamp);
+
+        const relStart = toTimelineMinutes(startMinutes);
+        let relEnd = toTimelineMinutes(endMinutes);
+
+        let duration = (relEnd - relStart + dayMinutes) % dayMinutes;
+        if (duration === 0 && !nextEvent) {
+          duration = dayMinutes - relStart;
+        }
+
+        if (duration > 0) {
+          segments.push({
+            status: event.newStatus,
+            statusText: formatStatus(event.newStatus),
+            color: getStatusColor(event.newStatus),
+            startPercentage: (relStart / dayMinutes) * 100,
+            widthPercentage: (duration / dayMinutes) * 100,
+            startTime: formatTimestamp(event.timestamp),
+            endTime: formatTimestamp(nextTimestamp)
+          });
+        }
+      }
+
+      return segments;
+    });
+
     const isDestroyed = ref(false);
 
     const sortedSchedule = computed(() => {
@@ -1139,6 +1262,7 @@ export default defineComponent({
       mixplaUrl,
       isHeartbeatActive,
       statusHistoryTimeline,
+      statusHistorySegments,
       getStatusTimelineType,
       formatStatus,
       formatTimestamp,
