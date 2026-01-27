@@ -124,21 +124,22 @@
             />
           </div>
           <!-- Status History Strip -->
-          <div style="position: relative; height: 24px; border-radius: 4px; overflow: hidden; background: transparent; margin-top: 4px;">
+          <div style="position: relative; height: 32px; border-radius: 4px; overflow: hidden; background: rgba(0,0,0,0.05); margin-top: 4px;">
             <div
               v-for="(segment, index) in statusHistorySegments"
               :key="index"
               :style="{
                 position: 'absolute',
                 left: segment.startPercentage + '%',
-                width: segment.widthPercentage + '%',
+                width: Math.max(segment.widthPercentage, 0.2) + '%',
                 height: '100%',
                 backgroundColor: segment.color,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 padding: '0 6px',
-                overflow: 'hidden'
+                overflow: 'hidden',
+                borderRight: '1px solid rgba(255,255,255,0.3)'
               }"
               :title="`${segment.statusText}: ${segment.startTime} - ${segment.endTime}`"
             >
