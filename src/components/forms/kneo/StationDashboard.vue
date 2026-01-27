@@ -920,6 +920,16 @@ export default defineComponent({
     const formatTimestamp = (timestamp: string): string => {
       const date = new Date(timestamp);
       if (isNaN(date.getTime())) return '';
+      const timeZone = stationDetails.value?.zoneId;
+      if (timeZone) {
+        return date.toLocaleTimeString('en-US', { 
+          timeZone, 
+          hour12: false, 
+          hour: '2-digit', 
+          minute: '2-digit', 
+          second: '2-digit' 
+        });
+      }
       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     };
 
