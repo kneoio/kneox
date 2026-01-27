@@ -14,6 +14,7 @@ import BrandForm from '../components/forms/kneo/BrandForm.vue';
 import Streams from '../components/lists/kneo/Streams.vue';
 import StreamForm from '../components/forms/kneo/StreamForm.vue';
 import SoundFragments from '../components/lists/kneo/SoundFragments.vue';
+import Songs from '../components/lists/kneo/Songs.vue';
 import SoundFragment from '../components/forms/kneo/SoundFragmentForm.vue';
 import AiAgents from '../components/lists/kneo/AiAgents.vue';
 import AiAgentForm from '../components/forms/kneo/AiAgentForm.vue';
@@ -191,6 +192,17 @@ const routes: Array<RouteRecordRaw> = [
                 path: 'streams/:id',
                 name: 'Stream',
                 component: StreamForm
+            },
+            {
+                path: 'songs',
+                name: 'Songs',
+                component: Songs
+            },
+            {
+                path: 'songs/:id',
+                name: 'Song',
+                component: SoundFragment,
+                props: true
             },
             {
                 path: 'soundfragments',

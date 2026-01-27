@@ -132,6 +132,7 @@ import {useRadioStationStore} from "../stores/kneo/radioStationStore";
 import {RadioStation, BrandStatus} from "../types/kneoBroadcasterTypes";
 import keycloakInst from '../keycloakFactory.js';
 import SoundFragments from '../components/lists/kneo/SoundFragments.vue';
+import Songs from '../components/lists/kneo/Songs.vue';
 import StationPlaylist from "../components/lists/kneo/StationPlaylist.vue";
 import Listeners from "../components/lists/kneo/Listeners.vue";
 import DashboardView from "./DashboardView.vue";
@@ -153,6 +154,7 @@ export default defineComponent({
     NSpace,
     NSwitch,
     SoundFragments,
+    Songs,
     StationPlaylist,
     Listeners,
     DashboardView,
@@ -423,6 +425,7 @@ export default defineComponent({
       if (route.name === 'Player') return 'player';
       if (route.name === 'Brands') return 'brands';
       if (route.name === 'Streams') return 'streams';
+      if (route.name === 'Songs') return 'songs';
       if (route.name === 'SoundFragments') return 'fragments';
       if (route.name === 'Events') return 'events';
       if (route.name === 'AiAgents') return 'ai_agents';
@@ -489,6 +492,8 @@ export default defineComponent({
         await router.push({name: 'Brands'});
       } else if (key === 'streams') {
         await router.push({name: 'Streams'});
+      } else if (key === 'songs') {
+        await router.push({name: 'Songs'});
       } else if (key === 'listeners') {
         await router.push({name: 'Listeners'});
       } else if (key === 'home') {
@@ -611,7 +616,8 @@ export default defineComponent({
       const baseNodes = [
         { key: 'home', label: 'Home' },
         { key: 'brands', label: 'Brands' },
-        { key: 'streams', label: 'Streams' }
+        { key: 'streams', label: 'Streams' },
+        { key: 'songs', label: 'Songs' }
       ];
 
       const supervisorNodes = [
@@ -652,6 +658,7 @@ export default defineComponent({
         ...stationNodes,
         { key: 'brands', label: 'Brands' },
         { key: 'streams', label: 'Streams' },
+        { key: 'songs', label: 'Songs' },
         ...(isSupervisor ? supervisorNodes : []),
         { key: 'home', label: 'Home' },
         ...endNodes
@@ -698,6 +705,7 @@ export default defineComponent({
       if (option.key === 'home') iconComponent = h(NIcon, { size: 25 }, () => h(BuildingSkyscraper));
       else if (option.key === 'brands') iconComponent = h(NIcon, { size: 25 }, () => h(PictureInPictureTop));
       else if (option.key === 'streams') iconComponent = h(NIcon, { size: 25 }, () => h(Ripple));
+      else if (option.key === 'songs') iconComponent = h(NIcon, { size: 25 }, () => h(Music));
       else if (option.key === 'listeners') iconComponent = h(NIcon, { size: 25 }, () => h(Headphones));
       else if (option.key === 'fragments') iconComponent = h(NIcon, { size: 25 }, () => h(Music));
       else if (option.key === 'events') iconComponent = h(NIcon, { size: 25 }, () => h(Calendar));

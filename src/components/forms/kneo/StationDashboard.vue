@@ -124,7 +124,7 @@
             />
           </div>
           <!-- Status History Strip -->
-          <div style="position: relative; height: 32px; border-radius: 4px; overflow: hidden; background: rgba(0,0,0,0.05); margin-top: 4px;">
+          <div style="position: relative; height: 20px; border-radius: 4px; overflow: hidden; background: rgba(0,0,0,0.05); margin-top: 4px;">
             <div
               v-for="(segment, index) in statusHistorySegments"
               :key="index"
