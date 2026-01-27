@@ -920,17 +920,9 @@ export default defineComponent({
     const formatTimestamp = (timestamp: string): string => {
       const date = new Date(timestamp);
       if (isNaN(date.getTime())) return '';
-      const timeZone = stationDetails.value?.zoneId;
-      if (timeZone) {
-        return date.toLocaleTimeString('en-US', { 
-          timeZone, 
-          hour12: false, 
-          hour: '2-digit', 
-          minute: '2-digit', 
-          second: '2-digit' 
-        });
-      }
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const hours = date.getUTCHours();
+      const minutes = date.getUTCMinutes();
+      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
     };
 
     const formatTaskType = (taskType: string): string => {
@@ -1107,20 +1099,9 @@ export default defineComponent({
 
       const getLocalMinutes = (timestamp: string): number => {
         const date = new Date(timestamp);
-        if (timeZone) {
-          const timeString = date.toLocaleTimeString('en-US', {
-            timeZone,
-            hour12: false,
-            hour: '2-digit',
-            minute: '2-digit'
-          });
-          const parts = timeString.split(':');
-          const hours = parseInt(parts[0], 10);
-          const minutes = parseInt(parts[1], 10);
-          return hours * 60 + minutes;
-        } else {
-          return date.getHours() * 60 + date.getMinutes();
-        }
+        const hours = date.getUTCHours();
+        const minutes = date.getUTCMinutes();
+        return hours * 60 + minutes;
       };
 
       const toTimelineMinutes = (m: number) => (m - startOffsetMinutes + dayMinutes) % dayMinutes;
