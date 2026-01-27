@@ -64,7 +64,7 @@
                 <n-form-item label="Labels">
                   <n-select
                     v-model:value="localFormData.labels"
-                    :options="referencesStore.labelOptions"
+                    :options="soundFragmentLabelOptions"
                     :render-tag="renderLabelTag"
                     :render-label="renderLabel"
                     multiple
@@ -204,6 +204,7 @@ export default defineComponent({
     const originalUploadedFileNames = ref<string[]>([]);
     const aclData = ref<any[]>([]);
     const aclLoading = ref(false);
+    const soundFragmentLabelOptions = ref<Array<{ label: string; value: string; color?: string; fontColor?: string }>>([]);
 
     const localFormData = reactive<SoundFragment>({
       id: null,
@@ -556,7 +557,9 @@ export default defineComponent({
         await Promise.all([
           radioStationStore.fetchAll(1, 100),
           referencesStore.fetchGenres(),
-          referencesStore.fetchLabelsByCategory('sound_fragment')
+          referencesStore.fetchLabelsByCategory('sound_fragment').then((opts) => {
+            soundFragmentLabelOptions.value = opts;
+          })
         ]);
       } catch (error) {
         console.error("Failed to preload references:", error);
@@ -616,6 +619,7 @@ export default defineComponent({
       formTitle,
       formatExpiresAt,
       referencesStore,
+      soundFragmentLabelOptions,
       aclData,
       aclLoading,
       renderLabelTag,
