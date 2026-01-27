@@ -1105,10 +1105,21 @@ export default defineComponent({
       const dayMinutes = 24 * 60;
 
       const getLocalMinutes = (timestamp: string): number => {
-        const date = new Date(timestamp);
-        const hours = date.getUTCHours();
-        const minutes = date.getUTCMinutes();
-        return hours * 60 + minutes;
+        const date = new Date(timestamp + 'Z');
+        if (timeZone) {
+          const timeString = date.toLocaleTimeString('en-US', {
+            timeZone,
+            hour12: false,
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+          const parts = timeString.split(':');
+          const hours = parseInt(parts[0], 10);
+          const minutes = parseInt(parts[1], 10);
+          return hours * 60 + minutes;
+        } else {
+          return date.getHours() * 60 + date.getMinutes();
+        }
       };
 
       const toTimelineMinutes = (m: number) => (m - startOffsetMinutes + dayMinutes) % dayMinutes;
