@@ -51,6 +51,20 @@
                     style="width: 25%; max-width: 300px;" />
                 </n-form-item>
               </n-gi>
+              <n-gi>
+                <n-form-item label="Labels">
+                  <n-select
+                    v-model:value="localFormData.labels"
+                    :options="aiAgentLabelOptions"
+                    :render-tag="renderLabelTag"
+                    :render-label="renderLabel"
+                    multiple
+                    filterable
+                    style="width: 50%; max-width: 600px;"
+                    placeholder=""
+                  />
+                </n-form-item>
+              </n-gi>
 
             </n-grid>
           </n-form>
@@ -188,6 +202,7 @@ export default defineComponent( {
     const activeTab = ref( "properties" );
     const aclData = ref( [] );
     const aclLoading = ref( false );
+    const aiAgentLabelOptions = ref<Array<{ label: string; value: string; color?: string; fontColor?: string }>>([]);
     const languageFilters = reactive<Record<string, string[]>>( {
       dj: [],
       newsReporter: [],
@@ -275,7 +290,8 @@ export default defineComponent( {
       ttsSetting: {},
       copilotId: "",
       talkativity: 0,
-      podcastMode: 0
+      podcastMode: 0,
+      labels: []
     } );
 
     const createVoiceItem = () => ( {
@@ -290,6 +306,27 @@ export default defineComponent( {
     } );
 
     const createLangPrefItem = () => ( { languageTag: 'en-US', weight: 1 } );
+
+    const renderLabelTag = ({ option, handleClose }: any) => {
+      const bg = option?.color;
+      const fg = option?.fontColor;
+      return h(
+        NTag as any,
+        {
+          closable: true,
+          onClose: handleClose,
+          style: {
+            backgroundColor: bg,
+            color: fg,
+          },
+        },
+        () => option?.label
+      );
+    };
+
+    const renderLabel = (option: any) => {
+      return h('span', null, option?.label as string);
+    };
 
     const setTtsVoice = ( key: keyof TTSSettingDTO, voiceId: string | null ) => {
       if ( !localFormData.ttsSetting ) {
@@ -386,7 +423,8 @@ export default defineComponent( {
           primaryVoice: ( localFormData as any ).primaryVoice || [],
           ttsSetting: localFormData.ttsSetting,
           talkativity: ( localFormData as any ).talkativity || 0,
-          podcastMode: ( localFormData as any ).podcastMode || 0
+          podcastMode: ( localFormData as any ).podcastMode || 0,
+          labels: localFormData.labels || []
         };
 
         if ( localFormData.copilotId ) {
@@ -444,10 +482,15 @@ export default defineComponent( {
     onMounted( async () => {
       try {
         loadingBar.start();
-        await referencesStore.fetchVoices( 'elevenlabs', 1, '', {} );
-        await referencesStore.fetchVoices( 'google', 1, '', {} );
-        await referencesStore.fetchVoices( 'modelslab', 1, '', {} );
-        try { await store.fetchAllUnsecured( 1, 1000 ); } catch { }
+        await Promise.all([
+          referencesStore.fetchVoices( 'elevenlabs', 1, '', {} ),
+          referencesStore.fetchVoices( 'google', 1, '', {} ),
+          referencesStore.fetchVoices( 'modelslab', 1, '', {} ),
+          referencesStore.fetchLabelsByCategory('ai_agent').then((opts) => {
+            aiAgentLabelOptions.value = opts;
+          }),
+          store.fetchAllUnsecured( 1, 1000 ).catch(() => {})
+        ]);
         const id = route.params.id as string;
         if ( id ) {
           await store.fetch( id );
@@ -493,7 +536,10 @@ export default defineComponent( {
       activeTab,
       aclData,
       aclLoading,
-      languageFilters
+      languageFilters,
+      aiAgentLabelOptions,
+      renderLabelTag,
+      renderLabel
     };
 
   }

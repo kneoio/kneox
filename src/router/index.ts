@@ -1,4 +1,4 @@
-import {createRouter, createWebHistory, RouteRecordRaw} from 'vue-router';
+import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
 import MainOutline from '../views/MainOutline.vue';
 import DashboardView from '../views/DashboardView.vue';
 import StationDashboard from '../components/forms/kneo/StationDashboard.vue';
@@ -42,6 +42,7 @@ import Chat from '../views/Chat.vue';
 import StationPage from '../views/StationPage.vue';
 import Keycloak from "keycloak-js";
 import apiClient from "../api/apiClient";
+import { keycloakReadyPromise } from '../main';
 
 declare module 'vue-router' {
     interface RouteMeta {
@@ -106,24 +107,24 @@ const routes: Array<RouteRecordRaw> = [
     {
         path: '/outline',
         component: MainOutline,
-        meta: {requiresAuth: true},
+        meta: { requiresAuth: true },
         children: [
             {
                 path: '',
-                redirect: {name: 'Brands'}
+                redirect: { name: 'Brands' }
             },
             {
                 path: 'dashboard',
                 name: 'Dashboard',
                 component: DashboardView,
-                meta: {requiresAuth: true, titleKey: 'Dashboard'}
+                meta: { requiresAuth: true, titleKey: 'Dashboard' }
             },
             {
                 path: 'station/:brandName',
                 name: 'StationDashboard',
                 component: StationDashboard,
                 props: true,
-                meta: {requiresAuth: true, titleKey: 'Station Details'},
+                meta: { requiresAuth: true, titleKey: 'Station Details' },
             },
             {
                 path: 'station/:brandName/playlist',
@@ -140,15 +141,15 @@ const routes: Array<RouteRecordRaw> = [
             {
                 path: 'station/:brandName/listeners/:id',
                 name: 'EditBrandListener',
-                component: () => import('../components/forms/kneo/BrandListenerForm.vue'),
+                component: () => import( '../components/forms/kneo/BrandListenerForm.vue' ),
                 props: true,
-            },           
+            },
             {
                 path: 'station/:brandName/chat',
                 name: 'StationChat',
                 component: ChatForm,
                 props: true,
-            },           
+            },
             {
                 path: 'station/:brandName/soundfragments',
                 name: 'StationSoundFragments',
@@ -324,83 +325,64 @@ const routes: Array<RouteRecordRaw> = [
     {
         path: '/api/soundfragments/files/:uuid/:name',
         component: { render: () => null },
-        beforeEnter: async (to) => {
+        beforeEnter: async ( to ) => {
             try {
-                const response = await apiClient.get(to.fullPath, {
+                const response = await apiClient.get( to.fullPath, {
                     responseType: 'blob'
-                });
-                const url = URL.createObjectURL(response.data);
-                const a = document.createElement('a');
+                } );
+                const url = URL.createObjectURL( response.data );
+                const a = document.createElement( 'a' );
                 a.href = url;
                 a.download = to.params.name as string;
-                document.body.appendChild(a); // Required for Firefox
+                document.body.appendChild( a ); // Required for Firefox
                 a.click();
 
-                setTimeout(() => {
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                }, 1000);
+                setTimeout( () => {
+                    document.body.removeChild( a );
+                    URL.revokeObjectURL( url );
+                }, 1000 );
 
                 return false;
 
-            } catch (error) {
-                console.error('Download failed:', error);
+            } catch ( error ) {
+                console.error( 'Download failed:', error );
                 return { name: 'WelcomeView' };
             }
         }
     },
     {
         path: '/:catchAll(.*)*',
-        redirect: {name: 'WelcomeView'}
+        redirect: { name: 'WelcomeView' }
     }
 ];
 
-const router = createRouter({
+const router = createRouter( {
     history: createWebHistory(),
     routes
-});
+} );
 
-export function setupRouterGuard(keycloak: Keycloak) {
-    if (!keycloak) {
-        throw new Error('Keycloak instance was not provided to setupRouterGuard');
+
+export function setupRouterGuard( keycloak: Keycloak ) {
+    if ( !keycloak ) {
+        throw new Error( 'Keycloak instance was not provided to setupRouterGuard' );
     }
 
-    router.beforeEach(async (to) => {
-        if (to.name === 'WelcomeView') {
-            return true;
-        }
 
-        if (to.matched.some(record => record.meta.requiresAuth)) {
+    router.beforeEach( async ( to ) => {
+        if ( to.matched.some( record => record.meta.requiresAuth ) ) {
+            await keycloakReadyPromise; // wait, don't just skip
+            if ( !keycloak.authenticated ) {
+                return keycloak.login( { redirectUri: window.location.origin + '/outline' } );
+            }
             try {
-                if (!keycloak.authenticated) {
-                    return keycloak.login({
-                        redirectUri: window.location.origin + '/outline'
-                    });
-                }
-
-                if (keycloak.authenticated) {
-                    try {
-                        await keycloak.updateToken(30);
-                        return true;
-                    } catch (error) {
-                        console.error('Token refresh failed:', error);
-                        return keycloak.login({
-                            redirectUri: window.location.origin + '/outline'
-                        });
-                    }
-                }
-                return keycloak.login({
-                    redirectUri: window.location.origin + '/outline'
-                });
-            } catch (error) {
-                console.error('Authentication failed:', error);
-                return keycloak.login({
-                    redirectUri: window.location.origin + '/outline'
-                });
+                await keycloak.updateToken( 30 );
+                return true;
+            } catch {
+                return keycloak.login( { redirectUri: window.location.origin + '/outline' } );
             }
         }
-        return true;
-    });
+        return true; // public routes pass instantly
+    } );
 }
 
 export default router;

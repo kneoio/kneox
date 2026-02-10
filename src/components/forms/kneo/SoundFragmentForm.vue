@@ -165,7 +165,7 @@ import { useSoundFragmentStore } from "../../../stores/kneo/soundFragmentStore";
 import { useRadioStationStore } from "../../../stores/kneo/radioStationStore";
 import { useReferencesStore } from "../../../stores/kneo/referencesStore";
 import { FragmentType, SoundFragment, SoundFragmentSave } from "../../../types/kneoBroadcasterTypes";
-import { isErrorWithResponse, capitalizeFirstLetter, getErrorMessage } from '../../helpers/errorHandling';
+import { getErrorMessage } from '../../helpers/errorHandling';
 import { handleFormSaveError } from "../../../utils/errorHandling";
 
 export default defineComponent({

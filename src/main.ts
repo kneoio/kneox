@@ -22,6 +22,13 @@ interface UserData {
 const keycloak = keycloakInst;
 const userData = reactive<UserData>({ profile: null });
 
+export let keycloakReadyPromise: Promise<void>;
+let resolveKeycloakReady: () => void;
+
+keycloakReadyPromise = new Promise(resolve => {
+    resolveKeycloakReady = resolve;
+});
+
 function startApp() {
     const app = createApp(App);
     app.component('IconWrapper', IconWrapper);
@@ -35,9 +42,10 @@ function startApp() {
 
 startApp();
 
-
 keycloak.init({
     onLoad: 'check-sso',
+    checkLoginIframe: false,
+    silentCheckSsoRedirectUri: window.location.origin + '/silent-check-sso.html',
     pkceMethod: 'S256',
     scope: 'openid offline_access'
 }).then(async (authenticated: boolean) => {
@@ -61,6 +69,8 @@ keycloak.init({
             console.error('Failed to load user profile', error);
         }
     }
+    resolveKeycloakReady();
 }).catch(error => {
     console.error('Keycloak initialization failed', error);
+    resolveKeycloakReady();
 });

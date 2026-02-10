@@ -104,6 +104,20 @@
                             multiple style="width: 50%; max-width: 600px;" placeholder="Select brands to associate with this listener" />
                 </n-form-item>
               </n-gi>
+              <n-gi>
+                <n-form-item label="Labels">
+                  <n-select
+                    v-model:value="localFormData.labels"
+                    :options="listenerLabelOptions"
+                    :render-tag="renderLabelTag"
+                    :render-label="renderLabel"
+                    multiple
+                    filterable
+                    style="width: 50%; max-width: 600px;"
+                    placeholder=""
+                  />
+                </n-form-item>
+              </n-gi>
             </n-grid>
           </n-form>
         </n-tab-pane>
@@ -116,7 +130,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, reactive, ref, computed, watch } from "vue";
+import { defineComponent, onMounted, reactive, ref, computed, watch, h } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
   NButton,
@@ -133,6 +147,7 @@ import {
   NSpace,
   NTabs,
   NTabPane,
+  NTag,
   useLoadingBar,
   useMessage,
 } from "naive-ui";
@@ -157,6 +172,7 @@ interface LocalListenerFormData {
   slugName: string;
   email: string;
   listenerOf: string[];
+  labels: string[];
 }
 
 export default defineComponent({
@@ -177,6 +193,7 @@ export default defineComponent({
     NTabs,
     NTabPane,
     AclTable,
+    NTag,
   },
   setup() {
     const router = useRouter();
@@ -202,6 +219,7 @@ export default defineComponent({
       slugName: "",
       email: "",
       listenerOf: [],
+      labels: [],
     });
 
     const formTitle = computed(() => localFormData.id ? 'Edit Listener' : 'Create New Listener');
@@ -219,6 +237,7 @@ export default defineComponent({
     const activeTab = ref('properties');
     const aclData = ref<any[]>([]);
     const aclLoading = ref(false);
+    const listenerLabelOptions = ref<Array<{ label: string; value: string; color?: string; fontColor?: string }>>([]);
 
     watch(localizedNameArray, (newValue) => {
       localFormData.localizedName = {};
@@ -262,6 +281,27 @@ export default defineComponent({
       value: ""
     });
 
+    const renderLabelTag = ({ option, handleClose }: any) => {
+      const bg = option?.color;
+      const fg = option?.fontColor;
+      return h(
+        NTag as any,
+        {
+          closable: true,
+          onClose: handleClose,
+          style: {
+            backgroundColor: bg,
+            color: fg,
+          },
+        },
+        () => option?.label
+      );
+    };
+
+    const renderLabel = (option: any) => {
+      return h('span', null, option?.label as string);
+    };
+
     watch(() => store.getCurrent, (currentListener) => {
       if (currentListener && currentListener.id) {
         const listener = currentListener as any;
@@ -281,6 +321,7 @@ export default defineComponent({
         if (listener.listenerOf && Array.isArray(listener.listenerOf)) {
           localFormData.listenerOf = listener.listenerOf;
         }
+        localFormData.labels = listener.labels || [];
 
         if (localFormData.localizedName) {
           localizedNameArray.value = Object.entries(localFormData.localizedName).map(([language, name]) => ({
@@ -321,6 +362,7 @@ export default defineComponent({
           listenerOf: localFormData.listenerOf,
           email: localFormData.email,
           userId: localFormData.userId,
+          labels: localFormData.labels,
         };
 
         console.log('Data to save:', dataToSave);
@@ -380,7 +422,13 @@ export default defineComponent({
       try {
         loadingBar.start();
         
-        await store.fetchListener(id);
+        await Promise.all([
+          store.fetchListener(id),
+          radioStationStore.fetchAll(1, 100),
+          referencesStore.fetchLabelsByCategory('listener').then((opts) => {
+            listenerLabelOptions.value = opts;
+          })
+        ]);
         const currentData = store.getCurrent;
         
         if (currentData && currentData.id) {
@@ -401,6 +449,7 @@ export default defineComponent({
           if (listener.listenerOf && Array.isArray(listener.listenerOf)) {
             localFormData.newlyListenerOf = listener.listenerOf.map((item: any) => item.brandId || item.id);
           }
+          localFormData.labels = listener.labels || [];
 
           if (localFormData.localizedName) {
             localizedNameArray.value = Object.entries(localFormData.localizedName).map(([language, name]) => ({
@@ -447,6 +496,9 @@ export default defineComponent({
       activeTab,
       aclData,
       aclLoading,
+      listenerLabelOptions,
+      renderLabelTag,
+      renderLabel,
     };
   },
 });
