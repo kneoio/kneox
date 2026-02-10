@@ -22,46 +22,6 @@ interface UserData {
 const keycloak = keycloakInst;
 const userData = reactive<UserData>({ profile: null });
 
-keycloak.init({
-    onLoad: 'check-sso',
-    pkceMethod: 'S256',
-    scope: 'openid offline_access'
-}).then(async (authenticated: boolean) => {
-    console.log('Initial authentication status: ', authenticated);
-    if (authenticated) {
-        try {
-            const profile = await keycloak.loadUserProfile();
-            const roles = keycloak.tokenParsed?.realm_access?.roles || [];
-            userData.profile = { ...profile, roles };
-            //console.log('User profile loaded', profile);
-            //console.log('User roles:', roles);
-            setupApiClient(keycloak.idToken);
-
-            setInterval(async () => {
-                try {
-                    const refreshed = await keycloak.updateToken(70);
-                    if (refreshed) {
-                        setupApiClient(keycloak.idToken);
-                    }
-                } catch (error) {
-                    console.error('Failed to refresh token, attempting login', error);
-                    keycloak.login();
-                }
-            }, 60000);
-
-        } catch (error) {
-            console.error('Failed to load user profile or setup API client post-authentication', error);
-        }
-    } else {
-        console.log('User is not authenticated initially.');
-    }
-    startApp();
-
-}).catch(error => {
-    console.error('Keycloak initialization failed catastrophically', error);
-    startApp();
-});
-
 function startApp() {
     const app = createApp(App);
     app.component('IconWrapper', IconWrapper);
@@ -72,3 +32,35 @@ function startApp() {
     setupRouterGuard(keycloak);
     app.mount('#app');
 }
+
+startApp();
+
+
+keycloak.init({
+    onLoad: 'check-sso',
+    pkceMethod: 'S256',
+    scope: 'openid offline_access'
+}).then(async (authenticated: boolean) => {
+    if (authenticated) {
+        try {
+            const profile = await keycloak.loadUserProfile();
+            const roles = keycloak.tokenParsed?.realm_access?.roles || [];
+            userData.profile = { ...profile, roles };
+            setupApiClient(keycloak.idToken);
+
+            setInterval(async () => {
+                try {
+                    const refreshed = await keycloak.updateToken(70);
+                    if (refreshed) setupApiClient(keycloak.idToken);
+                } catch {
+                    keycloak.login();
+                }
+            }, 60000);
+
+        } catch (error) {
+            console.error('Failed to load user profile', error);
+        }
+    }
+}).catch(error => {
+    console.error('Keycloak initialization failed', error);
+});
