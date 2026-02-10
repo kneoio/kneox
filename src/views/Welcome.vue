@@ -388,6 +388,7 @@ async function fetchStations( silent: boolean = false ) {
     stations.value = result || []
   } catch ( e ) {
     error.value = e
+    // Only clear stations on non-silent fetch errors
     if ( !silent ) {
       stations.value = []
     }
