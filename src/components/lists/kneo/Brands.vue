@@ -359,6 +359,7 @@ export default defineComponent({
       }
     };
 
+    
     const getStatusStyle = (status: string) => {
       switch (status) {
         case 'ON_LINE':
@@ -379,14 +380,6 @@ export default defineComponent({
 
     const renderFlags = (row: RadioStation) => {
       const tags: any[] = [];
-
-      if (row.isTemporary === 1) {
-        tags.push(h(NTag, {
-          bordered: true,
-          size: 'small',
-          color: { color: '#ffebee', textColor: '#c62828', borderColor: '#c62828' }
-        }, { default: () => 'TEMP' }));
-      }
 
       const statusInfo = getStatusStyle(row.status);
       tags.push(h(NTag, {

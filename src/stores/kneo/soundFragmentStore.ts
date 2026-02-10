@@ -6,7 +6,7 @@ import type { ApiFormResponse, ApiViewPageResponse } from "../../types";
 import type { SoundFragment, SoundFragmentSave } from "../../types/kneoBroadcasterTypes";
 // Local DTOs for filter usage
 type SourceType = 'USER' | 'SYSTEM';
-type PlaylistItemType = 'MUSIC' | 'AD' | 'JINGLE';
+type PlaylistItemType = 'SONG' | 'MIX_INTRO_SONG' | 'MIX_1_INTRO_FADED_SONG' | 'MIX_2_SONG' | 'MIX_SONG_1_SONG_2' | 'MIX_1_SONG' | 'MIX_2_INTRO_SONG' | 'MIX_DJ_CUSTOM_INTRO_SONG';
 
 interface SoundFragmentFilterDTO {
     genres?: string[];

@@ -104,8 +104,8 @@
                       <n-text v-if="fragment.duration" depth="3" style="font-size: 0.75rem;">
                         {{ formatDuration(fragment.duration) }}
                       </n-text>
-                      <n-tag v-if="getMergingTypeText(fragment).text" size="small" :type="getMergingTypeText(fragment).color">
-                        {{ getMergingTypeText(fragment).text }}
+                      <n-tag v-if="getItemTypeText(fragment).text" size="small" :type="getItemTypeText(fragment).color">
+                        {{ getItemTypeText(fragment).text }}
                       </n-tag>
                     </n-space>
                   </template>
@@ -581,23 +581,27 @@ export default defineComponent({
       return title.replace(/^(#+|--+)\s*/, '').replace(/[#-]/g, '|').trim();
     };
 
-    const getMergingTypeText = (fragment: any): { text: string; color: 'default' | 'success' | 'error' | 'warning' | 'primary' | 'info' } => {
+    const getItemTypeText = (fragment: any): { text: string; color: 'default' | 'success' | 'error' | 'warning' | 'primary' | 'info' } => {
       if (!fragment) return { text: '', color: 'default' };
-      switch (fragment.mergingType) {
-        case 'FILLER_JINGLE':
-          return { text: 'Jingle + Song', color: 'success' };
-        case 'INTRO_SONG':
+      switch (fragment.itemType) {
+        case 'SONG':
+          return { text: 'Song', color: 'success' };
+        case 'MIX_INTRO_SONG':
           return { text: 'Intro + Song', color: 'warning' };
-        case 'SONG_INTRO_SONG':
-          return { text: 'Song + Intro + Song', color: 'info' };
-        case 'INTRO_SONG_INTRO_SONG':
-          return { text: 'Intro + Song + Intro + Song', color: 'error' };
-        case 'SONG_CROSSFADE_SONG':
-          return { text: 'Song + Crossfade + Song', color: 'success' };
-        case 'SONG_ONLY':
-          return { text: 'Song Solely', color: 'success' };
+        case 'MIX_1_INTRO_FADED_SONG':
+          return { text: 'Intro + Faded Song', color: 'info' };
+        case 'MIX_2_SONG':
+          return { text: 'Song', color: 'success' };
+        case 'MIX_SONG_1_SONG_2':
+          return { text: 'Song + Song', color: 'success' };
+        case 'MIX_1_SONG':
+          return { text: '1 Song', color: 'default' };
+        case 'MIX_2_INTRO_SONG':
+          return { text: '2 Intro + Song', color: 'error' };
+        case 'MIX_DJ_CUSTOM_INTRO_SONG':
+          return { text: 'DJ Custom + Song', color: 'warning' };
         default:
-          return { text: fragment.mergingType || '', color: 'default' };
+          return { text: fragment.itemType || '', color: 'default' };
       }
     };
 
@@ -797,7 +801,7 @@ export default defineComponent({
       formatSceneDuration,
       mapMessageType,
       calculatePreviousSceneEnd,
-      getMergingTypeText,
+      getItemTypeText,
       formattedTime,
       timeWithDot,
       copyBrandNameToClipboard,

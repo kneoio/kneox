@@ -1,4 +1,15 @@
 
+export enum PlaylistItemType {
+    SONG = 'SONG',
+    MIX_INTRO_SONG = 'MIX_INTRO_SONG',
+    MIX_1_INTRO_FADED_SONG = 'MIX_1_INTRO_FADED_SONG',
+    MIX_2_SONG = 'MIX_2_SONG',
+    MIX_SONG_1_SONG_2 = 'MIX_SONG_1_SONG_2',
+    MIX_1_SONG = 'MIX_1_SONG',
+    MIX_2_INTRO_SONG = 'MIX_2_INTRO_SONG',
+    MIX_DJ_CUSTOM_INTRO_SONG = 'MIX_DJ_CUSTOM_INTRO_SONG'
+}
+
 export interface StationEntry {
     brandName: string;
     status: string;
@@ -100,14 +111,14 @@ export interface PlaylistManagerStats {
         artist?: string;
         source?: string;
         obtained?: boolean;
-        mergingType?: string;
+        itemType?: string;
     }>;
     playedSongs?: Array<{
         title?: string;
         artist?: string;
         source?: string;
         obtained?: boolean;
-        mergingType?: string;
+        itemType?: string;
         duration?: number;
     }>;
 }
