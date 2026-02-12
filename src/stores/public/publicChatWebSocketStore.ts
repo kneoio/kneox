@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, nextTick } from 'vue'
 import { MessageType } from '../../types/kneoBroadcasterTypes'
 import { apiServer } from '../../api/apiClient'
+import { usePublicChatStore } from './publicChatStore'
 
 export interface ChatMessage {
   id: string
@@ -34,6 +35,8 @@ export const usePublicChatWebSocketStore = defineStore('publicChatWebSocketStore
   const shouldReconnect = ref(true)
   const currentBrandSlug = ref<string>('')
   const currentUserToken = ref<string>('')
+  const reconnectAttempts = ref(0)
+  const reconnectTimeouts = [1000, 3000, 6000, 10000, 15000, 30000] // Exponential backoff up to 30s
 
   const buildWebSocketUrl = (userToken: string): string => {
     // Use backend host from apiServer and per-user token from registration flow
@@ -51,19 +54,52 @@ export const usePublicChatWebSocketStore = defineStore('publicChatWebSocketStore
     )
   }
 
-  const connect = (userToken: string, brandSlug: string) => {
-    if (isWebSocketActive(chatWebsocket.value)) return
+  const connect = async (userToken: string, brandSlug: string) => {
+    console.log('[WebSocket] Attempting to connect with token:', userToken.substring(0, 8) + '...')
+    
+    if (isWebSocketActive(chatWebsocket.value)) {
+      console.log('[WebSocket] Already connected or connecting')
+      return
+    }
+
+    // TODO: Re-enable token validation once backend is properly configured
+    /*
+    // Validate token before connecting
+    const publicChatStore = usePublicChatStore()
+    try {
+      console.log('[WebSocket] Validating token before connection...')
+      const validation = await publicChatStore.validateTokenWithAuth(userToken)
+      console.log('[WebSocket] Token validation result:', validation)
+      
+      if (!validation.success || !validation.valid) {
+        console.warn('[WebSocket] Token validation failed before WebSocket connection')
+        publicChatStore.clearAuthTokens()
+        lastError.value = 'Authentication failed. Please re-authenticate.'
+        // Trigger re-authentication flow
+        window.location.reload()
+        return
+      }
+    } catch (error) {
+      console.error('[WebSocket] Token validation error:', error)
+      publicChatStore.clearAuthTokens()
+      lastError.value = 'Authentication error. Please re-authenticate.'
+      window.location.reload()
+      return
+    }
+    */
 
     shouldReconnect.value = true
     currentUserToken.value = userToken
     currentBrandSlug.value = brandSlug
-
+    
+    console.log('[WebSocket] Creating WebSocket connection...')
     chatWebsocket.value = new WebSocket(buildWebSocketUrl(userToken))
 
     chatWebsocket.value.onopen = () => {
       console.log('Public chat WebSocket opened')
       isConnected.value = true
       lastError.value = null
+      reconnectAttempts.value = 0 // Reset attempts on successful connection
       getHistory()
     }
 
@@ -154,9 +190,34 @@ export const usePublicChatWebSocketStore = defineStore('publicChatWebSocketStore
       console.log('Public chat WebSocket closed:', event.code, event.reason)
       isConnected.value = false
 
+      // Only handle authentication failures if we have explicit auth error
+      // 1006 alone is not enough to determine auth vs server down
+      if (event.code === 4000 || event.code === 4001 || event.code === 4003) {
+        // Custom codes for auth errors (if backend sends them)
+        console.warn('[WebSocket] Authentication failure - explicit auth code')
+        const publicChatStore = usePublicChatStore()
+        publicChatStore.clearAuthTokens()
+        lastError.value = 'Authentication failed. Please re-authenticate.'
+        shouldReconnect.value = false
+        window.location.reload()
+        return
+      }
+
+      // For all other cases (1000, 1001, 1006), try to reconnect
+      // This includes server downtime, network issues, etc.
       if (shouldReconnect.value && [1000, 1001, 1006].includes(event.code)) {
-        console.log('Reconnecting public chat in 3s...')
-        setTimeout(() => connect(currentUserToken.value, currentBrandSlug.value), 3000)
+        const timeoutIndex = Math.min(reconnectAttempts.value, reconnectTimeouts.length - 1)
+        const delay = reconnectTimeouts[timeoutIndex]
+        reconnectAttempts.value++
+        console.log(`[NEW LOGIC] Reconnecting public chat in ${delay/1000}s... (attempt ${reconnectAttempts.value})`)
+        setTimeout(() => connect(currentUserToken.value, currentBrandSlug.value), delay)
+      } else {
+        console.log('Not reconnecting - shouldReconnect:', shouldReconnect.value, 'code:', event.code)
+        if (!shouldReconnect.value) {
+          lastError.value = 'Disconnected manually'
+        } else {
+          lastError.value = `Connection closed (code: ${event.code})`
+        }
       }
     }
 
@@ -165,11 +226,16 @@ export const usePublicChatWebSocketStore = defineStore('publicChatWebSocketStore
       isConnected.value = false
       lastError.value = 'WebSocket connection error'
       isSending.value = false
+      
+      // Try to determine if it's an auth error or server unavailable
+      // If the server responds at all, it's likely an auth error
+      // If it fails to connect entirely, it's server unavailable
     }
   }
 
   const disconnect = () => {
     shouldReconnect.value = false
+    reconnectAttempts.value = 0
     if (chatWebsocket.value) {
       chatWebsocket.value.close()
       chatWebsocket.value = null

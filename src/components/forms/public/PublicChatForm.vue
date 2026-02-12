@@ -146,7 +146,7 @@ export default defineComponent({
     }
 
     onMounted(() => {
-      chatStore.clearMessages()
+      // Don't clear messages - preserve chat history across reconnections
       chatStore.connect(props.userToken, props.stationSlug)
       scrollToBottom()
     })

@@ -96,6 +96,20 @@
                   </n-dynamic-input>
                 </n-form-item>
               </n-gi>
+              <n-gi>
+                <n-form-item label="Labels">
+                  <n-select
+                    v-model:value="localFormData.listener.labels"
+                    :options="listenerLabelOptions"
+                    :render-tag="renderLabelTag"
+                    :render-label="renderLabel"
+                    multiple
+                    filterable
+                    style="width: 50%; max-width: 600px;"
+                    placeholder=""
+                  />
+                </n-form-item>
+              </n-gi>
             </n-grid>
           </n-form>
         </n-tab-pane>
@@ -108,7 +122,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, reactive, ref, computed, watch } from "vue";
+import { defineComponent, onMounted, reactive, ref, computed, watch, h } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
   NButton,
@@ -125,6 +139,7 @@ import {
   NSpace,
   NTabs,
   NTabPane,
+  NTag,
   useLoadingBar,
   useMessage,
 } from "naive-ui";
@@ -151,6 +166,7 @@ interface LocalBrandListenerFormData {
     userId: string | number;
     slugName: string;
     email: string;
+    labels: string[];
   };
 }
 
@@ -172,6 +188,7 @@ export default defineComponent({
     NTabs,
     NTabPane,
     AclTable,
+    NTag,
   },
   setup() {
     const router = useRouter();
@@ -199,6 +216,7 @@ export default defineComponent({
         userId: "",
         slugName: "",
         email: "",
+        labels: [],
       },
     });
 
@@ -218,6 +236,7 @@ export default defineComponent({
     const activeTab = ref('properties');
     const aclData = ref<any[]>([]);
     const aclLoading = ref(false);
+    const listenerLabelOptions = ref<Array<{ label: string; value: string; color?: string; fontColor?: string }>>([]);
 
     watch(localizedNameArray, (newValue) => {
       if (localFormData.listener) {
@@ -267,6 +286,27 @@ export default defineComponent({
       value: ""
     });
 
+    const renderLabelTag = ({ option, handleClose }: any) => {
+      const bg = option?.color;
+      const fg = option?.fontColor;
+      return h(
+        NTag as any,
+        {
+          closable: true,
+          onClose: handleClose,
+          style: {
+            backgroundColor: bg,
+            color: fg,
+          },
+        },
+        () => option?.label
+      );
+    };
+
+    const renderLabel = (option: any) => {
+      return h('span', null, option?.label as string);
+    };
+
     const handleSave = async () => {
       isSaving.value = true;
       loadingBar.start();
@@ -283,6 +323,7 @@ export default defineComponent({
           archived: localFormData.listener.archived,
           userData: localFormData.listener.userData,
           email: localFormData.listener.email,
+          labels: localFormData.listener.labels,
         };
 
         console.log('Data to save:', dataToSave);
@@ -339,6 +380,13 @@ export default defineComponent({
       try {
         loadingBar.start();
         
+        await Promise.all([
+          radioStationStore.fetchAll(),
+          referencesStore.fetchLabelsByCategory('listener').then((opts) => {
+            listenerLabelOptions.value = opts;
+          })
+        ]);
+        
         if (id !== 'new') {
           await store.fetchBrandListener(brandName, id);
           watch(() => store.getCurrentBrandListener, (currentBrandListener) => {
@@ -368,6 +416,7 @@ export default defineComponent({
                 localFormData.listener.userId = data.listener.userId || '';
                 localFormData.listener.slugName = data.listener.slugName || '';
                 localFormData.listener.email = data.listener.email || '';
+                localFormData.listener.labels = data.listener.labels || [];
                 // Don't override listenerOf, keep the brandId from top level
                 if (!data.brandId && data.listener.listenerOf) {
                   localFormData.listener.listenerOf = data.listener.listenerOf;
@@ -428,6 +477,9 @@ export default defineComponent({
       activeTab,
       aclData,
       aclLoading,
+      listenerLabelOptions,
+      renderLabelTag,
+      renderLabel,
     };
   },
 });

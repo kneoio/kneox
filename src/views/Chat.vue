@@ -136,6 +136,21 @@ const canRegister = computed(() => {
 })
 
 onMounted(async () => {
+  // Debug: Check what's in localStorage
+  console.log('localStorage chatToken before clear:', window.localStorage.getItem('chatToken'))
+  console.log('localStorage auth-version:', window.localStorage.getItem('auth-version'))
+  
+  // Clear old tokens if auth version mismatch
+  console.log('checkAndClearOldTokens function:', typeof publicChatStore.checkAndClearOldTokens)
+  if (typeof publicChatStore.checkAndClearOldTokens === 'function') {
+    publicChatStore.checkAndClearOldTokens()
+  }
+  
+  console.log('localStorage chatToken after version check:', window.localStorage.getItem('chatToken'))
+  
+  // Clear any existing token to avoid using stale tokens - THIS IS THE PROBLEM!
+  // window.localStorage.removeItem('chatToken')
+  
   if (stationSlug.value) {
     try {
       const station = await submissionStore.getStation(stationSlug.value)
@@ -147,6 +162,8 @@ onMounted(async () => {
 
   try {
     const savedToken = window.localStorage.getItem('chatToken')
+    console.log('[Chat] Found saved token:', savedToken ? savedToken.substring(0, 8) + '...' : 'null')
+    
     if (savedToken) {
       const loadingMessage = nMessage.loading('Checking session...', { duration: 0 })
       try {
@@ -156,10 +173,16 @@ onMounted(async () => {
           userToken.value = savedToken
           displayNickname.value = result.username || form.value.nickname || form.value.email
           isAuthenticated.value = true
+          console.log('[Chat] Authentication successful with saved token')
         } else if (result && !result.valid) {
-          console.warn('[Chat] saved chatToken is not valid, removing from storage')
+          console.warn('[Chat] saved chatToken is not valid, removing from storage. Result:', result)
           window.localStorage.removeItem('chatToken')
+        } else {
+          console.warn('[Chat] Unexpected validation result:', result)
         }
+      } catch (error) {
+        console.error('[Chat] Token validation error:', error)
+        window.localStorage.removeItem('chatToken')
       } finally {
         loadingMessage.destroy()
       }
@@ -219,20 +242,34 @@ async function handleRegister() {
     if (!verified) return
   }
 
+  console.log('[Chat] Registering with sessionToken:', sessionToken.value?.substring(0, 8) + '...')
+
   try {
     registering.value = true
+    // Clear any existing token before registering a new one
+    const oldToken = window.localStorage.getItem('chatToken')
+    console.log('[Chat] Clearing old token from localStorage:', oldToken?.substring(0, 8) + '...')
+    window.localStorage.removeItem('chatToken')
+    
     const result = await publicChatStore.registerListener(
       sessionToken.value,
       stationSlug.value,
       form.value.nickname || undefined
     )
+    console.log('[Chat] Registration response:', result)
+    
     if (result.success && result.userToken) {
+      // Immediately store the fresh token from registration
+      console.log('[Chat] Storing new token:', result.userToken.substring(0, 8) + '...')
       userToken.value = result.userToken
-      displayNickname.value = form.value.nickname || form.value.email
-      isAuthenticated.value = true
       try {
         window.localStorage.setItem('chatToken', result.userToken)
+        console.log('[Chat] Token stored in localStorage successfully')
+        console.log('[Chat] Verification - stored token:', window.localStorage.getItem('chatToken')?.substring(0, 8) + '...')
       } catch (_) { /* ignore */ }
+      
+      displayNickname.value = form.value.nickname || form.value.email
+      isAuthenticated.value = true
       nMessage.success('Joined chat successfully')
     } else {
       nMessage.error(result.message || 'Registration failed')

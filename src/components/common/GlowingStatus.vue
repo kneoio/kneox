@@ -18,7 +18,7 @@ const statusStyle = computed(() => {
   
   if (!props.online) {
     return {
-      color: '#9ca3af', // gray for offline
+      color: '#6b7280', // darker gray for offline
       textShadow: 'none'
     }
   }
