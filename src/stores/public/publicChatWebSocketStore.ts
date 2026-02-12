@@ -256,7 +256,7 @@ export const usePublicChatWebSocketStore = defineStore('publicChatWebSocketStore
     const waitingMessage: ChatMessage = {
       id: `waiting-${Date.now()}`,
       username: 'System',
-      content: 'Waiting for response...',
+      content: '',
       timestamp: Date.now(),
       type: MessageType.WAITING
     }

@@ -231,10 +231,14 @@ export default defineComponent({
         },
         {
           title: 'Primary Voice',
-          key: 'primaryVoice',
+          key: 'ttsSetting.dj',
           width: 200,
           render: (row: AiAgent) => {
-            return h('span', {}, row.primaryVoice?.map(voice => voice.name).join(', ') || 'N/A');
+            const dj = row.ttsSetting?.dj;
+            if (!dj) return 'N/A';
+            const engine = dj.engineType || 'Unknown';
+            const name = dj.name || 'Unknown';
+            return h('span', {}, `${engine}: ${name}`);
           }
         }
       ];
