@@ -3,7 +3,12 @@
     <n-grid-item>
       <n-form-item label="Email">
         <n-input-group>
-          <n-input :value="email" @update:value="onEmail" placeholder="" />
+          <n-input 
+            :value="email" 
+            @update:value="onEmail" 
+            placeholder="" 
+            aria-label="Email"
+          />
           <n-button size="small" @click="$emit('send-code')" :loading="sendingCode" :disabled="sendingCode || !canSend">
             {{ codeSent ? 'Resend code' : 'Send code' }}
           </n-button>
@@ -12,7 +17,12 @@
     </n-grid-item>
     <n-grid-item>
       <n-form-item label="Confirmation Code">
-        <n-input :value="confirmationCode" @update:value="onCode" placeholder="" />
+        <n-input 
+          :value="confirmationCode" 
+          @update:value="onCode" 
+          placeholder="" 
+          aria-label="Confirmation Code"
+        />
       </n-form-item>
     </n-grid-item>
   </n-grid>
