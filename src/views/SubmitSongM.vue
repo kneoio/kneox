@@ -457,7 +457,7 @@ async function handleSubmit() {
       genres: form.value.genres,
       labels: form.value.labels,
       email: form.value.email,
-      confirmationCode: codeSent.value ? form.value.confirmationCode : '',
+      confirmationCode: isAuthenticated.value ? '' : form.value.confirmationCode,
       description: form.value.description,
       album: form.value.album || undefined,
       uploadId: currentUploadId.value || undefined,
