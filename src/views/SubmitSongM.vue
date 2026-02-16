@@ -7,14 +7,19 @@
             <n-icon size="16"><ArrowLeft /></n-icon>
             Back
           </n-button>
-          <n-icon size="32"><Alien /></n-icon>
+          <n-space align="center">
+            <n-icon size="32"><Alien /></n-icon>
+            <n-tag v-if="isAuthenticated && authChecked" type="success" size="small">
+              Authenticated
+            </n-tag>
+          </n-space>
         </n-space>
         <GlowLine :color="stationColor" />
       </n-layout-header>
 
       <n-layout-content :style="{ padding: '40px 16px 24px' }">
         <n-space vertical :style="{ maxWidth: '720px', margin: '0 auto' }">
-          <n-form :model="form" ref="formRef" label-placement="top">
+          <n-form :model="form" label-placement="top">
       <n-grid cols="12" x-gap="16" y-gap="16">
         <!-- Email + confirmation first -->
         <n-grid-item :span="12">
@@ -193,18 +198,22 @@ import {
 import { ArrowLeft, Alien } from '@vicons/tabler'
 import { useSubmissionStore } from '../stores/public/submissionStore'
 import { useReferencesStore } from '../stores/kneo/referencesStore'
+import { usePublicChatStore } from '../stores/public/publicChatStore'
 import MarkdownIt from 'markdown-it'
  
 import EmailVerifyFields from '../components/public/EmailVerifyFields.vue'
 import GlowLine from '../components/common/GlowLine.vue'
 
-const formRef = ref<any | null>(null)
 const submissionStore = useSubmissionStore()
 const referencesStore = useReferencesStore()
+const publicChatStore = usePublicChatStore()
 const nMessage = useMessage()
 const route = useRoute()
 const router = useRouter()
 const stationColor = ref('#2196F3')
+const chatToken = ref<string | null>(null)
+const isAuthenticated = ref(false)
+const authChecked = ref(false)
 
 
  
@@ -271,6 +280,26 @@ function goBack() {
 }
 
 onMounted(async () => {
+  // Check for existing chat token
+  try {
+    const savedToken = window.localStorage.getItem('chatToken')
+    if (savedToken) {
+      console.log('[SubmitSongM] Found chat token, validating...')
+      const validation = await publicChatStore.validateToken(savedToken)
+      if (validation && validation.success && validation.valid) {
+        chatToken.value = savedToken
+        isAuthenticated.value = true
+        console.log('[SubmitSongM] Chat token valid, user authenticated')
+      } else {
+        console.log('[SubmitSongM] Chat token invalid, clearing')
+        window.localStorage.removeItem('chatToken')
+      }
+    }
+  } catch (error) {
+    console.error('[SubmitSongM] Error validating chat token:', error)
+  }
+  authChecked.value = true
+
   try {
     if (stationSlug) {
       const station = await submissionStore.getStation(stationSlug)
@@ -442,14 +471,33 @@ async function handleSubmit() {
       attachedMessage: form.value.sendMessage && form.value.attachedMessage?.trim() ? form.value.attachedMessage.trim() : ''
     }
 
-    await submissionStore.submit(stationSlug, payload)
+    await submissionStore.submit(stationSlug, payload, chatToken.value || undefined)
+    
+    // Check if we got a token from submission
+    const savedToken = window.localStorage.getItem('chatToken')
+    if (savedToken && !isAuthenticated.value) {
+      chatToken.value = savedToken
+      isAuthenticated.value = true
+    }
+    
     nMessage.success('Thanks! Your song was submitted.')
     reset()
   } catch (e: any) {
-    const errorMessage = e?.response?.data?.message || e?.message || 'Submission failed'
-    message.value = errorMessage
-    messageType.value = 'error'
-    nMessage.error(errorMessage)
+    // Handle token expiration
+    if (e?.response?.status === 401 && chatToken.value) {
+      console.warn('[SubmitSongM] Token expired, clearing and prompting re-auth')
+      window.localStorage.removeItem('chatToken')
+      chatToken.value = null
+      isAuthenticated.value = false
+      message.value = 'Your session has expired. Please authenticate again in the chat.'
+      messageType.value = 'error'
+      nMessage.error('Session expired. Please authenticate in the chat first.')
+    } else {
+      const errorMessage = e?.response?.data?.message || e?.message || 'Submission failed'
+      message.value = errorMessage
+      messageType.value = 'error'
+      nMessage.error(errorMessage)
+    }
   } finally {
     submitting.value = false
   }
@@ -501,15 +549,6 @@ const renderLabelTag = ({ option, handleClose }: any) => {
 
 const renderLabel = (option: any) => {
   return h('span', null, option?.label as string);
-};
-
-const renderGenreLabel = ({ option }: any) => {
-  return h('span', {
-    style: {
-      paddingLeft: option.level > 0 ? `${option.level * 20}px` : '0',
-      color: option.level > 0 ? '#666' : 'inherit'
-    }
-  }, option.label);
 };
 </script>
 

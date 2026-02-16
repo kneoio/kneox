@@ -108,7 +108,7 @@ export const useSubmissionStore = defineStore( 'submissionStore', () => {
     }
   }
 
-  async function submit(slug: string, data: SubmissionPayload ): Promise<void> {
+  async function submit(slug: string, data: SubmissionPayload, authToken?: string ): Promise<void> {
     const url = `${publicApiRoot}/radio/${encodeURIComponent(slug)}/submissions`
     console.debug( '[submissionStore.submit] POST', url, {
       brand: data.brand,
@@ -120,11 +120,24 @@ export const useSubmissionStore = defineStore( 'submissionStore', () => {
       isShareable: ( data as any ).isShareable,
       shareable: ( data as any ).shareable,
       hasAttachedMessage: !!( data as any ).attachedMessage,
-      newlyUploadedCount: Array.isArray( ( data as any ).newlyUploaded ) ? ( data as any ).newlyUploaded.length : 0
+      newlyUploadedCount: Array.isArray( ( data as any ).newlyUploaded ) ? ( data as any ).newlyUploaded.length : 0,
+      hasToken: !!authToken
     } )
+    
+    const headers: Record<string, string> = {}
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`
+    }
+    
     try {
-      const res = await unsecuredClient.post( url, data )
+      const res = await unsecuredClient.post( url, data, { headers } )
       console.debug( '[submissionStore.submit] OK', res.status )
+      
+      // Check if backend returned a token to save
+      if (res.data?.userToken) {
+        console.log('[submissionStore.submit] Saving token from submission response')
+        window.localStorage.setItem('chatToken', res.data.userToken)
+      }
     } catch ( err: any ) {
       console.error( '[submissionStore.submit] FAIL', url, err?.response?.status, err?.response?.data || err?.message )
       throw err
