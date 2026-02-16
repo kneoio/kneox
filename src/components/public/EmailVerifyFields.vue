@@ -7,7 +7,7 @@
             :value="email" 
             @update:value="onEmail" 
             placeholder="" 
-            aria-label="Email"
+            :input-props="{ 'aria-label': 'Email' }"
           />
           <n-button size="small" @click="$emit('send-code')" :loading="sendingCode" :disabled="sendingCode || !canSend">
             {{ codeSent ? 'Resend code' : 'Send code' }}
@@ -21,7 +21,7 @@
           :value="confirmationCode" 
           @update:value="onCode" 
           placeholder="" 
-          aria-label="Confirmation Code"
+          :input-props="{ 'aria-label': 'Confirmation Code' }"
         />
       </n-form-item>
     </n-grid-item>

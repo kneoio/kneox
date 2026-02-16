@@ -65,17 +65,17 @@
           <n-grid cols="1 s:2" responsive="screen" x-gap="16" y-gap="8">
             <n-grid-item>
               <n-form-item label="Artist">
-                <n-input ref="artistInputRef" v-model:value="form.artist" placeholder="" aria-label="Artist" />
+                <n-input ref="artistInputRef" v-model:value="form.artist" placeholder="" :input-props="{ 'aria-label': 'Artist' }" />
               </n-form-item>
             </n-grid-item>
             <n-grid-item>
               <n-form-item label="Title">
-                <n-input v-model:value="form.title" placeholder="" aria-label="Title" />
+                <n-input v-model:value="form.title" placeholder="" :input-props="{ 'aria-label': 'Title' }" />
               </n-form-item>
             </n-grid-item>
             <n-grid-item>
               <n-form-item label="Album (optional)">
-                <n-input v-model:value="form.album" placeholder="" aria-label="Album" />
+                <n-input v-model:value="form.album" placeholder="" :input-props="{ 'aria-label': 'Album' }" />
               </n-form-item>
             </n-grid-item>
             <n-grid-item>
@@ -102,7 +102,7 @@
 
         <n-grid-item :span="12">
           <n-form-item label="Description (optional)">
-            <n-input v-model:value="form.description" type="textarea" :autosize="{ minRows: 3, maxRows: 6 }" placeholder="" aria-label="Description" />
+            <n-input v-model:value="form.description" type="textarea" :autosize="{ minRows: 3, maxRows: 6 }" placeholder="" :input-props="{ 'aria-label': 'Description' }" />
           </n-form-item>
         </n-grid-item>
       </n-grid>
@@ -143,10 +143,10 @@
       <n-form-item label-width="0" v-if="form.sendMessage" style="margin-top: 0;" :show-feedback="false">
         <div style="width: 100%;">
           <n-form-item label="From">
-            <n-input v-model:value="form.messageFrom" placeholder="" :show-feedback="false" aria-label="Message From" />
+            <n-input v-model:value="form.messageFrom" placeholder="" :show-feedback="false" :input-props="{ 'aria-label': 'Message From' }" />
           </n-form-item>
           <n-form-item label="Message">
-            <n-input v-model:value="form.attachedMessage" type="textarea" :autosize="{ minRows: 2, maxRows: 3 }" placeholder="" aria-label="Message" />
+            <n-input v-model:value="form.attachedMessage" type="textarea" :autosize="{ minRows: 2, maxRows: 3 }" placeholder="" :input-props="{ 'aria-label': 'Message' }" />
           </n-form-item>
         </div>
       </n-form-item>
