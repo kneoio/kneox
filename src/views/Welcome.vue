@@ -262,7 +262,7 @@ function startPlayback( slugName: string ) {
   errorStation.value = null
 
   const streamServer = import.meta.env.VITE_STREAM_SERVER
-  const playlistUrl = `${streamServer}/${slugName}/radio/stream.m3u8`
+  const playlistUrl = `${streamServer}/${slugName}/radio/master.m3u8`
 
   // Fetch and parse playlist to get current song
   fetchCurrentSong( playlistUrl )

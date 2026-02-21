@@ -310,7 +310,7 @@ function togglePlay() {
 function startPlayback() {
   stopPlayback()
   const streamServer = import.meta.env.VITE_STREAM_SERVER
-  const playlistUrl = `${streamServer}/${brandSlug.value}/radio/stream.m3u8`
+  const playlistUrl = `${streamServer}/${brandSlug.value}/radio/master.m3u8`
   
   // Fetch and parse playlist to get current song
   fetchCurrentSong(playlistUrl)
@@ -356,6 +356,11 @@ function startPlayback() {
     }
   })
   
+  hls.on(Hls.Events.FRAG_LOADED, () => {
+    const bw = hls?.bandwidthEstimate
+    if (bw) console.log(`bandwidth: ${Math.round(bw / 1000)} kbps`)
+  })
+
   hls.on(Hls.Events.ERROR, (_, data) => {
     if (data.fatal) {
       switch (data.type) {
