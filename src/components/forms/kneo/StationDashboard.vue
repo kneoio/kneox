@@ -301,79 +301,115 @@
                 </div>
 
                 <n-card title="Agenda" size="small" style="width: 100%;">
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <n-text depth="3" style="font-size: 12px;">Created: {{ formatTimestamp(stationDetails?.schedule?.createdAt) }}</n-text>
-                    <n-checkbox v-model:checked="showPlaylist">
-                      Show playlist
-                    </n-checkbox>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <n-text depth="3" style="font-size: 12px;">
+                      Created: {{ formatTimestamp(stationDetails?.schedule?.createdAt) }}
+                    </n-text>
+                    <n-checkbox v-model:checked="showPlaylist">Show playlist</n-checkbox>
                   </div>
-                  
-                  <div v-if="stationDetails?.schedule?.entries && stationDetails.schedule.entries.length">
-                    <n-timeline>
-                      <n-timeline-item
-                        v-for="(s, index) in sortedSchedule"
-                        :key="index"
-                      >
-                        <template #icon>
-                          <YellowLed v-if="s.status === 'ACTIVE'" :active="true" :pulse="true" :size="16" />
-                          <YellowLed v-else-if="pastSchedule.includes(s)" :active="false" :size="14" />
-                          <GreenLed v-else :active="false" :size="14" />
-                        </template>
 
-                        <template #default>
-                          <n-space align="center" justify="space-between" style="width: 100%;">
-                            <n-text style="font-weight: 500;">{{ s.sceneTitle }}</n-text>
-                            <n-tag size="tiny" :type="s.status === 'ACTIVE' ? 'success' : (s.status === 'SKIPPED' ? 'default' : 'info')">
-                              {{ s.status }}
-                            </n-tag>
-                          </n-space>
-                          <div style="margin-top: 4px; color: #9ca3af; font-size: 12px;">
-                            {{ formatScheduleStart(s.startTime) }} - {{ formatScheduleStart(s.endTime) }}
+                  <div v-if="stationDetails?.schedule?.entries && stationDetails.schedule.entries.length">
+                    <draggable
+                      v-model="sortedScheduleLocal"
+                      item-key="sceneId"
+                      handle=".scene-drag-handle"
+                      :animation="180"
+                      ghost-class="scene-ghost"
+                      style="display: flex; flex-wrap: wrap; gap: 10px;"
+                    >
+                      <template #item="{ element: s }">
+                        <div
+                          class="scene-box"
+                          :class="{
+                            'scene-box--active': s.status === 'ACTIVE',
+                            'scene-box--past':   pastSchedule.includes(s),
+                            'scene-box--future': !pastSchedule.includes(s) && s.status !== 'ACTIVE',
+                          }"
+                        >
+                          <div class="scene-box__header">
+                            <div style="display:flex; align-items:center; gap:6px; min-width:0; overflow:hidden;">
+                              <YellowLed v-if="s.status === 'ACTIVE'" :active="true" :pulse="true" :size="12" />
+                              <YellowLed v-else-if="pastSchedule.includes(s)" :active="false" :size="12" />
+                              <GreenLed  v-else :active="false" :size="12" />
+                              <n-text strong style="font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                {{ s.sceneTitle }}
+                              </n-text>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:4px; flex-shrink:0;">
+                              <n-tag size="tiny" :type="s.status === 'ACTIVE' ? 'success' : (s.status === 'SKIPPED' ? 'default' : 'info')">
+                                {{ s.status }}
+                              </n-tag>
+                              <n-icon class="scene-drag-handle" size="15" style="cursor:grab; color:#bbb;">
+                                <ReorderTwoOutline />
+                              </n-icon>
+                            </div>
                           </div>
-                          <div style="margin-top: 4px; color: #9ca3af; font-size: 12px;">
-                            {{ (s as any).searchInfo ?? (s as any).sourcing }} ({{ s.songsCount }} songs)
+
+                          <div class="scene-box__row">
+                            <n-text depth="3" style="font-size:11px;">
+                              {{ formatScheduleStart(s.startTime) }} – {{ formatScheduleStart(s.endTime) }}
+                            </n-text>
                           </div>
-                          <div style="margin-top: 6px; display: flex; align-items: center; gap: 8px;">
-                            <div style="display: flex; gap: 2px;">
+
+                          <div class="scene-box__row">
+                            <n-text depth="3" style="font-size:11px;">
+                              {{ (s as any).searchInfo ?? (s as any).sourcing }} ({{ s.songsCount }} songs)
+                            </n-text>
+                          </div>
+
+                          <div style="display:flex; align-items:center; gap:6px; margin-top:5px; flex-wrap:wrap;">
+                            <div style="display:flex; gap:2px; flex-wrap:wrap;">
                               <BlueLed
                                 v-for="i in (s as any).songsCount"
                                 :key="i"
                                 :active="i <= (s as any).fetchedSongsCount"
-                                :size="12"
+                                :size="10"
                               />
                             </div>
-                            <span style="font-size: 11px; color: #6b7280;">
+                            <n-text depth="3" style="font-size:10px;">
                               {{ (s as any).fetchedSongsCount }}/{{ (s as any).songsCount }} queued
-                            </span>
+                            </n-text>
                           </div>
-                          <div v-if="showPlaylist && (s as any).songs && (s as any).songs.length" style="margin-top: 6px; color: #9ca3af; font-size: 12px;">
-                            <div style="font-weight: 500; margin-bottom: 2px;">Songs:</div>
-                            <div v-for="song in (s as any).songs" :key="song.songId">
-                              {{ formatTimestamp(song.scheduledStartTime) }} - {{ song.title }}{{ song.artist ? ' — ' + song.artist : '' }}
+
+                          <div v-if="showPlaylist && (s as any).songs && (s as any).songs.length" style="margin-top:6px;">
+                            <n-text strong style="font-size:11px; display:block; margin-bottom:2px;">Songs:</n-text>
+                            <div v-for="song in (s as any).songs" :key="song.songId" style="font-size:11px; color:#9ca3af;">
+                              {{ formatTimestamp(song.scheduledStartTime) }} – {{ song.title }}{{ song.artist ? ' — ' + song.artist : '' }}
                             </div>
                           </div>
-                          <div v-if="(s as any).generatedContentTimestamp !== null" style="margin-top: 4px; color: #9ca3af; font-size: 12px;">
-                            Generated: {{ formatTimestamp((s as any).generatedContentTimestamp) }}
+
+                          <div v-if="(s as any).generatedContentTimestamp !== null" style="margin-top:4px;">
+                            <n-text depth="3" style="font-size:10px;">
+                              Generated: {{ formatTimestamp((s as any).generatedContentTimestamp) }}
+                            </n-text>
                           </div>
-                          <div v-if="(s as any).actualStartTime || (s as any).actualEndTime" style="margin-top: 4px; color: #9ca3af; font-size: 12px;">
-                            Actual: {{ (s as any).actualStartTime ? formatScheduleStart((s as any).actualStartTime) : '' }}{{ ((s as any).actualStartTime && (s as any).actualEndTime) ? ' - ' : '' }}{{ (s as any).actualEndTime ? formatScheduleStart((s as any).actualEndTime) : '' }}, Offset: {{ Math.round((s as any).timingOffsetSeconds / 60) }}m
+
+                          <div v-if="(s as any).actualStartTime || (s as any).actualEndTime" style="margin-top:4px;">
+                            <n-text depth="3" style="font-size:10px;">
+                              Actual: {{ (s as any).actualStartTime ? formatScheduleStart((s as any).actualStartTime) : '' }}
+                              {{ ((s as any).actualStartTime && (s as any).actualEndTime) ? ' – ' : '' }}
+                              {{ (s as any).actualEndTime ? formatScheduleStart((s as any).actualEndTime) : '' }},
+                              Offset: {{ Math.round((s as any).timingOffsetSeconds / 60) }}m
+                            </n-text>
                           </div>
-                          <div v-if="((s as any).searchInfo || (s as any).sourcing).includes('GENERATED')" style="margin-top: 8px;">
+
+                          <div v-if="((s as any).searchInfo || (s as any).sourcing).includes('GENERATED')" style="margin-top:8px;">
                             <n-button type="primary" size="tiny" :loading="generatingScenes[s.sceneId]" @click="handleGenerateContent(s.sceneId)">
                               Generate
                             </n-button>
-                            <div v-if="generateErrors[s.sceneId]" style="margin-top: 6px; color: #d03050; font-size: 12px;">
+                            <div v-if="generateErrors[s.sceneId]" style="margin-top:4px; color:#d03050; font-size:11px;">
                               {{ generateErrors[s.sceneId] }}
                             </div>
                           </div>
-                          <div v-if="(s as any).generatedSoundFragmentId !== null" style="margin-top: 8px;">
+
+                          <div v-if="(s as any).generatedSoundFragmentId !== null" style="margin-top:6px;">
                             <n-button size="tiny" @click="openGeneratedSoundFragment((s as any).generatedSoundFragmentId)">
                               Open Sound Fragment
                             </n-button>
                           </div>
-                        </template>
-                      </n-timeline-item>
-                    </n-timeline>
+                        </div>
+                      </template>
+                    </draggable>
                   </div>
                 </n-card>
               </n-space>
@@ -412,6 +448,8 @@ import {
   NBadge
 } from 'naive-ui';
 import { ExternalLink, PlayerPlay, PlayerStop, Activity, News, Cloud, Sun, Moon, Coffee, Tool, Music, Wind, MessageCircle, Home } from '@vicons/tabler';
+import { ReorderTwoOutline } from '@vicons/ionicons5';
+import draggable from 'vuedraggable';
 import { MIXPLA_PLAYER_URL } from '../../../constants/config';
 import GreenLed from '../../common/GreenLed.vue';
 import YellowLed from '../../common/YellowLed.vue';
@@ -428,7 +466,9 @@ export default defineComponent({
     GreenLed,
     YellowLed,
     BlueLed,
-    GlowingStatus
+    GlowingStatus,
+    draggable,
+    ReorderTwoOutline
   },
   props: {
     brandName: {
@@ -1168,6 +1208,13 @@ export default defineComponent({
       return schedule.slice();
     });
 
+    const sortedScheduleLocal = computed({
+      get: () => sortedSchedule.value,
+      set: (_val) => {
+        // optional: persist reorder via store
+      }
+    });
+
     const currentSchedule = computed(() => {
       return sortedSchedule.value.find((s: any) => s.status === 'ACTIVE');
     });
@@ -1313,6 +1360,7 @@ export default defineComponent({
       activeTab,
       copyBrandNameToClipboard,
       sortedSchedule,
+      sortedScheduleLocal,
       daySegments,
       scheduleItemId,
       currentSchedule,
@@ -1367,11 +1415,13 @@ export default defineComponent({
   align-items: center;
   margin-right: 6px;
 }
+
 .playing-indicator svg .bar {
   fill: #ef4444;
   animation: equalize 1s ease-in-out infinite;
   transform-origin: center bottom;
 }
+
 .playing-indicator svg .bar.b1 { animation-delay: 0s; }
 .playing-indicator svg .bar.b2 { animation-delay: 0.15s; }
 .playing-indicator svg .bar.b3 { animation-delay: 0.3s; }
@@ -1382,6 +1432,54 @@ export default defineComponent({
   40% { transform: scaleY(0.5); }
   60% { transform: scaleY(1.0); }
   80% { transform: scaleY(0.6); }
+}
+
+.scene-box {
+  width: 210px;
+  flex-shrink: 0;
+  border: 1px solid var(--n-border-color, #e0e0e6);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--n-card-color, #fff);
+  transition: box-shadow 0.18s, border-color 0.18s;
+  cursor: default;
+}
+.scene-box:hover {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+.scene-box--active {
+  border-color: #18a058;
+  background: rgba(24, 160, 88, 0.04);
+}
+.scene-box--past {
+  border-color: #9ca3af;
+  background: rgba(24, 160, 88, 0.04);
+}
+.scene-box--future {
+  border-color: #2080f0;
+  background: rgba(32, 128, 240, 0.03);
+}
+.scene-box__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 4px;
+  overflow: hidden;
+}
+.scene-box__row {
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.scene-ghost {
+  opacity: 0.3;
+  background: #f0f4ff;
+  border: 1px dashed #2080f0 !important;
+}
+.scene-drag-handle:hover {
+  color: #555 !important;
 }
 
 .schedule-groups {
