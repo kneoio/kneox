@@ -10,13 +10,32 @@
     </n-gi>
 
     <n-gi :span="isMobile ? 1 : 6">
-      <div style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; margin-top: 12px;">
+      <div style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; margin-top: 12px; overflow-x: auto;">
         <n-button-group>
           <n-button @click="handleNewClick" type="primary" :size="isMobile ? 'medium' : 'large'">New</n-button>
           <n-button type="error" :disabled="!hasSelection" @click="handleDelete" :size="isMobile ? 'medium' : 'large'">
             Delete ({{ checkedRowKeys.length }})
           </n-button>
+          <n-button
+            @click="handleFilterClick"
+            type="default"
+            :size="isMobile ? 'medium' : 'large'"
+            :disabled="!hasActiveFilters"
+          >
+            <red-led :active="hasActiveFilters" style="margin-right: 8px;" />
+            Filter
+          </n-button>
         </n-button-group>
+
+        <n-select
+          v-model:value="filters.scriptId"
+          :options="scriptOptions"
+          filterable
+          clearable
+          placeholder="Select Script"
+          style="width: 250px;"
+          :size="isMobile ? 'medium' : 'large'"
+        />
       </div>
     </n-gi>
 
@@ -43,7 +62,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, h, onMounted, ref } from 'vue';
+import { computed, defineComponent, h, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   DataTableColumns,
@@ -53,23 +72,66 @@ import {
   NGi,
   NGrid,
   NPageHeader,
+  NSelect,
   useMessage
 } from 'naive-ui';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
+import RedLed from '../../common/RedLed.vue';
 import { SceneTimingMode, ScriptScene } from '../../../types/kneoBroadcasterTypes';
 import { useScriptSceneStore } from '../../../stores/kneo/scriptSceneStore';
+import { useScriptStore } from '../../../stores/kneo/scriptStore';
 
 export default defineComponent({
-  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon },
+  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, RedLed, NSelect },
   setup() {
     const router = useRouter();
     const message = useMessage();
     const sceneStore = useScriptSceneStore();
+    const scriptStore = useScriptStore();
 
     const isMobile = ref(window.innerWidth < 768);
     const loading = ref(false);
     const checkedRowKeys = ref<(string | number)[]>([]);
     const hasSelection = computed(() => checkedRowKeys.value.length > 0);
+    const STORAGE_KEY = 'absoluteTimeScenes.list.filters';
+    const STORAGE_SHOW_KEY = 'absoluteTimeScenes.list.showFilters';
+    const showFilters = ref(false);
+    const filters = ref({
+      scriptId: null as string | null
+    });
+
+    const hasActiveFilters = computed(() => !!filters.value.scriptId);
+
+    const loadSavedFilters = () => {
+      try {
+        const s = localStorage.getItem(STORAGE_KEY);
+        if (s) {
+          const obj = JSON.parse(s);
+          filters.value = {
+            scriptId: obj.scriptId || null
+          };
+        }
+        const sh = localStorage.getItem(STORAGE_SHOW_KEY);
+        if (sh === 'true') showFilters.value = true;
+      } catch { }
+    };
+
+    const saveFilters = () => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(filters.value));
+        localStorage.setItem(STORAGE_SHOW_KEY, String(showFilters.value));
+      } catch { }
+    };
+
+    const handleFilterClick = () => {
+      filters.value.scriptId = null;
+    };
+
+    const scriptOptions = computed(() =>
+      (scriptStore.getEntries || [])
+        .filter((s: any) => typeof s.id === 'string' && s.id)
+        .map((s: any) => ({ label: s.name || s.id, value: s.id as string }))
+    );
 
     const rows = computed<any[]>(() => {
       const entries = (sceneStore.getEntries || []) as ScriptScene[];
@@ -108,10 +170,13 @@ export default defineComponent({
     const fetchData = async (page = 1, pageSize = 10) => {
       try {
         loading.value = true;
-        const activeFilters = {
-          activated: true,
+        const activeFilters: any = {
           timingMode: 'ABSOLUTE_TIME'
         };
+        if (filters.value.scriptId) {
+          activeFilters.activated = true;
+          activeFilters.scriptId = filters.value.scriptId;
+        }
         await sceneStore.fetchAll(page, pageSize, activeFilters);
         pagination.value = sceneStore.getPagination;
       } catch (error) {
@@ -125,6 +190,8 @@ export default defineComponent({
     const preFetch = async () => {
       try {
         loading.value = true;
+        loadSavedFilters();
+        await scriptStore.fetchAll(1, 100, {});
         await fetchData(1, 10);
       } catch (error) {
         console.error('Failed to load Scenes:', error);
@@ -243,6 +310,11 @@ export default defineComponent({
       };
     };
 
+    watch(() => filters.value, () => {
+      saveFilters();
+      fetchData(1, sceneStore.getPagination.pageSize);
+    }, { deep: true });
+
     return {
       columns,
       rows,
@@ -257,7 +329,12 @@ export default defineComponent({
       checkedRowKeys,
       hasSelection,
       pagination,
-      getRowProps
+      getRowProps,
+      showFilters,
+      filters,
+      hasActiveFilters,
+      handleFilterClick,
+      scriptOptions
     };
   }
 });

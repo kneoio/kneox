@@ -9,6 +9,7 @@
     <n-gi class="mt-2" span="6">
       <n-button-group>
         <n-button type="primary" @click="handleSave" size="large">Save</n-button>
+        <n-button v-if="localFormData.id" type="default" @click="handleCloneClick" size="large">Clone</n-button>
       </n-button-group>
     </n-gi>
 
@@ -107,6 +108,25 @@
       </n-tabs>
     </n-gi>
   </n-grid>
+
+  <n-modal v-model:show="showCloneDialog" preset="dialog" title="Clone Scene" :close-on-esc="true" :style="{ width: '500px', backgroundColor: dialogBackgroundColor }">
+    <n-space vertical>
+      <n-form-item label="Title">
+        <n-input v-model:value="cloneTitle" placeholder="Enter new scene title" style="width: 100%;" />
+      </n-form-item>
+      <n-form-item label="Sequence Number">
+        <n-radio-group v-model:value="cloneSeqNum" name="clone-seq-num-group">
+          <n-radio-button v-for="i in 10" :key="i" :value="i">{{ i }}</n-radio-button>
+        </n-radio-group>
+      </n-form-item>
+    </n-space>
+    <template #action>
+      <n-space>
+        <n-button @click="showCloneDialog = false">Cancel</n-button>
+        <n-button type="primary" @click="handleClone" :loading="isCloning">Clone</n-button>
+      </n-space>
+    </template>
+  </n-modal>
 </template>
 
 <script lang="ts">
@@ -146,6 +166,7 @@ import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 import { getErrorMessage, handleFormSaveError } from '../../../utils/errorHandling';
 import AclTable from '../../common/AclTable.vue';
 import PlaylistFields from '../../common/PlaylistFields.vue';
+import { useDialogBackground } from '../../../composables/useDialogBackground';
 
 export default defineComponent({
   name: 'RelativeTimeSceneForm',
@@ -184,12 +205,17 @@ export default defineComponent({
     const scriptsStore = useScriptStore();
     const promptStore = usePromptStore();
     const referencesStore = useReferencesStore();
+    const { dialogBackgroundColor } = useDialogBackground();
     const selectedScriptId = ref<string | null>(null);
     const activeTab = ref('properties');
     const aclData = ref<any[]>([]);
     const aclLoading = ref(false);
     const scenePrompts = ref<ScenePromptDTO[]>([]);
     const selectedWeekdays = ref<number[]>([]);
+    const showCloneDialog = ref(false);
+    const cloneTitle = ref('');
+    const cloneSeqNum = ref<number>(1);
+    const isCloning = ref(false);
     const scriptOptions = computed(() =>
       (scriptsStore.getEntries || [])
         .filter((s: any) => typeof s.id === 'string' && s.id)
@@ -377,6 +403,43 @@ export default defineComponent({
       }
     };
 
+    const handleCloneClick = () => {
+      cloneTitle.value = localFormData.title ? `${localFormData.title} (Copy)` : '';
+      cloneSeqNum.value = (localFormData.seqNum || 0) + 1;
+      showCloneDialog.value = true;
+    };
+
+    const handleClone = async () => {
+      try {
+        isCloning.value = true;
+        loadingBar.start();
+        const saveData: ScriptSceneSave = {
+          title: cloneTitle.value,
+          prompts: scenePrompts.value,
+          startTime: undefined,
+          durationSeconds: localFormData.durationSeconds as any,
+          seqNum: cloneSeqNum.value,
+          talkativity: localFormData.talkativity as any,
+          stagePlaylist: {
+            ...localFormData.stagePlaylist as any,
+            prompts: (localFormData.stagePlaylist as any)?.prompts || []
+          } as any,
+          weekdays: selectedWeekdays.value,
+          oneTimeRun: undefined,
+          timingMode: localFormData.timingMode as any
+        };
+        await store.upsertForScript(selectedScriptId.value || '', saveData);
+        message.success('Scene cloned successfully');
+        showCloneDialog.value = false;
+        router.push({ name: 'RelativeTimeScenes' });
+      } catch (error: any) {
+        handleFormSaveError(error, message);
+      } finally {
+        isCloning.value = false;
+        loadingBar.finish();
+      }
+    };
+
     const goToPrompt = (promptId: string) => {
       if (promptId) router.push({ name: 'PromptForm', params: { id: promptId } });
     };
@@ -438,7 +501,14 @@ export default defineComponent({
       aclData,
       aclLoading,
       referencesStore,
-      timingModeOptions
+      timingModeOptions,
+      dialogBackgroundColor,
+      showCloneDialog,
+      cloneTitle,
+      cloneSeqNum,
+      isCloning,
+      handleCloneClick,
+      handleClone
     };
   }
 });
