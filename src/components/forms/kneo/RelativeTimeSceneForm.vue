@@ -352,7 +352,7 @@ export default defineComponent({
             ...localFormData.stagePlaylist as any,
             prompts: (localFormData.stagePlaylist as any)?.prompts || []
           } as any,
-          weekdays: undefined,
+          weekdays: selectedWeekdays.value,
           oneTimeRun: undefined,
           timingMode: localFormData.timingMode as any
         };

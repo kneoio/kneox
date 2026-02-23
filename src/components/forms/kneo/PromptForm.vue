@@ -484,6 +484,8 @@ export default defineComponent({
         const previousRoute = router.options.history.state.back;
         if (previousRoute && previousRoute.toString().includes('/outline/document-tree')) {
           await router.push('/outline/document-tree');
+        } else if (normalizedPromptType === 'GENERATOR') {
+          await router.push({ name: 'Prompts', query: { promptType: 'GENERATOR' } });
         } else {
           await router.push('/outline/prompts');
         }
@@ -520,8 +522,11 @@ export default defineComponent({
 
     const goBack = () => {
       const previousRoute = router.options.history.state.back;
+      const normalizedPromptType = (localFormData as any).promptType || PromptType.SONG;
       if (previousRoute && previousRoute.toString().includes('/outline/document-tree')) {
         router.push('/outline/document-tree');
+      } else if (normalizedPromptType === 'GENERATOR') {
+        router.push({ name: 'Prompts', query: { promptType: 'GENERATOR' } });
       } else {
         router.push('/outline/prompts');
       }
