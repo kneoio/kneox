@@ -176,6 +176,7 @@ import {
   NTag,
   NSpace,
   NModal,
+  NSwitch,
   useLoadingBar,
   useMessage
 } from 'naive-ui';
@@ -219,7 +220,8 @@ export default defineComponent({
     AclTable,
     PlaylistFields,
     NSpace,
-    NModal
+    NModal,
+    NSwitch
   },
   setup() {
     const loadingBar = useLoadingBar();
@@ -289,6 +291,7 @@ export default defineComponent({
       timingMode: SceneTimingMode.RELATIVE_TO_STREAM_START,
       durationSeconds: 0,
       seqNum: 0,
+      oneTimeRun: false,
       stagePlaylist: {
         sourcing: 'RANDOM',
         searchTerm: '',
@@ -296,9 +299,8 @@ export default defineComponent({
         labels: [],
         type: [],
         source: [],
-        soundFragments: [],
-        prompts: []
-      }
+        soundFragments: []
+      } as any
     });
 
     const parseTimeStrToMs = (timeStr: string): number | null => {
@@ -362,9 +364,8 @@ export default defineComponent({
               labels: data.stagePlaylist.labels || [],
               type: (data.stagePlaylist as any).type || [],
               source: (data.stagePlaylist as any).source || [],
-              soundFragments: (data.stagePlaylist as any).soundFragments || [],
-              prompts: (data.stagePlaylist as any).prompts || []
-            };
+              soundFragments: (data.stagePlaylist as any).soundFragments || []
+            } as any;
           } else {
             localFormData.stagePlaylist = {
               sourcing: 'RANDOM',
@@ -373,9 +374,8 @@ export default defineComponent({
               labels: [],
               type: [],
               source: [],
-              soundFragments: [],
-              prompts: []
-            };
+              soundFragments: []
+            } as any;
           }
         }
       }
@@ -406,10 +406,11 @@ export default defineComponent({
           title: localFormData.title as any,
           prompts: scenePrompts.value,
           scriptId: selectedScriptId.value || undefined,
-          startTime: timesListToStrings(startTimesList.value),
+          startTime: timesListToStrings(startTimesList.value) as any,
           durationSeconds: localFormData.durationSeconds,
           seqNum: localFormData.seqNum,
           talkativity: localFormData.talkativity as any,
+          oneTimeRun: localFormData.oneTimeRun,
           stagePlaylist: {
             ...localFormData.stagePlaylist as any,
             prompts: (localFormData.stagePlaylist as any)?.prompts || []
@@ -452,10 +453,11 @@ export default defineComponent({
           title: cloneTitle.value,
           prompts: scenePrompts.value,
           scriptId: selectedScriptId.value || undefined,
-          startTime: timesListToStrings(cloneTimesList.value),
-          durationSeconds: null,
-          seqNum: null,
+          startTime: timesListToStrings(cloneTimesList.value) as any,
+          durationSeconds: undefined as any,
+          seqNum: undefined as any,
           talkativity: localFormData.talkativity as any,
+          oneTimeRun: localFormData.oneTimeRun,
           stagePlaylist: {
             ...localFormData.stagePlaylist as any,
             prompts: (localFormData.stagePlaylist as any)?.prompts || []

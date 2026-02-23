@@ -73,11 +73,12 @@ import {
   NGrid,
   NPageHeader,
   NSelect,
+  NTag,
   useMessage
 } from 'naive-ui';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
 import RedLed from '../../common/RedLed.vue';
-import { SceneTimingMode, ScriptScene } from '../../../types/kneoBroadcasterTypes';
+import { SceneTimingMode } from '../../../types/kneoBroadcasterTypes';
 import { useScriptSceneStore } from '../../../stores/kneo/scriptSceneStore';
 import { useScriptStore } from '../../../stores/kneo/scriptStore';
 
@@ -133,30 +134,52 @@ export default defineComponent({
         .map((s: any) => ({ label: s.name || s.id, value: s.id as string }))
     );
 
-    const rows = computed<any[]>(() => {
-      const entries = (sceneStore.getEntries || []) as ScriptScene[];
+    const rows = computed(() => {
+      const entries = sceneStore.getEntries || [];
+      if (!Array.isArray(entries)) return [];
+      
       const map = ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-      return entries.map((sc: ScriptScene) => {
-        const w = (sc as any).weekdays || [];
+      
+      return entries.map((sc: any) => {
+        if (!sc || typeof sc !== 'object') return {
+          id: '',
+          title: '',
+          name: '',
+          scriptTitle: '',
+          scriptId: '',
+          startTime: '',
+          timingMode: SceneTimingMode.ABSOLUTE_TIME,
+          durationSeconds: 0,
+          seqNum: 0,
+          talkativity: 0,
+          weekdays: '',
+          oneTimeRun: false,
+          sourcing: ''
+        };
+        
+        const w = sc.weekdays || [];
         const weekdaysText = Array.isArray(w) && w.length > 0
           ? w.filter((n: any) => Number.isInteger(n) && n >= 1 && n <= 7).map((n: number) => map[n]).join(', ')
           : '';
-        const scriptId = (sc as any).scriptId as string | undefined;
-        const startTimeArray = (sc as any).startTime || [];
-        const startTimeText = Array.isArray(startTimeArray) ? startTimeArray.join(', ') : startTimeArray;
+        
+        const startTimeArray = sc.startTime || [];
+        const startTimeText = Array.isArray(startTimeArray) 
+          ? startTimeArray.join(', ') 
+          : startTimeArray || '';
+        
         return {
           id: sc.id,
           title: sc.title || sc.type || '',
           name: sc.title || sc.type || '',
-          scriptTitle: (sc as any).scriptTitle || '',
-          scriptId: scriptId || '',
+          scriptTitle: sc.scriptTitle || '',
+          scriptId: sc.scriptId || '',
           startTime: startTimeText,
-          timingMode: (sc as any).timingMode || SceneTimingMode.ABSOLUTE_TIME,
-          durationSeconds: (sc as any).durationSeconds || 0,
-          seqNum: (sc as any).seqNum || 0,
-          talkativity: (sc as any).talkativity ?? 0,
+          timingMode: sc.timingMode || SceneTimingMode.ABSOLUTE_TIME,
+          durationSeconds: sc.durationSeconds || 0,
+          seqNum: sc.seqNum || 0,
+          talkativity: sc.talkativity ?? 0,
           weekdays: weekdaysText,
-          oneTimeRun: !!(sc as any).oneTimeRun,
+          oneTimeRun: !!sc.oneTimeRun,
           sourcing: sc.stagePlaylist?.sourcing || ''
         };
       });
@@ -277,7 +300,19 @@ export default defineComponent({
         }
       },
       { title: 'Talkativity', key: 'talkativity' },
-      { title: 'Weekdays', key: 'weekdays' }
+      { title: 'Weekdays', key: 'weekdays' },
+      {
+        title: 'Flags',
+        key: 'flags',
+        width: 100,
+        render: (row: any) => {
+          const flags: any[] = [];
+          if (row.oneTimeRun) {
+            flags.push(h(NTag, { type: 'warning', size: 'small' }, { default: () => 'One Time' }));
+          }
+          return flags.length > 0 ? h('div', { style: 'display: flex; gap: 4px; flex-wrap: wrap;' }, flags) : null;
+        }
+      }
     ]);
 
     const pagination = ref({ page: 1, pageSize: 10, itemCount: 0, pageCount: 1, showSizePicker: true, pageSizes: [10, 20, 30, 40] });
