@@ -9,7 +9,7 @@
     <n-gi class="mt-2" span="6">
       <n-button-group>
         <n-button type="primary" @click="handleSave" size="large">Save</n-button>
-        <n-button v-if="localFormData.id" type="default" @click="handleCloneClick" size="large">Clone</n-button>
+        <n-button type="default" @click="handleCloneClick" size="large">Clone</n-button>
       </n-button-group>
     </n-gi>
 
@@ -141,6 +141,8 @@ import {
   NRadioGroup,
   NRadioButton,
   NTag,
+  NSpace,
+  NModal,
   useLoadingBar,
   useMessage
 } from 'naive-ui';
@@ -157,6 +159,7 @@ import { useDialogBackground } from '../../../composables/useDialogBackground';
 
 export default defineComponent({
   name: 'AbsoluteTimeSceneForm',
+  inheritAttrs: false,
   components: {
     NPageHeader,
     NButtonGroup,
@@ -181,7 +184,9 @@ export default defineComponent({
     NTag,
     ChevronRight,
     AclTable,
-    PlaylistFields
+    PlaylistFields,
+    NSpace,
+    NModal
   },
   setup() {
     const loadingBar = useLoadingBar();
@@ -198,6 +203,7 @@ export default defineComponent({
     const aclLoading = ref(false);
     const scenePrompts = ref<ScenePromptDTO[]>([]);
     const selectedWeekdays = ref<number[]>([]);
+    const selectedScriptId = ref<string | null>(null);
     const showCloneDialog = ref(false);
     const cloneTitle = ref('');
     const cloneTime = ref<number | null>(null);
