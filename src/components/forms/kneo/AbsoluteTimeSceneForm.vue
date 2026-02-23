@@ -18,77 +18,91 @@
         <n-tab-pane name="properties" tab="Properties">
           <n-form label-placement="left" label-width="auto">
             <n-grid :cols="1" x-gap="12" y-gap="12" class="m-3">
-          <n-gi>
-            <n-form-item label="Script">
-              <n-select
-                v-model:value="selectedScriptId"
-                :options="scriptOptions"
-                style="width: 25%; max-width: 300px;"
-              />
-            </n-form-item>
-          </n-gi>
-          <n-gi>
-            <n-form-item label="Title">
-              <n-input v-model:value="localFormData.title" style="width: 50%; max-width: 600px;" placeholder="" />
-            </n-form-item>
-          </n-gi>
-          <n-gi>
-            <n-form-item label="Start time">
-              <n-time-picker v-model:value="startTimeMs" format="HH:mm:ss" style="width: 12.5%; max-width: 150px;" />
-            </n-form-item>
-          </n-gi>
-          <n-gi>
-            <n-form-item label="Talkativity">
-              <n-slider v-model:value="localFormData.talkativity" :min="0" :max="1" :step="0.05" :tooltip="false"
-                style="width: 50%; max-width: 600px;" />
-              <span style="margin-left: 12px;">{{ localFormData.talkativity || 0 }}</span>
-            </n-form-item>
-          </n-gi>
-          <n-gi>
-            <n-form-item label="Weekdays">
-              <n-checkbox-group v-model:value="selectedWeekdays" style="width: 50%; max-width: 600px;">
-                <n-checkbox :value="1" label="Mon" />
-                <n-checkbox :value="2" label="Tue" />
-                <n-checkbox :value="3" label="Wed" />
-                <n-checkbox :value="4" label="Thu" />
-                <n-checkbox :value="5" label="Fri" />
-                <n-checkbox :value="6" label="Sat" />
-                <n-checkbox :value="7" label="Sun" />
-              </n-checkbox-group>
-            </n-form-item>
-          </n-gi>
-          <n-gi>
-            <n-form-item label="Actions">
-              <n-dynamic-input
-                v-model:value="scenePrompts"
-                :on-create="createScenePrompt"
-                placeholder=""
-                style="width: 50%; max-width: 600px;"
-              >
-                <template #default="{ index }">
-                  <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;">
-                    <n-select
-                      v-model:value="scenePrompts[index].promptId"
-                      :options="promptOptions"
-                      :render-label="renderPromptLabel"
-                      placeholder=""
-                      style="min-width: 600px;"
-                    />
-                  </div>
-                </template>
-              </n-dynamic-input>
-            </n-form-item>
-          </n-gi>
+              <n-gi>
+                <n-form-item label="Script">
+                  <n-select
+                    v-model:value="selectedScriptId"
+                    :options="scriptOptions"
+                    style="width: 25%; max-width: 300px;"
+                  />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="Title">
+                  <n-input v-model:value="localFormData.title" style="width: 50%; max-width: 600px;" placeholder="" />
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="Start times">
+                  <n-dynamic-input
+                    v-model:value="startTimesList"
+                    :on-create="createStartTime"
+                    style="width: 50%; max-width: 600px;"
+                  >
+                    <template #default="{ value }">
+                      <n-space align="center" style="width: 100%;">
+                        <n-time-picker
+                          v-model:value="value.ms"
+                          format="HH:mm:ss"
+                          style="width: 150px;"
+                        />
+                      </n-space>
+                    </template>
+                  </n-dynamic-input>
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="Talkativity">
+                  <n-slider v-model:value="localFormData.talkativity" :min="0" :max="1" :step="0.05" :tooltip="false"
+                    style="width: 50%; max-width: 600px;" />
+                  <span style="margin-left: 12px;">{{ localFormData.talkativity || 0 }}</span>
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="Weekdays">
+                  <n-checkbox-group v-model:value="selectedWeekdays" style="width: 50%; max-width: 600px;">
+                    <n-checkbox :value="1" label="Mon" />
+                    <n-checkbox :value="2" label="Tue" />
+                    <n-checkbox :value="3" label="Wed" />
+                    <n-checkbox :value="4" label="Thu" />
+                    <n-checkbox :value="5" label="Fri" />
+                    <n-checkbox :value="6" label="Sat" />
+                    <n-checkbox :value="7" label="Sun" />
+                  </n-checkbox-group>
+                </n-form-item>
+              </n-gi>
+              <n-gi>
+                <n-form-item label="Actions">
+                  <n-dynamic-input
+                    v-model:value="scenePrompts"
+                    :on-create="createScenePrompt"
+                    placeholder=""
+                    style="width: 50%; max-width: 600px;"
+                  >
+                    <template #default="{ index }">
+                      <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;">
+                        <n-select
+                          v-model:value="scenePrompts[index].promptId"
+                          :options="promptOptions"
+                          :render-label="renderPromptLabel"
+                          placeholder=""
+                          style="min-width: 600px;"
+                        />
+                      </div>
+                    </template>
+                  </n-dynamic-input>
+                </n-form-item>
+              </n-gi>
             </n-grid>
           </n-form>
         </n-tab-pane>
         <n-tab-pane name="playlist" tab="Playlist">
           <PlaylistFields
-              :model-value="localFormData.stagePlaylist as any"
-              @update:model-value="(val) => Object.assign(localFormData.stagePlaylist!, val)"
-              :genre-options="referencesStore.genreOptions"
-              :label-options="referencesStore.labelOptions"
-              :prompt-options="promptOptions"
+            :model-value="localFormData.stagePlaylist as any"
+            @update:model-value="(val) => Object.assign(localFormData.stagePlaylist!, val)"
+            :genre-options="referencesStore.genreOptions"
+            :label-options="referencesStore.labelOptions"
+            :prompt-options="promptOptions"
           />
         </n-tab-pane>
         <n-tab-pane name="acl" tab="ACL">
@@ -103,8 +117,22 @@
       <n-form-item label="Title">
         <n-input v-model:value="cloneTitle" placeholder="Enter new scene title" style="width: 100%;" />
       </n-form-item>
-      <n-form-item label="Start Time">
-        <n-time-picker v-model:value="cloneTime" format="HH:mm:ss" style="width: 100%;" />
+      <n-form-item label="Start Times">
+        <n-dynamic-input
+          v-model:value="cloneTimesList"
+          :on-create="createStartTime"
+          style="width: 100%;"
+        >
+          <template #default="{ value }">
+            <n-space align="center" style="width: 100%;">
+              <n-time-picker
+                v-model:value="value.ms"
+                format="HH:mm:ss"
+                style="width: 150px;"
+              />
+            </n-space>
+          </template>
+        </n-dynamic-input>
       </n-form-item>
     </n-space>
     <template #action>
@@ -206,13 +234,18 @@ export default defineComponent({
     const selectedScriptId = ref<string | null>(null);
     const showCloneDialog = ref(false);
     const cloneTitle = ref('');
-    const cloneTime = ref<number | null>(null);
     const isCloning = ref(false);
+
+    const startTimesList = ref<{ ms: number | null }[]>([]);
+    const cloneTimesList = ref<{ ms: number | null }[]>([]);
+    const createStartTime = () => ({ ms: null });
+
     const scriptOptions = computed(() =>
       (scriptsStore.getEntries || [])
         .filter((s: any) => typeof s.id === 'string' && s.id)
         .map((s: any) => ({ label: s.name || s.id, value: s.id as string }))
     );
+
     const promptOptions = computed(() =>
       (promptStore.getEntries || [])
         .filter((p: any) => typeof p.id === 'string' && p.id)
@@ -234,12 +267,12 @@ export default defineComponent({
         h('span', option.label)
       ]);
     };
-    
+
     const timingModeOptions = [
       { label: 'Absolute Time', value: SceneTimingMode.RELATIVE_TO_STREAM_START },
       { label: 'Relative to Stream Start', value: SceneTimingMode.ABSOLUTE_TIME }
     ];
-    
+
     const formTitle = computed(() => (localFormData.id ? 'Edit Scene' : 'Create New Scene'));
 
     const localFormData = reactive<Partial<ScriptScene>>({
@@ -263,36 +296,27 @@ export default defineComponent({
       }
     });
 
-    const startTimeMs = ref<number | null>(null);
-    const durationMinutes = ref<number>(0);
-    
-    watch(durationMinutes, (minutes) => {
-      localFormData.durationSeconds = Math.round(minutes * 60);
-    });
-    
-    watch(() => localFormData.durationSeconds, (seconds) => {
-      durationMinutes.value = (seconds ?? 0) / 60;
-    });
-
-    const parseTimeToMs = (timeStr: string | undefined | null): number | null => {
-      if (!timeStr) return null;
+    const parseTimeStrToMs = (timeStr: string): number | null => {
+      if (!timeStr || typeof timeStr !== 'string') return null;
       const timeOnly = timeStr.includes('T') ? timeStr.split('T')[1] : timeStr;
       const parts = timeOnly.split(':');
       const hh = Number(parts[0] || 0);
       const mm = Number(parts[1] || 0);
       const ss = Number(parts[2] || 0);
       const d = new Date(1970, 0, 1, hh, mm, ss);
-      const ms = d.getTime();
-      return Number.isNaN(ms) ? null : ms;
+      return d.getTime();
     };
 
-    const formatTimeFromMs = (ms: number): string => {
+    const formatMsToTimeStr = (ms: number): string => {
       const d = new Date(ms);
       const hh = String(d.getHours()).padStart(2, '0');
       const mm = String(d.getMinutes()).padStart(2, '0');
       const ss = String(d.getSeconds()).padStart(2, '0');
       return `${hh}:${mm}:${ss}`;
     };
+
+    const timesListToStrings = (list: { ms: number | null }[]): string[] =>
+      list.filter(e => e.ms != null).map(e => formatMsToTimeStr(e.ms as number));
 
     const load = async () => {
       const id = route.params.id as string;
@@ -305,20 +329,26 @@ export default defineComponent({
         if (data) {
           Object.assign(localFormData, data);
           selectedScriptId.value = data.scriptId || selectedScriptId.value;
-          startTimeMs.value = parseTimeToMs(data.startTime);
+
+          const rawTimes: string[] = Array.isArray((data as any).startTime)
+            ? (data as any).startTime
+            : Array.isArray((data as any).startTime)
+              ? (data as any).startTime
+              : data.startTime
+                ? [data.startTime]
+                : [];
+          startTimesList.value = rawTimes.map(t => ({ ms: parseTimeStrToMs(t) }));
+          console.log('[load] startTimesList:', JSON.stringify(startTimesList.value));
+
           const arr = (data as any).prompts || [];
-          scenePrompts.value = Array.isArray(arr)
-            ? (arr as ScenePromptDTO[])
-            : [];
+          scenePrompts.value = Array.isArray(arr) ? (arr as ScenePromptDTO[]) : [];
           const w = (data as any).weekdays || [];
           selectedWeekdays.value = Array.isArray(w) ? (w.filter((n: any) => Number.isInteger(n)) as number[]) : [];
           localFormData.talkativity = typeof data.talkativity === 'number' ? data.talkativity : 0.5;
           const duration = typeof (data as any).durationSeconds === 'number' ? (data as any).durationSeconds : 0;
           localFormData.durationSeconds = duration;
-          durationMinutes.value = duration / 60;
           localFormData.seqNum = typeof (data as any).seqNum === 'number' ? (data as any).seqNum : 0;
-          
-          // Initialize stagePlaylist
+
           if (data.stagePlaylist) {
             localFormData.stagePlaylist = {
               sourcing: data.stagePlaylist.sourcing || 'RANDOM',
@@ -371,9 +401,9 @@ export default defineComponent({
           title: localFormData.title as any,
           prompts: scenePrompts.value,
           scriptId: selectedScriptId.value || undefined,
-          startTime: startTimeMs.value != null ? formatTimeFromMs(startTimeMs.value) : undefined,
-          durationSeconds: null,
-          seqNum: null,
+          startTime: timesListToStrings(startTimesList.value),
+          durationSeconds: localFormData.durationSeconds,
+          seqNum: localFormData.seqNum,
           talkativity: localFormData.talkativity as any,
           stagePlaylist: {
             ...localFormData.stagePlaylist as any,
@@ -405,7 +435,7 @@ export default defineComponent({
 
     const handleCloneClick = () => {
       cloneTitle.value = localFormData.title ? `${localFormData.title} (Copy)` : '';
-      cloneTime.value = startTimeMs.value;
+      cloneTimesList.value = startTimesList.value.map(e => ({ ms: e.ms }));
       showCloneDialog.value = true;
     };
 
@@ -417,7 +447,7 @@ export default defineComponent({
           title: cloneTitle.value,
           prompts: scenePrompts.value,
           scriptId: selectedScriptId.value || undefined,
-          startTime: cloneTime.value != null ? formatTimeFromMs(cloneTime.value) : undefined,
+          startTime: timesListToStrings(cloneTimesList.value),
           durationSeconds: null,
           seqNum: null,
           talkativity: localFormData.talkativity as any,
@@ -488,8 +518,9 @@ export default defineComponent({
       handleSave,
       goBack,
       selectedScriptId,
-      startTimeMs,
-      durationMinutes,
+      startTimesList,
+      cloneTimesList,
+      createStartTime,
       scenePrompts,
       selectedWeekdays,
       promptOptions,
@@ -505,7 +536,6 @@ export default defineComponent({
       dialogBackgroundColor,
       showCloneDialog,
       cloneTitle,
-      cloneTime,
       isCloning,
       handleCloneClick,
       handleClone

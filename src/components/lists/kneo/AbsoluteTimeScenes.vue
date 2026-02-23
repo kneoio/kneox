@@ -142,13 +142,15 @@ export default defineComponent({
           ? w.filter((n: any) => Number.isInteger(n) && n >= 1 && n <= 7).map((n: number) => map[n]).join(', ')
           : '';
         const scriptId = (sc as any).scriptId as string | undefined;
+        const startTimeArray = (sc as any).startTime || [];
+        const startTimeText = Array.isArray(startTimeArray) ? startTimeArray.join(', ') : startTimeArray;
         return {
           id: sc.id,
           title: sc.title || sc.type || '',
           name: sc.title || sc.type || '',
           scriptTitle: (sc as any).scriptTitle || '',
           scriptId: scriptId || '',
-          startTime: sc.startTime || '',
+          startTime: startTimeText,
           timingMode: (sc as any).timingMode || SceneTimingMode.ABSOLUTE_TIME,
           durationSeconds: (sc as any).durationSeconds || 0,
           seqNum: (sc as any).seqNum || 0,
