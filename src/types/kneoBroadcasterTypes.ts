@@ -471,15 +471,8 @@ export interface ScriptScene {
     };
 }
 
-export interface ScriptSceneViewData {
-    count: number;
-    pageNum: number;
-    maxPage: number;
-    pageSize: number;
-    entries: ScriptScene[];
-}
-
 export interface ScriptSceneSave {
+    scriptId?: string;
     type?: string;
     title?: string;
     prompts?: ScenePromptDTO[];
@@ -504,7 +497,14 @@ export interface ScriptSceneSave {
     };
 }
 
-// Prompts (Broadcaster)
+export interface ScriptSceneViewData {
+    count: number;
+    pageNum: number;
+    maxPage: number;
+    pageSize: number;
+    entries: ScriptScene[];
+}
+
 export interface BroadcastPrompt {
     id: string;
     author: string;

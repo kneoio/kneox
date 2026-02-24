@@ -246,7 +246,7 @@
                         </n-space>
                         <n-space justify="space-between">
                           <n-text depth="3">Duration:</n-text>
-                          <n-text>{{ formatSceneDuration(currentSchedule?.startTime, currentSchedule?.endTime, futureSchedule[0]?.sceneTitle, currentSchedule?.sceneTitle) }}</n-text>
+                          <n-text>{{ formatSceneDuration(currentSchedule?.startTime || '', currentSchedule?.endTime || '', futureSchedule[0]?.sceneTitle, currentSchedule?.sceneTitle) }}</n-text>
                         </n-space>
                         <n-space justify="space-between">
                           <n-text depth="3">Prompts:</n-text>
@@ -401,12 +401,6 @@
                               {{ generateErrors[s.sceneId] }}
                             </div>
                           </div>
-
-                          <div v-if="(s as any).generatedSoundFragmentId !== null" style="margin-top:6px;">
-                            <n-button size="tiny" @click="openGeneratedSoundFragment((s as any).generatedSoundFragmentId)">
-                              Open Sound Fragment
-                            </n-button>
-                          </div>
                         </div>
                       </template>
                     </draggable>
@@ -491,10 +485,6 @@ export default defineComponent({
     const copyBrandNameToClipboard = async () => {
       await navigator.clipboard.writeText(props.brandName);
       message.success('Copied');
-    };
-
-    const openGeneratedSoundFragment = (id: string) => {
-      router.push({ name: 'EditSoundFragment', params: { brandName: props.brandName, id } });
     };
 
     const activeTab = ref<'dashboard'>('dashboard');
@@ -717,7 +707,7 @@ export default defineComponent({
       return `${MIXPLA_PLAYER_URL}?radio=${encodeURIComponent(props.brandName.toLowerCase())}`;
     });
 
-    const formatTime = (timeString: string) => {
+    const formatTime = (timeString: string | undefined) => {
       if (!timeString) return '';
       // If it's already in HH:mm format, return as is
       if (/^\d{2}:\d{2}(:\d{2})?$/.test(timeString)) {
@@ -1087,38 +1077,6 @@ export default defineComponent({
         };
       });
     });
-
-    const timestampToTimelinePercentage = (timestamp?: string): number => {
-      if (!timestamp) return 0;
-      const date = new Date(timestamp);
-      if (isNaN(date.getTime())) return 0;
-
-      const timeZone = stationDetails.value?.zoneId;
-      let hours, minutes, seconds;
-
-      if (timeZone) {
-        const timeString = date.toLocaleTimeString('en-US', {
-          timeZone,
-          hour12: false,
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit'
-        });
-        const parts = timeString.split(':');
-        hours = parseInt(parts[0], 10);
-        minutes = parseInt(parts[1], 10);
-        seconds = parseInt(parts[2], 10);
-      } else {
-        hours = date.getHours();
-        minutes = date.getMinutes();
-        seconds = date.getSeconds();
-      }
-
-      const totalSeconds = hours * 3600 + minutes * 60 + seconds;
-      const startOffsetSeconds = 6 * 3600;
-      const shiftedSeconds = (totalSeconds - startOffsetSeconds + 86400) % 86400;
-      return (shiftedSeconds / 86400) * 100;
-    };
 
     const getStatusColor = (status?: string): string => {
       if (!status) return '#9ca3af';

@@ -401,16 +401,17 @@ export const useReferencesStore = defineStore('references', () => {
     { label: 'Weather', value: 'WEATHER' }
   ];
 
-  
   const variableSampleData: Record<string, string[]> = {
     ai_dj_name: ['DJ Nova', 'DJ Echo', 'DJ Pulse', 'DJ Orion', 'DJ Lyra'],
     brand: ['KNEO Radio', 'SonicWave FM', 'Urban Beats', 'Galaxy Tunes', 'City Vibes']
   };
 
   const bitRateOptions = [
+    { value: 64000, label: "64 kbps" },
     { value: 128000, label: "128 kbps" },
     { value: 192000, label: "192 kbps" },
     { value: 320000, label: "320 kbps" }
+  
   ];
 
   const submissionPolicyOptions = [

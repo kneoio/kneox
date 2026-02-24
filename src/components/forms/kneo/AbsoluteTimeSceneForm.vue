@@ -73,7 +73,7 @@
               </n-gi>
               <n-gi>
                 <n-form-item label="One Time Run">
-                  <n-switch v-model:value="localFormData.oneTimeRun" />
+                  <n-switch  :round="false" size="small" v-model:value="localFormData.oneTimeRun" />
                 </n-form-item>
               </n-gi>
               <n-gi>

@@ -75,8 +75,8 @@
               <n-gi>
                 <n-form-item label="Bit Rate">
                   <n-slider v-model:value="localFormData.bitRate" 
-                    :marks="{ 128000: '128 kbps', 192000: '192 kbps', 256000: '256 kbps', 320000: '320 kbps' }"
-                    :min="128000" :max="320000" :step="64000"
+                    :marks="{ 64000: '64 kbps', 128000: '128 kbps', 192000: '192 kbps', 256000: '256 kbps', 320000: '320 kbps' }"
+                    :min="64000" :max="320000" :step="64000"
                     :style="{ width: isMobile ? '100%' : '50%', maxWidth: isMobile ? '100%' : '400px' }" />
                 </n-form-item>
               </n-gi>
