@@ -891,6 +891,11 @@ export default defineComponent({
       }
     };
 
+    const openGeneratedSoundFragment = (sceneId: string) => {
+      // TODO: Implement opening generated sound fragment
+      console.log('Opening generated sound fragment for scene:', sceneId);
+    };
+
     const cleanTitle = (title: string | undefined | null): string => {
       if (!title || typeof title !== 'string') return 'N/A';
       return title.replace(/^(#+|--+)\s*/, '').replace(/[#-]/g, '|').trim();
