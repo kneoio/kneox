@@ -56,7 +56,7 @@ export const useRadioStationStore = defineStore('radioStationStore', () => {
         if (getEntries.value.length > 0) {
             return;
         }
-        const response = await apiClient.get(`radiostations?page=${page}&size=${pageSize}`);
+        const response = await apiClient.get(`brands?page=${page}&size=${pageSize}`);
         if (response?.data?.payload) {
             nextTick(() => {
                 apiViewResponse.value = response.data.payload; // Line 56 - wrapped in nextTick
@@ -67,7 +67,7 @@ export const useRadioStationStore = defineStore('radioStationStore', () => {
     };
 
     const fetchRadioStation = async (id: string) => {
-        const response = await apiClient.get(`radiostations/${id}`);
+        const response = await apiClient.get(`brands/${id}`);
         if (response?.data?.payload) {
             nextTick(() => {
                 apiFormResponse.value = response.data.payload;
@@ -98,7 +98,7 @@ export const useRadioStationStore = defineStore('radioStationStore', () => {
     };
 
     const save = async (data: RadioStationSave, id?: string) => {
-        const response = await apiClient.post(`radiostations/${id}`, data);
+        const response = await apiClient.post(`brands/${id}`, data);
         if (response?.data) {
             const {docData} = response.data;
             updateCurrent(docData, {});
@@ -109,11 +109,11 @@ export const useRadioStationStore = defineStore('radioStationStore', () => {
     };
 
     const deleteRadioStation = async (id: string) => {
-        await apiClient.delete(`radiostations/${id}`);
+        await apiClient.delete(`brands/${id}`);
     };
 
     const fetchAccessList = async (id: string) => {
-        const response = await apiClient.get(`radiostations/${id}/access`);
+        const response = await apiClient.get(`brands/${id}/access`);
         if (!response?.data) throw new Error('Invalid API response');
         return response.data;
     };
