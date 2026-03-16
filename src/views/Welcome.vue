@@ -46,6 +46,15 @@
                 Listen Live on mixpla.online
               </n-button>
 
+              <n-button size="large" @click="goToBrands">
+                <template #icon>
+                  <n-icon>
+                    <Settings />
+                  </n-icon>
+                </template>
+                Manage Stations
+              </n-button>
+
               <n-divider />
 
               <n-space vertical size="small" align="center">
@@ -79,13 +88,17 @@ import {
   NThing,
   darkTheme
 } from 'naive-ui'
-import { Alien, ExternalLink } from '@vicons/tabler'
+import { Alien, ExternalLink, Settings } from '@vicons/tabler'
 import GlowLine from '../components/common/GlowLine.vue'
 
 const hoveredColor = ref('#2196F3')
 
 function goToMixpla() {
   window.open('https://mixpla.online', '_blank', 'noopener,noreferrer')
+}
+
+function goToBrands() {
+  window.location.href = '/outline/brands'
 }
 </script>
 
