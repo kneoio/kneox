@@ -206,7 +206,7 @@ export default defineComponent({
           style: 'display: flex; align-items: center; gap: 8px;'
         }, [
           h(StatusLed, {
-            status: station.status,
+            status: station.status || 'OFF_LINE',
             active: true,
             size: 12
           }),
@@ -688,7 +688,7 @@ export default defineComponent({
             style: 'display: flex; align-items: center; gap: 8px; width: 100%;'
           }, [
             h(StatusLed, {
-              status: station.status,
+              status: station.status || 'OFF_LINE',
               active: true,
               size: 12
             }),

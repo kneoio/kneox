@@ -149,7 +149,7 @@ export const useReferencesStore = defineStore('references', () => {
   ].join(',');
 
   const fetchGenres = async () => {
-    const response = await apiClient.get('/genres?page=1&size=1000');
+    const response = await apiClient.get('/dictionary/genres?page=1&size=1000');
     if (!response?.data?.payload) throw new Error('Invalid API response');
 
     const processGenreEntry = (entry: any): any => {
@@ -230,7 +230,7 @@ export const useReferencesStore = defineStore('references', () => {
     
     params.append('filter', JSON.stringify(filterObj));
     
-    const response = await unsecuredClient.get(`/dictionary/voices?${params.toString()}`);
+    const response = await apiClient.get(`/dictionary/voices?${params.toString()}`);
     if (!response?.data?.payload) throw new Error('Invalid API response');
 
     const list = response.data.payload.viewData.entries
@@ -288,7 +288,7 @@ export const useReferencesStore = defineStore('references', () => {
   };
 
   const fetchDictionary = async (type: 'agents' | 'profiles' | 'voices', page = 1, pageSize = 100) => {
-    const response = await unsecuredClient.get(`/dictionary/${type}?page=${page}&size=${pageSize}`);
+    const response = await apiClient.get(`/dictionary/${type}?page=${page}&size=${pageSize}`);
     if (response?.data?.payload) {
       return response.data.payload;
     } else {
@@ -299,7 +299,7 @@ export const useReferencesStore = defineStore('references', () => {
   const fetchStation = async (brand: string) => {
     try {
       const baseWithoutApi = apiServer.replace(/\/datanest\/?$/, '');
-      const response = await unsecuredClient.get(`${baseWithoutApi}/radio/all-stations/${brand}`);
+      const response = await apiClient.get(`${baseWithoutApi}/radio/all-stations/${brand}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching station:', error);
@@ -317,7 +317,7 @@ export const useReferencesStore = defineStore('references', () => {
       } else if (online === false) {
         params.online = false;
       }
-      const response = await unsecuredClient.get(`${baseWithoutApi}/radio/all-stations`, { params });
+      const response = await apiClient.get(`${baseWithoutApi}/radio/all-stations`, { params });
       return response.data;
     } catch (error) {
       console.error('Error fetching radio stations:', error);

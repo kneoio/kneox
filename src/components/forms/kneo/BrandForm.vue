@@ -890,7 +890,6 @@ export default defineComponent( {
       stationFontOptions,
       stationTitlePreview,
       targetOptions,
-      referencesStore,
       getCurrentTimeInTimezone,
       startClockUpdate,
       stopClockUpdate,
