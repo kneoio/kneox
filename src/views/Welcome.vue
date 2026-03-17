@@ -166,12 +166,17 @@ nav {
   gap: 20px;
   text-transform: uppercase;
   font-size: 0.85rem;
+  align-items: center;
 }
 
 nav a,
 .footer-links a {
   color: #c0c0c0;
   text-decoration: none;
+}
+
+nav a:not(:last-child) {
+  margin-right: 16px;
 }
 
 .hero {

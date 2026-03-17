@@ -56,7 +56,20 @@ export const useDashboardStore = defineStore('dashboardStore', () => {
     const connectStation = (brandName: string) => {
         if (isWebSocketActive(stationWebsockets.value[brandName])) return;
 
-        stationWebsockets.value[brandName] = new WebSocket(buildWebSocketUrl(`dashboard/station/${brandName}`));
+        const metriqServer = import.meta.env.VITE_METRIQ_SERVER;
+        let wsUrl: string;
+        if (metriqServer) {
+            const url = new URL(metriqServer);
+            const wsProtocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+            wsUrl = `${wsProtocol}//${url.host}/metriq/ws/metrics?brandName=${brandName}`;
+        } else {
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            wsUrl = `${wsProtocol}//${window.location.host}/metriq/ws/metrics?brandName=${brandName}`;
+        }
+        const token = keycloak.token;
+        const finalUrl = token ? `${wsUrl}&token=${token}` : wsUrl;
+
+        stationWebsockets.value[brandName] = new WebSocket(finalUrl);
         Object.assign(stationWebsockets.value[brandName], createWebSocketHandlers({
             type: 'station',
             brandName,
