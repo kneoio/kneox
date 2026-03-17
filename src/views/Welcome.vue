@@ -5,19 +5,19 @@
         <div class="logo">MIXPLA</div>
         <nav>
           <a href="#platform">Platform</a>
-          <a href="#creators">Creators</a>
+          <a href="#creators">Owners</a>
           <a href="#about">About</a>
         </nav>
       </header>
 
       <section class="hero" id="platform">
         <div class="hero-text">
-          <p class="eyebrow">Infrastructure-first</p>
-          <h1>AI-Driven Radio, Events and Audio Experiences.</h1>
-          <p class="subline">Radio that never sleeps. Personalised. Interactive. Alive.</p>
+          <p class="eyebrow">You choose the vibe. AI keeps it live.</p>
+          <h1>AI-Driven Streams, Events and Audio Experiences.</h1>
+          <p class="subline">Streams that never sleep. Personalised. Interactive. Alive.</p>
           <div class="hero-ctas">
             <n-button type="primary" size="large" class="cta-button" @click="goToMixpla">Mixplay Music</n-button>
-            <n-button size="large" @click="scrollToRegister">Become a Creator</n-button>
+            <n-button size="large" @click="scrollToRegister">Become an Owner</n-button>
           </div>
         </div>
         <div class="waveform" aria-hidden="true">
@@ -29,11 +29,11 @@
         <div class="section-header">
           <p class="eyebrow">What is Mixpla</p>
           <h2>Audio infrastructure engineered for continuous AI performance.</h2>
-          <p class="intro">Mixpla powers autonomous radio stations, one-off shows and monetisation for creators building the next generation of sonic experiences.</p>
+          <p class="intro">Mixpla powers autonomous AI streams, one-off shows and monetisation for owners building the next generation of sonic experiences.</p>
         </div>
         <div class="cards">
           <article>
-            <h3>Continuous AI Radio</h3>
+            <h3>Continuous AI Streams</h3>
             <p>24/7 AI DJ with live listener chat, adaptive programming and telemetry-grade observability.</p>
           </article>
           <article>
@@ -42,7 +42,7 @@
           </article>
           <article>
             <h3>Marketplace</h3>
-            <p>Creators sell scripts, playlists and DJ styles directly into the Mixpla ecosystem.</p>
+            <p>Owners sell scripts, playlists and DJ styles directly into the Mixpla ecosystem.</p>
           </article>
         </div>
       </section>
@@ -51,30 +51,30 @@
         <div>24/7 Uptime</div>
         <div>AI DJ always on</div>
         <div>Scales from 1 to millions</div>
-        <div>European infrastructure</div>
+        <div>Made in Europe</div>
       </section>
 
       <section class="creator-portal" id="creators">
         <div>
-          <p class="eyebrow">For Creators</p>
-          <h2>Operate your AI station, own your scripts, ship paid experiences.</h2>
+          <p class="eyebrow">For Stream Owners</p>
+          <h2>Operate your AI stream, own your scripts, ship paid experiences.</h2>
           <p>Set up stations, manage pipelines and monetise with enterprise tooling built for audio teams.</p>
           <span class="badge">🔒 Protected — Login Required</span>
         </div>
-        <n-button type="primary" size="large" @click="goToBrands">Access Creator Portal</n-button>
+        <n-button type="primary" size="large" @click="goToBrands">Access Stream Owner Portal</n-button>
       </section>
 
       <section class="register" id="register">
         <div class="section-header">
-          <p class="eyebrow">Register as Creator</p>
-          <h2>Apply for Creator Access.</h2>
+          <p class="eyebrow">Register as Owner</p>
+          <h2>Apply for Owner Access.</h2>
           <p>Authentication powered by Keycloak — full portal coming soon.</p>
         </div>
         <form class="register-form" @submit.prevent="handleCreatorSubmit">
           <n-input v-model:value="creatorForm.name" placeholder="Name" size="large" required />
           <n-input v-model:value="creatorForm.email" placeholder="Email" size="large" required />
           <n-input v-model:value="creatorForm.channel" placeholder="Channel / Website" size="large" required />
-          <n-button type="primary" attr-type="submit" size="large">Apply for Creator Access</n-button>
+          <n-button type="primary" attr-type="submit" size="large">Apply for Owner Access</n-button>
         </form>
         <p v-if="submitted" class="success">Application received. We'll reach out soon.</p>
       </section>
@@ -83,7 +83,7 @@
         <div class="logo">MIXPLA</div>
         <div class="footer-links">
           <a href="#platform">Platform</a>
-          <a href="#creators">Creators</a>
+          <a href="#creators">Owners</a>
           <a href="#about">About</a>
         </div>
         <div class="status">● Live — Running 24/7</div>
