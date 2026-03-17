@@ -80,6 +80,11 @@
                     :style="{ width: isMobile ? '100%' : '50%', maxWidth: isMobile ? '100%' : '400px' }" />
                 </n-form-item>
               </n-gi>
+              <n-gi>
+                <n-form-item label="Public Brand">
+                  <n-switch v-model:value="localFormData.publicBrand" :checked-value="1" :unchecked-value="0" />
+                </n-form-item>
+              </n-gi>
               
               <n-gi>
                 <n-divider :style="{ width: isMobile ? '100%' : '50%', maxWidth: isMobile ? '100%' : '1200px' }" />
@@ -542,6 +547,7 @@ export default defineComponent( {
       timeZone: "",
       managedBy: ManagedBy.MIX,
       bitRate: 128000,
+      publicBrand: 0,
       oneTimeStreamPolicy: undefined,
       submissionPolicy: undefined,
       messagingPolicy: undefined,
@@ -713,6 +719,7 @@ export default defineComponent( {
           timeZone: localFormData.timeZone,
           managedBy: localFormData.managedBy,
           bitRate: localFormData.bitRate,
+          publicBrand: localFormData.publicBrand,
           nRate: localFormData.nRate,
           oneTimeStreamPolicy: localFormData.oneTimeStreamPolicy,
           submissionPolicy: localFormData.submissionPolicy,

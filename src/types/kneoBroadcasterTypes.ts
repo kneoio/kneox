@@ -123,6 +123,7 @@ export interface RadioStation {
     messagingPolicy?: SubmissionPolicy;
     aiAgentMode?: AiAgentMode;
     isTemporary?: number;
+    publicBrand?: number;
     scriptId?: string;
 }
 
@@ -145,6 +146,7 @@ export interface RadioStationSave {
     submissionPolicy?: SubmissionPolicy;
     messagingPolicy?: SubmissionPolicy;
     aiAgentMode?: AiAgentMode;
+    publicBrand?: number;
     scripts?: { scriptId: string; userVariables: Record<string, any> }[];
 }
 

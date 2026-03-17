@@ -2,7 +2,7 @@ import axios from 'axios';
 import keycloak from '../keycloakFactory';
 
 const apiServer = import.meta.env.VITE_API_SERVER;
-export const publicApiRoot = apiServer.replace(/\/api\/?$/, '');
+export const publicApiRoot = apiServer.replace(/\/datanest\/?$/, '');
 
 if (!apiServer) {
     throw new Error('VITE_API_SERVER environment variable is not set');
