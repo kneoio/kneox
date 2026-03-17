@@ -8,7 +8,6 @@
           <a href="#creators">Creators</a>
           <a href="#about">About</a>
         </nav>
-        <n-button type="primary" size="large" quaternary @click="goToMixpla">Launch Platform</n-button>
       </header>
 
       <section class="hero" id="platform">
@@ -17,7 +16,7 @@
           <h1>AI-Driven Radio, Events and Audio Experiences.</h1>
           <p class="subline">Radio that never sleeps. Personalised. Interactive. Alive.</p>
           <div class="hero-ctas">
-            <n-button type="primary" size="large" @click="goToMixpla">Launch Platform</n-button>
+            <n-button type="primary" size="large" class="cta-button" @click="goToMixpla">Mixplay Music</n-button>
             <n-button size="large" @click="scrollToRegister">Become a Creator</n-button>
           </div>
         </div>
@@ -159,6 +158,7 @@ function handleCreatorSubmit() {
   font-family: 'Kaylon', 'Inter', sans-serif;
   font-weight: 700;
   letter-spacing: 0.24em;
+  font-size: clamp(1.1rem, 2vw, 1.6rem);
 }
 
 nav {
@@ -204,6 +204,21 @@ h1 {
   gap: 16px;
   margin-top: 24px;
   flex-wrap: wrap;
+}
+
+.cta-button {
+  background: linear-gradient(120deg, #ff7a18, #af002d 60%, #319197);
+  border: none;
+  color: #fff !important;
+  box-shadow: 0 15px 40px rgba(255, 122, 24, 0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cta-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 45px rgba(255, 122, 24, 0.45);
 }
 
 .waveform {

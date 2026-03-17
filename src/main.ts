@@ -38,6 +38,12 @@ function startApp() {
     app.use(router);
     setupRouterGuard(keycloak);
     app.mount('#app');
+    const loader = document.getElementById('app-loader');
+    if (loader) {
+        loader.style.opacity = '0';
+        loader.style.pointerEvents = 'none';
+        setTimeout(() => loader.remove(), 400);
+    }
 }
 
 startApp();
