@@ -1,97 +1,111 @@
 <template>
   <n-config-provider :theme="darkTheme">
-    <n-layout>
-      <n-layout-header class="neon-header">
-        <div
-          :style="{ maxWidth: '720px', margin: '0 auto', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '24px' }">
-          <n-icon size="32">
-            <Alien />
-          </n-icon>
+    <div class="welcome-page">
+      <header class="nav">
+        <div class="logo">MIXPLA</div>
+        <nav>
+          <a href="#platform">Platform</a>
+          <a href="#creators">Creators</a>
+          <a href="#about">About</a>
+        </nav>
+        <n-button type="primary" size="large" quaternary @click="goToMixpla">Launch Platform</n-button>
+      </header>
+
+      <section class="hero" id="platform">
+        <div class="hero-text">
+          <p class="eyebrow">Infrastructure-first</p>
+          <h1>AI-Driven Radio, Events and Audio Experiences.</h1>
+          <p class="subline">Radio that never sleeps. Personalised. Interactive. Alive.</p>
+          <div class="hero-ctas">
+            <n-button type="primary" size="large" @click="goToMixpla">Launch Platform</n-button>
+            <n-button size="large" @click="scrollToRegister">Become a Creator</n-button>
+          </div>
         </div>
-        <GlowLine :color="hoveredColor" />
-      </n-layout-header>
+        <div class="waveform" aria-hidden="true">
+          <span v-for="bar in 32" :key="bar" />
+        </div>
+      </section>
 
-      <n-layout-content :style="{ padding: '16px 16px 24px' }">
-        <n-space vertical class="root" :style="{ maxWidth: '720px', margin: '0 auto' }">
-          <n-space vertical size="large">
-            <n-thing style="margin-bottom: 8px;">
-              <template #header>
-                <n-h1
-                  style="font-size:32px; font-weight:bold; font-family: 'Kaylon', sans-serif; margin-top: 0; margin-bottom: 0px;">MIXPLA</n-h1>
-              </template>
-              <template #description>
-                <span style="font-size:20px; opacity:.9;">You choose the vibe. AI keeps it live.</span>
-              </template>
-            </n-thing>
+      <section class="what-is" id="about">
+        <div class="section-header">
+          <p class="eyebrow">What is Mixpla</p>
+          <h2>Audio infrastructure engineered for continuous AI performance.</h2>
+          <p class="intro">Mixpla powers autonomous radio stations, one-off shows and monetisation for creators building the next generation of sonic experiences.</p>
+        </div>
+        <div class="cards">
+          <article>
+            <h3>Continuous AI Radio</h3>
+            <p>24/7 AI DJ with live listener chat, adaptive programming and telemetry-grade observability.</p>
+          </article>
+          <article>
+            <h3>One-Time Streams</h3>
+            <p>Personalised audio for events, launches, workouts or birthdays with scripted AI hosts.</p>
+          </article>
+          <article>
+            <h3>Marketplace</h3>
+            <p>Creators sell scripts, playlists and DJ styles directly into the Mixpla ecosystem.</p>
+          </article>
+        </div>
+      </section>
 
-            <n-space vertical size="large" align="center">
-              <n-p style="font-size: 16px; text-align: center; max-width: 500px;">
-                Welcome to MIXPLA, where artificial intelligence creates and curates live radio stations 24/7. 
-                Our AI DJs analyze music patterns, audience preferences, and cultural trends to deliver unique, 
-                ever-evolving audio experiences that adapt to your vibe.
-              </n-p>
-              
-              <n-p style="font-size: 16px; text-align: center; max-width: 500px;">
-                Each station is powered by advanced AI that generates content, selects tracks, and maintains 
-                the perfect atmosphere. From ambient chill to high-energy beats, there's always something 
-                new to discover.
-              </n-p>
+      <section class="highlights">
+        <div>24/7 Uptime</div>
+        <div>AI DJ always on</div>
+        <div>Scales from 1 to millions</div>
+        <div>European infrastructure</div>
+      </section>
 
-              <n-button size="large" type="primary" @click="goToMixpla">
-                <template #icon>
-                  <n-icon>
-                    <ExternalLink />
-                  </n-icon>
-                </template>
-                Listen Live on mixpla.online
-              </n-button>
+      <section class="creator-portal" id="creators">
+        <div>
+          <p class="eyebrow">For Creators</p>
+          <h2>Operate your AI station, own your scripts, ship paid experiences.</h2>
+          <p>Set up stations, manage pipelines and monetise with enterprise tooling built for audio teams.</p>
+          <span class="badge">🔒 Protected — Login Required</span>
+        </div>
+        <n-button type="primary" size="large" @click="goToBrands">Access Creator Portal</n-button>
+      </section>
 
-              <n-button size="large" @click="goToBrands">
-                <template #icon>
-                  <n-icon>
-                    <Settings />
-                  </n-icon>
-                </template>
-                Manage Stations
-              </n-button>
+      <section class="register" id="register">
+        <div class="section-header">
+          <p class="eyebrow">Register as Creator</p>
+          <h2>Apply for Creator Access.</h2>
+          <p>Authentication powered by Keycloak — full portal coming soon.</p>
+        </div>
+        <form class="register-form" @submit.prevent="handleCreatorSubmit">
+          <n-input v-model:value="creatorForm.name" placeholder="Name" size="large" required />
+          <n-input v-model:value="creatorForm.email" placeholder="Email" size="large" required />
+          <n-input v-model:value="creatorForm.channel" placeholder="Channel / Website" size="large" required />
+          <n-button type="primary" attr-type="submit" size="large">Apply for Creator Access</n-button>
+        </form>
+        <p v-if="submitted" class="success">Application received. We'll reach out soon.</p>
+      </section>
 
-              <n-divider />
-
-              <n-space vertical size="small" align="center">
-                <a href="https://discord.com/channels/1395012925512613998/1395012926154346538" target="_blank"
-                  rel="noopener noreferrer" style="font-size:13px; text-decoration: underline;">Discord</a>
-                <router-link to="/about" style="font-size:13px; text-decoration: underline;">About</router-link>
-              </n-space>
-            </n-space>
-          </n-space>
-        </n-space>
-      </n-layout-content>
-    </n-layout>
+      <footer class="footer">
+        <div class="logo">MIXPLA</div>
+        <div class="footer-links">
+          <a href="#platform">Platform</a>
+          <a href="#creators">Creators</a>
+          <a href="#about">About</a>
+        </div>
+        <div class="status">● Live — Running 24/7</div>
+        <div class="copyright">© Mixpla</div>
+        <a class="affiliation" href="https://semantyca.com" target="_blank" rel="noopener noreferrer">Part of Semantyca</a>
+      </footer>
+    </div>
   </n-config-provider>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import {
-  NButton,
-  NCard,
-  NConfigProvider,
-  NDivider,
-  NH1,
-  NIcon,
-  NLayout,
-  NLayoutContent,
-  NLayoutHeader,
-  NP,
-  NSpace,
-  NText,
-  NThing,
-  darkTheme
-} from 'naive-ui'
-import { Alien, ExternalLink, Settings } from '@vicons/tabler'
-import GlowLine from '../components/common/GlowLine.vue'
+import { reactive, ref } from 'vue'
+import { NButton, NConfigProvider, NInput, darkTheme } from 'naive-ui'
 
-const hoveredColor = ref('#2196F3')
+const creatorForm = reactive({
+  name: '',
+  email: '',
+  channel: ''
+})
+
+const submitted = ref(false)
 
 function goToMixpla() {
   window.open('https://mixpla.online', '_blank', 'noopener,noreferrer')
@@ -100,28 +114,232 @@ function goToMixpla() {
 function goToBrands() {
   window.location.href = '/outline/brands'
 }
+
+function scrollToRegister() {
+  document.getElementById('register')?.scrollIntoView({ behavior: 'smooth' })
+}
+
+function handleCreatorSubmit() {
+  submitted.value = true
+}
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 @font-face {
-  font-family: 'ConthraxSB';
-  src: url('/src/assets/fonts/conthrax-sb.ttf') format('truetype');
+  font-family: 'Kaylon';
+  src: url('/src/assets/fonts/kaylonbold.otf') format('opentype');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
 
-@font-face {
-  font-family: 'Kaylon';
-  src: url('/src/assets/fonts/kaylonbold.otf') format('opentype');
-  font-weight: 800;
-  font-style: normal;
-  font-display: swap;
+:global(body) {
+  background: #050505;
 }
 
-.neon-header {
-  position: relative;
-  overflow: visible;
-  z-index: 1;
+.welcome-page {
+  min-height: 100vh;
+  background: #050505;
+  color: #f5f5f5;
+  font-family: 'Inter', sans-serif;
+  padding: 32px clamp(16px, 4vw, 64px);
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 32px;
+}
+
+.logo {
+  font-family: 'Kaylon', 'Inter', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+}
+
+nav {
+  display: flex;
+  gap: 20px;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+nav a,
+.footer-links a {
+  color: #c0c0c0;
+  text-decoration: none;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  align-items: center;
+  gap: 48px;
+  padding: 64px 0;
+}
+
+.eyebrow {
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: #888;
+  font-size: 0.75rem;
+}
+
+h1 {
+  font-size: clamp(2.5rem, 5vw, 3.8rem);
+  margin: 16px 0;
+}
+
+.subline {
+  font-size: 1.125rem;
+  color: #b0b0b0;
+}
+
+.hero-ctas {
+  display: flex;
+  gap: 16px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+.waveform {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 160px;
+  padding: 24px;
+  background: radial-gradient(circle at top, rgba(255,255,255,0.08), transparent 60%);
+  border-radius: 16px;
+}
+
+.waveform span {
+  width: 4px;
+  background: linear-gradient(180deg, #58d6ff, #7b5bff);
+  border-radius: 2px;
+  animation: pulse 1.5s ease-in-out infinite;
+  animation-delay: calc(var(--i) * 0.05s);
+}
+
+.waveform span:nth-child(n) {
+  --i: 1;
+}
+
+.waveform span:nth-child(odd) {
+  animation-duration: 1s;
+}
+
+.what-is {
+  padding: 64px 0;
+  border-top: 1px solid #1a1a1a;
+}
+
+.section-header h2 {
+  margin: 12px 0 8px;
+}
+
+.intro {
+  max-width: 680px;
+  color: #b0b0b0;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 24px;
+  margin-top: 32px;
+}
+
+.cards article {
+  padding: 24px;
+  border: 1px solid #1f1f1f;
+  border-radius: 12px;
+  background: #0f0f0f;
+}
+
+.highlights {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  padding: 48px 0;
+  border-top: 1px solid #1a1a1a;
+}
+
+.highlights div {
+  border: 1px solid #1f1f1f;
+  padding: 16px;
+  text-align: center;
+  border-radius: 12px;
+}
+
+.creator-portal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 48px 0;
+  border-top: 1px solid #1a1a1a;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #ffdf6b;
+}
+
+.register {
+  padding: 48px 0 64px;
+  border-top: 1px solid #1a1a1a;
+}
+
+.register-form {
+  display: grid;
+  gap: 16px;
+  max-width: 480px;
+  margin-top: 24px;
+}
+
+.success {
+  margin-top: 16px;
+  color: #68ffba;
+}
+
+.footer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+  padding-top: 48px;
+  border-top: 1px solid #1a1a1a;
+  align-items: center;
+}
+
+.status {
+  color: #68ffba;
+}
+
+@keyframes pulse {
+  0% { height: 20%; opacity: 0.4; }
+  50% { height: 100%; opacity: 1; }
+  100% { height: 30%; opacity: 0.4; }
+}
+
+@media (max-width: 768px) {
+  nav {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .nav {
+    flex-direction: column;
+  }
+  .creator-portal {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 </style>
