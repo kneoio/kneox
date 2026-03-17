@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import apiClient from '../../api/apiClient';
-import { unsecuredClient, apiServer } from '../../api/apiClient';
+import {  apiServer } from '../../api/apiClient';
 
 export const useReferencesStore = defineStore('references', () => {
   const countryOptions = [
@@ -298,7 +298,7 @@ export const useReferencesStore = defineStore('references', () => {
 
   const fetchStation = async (brand: string) => {
     try {
-      const baseWithoutApi = apiServer.replace(/\/api\/?$/, '');
+      const baseWithoutApi = apiServer.replace(/\/datanest\/?$/, '');
       const response = await unsecuredClient.get(`${baseWithoutApi}/radio/all-stations/${brand}`);
       return response.data;
     } catch (error) {
@@ -310,7 +310,7 @@ export const useReferencesStore = defineStore('references', () => {
   const fetchRadioStations = async (online?: boolean) => {
     try {
       // Build absolute URL without trailing /api to avoid /api prefix for this endpoint
-      const baseWithoutApi = apiServer.replace(/\/api\/?$/, '');
+      const baseWithoutApi = apiServer.replace(/\/datanest\/?$/, '');
       const params: any = {};
       if (online === true) {
         params.online = true;

@@ -2,31 +2,16 @@ import axios from 'axios';
 import keycloak from '../keycloakFactory';
 
 const apiServer = import.meta.env.VITE_API_SERVER;
-export const publicApiRoot = apiServer.replace(/\/datanest\/?$/, '');
 
 if (!apiServer) {
     throw new Error('VITE_API_SERVER environment variable is not set');
 }
-
-const unsecuredClient = axios.create({
-    baseURL: `${apiServer}`,
-    withCredentials: false,
-});
 
 const apiClient = axios.create({
     baseURL: `${apiServer}`,
     withCredentials: true,
 });
 
-unsecuredClient.interceptors.request.use(
-    (config) => {
-        config.headers['X-Client-ID'] = 'mixpla-web';
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
-    }
-);
 
 export const setupApiClient = (token?: string) => {
     if (token) {
@@ -63,5 +48,5 @@ export const getBaseURL = () => {
     return apiClient.defaults.baseURL;
 };
 
-export { unsecuredClient, apiServer };
+export { apiServer };
 export default apiClient;
