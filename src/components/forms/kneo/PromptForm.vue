@@ -564,7 +564,7 @@ export default defineComponent({
         if (eventSource) {
           eventSource.close();
         }
-        const apiServer = import.meta.env.VITE_API_SERVER;
+        const apiServer = import.meta.env.VITE_DATANEST_SERVER;
         eventSource = new EventSource(`${apiServer}/prompts/translate/stream?jobId=${jobId}`, { withCredentials: true } as any);
         eventSource.addEventListener('language_done', (e: MessageEvent) => {
           if (isUnmounting) return;

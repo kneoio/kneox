@@ -1,10 +1,10 @@
 import axios from 'axios';
 import keycloak from '../keycloakFactory';
 
-const apiServer = import.meta.env.VITE_API_SERVER;
+const apiServer = import.meta.env.VITE_DATANEST_SERVER;
 
 if (!apiServer) {
-    throw new Error('VITE_API_SERVER environment variable is not set');
+    throw new Error('VITE_DATANEST_SERVER environment variable is not set');
 }
 
 const apiClient = axios.create({

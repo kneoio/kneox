@@ -96,7 +96,6 @@ import {
   provide,
   h,
   nextTick,
-  watchEffect,
   inject,
   type Ref,
 } from 'vue';
@@ -128,15 +127,12 @@ import {
   Tornado
 } from '@vicons/tabler';
 import { LayersLinked } from '@vicons/tabler';
-import {useRadioStationStore} from "../stores/kneo/radioStationStore";
-import {RadioStation, BrandStatus} from "../types/kneoBroadcasterTypes";
 import keycloakInst from '../keycloakFactory.js';
 import SoundFragments from '../components/lists/kneo/SoundFragments.vue';
 import Songs from '../components/lists/kneo/Songs.vue';
 import StationPlaylist from "../components/lists/kneo/StationPlaylist.vue";
 import Listeners from "../components/lists/kneo/Listeners.vue";
 import DashboardView from "./DashboardView.vue";
-import StatusLed from '../components/common/StatusLed.vue';
 
 export default defineComponent({
   components: {
@@ -159,15 +155,14 @@ export default defineComponent({
     Listeners,
     DashboardView,
     Moon,
-    Sun,
-    StatusLed
+    Sun
   },
   setup() {
     const themeVars = useThemeVars();
 
     const router = useRouter();
     const route = useRoute();
-    const radioStationStore = useRadioStationStore();
+    const lumisonicSlug = 'lumisonic';
 
     const isDarkTheme = inject<Ref<boolean>>('isDarkTheme', ref(false));
     const toggleTheme = inject<(value: boolean) => void>('toggleTheme', () => {
@@ -178,247 +173,8 @@ export default defineComponent({
     const drawerWidth = ref(300);
     const active = ref(window.innerWidth > 768);
     const viewTitle = ref<string | null>(null);
-    const radioStations = ref<RadioStation[]>([]);
-    const isLoadingStations = ref(false);
 
     provide('parentTitle', viewTitle);
-
-    const fetchRadioStations = async () => {
-      try {
-        isLoadingStations.value = true;
-        await radioStationStore.fetchAll();
-        radioStations.value = radioStationStore.getEntries || [];
-      } catch (error) {
-        console.error('Failed to fetch radio stations:', error);
-        radioStations.value = [];
-      } finally {
-        isLoadingStations.value = false;
-      }
-    };
-
-
-    const dynamicMenuOptions = computed<MenuOption[]>(() => {
-      const userRoles = keycloakInst.tokenParsed?.realm_access?.roles || [];
-      const isSupervisor = userRoles.includes('supervisor');
-
-      const radioStationOptions: MenuOption[] = radioStations.value.map((station: RadioStation) => ({
-        label: () => h('div', {
-          style: 'display: flex; align-items: center; gap: 8px;'
-        }, [
-          h(StatusLed, {
-            status: station.status || 'OFF_LINE',
-            active: true,
-            size: 12
-          }),
-          h('span', {}, station.localizedName.en),
-          h('span', {
-            style: 'font-size: 0.75rem; color: #666; margin-left: auto;'
-          }, station.country || '')
-        ]),
-        key: `radiostation-${station.slugName}`,
-        icon: () => h(Radio, {size: 16}),
-        children: [
-          {
-            label: 'Dashboard',
-            key: `station-${station.slugName}-dashboard`
-          },
-          {
-            label: 'Playlist',
-            key: `station-${station.slugName}-playlist`
-          },
-          {
-            label: 'Listeners',
-            key: `station-${station.slugName}-listeners`
-          },
-          {
-            label: 'Chat',
-            key: `station-${station.slugName}-chat`
-          },
-          {
-            label: 'Settings',
-            key: `station-${station.slugName}-settings`
-          }
-        ]
-      }));
-
-      const allStationsOption: MenuOption = {
-        label: 'Brands',
-        key: 'brands',
-        icon: () => h(PictureInPictureTop)
-      };
-
-      const allStreamsOption: MenuOption = {
-        label: 'Streams',
-        key: 'streams',
-        icon: () => h(Ripple)
-      };
-
-      const homeOption: MenuOption = {
-        label: 'Home',
-        key: 'home',
-        icon: () => h(BuildingSkyscraper)
-      };
-
-      const profileOption: MenuOption = {
-        label: () => h('div', {style: 'display: flex; flex-direction: column;'}, [
-          h('div', 'Profile'),
-          h('div', {
-            style: 'font-size: 0.75rem; color: #666; margin-top: 2px;',
-            title: keycloakInst.tokenParsed?.email || keycloakInst.tokenParsed?.preferred_username || ''
-          }, keycloakInst.tokenParsed?.preferred_username || '')
-        ]),
-        key: 'profile',
-        icon: () => h(Fall)
-      };
-
-      const logoutOption: MenuOption = {
-        label: 'Logout',
-        key: 'logout',
-        icon: () => h(Logout)
-      };
-
-      if (!isSupervisor) {
-        return [
-          ...radioStationOptions,
-          {
-            key: 'divider-2',
-            type: 'divider',
-            props: {
-              style: {
-                marginLeft: '32px',
-                marginBottom: '10px',
-                color: '#ffb700',
-              }
-            }
-          },
-          allStationsOption,
-          allStreamsOption,
-          homeOption,
-          {
-            type: 'divider',
-            key: 'd1'
-          },
-          profileOption,
-          logoutOption
-        ];
-      }
-
-      const baseOptions: MenuOption[] = [
-        {
-          label: 'Dashboard',
-          key: 'dashboard',
-          icon: () => h(Dashboard)
-        },
-        {
-          key: 'divider-1',
-          type: 'divider',
-          props: {
-            style: {
-              marginLeft: '32px',
-              marginBottom: '10px',
-              color: '#ffb700',
-            }
-          }
-        }
-      ];
-
-      const remainingOptions: MenuOption[] = [
-        {
-          label: 'Listeners',
-          key: 'listeners',
-          icon: () => h(Headphones)
-        },
-        {
-          label: 'Sound Fragments',
-          key: 'fragments',
-          icon: () => h(Music)
-        },
-        {
-          label: 'Environment Profiles',
-          key: 'environment_profiles',
-          icon: () => h(BrandAirtable)
-        },
-        {
-          label: 'Events',
-          key: 'events',
-          icon: () => h(Calendar)
-        },
-        {
-          label: 'AiAgents',
-          key: 'ai_agents',
-          icon: () => h(Robot)
-        },
-        {
-          label: 'Flows',
-          key: 'document-tree',
-          icon: () => h(Tornado)
-        },
-        {
-          label: 'Scripts',
-          key: 'scripts',
-          icon: () => h(LayersLinked)
-        },
-        {
-          label: 'Scenes',
-          key: 'scenes',
-          icon: () => h(Gauge)
-        },
-        {
-          label: 'Prompts',
-          key: 'prompts',
-          icon: () => h(Prompt),
-          children: [
-            {
-              label: 'Song',
-              key: 'prompts-song'
-            },
-            {
-              label: 'Advertisement',
-              key: 'prompts-advertisement'
-            },
-            {
-              label: 'Reminder',
-              key: 'prompts-reminder'
-            },
-            {
-              label: 'Generator',
-              key: 'prompts-generator'
-            }
-          ]
-        },
-        {
-          label: 'Drafts',
-          key: 'drafts',
-          icon: () => h(ToiletPaper)
-        },
-        {
-          type: 'divider',
-          key: 'd1'
-        },
-        homeOption,
-        profileOption,
-        logoutOption
-      ];
-
-      return [
-        ...baseOptions,
-        ...radioStationOptions,
-        {
-          key: 'divider-2',
-          type: 'divider',
-          props: {
-            style: {
-              marginLeft: '32px',
-              marginBottom: '10px',
-              color: '#ffb700',
-            }
-          }
-        },
-        allStationsOption,
-        allStreamsOption,
-        ...remainingOptions
-      ];
-    });
 
     const activeMenuKey = computed(() => {
       if (route.name === 'Dashboard') return 'dashboard';
@@ -460,12 +216,6 @@ export default defineComponent({
       if (route.name === 'StationChat' && route.params.brandName) {
         return `station-${route.params.brandName}-chat`;
       }
-      if (route.name === 'Brand' && route.params.id) {
-        const station = radioStations.value.find((s) => s.id === route.params.id);
-        if (station) {
-          return `station-${station.slugName}-settings`;
-        }
-      }
       return null;
     });
 
@@ -484,10 +234,6 @@ export default defineComponent({
       } else if (key.startsWith('station-') && key.endsWith('-chat')) {
         const brandName = key.replace('station-', '').replace('-chat', '');
         await router.push({name: 'StationChat', params: {brandName: brandName}});
-      } else if (key.startsWith('station-') && key.endsWith('-settings')) {
-        const brandName = key.replace('station-', '').replace('-settings', '');
-        const station = radioStations.value.find((s) => s.slugName === brandName)!;
-        await router.push({name: 'Brand', params: {id: station.id}});
       } else if (key === 'brands') {
         await router.push({name: 'Brands'});
       } else if (key === 'streams') {
@@ -567,29 +313,10 @@ export default defineComponent({
     onMounted(() => {
       window.addEventListener('resize', updateDrawerState);
       updateDrawerState();
-      fetchRadioStations();
     });
 
     onUnmounted(() => {
       window.removeEventListener('resize', updateDrawerState);
-    });
-
-    watchEffect(() => {
-      if (radioStationStore.getEntries) {
-        radioStations.value = radioStationStore.getEntries;
-      }
-    });
-
-    onMounted(() => {
-      const intervalId = setInterval(() => {
-        if (!isLoadingStations.value) {
-          fetchRadioStations();
-        }
-      }, 60000); // Refresh every 60 seconds
-
-      onUnmounted(() => {
-        clearInterval(intervalId);
-      });
     });
 
     const drawerStyle = computed(() => ({
@@ -597,81 +324,56 @@ export default defineComponent({
     }));
 
     // Tree data structure
-    const treeData = computed(() => {
-      const userRoles = keycloakInst.tokenParsed?.realm_access?.roles || [];
-      const isSupervisor = userRoles.includes('supervisor');
-
-      const stationNodes = radioStations.value.map((station: RadioStation) => ({
-        key: `radiostation-${station.slugName}`,
-        label: station.localizedName.en,
+    const treeData = computed(() => [
+      {
+        key: `radiostation-${lumisonicSlug}`,
+        label: 'Lumisonic',
         children: [
-          { key: `station-${station.slugName}-dashboard`, label: 'Dashboard' },
-          { key: `station-${station.slugName}-playlist`, label: 'Playlist' },
-          { key: `station-${station.slugName}-listeners`, label: 'Listeners' },
-          { key: `station-${station.slugName}-chat`, label: 'Chat' },
-          { key: `station-${station.slugName}-settings`, label: 'Settings' }
+          { key: `station-${lumisonicSlug}-dashboard`, label: 'Dashboard' },
+          { key: `station-${lumisonicSlug}-playlist`, label: 'Playlist' },
+          { key: `station-${lumisonicSlug}-listeners`, label: 'Listeners' },
+          { key: `station-${lumisonicSlug}-chat`, label: 'Chat' }
         ]
-      }));
+      },
+      { key: 'brands', label: 'Brands' },
+      { key: 'streams', label: 'Streams' },
+      { key: 'songs', label: 'Songs' },
+      { key: 'listeners', label: 'Listeners' },
+      { key: 'fragments', label: 'Sound Fragments' },
+      { key: 'environment_profiles', label: 'Environment Profiles' },
+      { key: 'events', label: 'Events' },
+      { key: 'ai_agents', label: 'AiAgents' },
+      { key: 'document-tree', label: 'Flows' },
+      { key: 'scripts', label: 'Scripts' },
+      {
+        key: 'scenes',
+        label: 'Scenes',
+        children: [
+          { key: 'scenes-absolute-time', label: 'Absolute Time Scenes' },
+          { key: 'scenes-relative-time', label: 'Relative Time Scenes' }
+        ]
+      },
+      {
+        key: 'prompts',
+        label: 'Prompts',
+        children: [
+          { key: 'prompts-song', label: 'Song' },
+          { key: 'prompts-advertisement', label: 'Advertisement' },
+          { key: 'prompts-reminder', label: 'Reminder' },
+          { key: 'prompts-generator', label: 'Generator' }
+        ]
+      },
+      { key: 'drafts', label: 'Drafts' },
+      { key: 'home', label: 'Home' },
+      { key: 'profile', label: 'Profile' },
+      { key: 'logout', label: 'Logout' }
+    ]);
 
-      const baseNodes = [
-        { key: 'home', label: 'Home' },
-        { key: 'brands', label: 'Brands' },
-        { key: 'streams', label: 'Streams' },
-        { key: 'songs', label: 'Songs' }
-      ];
-
-      const supervisorNodes = [
-        { key: 'listeners', label: 'Listeners' },
-        { key: 'fragments', label: 'Sound Fragments' },
-        { key: 'environment_profiles', label: 'Environment Profiles' },
-        { key: 'events', label: 'Events' },
-        { key: 'ai_agents', label: 'AiAgents' },
-        { key: 'document-tree', label: 'Flows' },
-        { key: 'scripts', label: 'Scripts' },
-        { 
-          key: 'scenes', 
-          label: 'Scenes',
-          children: [
-            { key: 'scenes-absolute-time', label: 'Absolute Time Scenes' },
-            { key: 'scenes-relative-time', label: 'Relative Time Scenes' }
-          ]
-        },
-        {
-          key: 'prompts',
-          label: 'Prompts',
-          children: [
-            { key: 'prompts-song', label: 'Song' },
-            { key: 'prompts-advertisement', label: 'Advertisement' },
-            { key: 'prompts-reminder', label: 'Reminder' },
-            { key: 'prompts-generator', label: 'Generator' }
-          ]
-        },
-        { key: 'drafts', label: 'Drafts' }
-      ];
-
-      const endNodes = [
-        { key: 'profile', label: 'Profile' },
-        { key: 'logout', label: 'Logout' }
-      ];
-
-      return [
-        ...stationNodes,
-        { key: 'brands', label: 'Brands' },
-        { key: 'streams', label: 'Streams' },
-        { key: 'songs', label: 'Songs' },
-        ...(isSupervisor ? supervisorNodes : []),
-        { key: 'home', label: 'Home' },
-        ...endNodes
-      ];
-    });
-
-    const defaultExpandedKeys = computed(() => {
-      return [
-        ...radioStations.value.map(station => `radiostation-${station.slugName}`),
-        'scenes',
-        'prompts'
-      ];
-    });
+    const defaultExpandedKeys = computed(() => [
+      `radiostation-${lumisonicSlug}`,
+      'scenes',
+      'prompts'
+    ]);
 
     const handleTreeSelect = async (keys: Array<string | number>) => {
       const key = keys[0] as string;
@@ -682,24 +384,14 @@ export default defineComponent({
 
     const renderTreeLabel = ({ option }: { option: any }) => {
       if (option.key?.startsWith('radiostation-')) {
-        const station = radioStations.value.find(s => `radiostation-${s.slugName}` === option.key);
-        if (station) {
-          return h('div', {
-            style: 'display: flex; align-items: center; gap: 8px; width: 100%;'
-          }, [
-            h(StatusLed, {
-              status: station.status || 'OFF_LINE',
-              active: true,
-              size: 12
-            }),
-            h('span', {}, option.label),
-            h('span', {
-              style: 'font-size: 0.75rem; color: #666; margin-left: auto;'
-            }, station.country || '')
-          ]);
-        }
+        return h('div', {
+          style: 'display: flex; align-items: center; gap: 8px; width: 100%;'
+        }, [
+          h(NIcon, { size: 20 }, () => h(Radio)),
+          h('span', {}, option.label)
+        ]);
       }
-      
+
       // Add icons for other nodes
       let iconComponent = null;
       if (option.key === 'home') iconComponent = h(NIcon, { size: 25 }, () => h(BuildingSkyscraper));
@@ -729,7 +421,6 @@ export default defineComponent({
 
     return {
       active,
-      dynamicMenuOptions,
       treeData,
       defaultExpandedKeys,
       toggleDrawer,
@@ -742,7 +433,6 @@ export default defineComponent({
       handleContentClick,
       drawerWidth,
       AlignJustified,
-      isLoadingStations,
       drawerStyle,
       isDarkTheme,
       toggleTheme,
