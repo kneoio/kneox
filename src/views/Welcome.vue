@@ -3,6 +3,7 @@
     <div class="welcome-page">
       <header class="nav">
         <div class="logo">MIXPLA</div>
+        <img src="/logo.svg" alt="MIXPLA" class="nav-logo">
         <nav>
           <a href="#platform">Platform</a>
           <a href="#creators">Owners</a>
@@ -159,6 +160,11 @@ function handleCreatorSubmit() {
   font-weight: 700;
   letter-spacing: 0.24em;
   font-size: clamp(1.1rem, 2vw, 1.6rem);
+}
+
+.nav-logo {
+  height: 48px;
+  filter: invert(1);
 }
 
 nav {
