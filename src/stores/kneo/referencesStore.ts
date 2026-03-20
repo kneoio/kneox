@@ -260,7 +260,7 @@ export const useReferencesStore = defineStore('references', () => {
   };
 
   const fetchLabels = async () => {
-    const response = await apiClient.get('/dictionary/labels?page=1&size=1000');
+    const response = await apiClient.get('/dictionary/labels/sound_fragment');
     if (!response?.data?.payload) throw new Error('Invalid API response');
 
     labelOptions.value = response.data.payload.viewData.entries
@@ -274,7 +274,7 @@ export const useReferencesStore = defineStore('references', () => {
   };
 
   const fetchLabelsByCategory = async (category: string) => {
-    const response = await apiClient.get(`/labels/only/category/${category}`);
+    const response = await apiClient.get(`/dictionary/labels/${category}`);
     if (!response?.data?.payload) throw new Error('Invalid API response');
 
     return response.data.payload.viewData.entries

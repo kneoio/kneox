@@ -160,6 +160,7 @@ function handleCreatorSubmit() {
   font-weight: 700;
   letter-spacing: 0.24em;
   font-size: clamp(1.1rem, 2vw, 1.6rem);
+  color: #c0c0c0;
 }
 
 .nav-logo {
