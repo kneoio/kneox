@@ -180,7 +180,6 @@ export default defineComponent({
       if (route.name === 'Dashboard') return 'dashboard';
       if (route.name === 'Player') return 'player';
       if (route.name === 'Brands') return 'brands';
-      if (route.name === 'Streams') return 'streams';
       if (route.name === 'Songs') return 'songs';
       if (route.name === 'SoundFragments') return 'fragments';
       if (route.name === 'Events') return 'events';
@@ -236,8 +235,6 @@ export default defineComponent({
         await router.push({name: 'StationChat', params: {brandName: brandName}});
       } else if (key === 'brands') {
         await router.push({name: 'Brands'});
-      } else if (key === 'streams') {
-        await router.push({name: 'Streams'});
       } else if (key === 'songs') {
         await router.push({name: 'Songs'});
       } else if (key === 'listeners') {
@@ -336,7 +333,6 @@ export default defineComponent({
         ]
       },
       { key: 'brands', label: 'Brands' },
-      { key: 'streams', label: 'Streams' },
       { key: 'songs', label: 'Songs' },
       { key: 'listeners', label: 'Listeners' },
       { key: 'fragments', label: 'Sound Fragments' },
@@ -396,7 +392,6 @@ export default defineComponent({
       let iconComponent = null;
       if (option.key === 'home') iconComponent = h(NIcon, { size: 25 }, () => h(BuildingSkyscraper));
       else if (option.key === 'brands') iconComponent = h(NIcon, { size: 25 }, () => h(PictureInPictureTop));
-      else if (option.key === 'streams') iconComponent = h(NIcon, { size: 25 }, () => h(Ripple));
       else if (option.key === 'songs') iconComponent = h(NIcon, { size: 25 }, () => h(Music));
       else if (option.key === 'listeners') iconComponent = h(NIcon, { size: 25 }, () => h(Headphones));
       else if (option.key === 'fragments') iconComponent = h(NIcon, { size: 25 }, () => h(Music));
