@@ -17,7 +17,6 @@
         <n-space justify="space-between" align="center">
           <n-space>
             <n-h3 style=" font-weight:bold; font-family: 'Kaylon', sans-serif; margin-top: 0; margin-bottom: 0px;">MIXPLA</n-h3>
-            <n-h6 style="font-size: small">manager v.1.8.15</n-h6>
           </n-space>
           <n-switch
               :value="isDarkTheme"
@@ -40,7 +39,7 @@
 
         </n-space>
       </div>
-      <div class="drawer-content" style="overflow-y: auto; max-height: calc(100vh - 80px);">
+      <div class="drawer-content" style="overflow-y: auto; max-height: calc(100vh - 140px);">
         <n-tree
             :data="treeData"
             :selected-keys="activeMenuKey ? [activeMenuKey] : []"
@@ -53,6 +52,10 @@
             style="min-width: 250px;"
             :render-label="renderTreeLabel"
         />
+      </div>
+      <div class="drawer-footer">
+        <img src="/logo.svg" alt="Mixpla" class="drawer-logo" />
+        <div class="drawer-version">manager v.1.8.16</div>
       </div>
     </div>
 
@@ -474,6 +477,25 @@ export default defineComponent({
 
 .drawer-content {
   padding: 16px;
+}
+
+.drawer-footer {
+  padding: 12px 16px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-top: 1px solid #9336f7;
+}
+
+.drawer-logo {
+  height: 22px;
+  width: auto;
+  display: block;
+}
+
+.drawer-version {
+  font-size: 12px;
+  opacity: 0.7;
 }
 
 /* Collapsed Drawer (Mini Version) */

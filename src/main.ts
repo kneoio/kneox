@@ -69,7 +69,7 @@ keycloak.init({
                 } catch {
                     keycloak.login();
                 }
-            }, 60000);
+            }, 300000);
 
         } catch (error) {
             console.error('Failed to load user profile', error);
