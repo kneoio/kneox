@@ -55,7 +55,7 @@
       </div>
       <div class="drawer-footer">
         <img src="/logo.svg" alt="Mixpla" class="drawer-logo" />
-        <div class="drawer-version">manager v.1.8.16</div>
+        <div class="drawer-version">manager v.1.8.17</div>
       </div>
     </div>
 
