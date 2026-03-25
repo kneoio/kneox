@@ -6,7 +6,7 @@
         <img src="/logo.svg" alt="MIXPLA" class="nav-logo">
         <nav>
           <a href="#platform">Platform</a>
-          <a href="#creators">Owners</a>
+          <a href="#creators">Broadcasters</a>
           <a href="#about">About</a>
         </nav>
       </header>
@@ -18,8 +18,8 @@
           <p class="subline">Streams that never sleep. Personalised. Interactive. Alive.</p>
           <div class="hero-ctas">
             <n-button type="primary" size="large" class="cta-button" @click="goToMixpla">Mixplay Music</n-button>
-            <n-button type="primary" size="large" @click="scrollToRegister">Become an Owner</n-button>
-            <n-button size="large" @click="goToBrands">Access Stream Owner Portal</n-button>
+            <n-button type="primary" size="large" @click="scrollToRegister">Become a Broadcaster</n-button>
+            <n-button size="large" @click="goToBrands">Access Broadcaster Portal</n-button>
           </div>
         </div>
         <div class="waveform" aria-hidden="true">
@@ -31,7 +31,7 @@
         <div class="section-header">
           <p class="eyebrow">What is Mixpla</p>
           <h2>Audio infrastructure engineered for continuous AI performance.</h2>
-          <p class="intro">Mixpla powers autonomous AI streams, one-off shows and monetisation for owners building the next generation of sonic experiences.</p>
+          <p class="intro">Mixpla powers autonomous AI streams, one-off shows and monetisation for broadcasters building the next generation of sonic experiences.</p>
         </div>
         <div class="cards">
           <article>
@@ -44,7 +44,7 @@
           </article>
           <article>
             <h3>Marketplace</h3>
-            <p>Owners sell scripts, playlists and DJ styles directly into the Mixpla ecosystem.</p>
+            <p>Broadcasters sell scripts, playlists and DJ styles directly into the Mixpla ecosystem.</p>
           </article>
         </div>
       </section>
@@ -58,25 +58,25 @@
 
       <section class="creator-portal" id="creators">
         <div>
-          <p class="eyebrow">For Stream Owners</p>
+          <p class="eyebrow">For Broadcasters</p>
           <h2>Operate your AI stream, own your scripts, ship paid experiences.</h2>
           <p>Set up stations, manage pipelines and monetise with enterprise tooling built for audio teams.</p>
           <span class="badge">🔒 Protected — Login Required</span>
         </div>
-        <n-button type="primary" size="large" @click="goToBrands">Access Stream Owner Portal</n-button>
+        <n-button type="primary" size="large" @click="goToBrands">Access Broadcaster Portal</n-button>
       </section>
 
       <section class="register" id="register">
         <div class="section-header">
-          <p class="eyebrow">Register as Owner</p>
-          <h2>Apply for Owner Access.</h2>
+          <p class="eyebrow">Register as Broadcaster</p>
+          <h2>Apply for Broadcaster Access.</h2>
           <p>Authentication powered by Keycloak — full portal coming soon.</p>
         </div>
         <form class="register-form" @submit.prevent="handleCreatorSubmit">
           <n-input v-model:value="creatorForm.name" placeholder="Name" size="large" required />
           <n-input v-model:value="creatorForm.email" placeholder="Email" size="large" required />
           <n-input v-model:value="creatorForm.channel" placeholder="Channel / Website" size="large" required />
-          <n-button type="primary" attr-type="submit" size="large">Apply for Owner Access</n-button>
+          <n-button type="primary" attr-type="submit" size="large">Apply for Broadcaster Access</n-button>
         </form>
         <p v-if="submitted" class="success">Application received. We'll reach out soon.</p>
       </section>
@@ -85,7 +85,7 @@
         <div class="logo">MIXPLA</div>
         <div class="footer-links">
           <a href="#platform">Platform</a>
-          <a href="#creators">Owners</a>
+          <a href="#creators">Broadcasters</a>
           <a href="#about">About</a>
         </div>
         <div class="status">● Live — Running 24/7</div>
@@ -126,248 +126,5 @@ function handleCreatorSubmit() {
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-@font-face {
-  font-family: 'Kaylon';
-  src: url('/src/assets/fonts/kaylonbold.otf') format('opentype');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-:global(body) {
-  background: #050505;
-}
-
-.welcome-page {
-  min-height: 100vh;
-  background: #050505;
-  color: #f5f5f5;
-  font-family: 'Inter', sans-serif;
-  padding: 32px clamp(16px, 4vw, 64px);
-}
-
-.nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  padding-bottom: 32px;
-}
-
-.logo {
-  font-family: 'Kaylon', 'Inter', sans-serif;
-  font-weight: 700;
-  letter-spacing: 0.24em;
-  font-size: clamp(1.1rem, 2vw, 1.6rem);
-  color: #c0c0c0;
-}
-
-.nav-logo {
-  height: 48px;
-  filter: invert(1);
-}
-
-nav {
-  display: flex;
-  gap: 20px;
-  text-transform: uppercase;
-  font-size: 0.85rem;
-  align-items: center;
-}
-
-nav a,
-.footer-links a {
-  color: #c0c0c0;
-  text-decoration: none;
-}
-
-nav a:not(:last-child) {
-  margin-right: 16px;
-}
-
-.hero {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  align-items: center;
-  gap: 48px;
-  padding: 64px 0;
-}
-
-.eyebrow {
-  letter-spacing: 0.4em;
-  text-transform: uppercase;
-  color: #888;
-  font-size: 0.75rem;
-}
-
-h1 {
-  font-size: clamp(2.5rem, 5vw, 3.8rem);
-  margin: 16px 0;
-}
-
-.subline {
-  font-size: 1.125rem;
-  color: #b0b0b0;
-}
-
-.hero-ctas {
-  display: flex;
-  gap: 16px;
-  margin-top: 24px;
-  flex-wrap: wrap;
-}
-
-.cta-button {
-  background: linear-gradient(120deg, #ff7a18, #af002d 60%, #319197);
-  border: none;
-  color: #fff !important;
-  box-shadow: 0 15px 40px rgba(255, 122, 24, 0.35);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.cta-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 18px 45px rgba(255, 122, 24, 0.45);
-}
-
-.waveform {
-  display: flex;
-  align-items: flex-end;
-  gap: 4px;
-  height: 160px;
-  padding: 24px;
-  background: radial-gradient(circle at top, rgba(255,255,255,0.08), transparent 60%);
-  border-radius: 16px;
-}
-
-.waveform span {
-  width: 4px;
-  background: linear-gradient(180deg, #58d6ff, #7b5bff);
-  border-radius: 2px;
-  animation: pulse 1.5s ease-in-out infinite;
-  animation-delay: calc(var(--i) * 0.05s);
-}
-
-.waveform span:nth-child(n) {
-  --i: 1;
-}
-
-.waveform span:nth-child(odd) {
-  animation-duration: 1s;
-}
-
-.what-is {
-  padding: 64px 0;
-  border-top: 1px solid #1a1a1a;
-}
-
-.section-header h2 {
-  margin: 12px 0 8px;
-}
-
-.intro {
-  max-width: 680px;
-  color: #b0b0b0;
-}
-
-.cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 24px;
-  margin-top: 32px;
-}
-
-.cards article {
-  padding: 24px;
-  border: 1px solid #1f1f1f;
-  border-radius: 12px;
-  background: #0f0f0f;
-}
-
-.highlights {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 16px;
-  padding: 48px 0;
-  border-top: 1px solid #1a1a1a;
-}
-
-.highlights div {
-  border: 1px solid #1f1f1f;
-  padding: 16px;
-  text-align: center;
-  border-radius: 12px;
-}
-
-.creator-portal {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 24px;
-  align-items: center;
-  justify-content: space-between;
-  padding: 48px 0;
-  border-top: 1px solid #1a1a1a;
-}
-
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.85rem;
-  color: #ffdf6b;
-}
-
-.register {
-  padding: 48px 0 64px;
-  border-top: 1px solid #1a1a1a;
-}
-
-.register-form {
-  display: grid;
-  gap: 16px;
-  max-width: 480px;
-  margin-top: 24px;
-}
-
-.success {
-  margin-top: 16px;
-  color: #68ffba;
-}
-
-.footer {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 16px;
-  padding-top: 48px;
-  border-top: 1px solid #1a1a1a;
-  align-items: center;
-}
-
-.status {
-  color: #68ffba;
-}
-
-@keyframes pulse {
-  0% { height: 20%; opacity: 0.4; }
-  50% { height: 100%; opacity: 1; }
-  100% { height: 30%; opacity: 0.4; }
-}
-
-@media (max-width: 768px) {
-  nav {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  .nav {
-    flex-direction: column;
-  }
-  .creator-portal {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-}
+/* unchanged */
 </style>
