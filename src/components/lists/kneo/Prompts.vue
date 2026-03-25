@@ -49,7 +49,7 @@
 
 <script lang="ts">
 import { computed, defineComponent, h, onMounted, onUnmounted, ref, watch } from 'vue';
-import { DataTableColumns, NButton, NButtonGroup, NDataTable, NGi, NGrid, NPageHeader, NTag, NFormItem, NSelect, NSpace, NCollapseTransition, NRadioGroup, NRadioButton, useMessage } from 'naive-ui';
+import { DataTableColumns, NButton, NButtonGroup, NDataTable, NGi, NGrid, NPageHeader, NTag, NFormItem, NSelect, NSpace, NCollapseTransition, NRadioGroup, NRadioButton, NCheckbox, useMessage } from 'naive-ui';
 import { useRoute, useRouter } from 'vue-router';
 import LoaderIcon from '../../helpers/LoaderWrapper.vue';
 import RedLed from '../../common/RedLed.vue';
@@ -58,7 +58,7 @@ import { usePromptStore } from '../../../stores/kneo/promptStore';
 import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 
 export default defineComponent( {
-  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, RedLed, NTag, NFormItem, NSelect, NSpace, NCollapseTransition, NRadioGroup, NRadioButton },
+  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, RedLed, NTag, NFormItem, NSelect, NSpace, NCollapseTransition, NRadioGroup, NRadioButton, NCheckbox },
   setup() {
     const router = useRouter();
     const route = useRoute();
@@ -208,9 +208,10 @@ export default defineComponent( {
       stopPeriodicRefresh();
     } );
 
-    watch( () => filters.value, () => {
+    watch( () => filters.value, (newValue, oldValue) => {
       saveFilters();
-      if ( showFilters.value ) {
+      // Always fetch when languageTag changes, otherwise only when showFilters is true
+      if ( newValue.languageTag !== oldValue.languageTag || showFilters.value ) {
         fetchData( 1, store.getPagination.pageSize );
       }
     }, { deep: true } );

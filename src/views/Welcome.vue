@@ -3,7 +3,7 @@
     <div class="welcome-page">
       <header class="nav">
         <div class="logo">MIXPLA</div>
-        <img src="/logo.svg" alt="MIXPLA" class="nav-logo">
+        <img src="/favicon.svg" alt="MIXPLA" class="nav-logo">
         <nav>
           <a href="#platform">Platform</a>
           <a href="#creators">Owners</a>
