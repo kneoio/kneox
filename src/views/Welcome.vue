@@ -18,7 +18,8 @@
           <p class="subline">Streams that never sleep. Personalised. Interactive. Alive.</p>
           <div class="hero-ctas">
             <n-button type="primary" size="large" class="cta-button" @click="goToMixpla">Mixplay Music</n-button>
-            <n-button size="large" @click="scrollToRegister">Become an Owner</n-button>
+            <n-button type="primary" size="large" @click="scrollToRegister">Become an Owner</n-button>
+            <n-button size="large" @click="goToBrands">Access Stream Owner Portal</n-button>
           </div>
         </div>
         <div class="waveform" aria-hidden="true">
