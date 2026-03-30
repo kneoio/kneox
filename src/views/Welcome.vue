@@ -6,14 +6,14 @@
         <img src="/favicon.svg" alt="MIXPLA" class="nav-logo">
         <nav>
           <a href="#platform">Platform</a>
-          <a href="#creators">Owners</a>
+          <a href="#creators">Broadcasters</a>
           <a href="#about">About</a>
         </nav>
       </header>
 
       <section class="hero" id="platform">
         <div class="hero-text">
-          <p class="eyebrow">You choose the vibe. AI keeps it live.</p>
+          <p class="eyebrow neon-motto">You choose the vibe. AI keeps it live.</p>
           <h1>AI-Driven Streams, Events and Audio Experiences.</h1>
           <p class="subline">Streams that never sleep. Personalised. Interactive. Alive.</p>
           <div class="hero-ctas">
@@ -90,7 +90,7 @@
         </div>
         <div class="status">● Live — Running 24/7</div>
         <div class="copyright">© Mixpla</div>
-        <a class="affiliation" href="https://semantyca.com" target="_blank" rel="noopener noreferrer">Part of Semantyca</a>
+        <a class="affiliation" href="https://semantyca.com" target="_blank" rel="noopener noreferrer">By Semantyca</a>
       </footer>
     </div>
   </n-config-provider>
@@ -127,6 +127,7 @@ function handleCreatorSubmit() {
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css?family=Sacramento&display=swap");
 
 @font-face {
   font-family: 'Kaylon';
@@ -200,6 +201,17 @@ nav a:not(:last-child) {
   text-transform: uppercase;
   color: #888;
   font-size: 0.75rem;
+}
+
+.neon-motto {
+  font-size: 0.75rem;
+  text-shadow: 0 0 5px #ffa500, 0 0 15px #ffa500, 0 0 20px #ffa500, 0 0 40px #ffa500, 0 0 60px #ff0000, 0 0 10px #ff8d00, 0 0 98px #ff0000;
+  color: #fff6a9;
+  text-align: left;
+  animation: blink 12s infinite;
+  -webkit-animation: blink 12s infinite;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
 }
 
 h1 {
@@ -349,6 +361,48 @@ h1 {
 
 .status {
   color: #68ffba;
+}
+
+@-webkit-keyframes blink {
+  20%,
+  24%,
+  55% {
+    color: #111;
+    text-shadow: none;
+  }
+
+  0%,
+  19%,
+  21%,
+  23%,
+  25%,
+  54%,
+  56%,
+  100% {
+    text-shadow: 0 0 5px #ffa500, 0 0 15px #ffa500, 0 0 20px #ffa500, 0 0 40px #ffa500, 0 0 60px #ff0000, 0 0 10px #ff8d00, 0 0 98px #ff0000;
+    color: #fff6a9;
+  }
+}
+
+@keyframes blink {
+  20%,
+  24%,
+  55% {
+    color: #111;
+    text-shadow: none;
+  }
+
+  0%,
+  19%,
+  21%,
+  23%,
+  25%,
+  54%,
+  56%,
+  100% {
+    text-shadow: 0 0 5px #ffa500, 0 0 15px #ffa500, 0 0 20px #ffa500, 0 0 40px #ffa500, 0 0 60px #ff0000, 0 0 10px #ff8d00, 0 0 98px #ff0000;
+    color: #fff6a9;
+  }
 }
 
 @keyframes pulse {
