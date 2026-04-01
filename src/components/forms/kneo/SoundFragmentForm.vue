@@ -241,7 +241,10 @@ export default defineComponent({
       { label: 'Advertisement', value: 'ADVERTISEMENT' },
       { label: 'Jingle', value: 'JINGLE' },
       { label: 'News', value: 'NEWS' },
-      { label: 'Weather', value: 'WEATHER' }
+      { label: 'Weather', value: 'WEATHER' },
+      { label: 'Jingle Intro', value: 'JINGLE_INTRO' },
+      { label: 'Jingle Outro', value: 'JINGLE_OUTRO' },
+      { label: 'Background Loop', value: 'BACKGROUND_LOOP' }
     ];
 
     const sourceDisplayValue = computed(() => store.formatSource(localFormData.source));

@@ -5,7 +5,10 @@ export enum FragmentType {
     ADVERTISEMENT = "ADVERTISEMENT",
     JINGLE = "JINGLE",
     NEWS = "NEWS",
-    WEATHER = "WEATHER"
+    WEATHER = "WEATHER",
+    JINGLE_INTRO = "JINGLE_INTRO",
+    JINGLE_OUTRO = "JINGLE_OUTRO",
+    BACKGROUND_LOOP = "BACKGROUND_LOOP"
 }
 
 export enum PromptType {

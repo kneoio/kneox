@@ -145,6 +145,17 @@ export default defineComponent( {
       try {
         loading.value = true;
         let activeFilters: any = {};
+        
+        // Always apply languageTag filter since it's always visible
+        if ( filters.value.languageTag ) {
+          activeFilters = {
+            ...activeFilters,
+            activated: true,
+            languageTag: filters.value.languageTag
+          };
+        }
+        
+        // Always apply promptType filter
         if ( filters.value.promptType ) {
           activeFilters = {
             ...activeFilters,
@@ -152,22 +163,17 @@ export default defineComponent( {
             promptType: filters.value.promptType
           };
         }
+        
+        // Apply other filters only when showFilters is true
         if ( showFilters.value ) {
-          const hasFilters = filters.value.languageTag ||
-            filters.value.promptType ||
-            filters.value.enabled ||
+          const hasOtherFilters = filters.value.enabled ||
             filters.value.master ||
             filters.value.locked;
-          if ( hasFilters ) {
+          if ( hasOtherFilters ) {
             activeFilters = {
+              ...activeFilters,
               activated: true
             };
-            if ( filters.value.languageTag ) {
-              activeFilters.languageTag = filters.value.languageTag;
-            }
-            if ( filters.value.promptType ) {
-              activeFilters.promptType = filters.value.promptType;
-            }
             if ( filters.value.enabled ) {
               activeFilters.enabled = filters.value.enabled;
             }
@@ -216,9 +222,12 @@ export default defineComponent( {
       }
     }, { deep: true } );
 
-    watch( () => filters.value.languageTag, (newValue) => {
+    watch( () => filters.value.languageTag, (newValue, oldValue) => {
       if (newValue) {
         filters.value.master = false;
+      }
+      if (newValue !== oldValue) {
+        fetchData( 1, store.getPagination.pageSize );
       }
     } );
 
@@ -233,6 +242,11 @@ export default defineComponent( {
 
     const toggleFilters = () => {
       showFilters.value = !showFilters.value;
+      if (!showFilters.value) {
+        filters.value.enabled = false;
+        filters.value.master = false;
+        filters.value.locked = false;
+      }
       saveFilters();
       fetchData( 1, store.getPagination.pageSize );
     };
