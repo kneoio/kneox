@@ -19,14 +19,12 @@
           <n-button type="primary" :disabled="!hasSelection" @click="handleBulkBrandUpdate" :size="isMobile ? 'medium' : 'large'">
             Brands ({{ checkedRowKeys.length }})
           </n-button>
-          <n-button @click="openFilterDialog" type="default" :size="isMobile ? 'medium' : 'large'">
-            <red-led :active="hasActiveFilters" style="margin-right: 8px;" />
-            Filter
-          </n-button>
           <n-button @click="resetFilters" type="default" :size="isMobile ? 'medium' : 'large'" :disabled="!hasActiveFilters">
+            <red-led :active="hasActiveFilters" style="margin-right: 8px;" />
             Reset
           </n-button>
         </n-button-group>
+        
         <n-input 
           v-model:value="filters.searchTerm" 
           placeholder="Search..." 
@@ -34,6 +32,52 @@
           @update:value="onSearchChange"
           style="width: 200px;"
           :size="isMobile ? 'medium' : 'large'"
+        />
+        
+        <n-select 
+          v-model:value="filters.genre" 
+          :options="referencesStore.genreOptions" 
+          multiple 
+          filterable
+          placeholder="Genre" 
+          clearable 
+          style="width: 200px;"
+          :size="isMobile ? 'medium' : 'large'"
+          @update:value="onFilterChange"
+        />
+        
+        <n-select 
+          v-model:value="filters.labels" 
+          :options="referencesStore.labelOptions" 
+          multiple 
+          filterable
+          placeholder="Labels" 
+          clearable 
+          style="width: 200px;"
+          :size="isMobile ? 'medium' : 'large'"
+          @update:value="onFilterChange"
+        />
+        
+        <n-select 
+          v-model:value="filters.type" 
+          :options="referencesStore.fragmentTypeOptions" 
+          multiple
+          placeholder="Type" 
+          clearable 
+          style="width: 200px;"
+          :size="isMobile ? 'medium' : 'large'"
+          @update:value="onFilterChange"
+        />
+        
+        <n-select 
+          v-model:value="filters.source" 
+          :options="referencesStore.fragmentSourceOptions" 
+          multiple
+          placeholder="Source" 
+          clearable 
+          style="width: 200px;"
+          :size="isMobile ? 'medium' : 'large'"
+          @update:value="onFilterChange"
         />
       </div>
     </n-gi>
@@ -55,38 +99,6 @@
       </n-data-table>
     </n-gi>
   </n-grid>
-
-  <!-- Filter Dialog -->
-  <n-modal v-model:show="showFilterDialog" preset="dialog" title="Filter Options" :style="{ backgroundColor: dialogBackgroundColor }">
-    <n-space vertical>
-      <n-form-item label="Search" :show-feedback="false">
-        <n-input v-model:value="dialogFilters.searchTerm" placeholder="Search..." clearable />
-      </n-form-item>
-      <n-form-item label="Genre" :show-feedback="false">
-        <n-select v-model:value="dialogFilters.genre" :options="referencesStore.genreOptions" multiple filterable
-          placeholder="Select genres" clearable />
-      </n-form-item>
-      <n-form-item label="Labels" :show-feedback="false">
-        <n-select v-model:value="dialogFilters.labels" :options="referencesStore.labelOptions" multiple filterable
-          placeholder="Select labels" clearable />
-      </n-form-item>
-      <n-form-item label="Type" :show-feedback="false">
-        <n-select v-model:value="dialogFilters.type" :options="referencesStore.fragmentTypeOptions" multiple
-          placeholder="Select types" clearable />
-      </n-form-item>
-      <n-form-item label="Source" :show-feedback="false">
-        <n-select v-model:value="dialogFilters.source" :options="referencesStore.fragmentSourceOptions" multiple
-          placeholder="Select sources" clearable />
-      </n-form-item>
-    </n-space>
-    <template #action>
-      <n-space>
-        <n-button @click="clearDialogFilters">Clear</n-button>
-        <n-button @click="showFilterDialog = false">Cancel</n-button>
-        <n-button type="primary" @click="applyDialogFilters">OK</n-button>
-      </n-space>
-    </template>
-  </n-modal>
 
   <!-- Bulk Brand Update Dialog -->
   <n-modal v-model:show="showBrandUpdateDialog" preset="dialog" title="Bulk Brand Update" :style="{ backgroundColor: dialogBackgroundColor }">
@@ -182,14 +194,6 @@ export default defineComponent( {
     const checkedRowKeys = ref<( string | number )[]>( [] );
     const hasSelection = computed( () => checkedRowKeys.value.length > 0 );
     const hasActiveFilters = computed( () => !!(filters.value.searchTerm || filters.value.genre?.length > 0 || filters.value.labels?.length > 0 || filters.value.type?.length > 0 || filters.value.source?.length > 0) );
-    const showFilterDialog = ref(false);
-    const dialogFilters = ref({
-      searchTerm: '',
-      genre: [] as string[],
-      labels: [] as string[],
-      type: [] as string[],
-      source: [] as string[]
-    });
     const message = useMessage();
     const STORAGE_KEY = 'soundfragments.list.filters';
     const STORAGE_SHOW_KEY = 'soundfragments.list.showFilters';
@@ -407,39 +411,6 @@ export default defineComponent( {
       fetchData( 1, store.getPagination.pageSize );
     };
 
-    const openFilterDialog = () => {
-      dialogFilters.value = {
-        searchTerm: filters.value.searchTerm,
-        genre: [...filters.value.genre],
-        labels: [...filters.value.labels],
-        type: [...filters.value.type],
-        source: [...filters.value.source]
-      };
-      showFilterDialog.value = true;
-    };
-
-    const applyDialogFilters = () => {
-      filters.value = {
-        searchTerm: dialogFilters.value.searchTerm,
-        genre: [...dialogFilters.value.genre],
-        labels: [...dialogFilters.value.labels],
-        type: [...dialogFilters.value.type],
-        source: [...dialogFilters.value.source]
-      };
-      showFilterDialog.value = false;
-      saveFilters();
-      fetchData(1, store.getPagination.pageSize);
-    };
-
-    const clearDialogFilters = () => {
-      dialogFilters.value = {
-        searchTerm: '',
-        genre: [],
-        labels: [],
-        type: [],
-        source: []
-      };
-    };
 
     const filterSummary = computed(() => {
       const parts: string[] = [];
@@ -489,6 +460,11 @@ export default defineComponent( {
     };
 
     const onSearchChange = () => {
+      saveFilters();
+      fetchData(1, store.getPagination.pageSize);
+    };
+
+    const onFilterChange = () => {
       saveFilters();
       fetchData(1, store.getPagination.pageSize);
     };
@@ -556,12 +532,8 @@ export default defineComponent( {
       clearFilters,
       resetFilters,
       applyFilters,
-      showFilterDialog,
-      dialogFilters,
-      openFilterDialog,
-      applyDialogFilters,
-      clearDialogFilters,
       filterSummary,
+      onFilterChange,
       brandOptions,
       handleBulkBrandUpdate,
       confirmBrandUpdate,
