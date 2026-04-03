@@ -136,6 +136,7 @@ import Songs from '../components/lists/kneo/Songs.vue';
 import StationPlaylist from "../components/lists/kneo/StationPlaylist.vue";
 import Listeners from "../components/lists/kneo/Listeners.vue";
 import DashboardView from "./DashboardView.vue";
+import { useRadioStationStore } from '../stores/kneo/radioStationStore';
 
 export default defineComponent({
   components: {
@@ -165,7 +166,7 @@ export default defineComponent({
 
     const router = useRouter();
     const route = useRoute();
-    const lumisonicSlug = 'lumisonic';
+    const radioStationStore = useRadioStationStore();
 
     const isDarkTheme = inject<Ref<boolean>>('isDarkTheme', ref(false));
     const toggleTheme = inject<(value: boolean) => void>('toggleTheme', () => {
@@ -310,9 +311,10 @@ export default defineComponent({
       isDrawerOpen.value = !isDrawerOpen.value;
     }
 
-    onMounted(() => {
+    onMounted(async () => {
       window.addEventListener('resize', updateDrawerState);
       updateDrawerState();
+      await radioStationStore.fetchAll(1, 100);
     });
 
     onUnmounted(() => {
@@ -325,16 +327,15 @@ export default defineComponent({
 
     // Tree data structure
     const treeData = computed(() => [
-      {
-        key: `radiostation-${lumisonicSlug}`,
-        label: 'Lumisonic',
+      ...radioStationStore.getEntries.map(station => ({
+        key: `radiostation-${station.slugName}`,
+        label: station.slugName,
         children: [
-          { key: `station-${lumisonicSlug}-dashboard`, label: 'Dashboard' },
-          { key: `station-${lumisonicSlug}-playlist`, label: 'Playlist' },
-          { key: `station-${lumisonicSlug}-listeners`, label: 'Listeners' },
-          { key: `station-${lumisonicSlug}-chat`, label: 'Chat' }
+          { key: `station-${station.slugName}-dashboard`, label: 'Dashboard' },
+          { key: `station-${station.slugName}-playlist`, label: 'Playlist' },
+          { key: `station-${station.slugName}-listeners`, label: 'Listeners' }
         ]
-      },
+      })),
       { key: 'brands', label: 'Brands' },
       { key: 'songs', label: 'Songs' },
       { key: 'listeners', label: 'Listeners' },
@@ -369,7 +370,6 @@ export default defineComponent({
     ]);
 
     const defaultExpandedKeys = computed(() => [
-      `radiostation-${lumisonicSlug}`,
       'scenes',
       'prompts'
     ]);
