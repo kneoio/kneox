@@ -99,7 +99,6 @@
                     :model-value="localFormData.prompt"
                     @update:model-value="(val) => (localFormData.prompt = typeof val === 'string' ? val : (((val as any)?.data) ?? ''))"
                     basic
-                    :disabled="localFormData.locked"
                     :style="{
                       width: '1200px',
                       height: '600px',
@@ -448,10 +447,6 @@ export default defineComponent({
       if (isMaster) {
         selectedMasterId.value = null;
       }
-    });
-
-    watch(selectedMasterId, (val) => {
-      localFormData.locked = !!val;
     });
 
     const handleSave = async () => {
