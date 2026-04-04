@@ -473,6 +473,7 @@ export interface ScriptScene {
         type?: string[];
         source?: string[];
         soundFragments?: string[];
+        prompts?: ScenePromptDTO[];
     };
 }
 
@@ -499,6 +500,7 @@ export interface ScriptSceneSave {
         type?: string[];
         source?: string[];
         soundFragments?: string[];
+        prompts?: ScenePromptDTO[];
     };
 }
 

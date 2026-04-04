@@ -364,7 +364,8 @@ export default defineComponent({
               labels: data.stagePlaylist.labels || [],
               type: (data.stagePlaylist as any).type || [],
               source: (data.stagePlaylist as any).source || [],
-              soundFragments: (data.stagePlaylist as any).soundFragments || []
+              soundFragments: (data.stagePlaylist as any).soundFragments || [],
+              prompts: (data.stagePlaylist as any).prompts || []
             } as any;
           } else {
             localFormData.stagePlaylist = {
@@ -374,7 +375,8 @@ export default defineComponent({
               labels: [],
               type: [],
               source: [],
-              soundFragments: []
+              soundFragments: [],
+              prompts: []
             } as any;
           }
         }

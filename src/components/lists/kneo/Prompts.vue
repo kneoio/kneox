@@ -81,7 +81,7 @@ export default defineComponent( {
     } );
 
     const hasActiveFilters = computed( () =>
-      !!( filters.value.languageTag || filters.value.promptType || filters.value.enabled || filters.value.master || filters.value.locked )
+      !!( filters.value.languageTag || filters.value.enabled || filters.value.master || filters.value.locked )
     );
 
     const loadSavedFilters = () => {
@@ -164,25 +164,23 @@ export default defineComponent( {
           };
         }
         
-        // Apply other filters only when showFilters is true
-        if ( showFilters.value ) {
-          const hasOtherFilters = filters.value.enabled ||
-            filters.value.master ||
-            filters.value.locked;
-          if ( hasOtherFilters ) {
-            activeFilters = {
-              ...activeFilters,
-              activated: true
-            };
-            if ( filters.value.enabled ) {
-              activeFilters.enabled = filters.value.enabled;
-            }
-            if ( filters.value.master ) {
-              activeFilters.master = filters.value.master;
-            }
-            if ( filters.value.locked ) {
-              activeFilters.locked = filters.value.locked;
-            }
+        // Apply other filters when they are set
+        const hasOtherFilters = filters.value.enabled ||
+          filters.value.master ||
+          filters.value.locked;
+        if ( hasOtherFilters ) {
+          activeFilters = {
+            ...activeFilters,
+            activated: true
+          };
+          if ( filters.value.enabled ) {
+            activeFilters.enabled = filters.value.enabled;
+          }
+          if ( filters.value.master ) {
+            activeFilters.master = filters.value.master;
+          }
+          if ( filters.value.locked ) {
+            activeFilters.locked = filters.value.locked;
           }
         }
         await store.fetchAll( page, pageSize, activeFilters );
@@ -214,12 +212,9 @@ export default defineComponent( {
       stopPeriodicRefresh();
     } );
 
-    watch( () => filters.value, (newValue, oldValue) => {
+    watch( () => filters.value, () => {
       saveFilters();
-      // Always fetch when languageTag changes, otherwise only when showFilters is true
-      if ( newValue.languageTag !== oldValue.languageTag || showFilters.value ) {
-        fetchData( 1, store.getPagination.pageSize );
-      }
+      fetchData( 1, store.getPagination.pageSize );
     }, { deep: true } );
 
     watch( () => filters.value.languageTag, (newValue, oldValue) => {
@@ -241,12 +236,11 @@ export default defineComponent( {
     } );
 
     const toggleFilters = () => {
-      showFilters.value = !showFilters.value;
-      if (!showFilters.value) {
-        filters.value.enabled = false;
-        filters.value.master = false;
-        filters.value.locked = false;
-      }
+      // Reset all filters
+      filters.value.languageTag = null;
+      filters.value.enabled = false;
+      filters.value.master = false;
+      filters.value.locked = false;
       saveFilters();
       fetchData( 1, store.getPagination.pageSize );
     };
