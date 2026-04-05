@@ -9,46 +9,34 @@
       </n-page-header>
     </n-gi>
 
-    <n-gi :span="isMobile ? 1 : 6" class="flex items-center">
-      <n-button-group class="mr-4">
-        <n-button @click="handleNewClick" type="primary" size="large">New</n-button>
-        <n-button
-            type="error"
-            :disabled="!hasSelection"
-            @click="handleDelete"
-            size="large"
-        >
-          Delete ({{ checkedRowKeys.length }})
-        </n-button>
-        <n-button @click="toggleFilters" type="default" size="large" class="mr-4">
-          <red-led :active="hasActiveFilters" style="margin-right: 8px;" />
-          Filter
-        </n-button>
-      </n-button-group>
+    <n-gi>
+      <div style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; margin-top: 12px; overflow-x: auto;">
+        <n-button-group>
+          <n-button @click="handleNewClick" type="primary" :size="isMobile ? 'medium' : 'large'">New</n-button>
+          <n-button type="error" :disabled="!hasSelection" @click="handleDelete" :size="isMobile ? 'medium' : 'large'">
+            Delete ({{ checkedRowKeys.length }})
+          </n-button>
+          <n-button @click="resetFilters" type="default" :size="isMobile ? 'medium' : 'large'" :disabled="!hasActiveFilters">
+            <red-led :active="hasActiveFilters" style="margin-right: 8px;" />
+            Reset
+          </n-button>
+        </n-button-group>
+        
+        <n-input 
+          v-model:value="filters.searchTerm" 
+          placeholder="Search..." 
+          clearable
+          @update:value="onSearchChange"
+          style="width: 200px;"
+          :size="isMobile ? 'medium' : 'large'"
+        />
+      </div>
     </n-gi>
 
-    <n-gi :span="isMobile ? 1 : 6">
-      <n-collapse-transition :show="showFilters">
-        <div style="width: 50%;">
-          <n-grid :cols="1" x-gap="12" y-gap="0">
-            <n-gi>
-              <n-form-item label="Search" size="small" :show-feedback="false">
-                <n-input
-                    v-model:value="searchQuery"
-                    placeholder="Search..."
-                    clearable
-                    size="large"
-                    style="width: 250px"
-                    @keydown.enter="handleSearch"
-                    @clear="handleSearch"
-                />
-              </n-form-item>
-            </n-gi>
-            <n-gi>
-            </n-gi>
-          </n-grid>
-        </div>
-      </n-collapse-transition>
+    <n-gi :span="isMobile ? 1 : 4">
+      <div v-if="filterSummary" class="filter-summary">
+        {{ filterSummary }}
+      </div>
     </n-gi>
 
     <n-gi :span="isMobile ? 1 : 6">
@@ -85,7 +73,6 @@ import {
   NIcon,
   NInput,
   NPageHeader,
-  NCollapseTransition,
   NFormItem,
   NSelect,
   useMessage
@@ -99,7 +86,7 @@ import { useReferencesStore } from '../../../stores/kneo/referencesStore';
 
 export default defineComponent({
   name: 'Listeners',
-  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, RedLed, NIcon, NInput, NCollapseTransition, NFormItem, NSelect },
+  components: { NPageHeader, NDataTable, NButtonGroup, NButton, NGi, NGrid, LoaderIcon, RedLed, NIcon, NInput, NFormItem, NSelect },
   props: {
     brandName: {
       type: String,
@@ -115,15 +102,12 @@ export default defineComponent({
     const intervalId = ref<number | null>(null);
     const checkedRowKeys = ref<(string | number)[]>([]);
     const hasSelection = computed(() => checkedRowKeys.value.length > 0);
+    const hasActiveFilters = computed(() => !!(filters.value.searchTerm));
     const message = useMessage();
-    const searchQuery = ref('');
-    const debounceTimer = ref<number | null>(null);
-    const showFilters = ref(false);
+    const STORAGE_KEY = 'listeners.list.filters';
     const filters = ref({
-      userData: undefined
+      searchTerm: ''
     });
-
-    const hasActiveFilters = computed(() => !!(filters.value.userData || searchQuery.value));
 
     const columns: DataTableColumns<ListenerEntry> = [
       { type: 'selection' },
@@ -166,9 +150,28 @@ export default defineComponent({
       return row.id;
     };
 
+    const loadSavedFilters = () => {
+      try {
+        const s = localStorage.getItem(STORAGE_KEY);
+        if (s) {
+          const obj = JSON.parse(s);
+          filters.value = {
+            searchTerm: obj.searchTerm || ''
+          };
+        }
+      } catch {}
+    };
+
+    const saveFilters = () => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(filters.value));
+      } catch {}
+    };
+
     async function preFetch() {
       try {
         loading.value = true;
+        loadSavedFilters();
         if (props.brandName) {
           await listenersStore.fetchListeners(props.brandName);
         } else {
@@ -204,21 +207,18 @@ export default defineComponent({
       isMobile.value = window.innerWidth < 768;
     };
 
-    const fetchData = async (page = listenersStore.getPagination.page, pageSize = listenersStore.getPagination.pageSize) => {
+    const fetchData = async (page = 1, pageSize = 10) => {
       try {
         loading.value = true;
         let activeFilters = {};
-        if (showFilters.value) {
-          if (searchQuery.value) {
-            activeFilters = {};
-          } else {
-            return;
-          }
+        const hasSearchTerm = filters.value.searchTerm;
+        if (hasSearchTerm) {
+          activeFilters = filters.value;
         }
         if (props.brandName) {
           await listenersStore.fetchListeners(props.brandName, page, pageSize);
         } else {
-          await listenersStore.fetchAllListeners(page, pageSize, searchQuery.value, activeFilters);
+          await listenersStore.fetchAllListeners(page, pageSize, filters.value.searchTerm, activeFilters);
         }
       } catch (error) {
         console.error('Failed to fetch listeners:', error);
@@ -228,12 +228,24 @@ export default defineComponent({
       }
     };
 
-    const handleSearch = () => {
+    const filterSummary = computed(() => {
+      const parts: string[] = [];
+      if (filters.value.searchTerm) {
+        parts.push(`Search: "${filters.value.searchTerm}"`);
+      }
+      return parts.join(' | ');
+    });
+
+    const resetFilters = () => {
+      filters.value = {
+        searchTerm: ''
+      };
+      saveFilters();
       fetchData(1, listenersStore.getPagination.pageSize);
     };
 
-    const toggleFilters = () => {
-      showFilters.value = !showFilters.value;
+    const onSearchChange = () => {
+      saveFilters();
       fetchData(1, listenersStore.getPagination.pageSize);
     };
 
@@ -294,23 +306,6 @@ export default defineComponent({
       window.removeEventListener('resize', handleResize);
     });
 
-    watch(searchQuery, (newVal, oldVal) => {
-      if (newVal !== oldVal) {
-        if (debounceTimer.value) {
-          clearTimeout(debounceTimer.value);
-        }
-        debounceTimer.value = window.setTimeout(() => {
-          handleSearch();
-        }, 500);
-      }
-    });
-
-    watch(() => filters.value.userData, () => {
-      if (showFilters.value) {
-        fetchData(1, listenersStore.getPagination.pageSize);
-      }
-    });
-
     watch(() => props.brandName, () => {
       fetchData();
     }, { immediate: true });
@@ -320,9 +315,8 @@ export default defineComponent({
       referencesStore,
       columns,
       rowKey,
+      fetchData,
       isMobile,
-      searchQuery,
-      handleSearch,
       handleNewClick,
       handleDelete,
       getRowProps,
@@ -332,9 +326,10 @@ export default defineComponent({
       checkedRowKeys,
       hasSelection,
       hasActiveFilters,
-      toggleFilters,
-      showFilters,
-      filters
+      filters,
+      filterSummary,
+      resetFilters,
+      onSearchChange
     };
   }
 });
@@ -343,5 +338,11 @@ export default defineComponent({
 <style scoped>
 .p-4 {
   padding: 1rem;
+}
+.filter-summary {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #888;
+  line-height: 1.4;
 }
 </style>
