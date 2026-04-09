@@ -212,6 +212,7 @@ export interface VoiceDTO {
     id: string;
     name: string;
     engineType: TTSEngineType | null;
+    gain?: number;
 }
 
 export interface TTSSettingDTO {

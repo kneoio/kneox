@@ -1,16 +1,16 @@
 <template>
-  <n-grid :cols="isMobile ? 1 : 6" x-gap="12" y-gap="12" class="p-4">
-    <n-gi>
+  <div class="p-4">
+    <div class="header-section">
       <n-page-header>
         <template #title>All Listeners</template>
         <template #footer>
           Total: {{ listenersStore.getPagination.itemCount }}
         </template>
       </n-page-header>
-    </n-gi>
+    </div>
 
-    <n-gi>
-      <div style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; margin-top: 12px; overflow-x: auto;">
+    <div class="action-bar">
+      <div class="action-buttons">
         <n-button-group>
           <n-button @click="handleNewClick" type="primary" :size="isMobile ? 'medium' : 'large'">New</n-button>
           <n-button type="error" :disabled="!hasSelection" @click="handleDelete" :size="isMobile ? 'medium' : 'large'">
@@ -21,25 +21,24 @@
             Reset
           </n-button>
         </n-button-group>
-        
+      </div>
+      
+      <div class="search-section">
         <n-input 
           v-model:value="filters.searchTerm" 
           placeholder="Search..." 
           clearable
           @update:value="onSearchChange"
-          style="width: 200px;"
           :size="isMobile ? 'medium' : 'large'"
         />
       </div>
-    </n-gi>
+    </div>
 
-    <n-gi :span="isMobile ? 1 : 4">
-      <div v-if="filterSummary" class="filter-summary">
-        {{ filterSummary }}
-      </div>
-    </n-gi>
+    <div v-if="filterSummary" class="filter-summary">
+      {{ filterSummary }}
+    </div>
 
-    <n-gi :span="isMobile ? 1 : 6">
+    <div class="table-section">
       <n-data-table
           remote
           :columns="columns"
@@ -57,8 +56,8 @@
           <loader-icon />
         </template>
       </n-data-table>
-    </n-gi>
-  </n-grid>
+    </div>
+  </div>
 </template>
 
 <script lang="ts">
@@ -114,9 +113,9 @@ export default defineComponent({
       { title: 'Name', key: 'localizedName.en' },
       { 
         title: 'Nickname', 
-        key: 'nickName',
+        key: 'listener.nickName',
         render: (row) => {
-          const nicknames = row.nickName || {};
+          const nicknames = row.listener?.nickName || {};
           const allNicknames = Object.values(nicknames).flat();
           return allNicknames.length > 0 ? allNicknames.join(', ') : 'N/A';
         }
@@ -339,10 +338,56 @@ export default defineComponent({
 .p-4 {
   padding: 1rem;
 }
+
+.header-section {
+  margin-bottom: 1rem;
+}
+
+.action-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.search-section {
+  min-width: 200px;
+  flex: 1;
+  max-width: 300px;
+}
+
 .filter-summary {
-  margin-top: 8px;
+  margin-bottom: 1rem;
   font-size: 12px;
   color: #888;
   line-height: 1.4;
+}
+
+.table-section {
+  margin-top: 1rem;
+}
+
+@media (max-width: 768px) {
+  .action-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+  
+  .action-buttons {
+    justify-content: center;
+  }
+  
+  .search-section {
+    max-width: none;
+    min-width: auto;
+  }
 }
 </style>

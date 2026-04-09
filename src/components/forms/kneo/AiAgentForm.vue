@@ -85,6 +85,9 @@
                       <n-select :value="localFormData.ttsSetting?.dj?.id || null"
                         :options="filteredTtsVoiceOptions( 'dj' )" :render-label="renderVoiceLabel" filterable
                         style="width: 300px;" @update:value="setTtsVoice( 'dj', $event as string | null )" />
+                      <n-select :value="localFormData.ttsSetting?.dj?.gain ?? 1.0"
+                        :options="voiceGainOptions" style="width: 220px;"
+                        @update:value="setTtsGain( 'dj', $event as number )" />
                     </n-space>
                   </n-space>
                 </n-form-item>
@@ -102,6 +105,9 @@
                       <n-select :value="localFormData.ttsSetting?.newsReporter?.id || null"
                         :options="filteredTtsVoiceOptions( 'newsReporter' )" :render-label="renderVoiceLabel" filterable
                         style="width: 300px;" @update:value="setTtsVoice( 'newsReporter', $event as string | null )" />
+                      <n-select :value="localFormData.ttsSetting?.newsReporter?.gain ?? 1.0"
+                        :options="voiceGainOptions" style="width: 220px;"
+                        @update:value="setTtsGain( 'newsReporter', $event as number )" />
                     </n-space>
                   </n-space>
                 </n-form-item>
@@ -120,6 +126,9 @@
                         :options="filteredTtsVoiceOptions( 'weatherReporter' )" :render-label="renderVoiceLabel"
                         filterable style="width: 300px;"
                         @update:value="setTtsVoice( 'weatherReporter', $event as string | null )" />
+                      <n-select :value="localFormData.ttsSetting?.weatherReporter?.gain ?? 1.0"
+                        :options="voiceGainOptions" style="width: 220px;"
+                        @update:value="setTtsGain( 'weatherReporter', $event as number )" />
                     </n-space>
                   </n-space>
                 </n-form-item>
@@ -243,6 +252,16 @@ export default defineComponent( {
       { label: 'elevenlabs', value: TTSEngineType.ELEVENLABS },
       { label: 'modelslab', value: TTSEngineType.MODELSLAB },
       { label: 'google', value: TTSEngineType.GOOGLE }
+    ];
+
+    const voiceGainOptions = [
+      { label: '-12 dB', value: 0.25 },
+      { label: '-6 dB', value: 0.5 },
+      { label: '-2.5 dB', value: 0.75 },
+      { label: '0 dB (default)', value: 1.0 },
+      { label: '+2 dB', value: 1.25 },
+      { label: '+3.5 dB', value: 1.5 },
+      { label: '+6 dB', value: 2.0 }
     ];
 
     const engineParamFor = ( engineType: TTSEngineType | null | undefined ) => {
@@ -371,11 +390,30 @@ export default defineComponent( {
         ( localFormData.ttsSetting as any )[key] = {
           id: '',
           name: '',
-          engineType
+          engineType,
+          gain: 1.0
         } as VoiceDTO;
         return;
       }
       ( localFormData.ttsSetting as any )[key] = { ...existing, engineType } as VoiceDTO;
+    };
+
+    const setTtsGain = ( key: keyof TTSSettingDTO, gain: number ) => {
+      if ( !localFormData.ttsSetting ) {
+        ( localFormData as any ).ttsSetting = {};
+      }
+
+      const existing = ( localFormData.ttsSetting as any )[key] as VoiceDTO | undefined;
+      if ( !existing ) {
+        ( localFormData.ttsSetting as any )[key] = {
+          id: '',
+          name: '',
+          engineType: null,
+          gain
+        } as VoiceDTO;
+        return;
+      }
+      ( localFormData.ttsSetting as any )[key] = { ...existing, gain } as VoiceDTO;
     };
 
     const loadFormData = async ( agentData: AiAgentForm ) => {
@@ -522,6 +560,8 @@ export default defineComponent( {
       fetchFilteredVoicesForTts,
       renderVoiceLabel,
       ttsEngineTypeOptions,
+      voiceGainOptions,
+      setTtsGain,
       ttsVoiceOptionsFor,
       setTtsVoice,
       setTtsEngineType,
