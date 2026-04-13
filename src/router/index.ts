@@ -10,33 +10,11 @@ import AvailableListeners from '../components/lists/kneo/AvailableListeners.vue'
 import ListenerForm from '../components/forms/kneo/ListenerForm.vue';
 import Brands from '../components/lists/kneo/Brands.vue';
 import BrandForm from '../components/forms/kneo/BrandForm.vue';
-import SoundFragments from '../components/lists/kneo/SoundFragments.vue';
-import Songs from '../components/lists/kneo/Songs.vue';
-import SoundFragment from '../components/forms/kneo/SoundFragmentForm.vue';
-import AiAgents from '../components/lists/kneo/AiAgents.vue';
-import AiAgentForm from '../components/forms/kneo/AiAgentForm.vue';
-import Scripts from '../components/lists/kneo/Scripts.vue';
-import ScriptForm from '../components/forms/kneo/ScriptForm.vue';
-import Prompts from '../components/lists/kneo/Prompts.vue';
-import PromptForm from '../components/forms/kneo/PromptForm.vue';
-import Drafts from '../components/lists/kneo/Drafts.vue';
-import DraftForm from '../components/forms/kneo/DraftForm.vue';
-import AbsoluteTimeSceneForm from '../components/forms/kneo/AbsoluteTimeSceneForm.vue';
-import RelativeTimeSceneForm from '../components/forms/kneo/RelativeTimeSceneForm.vue';
-import Scenes from '../components/lists/kneo/Scenes.vue';
-import AbsoluteTimeScenes from '../components/lists/kneo/AbsoluteTimeScenes.vue';
-import RelativeTimeScenes from '../components/lists/kneo/RelativeTimeScenes.vue';
-import EnvironmentProfiles from '../components/lists/kneo/EnvironmentProfiles.vue';
-import ProfileForm from '../components/forms/kneo/EnvironmentProfileForm.vue';
-import Events from '../components/lists/kneo/Events.vue';
-import EventForm from '../components/forms/kneo/EventForm.vue';
 import Profile from '../components/lists/kneo/Profile.vue';
-import DocumentTree from '../views/DocumentTree.vue';
 import Welcome from '../views/Welcome.vue';
 import AboutM from '../views/AboutM.vue';
 import StationPage from '../views/StationPage.vue';
 import Keycloak from "keycloak-js";
-import apiClient from "../api/apiClient";
 import { keycloakReadyPromise } from '../main';
 
 declare module 'vue-router' {
@@ -110,18 +88,6 @@ const routes: Array<RouteRecordRaw> = [
                 props: true,
             },
             {
-                path: 'station/:brandName/soundfragments',
-                name: 'StationSoundFragments',
-                component: SoundFragments,
-                props: true,
-            },
-            {
-                path: 'station/:brandName/soundfragments/:id',
-                name: 'EditSoundFragment',
-                component: SoundFragment,
-                props: true,
-            },
-            {
                 path: 'listeners',
                 name: 'Listeners',
                 component: Listeners
@@ -143,161 +109,11 @@ const routes: Array<RouteRecordRaw> = [
                 component: BrandForm
             },
             {
-                path: 'songs',
-                name: 'Songs',
-                component: Songs
-            },
-            {
-                path: 'songs/:id',
-                name: 'Song',
-                component: SoundFragment,
-                props: true
-            },
-            {
-                path: 'soundfragments',
-                name: 'SoundFragments',
-                component: SoundFragments
-            },
-            {
-                path: 'soundfragments/:id',
-                name: 'SoundFragment',
-                component: SoundFragment,
-                props: true
-            },
-            {
-                path: 'ai_agents',
-                name: 'AiAgents',
-                component: AiAgents
-            },
-            {
-                path: 'ai_agents/:id',
-                name: 'AiAgentForm',
-                component: AiAgentForm,
-                props: true
-            },
-            {
-                path: 'scripts',
-                name: 'Scripts',
-                component: Scripts
-            },
-            {
-                path: 'scenes',
-                name: 'Scenes',
-                component: Scenes,
-                children: [
-                    {
-                        path: 'absolute-time',
-                        name: 'AbsoluteTimeScenes',
-                        component: AbsoluteTimeScenes
-                    },
-                    {
-                        path: 'relative-time',
-                        name: 'RelativeTimeScenes',
-                        component: RelativeTimeScenes
-                    }
-                ]
-            },
-            {
-                path: 'scripts/:id',
-                name: 'ScriptForm',
-                component: ScriptForm,
-                props: true
-            },
-            {
-                path: 'scenes/absolute-time/:id',
-                name: 'AbsoluteTimeSceneForm',
-                component: AbsoluteTimeSceneForm,
-                props: true
-            },
-            {
-                path: 'scenes/relative-time/:id',
-                name: 'RelativeTimeSceneForm',
-                component: RelativeTimeSceneForm,
-                props: true
-            },
-            {
-                path: 'prompts',
-                name: 'Prompts',
-                component: Prompts
-            },
-            {
-                path: 'prompts/:id',
-                name: 'PromptForm',
-                component: PromptForm,
-                props: true
-            },
-            {
-                path: 'drafts',
-                name: 'Drafts',
-                component: Drafts
-            },
-            {
-                path: 'drafts/:id',
-                name: 'DraftForm',
-                component: DraftForm,
-                props: true
-            },
-            {
-                path: 'profiles',
-                name: 'EnvironmentProfiles',
-                component: EnvironmentProfiles
-            },
-            {
-                path: 'profiles/:id',
-                name: 'ProfileForm',
-                component: ProfileForm,
-                props: true
-            },
-            {
-                path: 'events',
-                name: 'Events',
-                component: Events
-            },
-            {
-                path: 'events/:id',
-                name: 'EventForm',
-                component: EventForm,
-                props: true
-            },
-            {
                 path: 'profile',
                 name: 'Profile',
                 component: Profile
             },
-            {
-                path: 'document-tree',
-                name: 'DocumentTree',
-                component: DocumentTree
-            },
         ]
-    },
-    {
-        path: '/api/soundfragments/files/:uuid/:name',
-        component: { render: () => null },
-        beforeEnter: async ( to ) => {
-            try {
-                const response = await apiClient.get( to.fullPath, {
-                    responseType: 'blob'
-                } );
-                const url = URL.createObjectURL( response.data );
-                const a = document.createElement( 'a' );
-                a.href = url;
-                a.download = to.params.name as string;
-                document.body.appendChild( a ); // Required for Firefox
-                a.click();
-
-                setTimeout( () => {
-                    document.body.removeChild( a );
-                    URL.revokeObjectURL( url );
-                }, 1000 );
-
-                return false;
-
-            } catch ( error ) {
-                console.error( 'Download failed:', error );
-                return { name: 'WelcomeView' };
-            }
-        }
     },
     {
         path: '/:catchAll(.*)*',

@@ -87,7 +87,6 @@ import {
   NH6,
   NSpace,
   NSwitch,
-  MenuOption,
   useThemeVars
 } from 'naive-ui';
 import {
@@ -105,34 +104,16 @@ import {
 import {useRouter, useRoute} from 'vue-router';
 import {
   AlignJustified,
-  List,
-  Music,
-  Dashboard,
-  Robot,
-  Grain,
   Radio,
   Logout,
-  BrandAirtable,
   Headphones,
   Sun,
   Moon,
-  Calendar,
-  User,
-  FileText,
-  Prompt,
-  Ripple,
   PictureInPictureTop,
-  Tent,
-  BuildingSkyscraper,
   Fall,
-  ToiletPaper,
-  Gauge,
-  Tornado
+  Settings
 } from '@vicons/tabler';
-import { LayersLinked } from '@vicons/tabler';
 import keycloakInst from '../keycloakFactory.js';
-import SoundFragments from '../components/lists/kneo/SoundFragments.vue';
-import Songs from '../components/lists/kneo/Songs.vue';
 import StationPlaylist from "../components/lists/kneo/StationPlaylist.vue";
 import Listeners from "../components/lists/kneo/Listeners.vue";
 import DashboardView from "./DashboardView.vue";
@@ -153,8 +134,6 @@ export default defineComponent({
     NH6,
     NSpace,
     NSwitch,
-    SoundFragments,
-    Songs,
     StationPlaylist,
     Listeners,
     DashboardView,
@@ -184,26 +163,7 @@ export default defineComponent({
       if (route.name === 'Dashboard') return 'dashboard';
       if (route.name === 'Player') return 'player';
       if (route.name === 'Brands') return 'brands';
-      if (route.name === 'Songs') return 'songs';
-      if (route.name === 'SoundFragments') return 'fragments';
-      if (route.name === 'Events') return 'events';
-      if (route.name === 'AiAgents') return 'ai_agents';
-      if (route.name === 'Scripts') return 'scripts';
-      if (route.name === 'Scenes') return 'scenes';
-      if (route.name === 'AbsoluteTimeScenes' || route.name === 'AbsoluteTimeSceneForm') return 'scenes-absolute-time';
-      if (route.name === 'RelativeTimeScenes' || route.name === 'RelativeTimeSceneForm') return 'scenes-relative-time';
-      if (route.name === 'Prompts') {
-        if (route.query.promptType === 'SONG') return 'prompts-song';
-        if (route.query.promptType === 'ADVERTISEMENT') return 'prompts-advertisement';
-        if (route.query.promptType === 'REMINDER') return 'prompts-reminder';
-        if (route.query.promptType === 'GENERATOR') return 'prompts-generator';
-        return 'prompts';
-      }
-      if (route.name === 'PromptForm') return 'prompts';
-      if (route.name === 'Drafts') return 'drafts';
-      if (route.name === 'EnvironmentProfiles') return 'environment_profiles';
       if (route.name === 'Listeners') return 'listeners';
-      if (route.name === 'DocumentTree') return 'document-tree';
       if (route.name === 'Profile') return 'profile';
 
       // Fix: Change 'StationDetail' to 'StationDashboard'
@@ -218,6 +178,9 @@ export default defineComponent({
       }
       if (route.name === 'StationChat' && route.params.brandName) {
         return `station-${route.params.brandName}-chat`;
+      }
+      if (route.name === 'Brand' && route.params.id) {
+        return `station-${route.params.id}-settings`;
       }
       return null;
     });
@@ -237,54 +200,21 @@ export default defineComponent({
       } else if (key.startsWith('station-') && key.endsWith('-chat')) {
         const brandName = key.replace('station-', '').replace('-chat', '');
         await router.push({name: 'StationChat', params: {brandName: brandName}});
+      } else if (key.startsWith('station-') && key.endsWith('-settings')) {
+        const brandName = key.replace('station-', '').replace('-settings', '');
+        await router.push({name: 'Brand', params: {id: brandName}});
       } else if (key === 'brands') {
         await router.push({name: 'Brands'});
-      } else if (key === 'songs') {
-        await router.push({name: 'Songs'});
       } else if (key === 'listeners') {
         await router.push({name: 'Listeners'});
-      } else if (key === 'home') {
-        await router.push({name: 'Welcome'});
       } else if (key === 'profile') {
         await router.push({name: 'Profile'});
       } else if (key === 'logout') {
         keycloakInst.logout({redirectUri: window.location.origin});
-      } else if (key === 'djs') {
-        await router.push({name: 'EnvironmentProfiles'});
       } else if (key === 'dashboard') {
         await router.push({name: 'Dashboard'});
       } else if (key === 'player') {
         await router.push({name: 'Player'});
-      } else if (key === 'fragments') {
-        await router.push({name: 'SoundFragments'});
-      } else if (key === 'events') {
-        await router.push({name: 'Events'});
-      } else if (key === 'ai_agents') {
-        await router.push({name: 'AiAgents'});
-      } else if (key === 'scripts') {
-        await router.push({name: 'Scripts'});
-      } else if (key === 'scenes') {
-        // Do nothing - parent item is not clickable, user must choose a category
-      } else if (key === 'scenes-absolute-time') {
-        await router.push({name: 'AbsoluteTimeScenes'});
-      } else if (key === 'scenes-relative-time') {
-        await router.push({name: 'RelativeTimeScenes'});
-      } else if (key === 'prompts') {
-        // Do nothing - parent item is not clickable, user must choose a category
-      } else if (key === 'prompts-song') {
-        await router.push({ name: 'Prompts', query: { promptType: 'SONG' } });
-      } else if (key === 'prompts-advertisement') {
-        await router.push({ name: 'Prompts', query: { promptType: 'ADVERTISEMENT' } });
-      } else if (key === 'prompts-reminder') {
-        await router.push({ name: 'Prompts', query: { promptType: 'REMINDER' } });
-      } else if (key === 'prompts-generator') {
-        await router.push({ name: 'Prompts', query: { promptType: 'GENERATOR' } });
-      } else if (key === 'drafts') {
-        await router.push({name: 'Drafts'});
-      } else if (key === 'environment_profiles') {
-        await router.push({name: 'EnvironmentProfiles'});
-      } else if (key === 'document-tree') {
-        await router.push({name: 'DocumentTree'});
       }
 
       await nextTick();
@@ -333,46 +263,17 @@ export default defineComponent({
         children: [
           { key: `station-${station.slugName}-dashboard`, label: 'Dashboard' },
           { key: `station-${station.slugName}-playlist`, label: 'Playlist' },
-          { key: `station-${station.slugName}-listeners`, label: 'Listeners' }
+          { key: `station-${station.slugName}-listeners`, label: 'Listeners' },
+          { key: `station-${station.slugName}-settings`, label: 'Settings' }
         ]
       })),
       { key: 'brands', label: 'Brands' },
-      { key: 'songs', label: 'Songs' },
       { key: 'listeners', label: 'Listeners' },
-      { key: 'fragments', label: 'Sound Fragments' },
-      { key: 'environment_profiles', label: 'Environment Profiles' },
-      { key: 'events', label: 'Events' },
-      { key: 'ai_agents', label: 'AiAgents' },
-      { key: 'document-tree', label: 'Flows' },
-      { key: 'scripts', label: 'Scripts' },
-      {
-        key: 'scenes',
-        label: 'Scenes',
-        children: [
-          { key: 'scenes-absolute-time', label: 'Absolute Time Scenes' },
-          { key: 'scenes-relative-time', label: 'Relative Time Scenes' }
-        ]
-      },
-      {
-        key: 'prompts',
-        label: 'Prompts',
-        children: [
-          { key: 'prompts-song', label: 'Song' },
-          { key: 'prompts-advertisement', label: 'Advertisement' },
-          { key: 'prompts-reminder', label: 'Reminder' },
-          { key: 'prompts-generator', label: 'Generator' }
-        ]
-      },
-      { key: 'drafts', label: 'Drafts' },
-      { key: 'home', label: 'Home' },
       { key: 'profile', label: 'Profile' },
       { key: 'logout', label: 'Logout' }
     ]);
 
-    const defaultExpandedKeys = computed(() => [
-      'scenes',
-      'prompts'
-    ]);
+    const defaultExpandedKeys = computed(() => []);
 
     const handleTreeSelect = async (keys: Array<string | number>) => {
       const key = keys[0] as string;
@@ -391,21 +292,20 @@ export default defineComponent({
         ]);
       }
 
+      // Add icon for Settings option in station submenu
+      if (option.key?.endsWith('-settings')) {
+        return h('div', {
+          style: 'display: flex; align-items: center; gap: 8px; width: 100%;'
+        }, [
+          h(NIcon, { size: 16 }, () => h(Settings)),
+          h('span', {}, option.label)
+        ]);
+      }
+
       // Add icons for other nodes
       let iconComponent = null;
-      if (option.key === 'home') iconComponent = h(NIcon, { size: 25 }, () => h(BuildingSkyscraper));
-      else if (option.key === 'brands') iconComponent = h(NIcon, { size: 25 }, () => h(PictureInPictureTop));
-      else if (option.key === 'songs') iconComponent = h(NIcon, { size: 25 }, () => h(Music));
+      if (option.key === 'brands') iconComponent = h(NIcon, { size: 25 }, () => h(PictureInPictureTop));
       else if (option.key === 'listeners') iconComponent = h(NIcon, { size: 25 }, () => h(Headphones));
-      else if (option.key === 'fragments') iconComponent = h(NIcon, { size: 25 }, () => h(Music));
-      else if (option.key === 'events') iconComponent = h(NIcon, { size: 25 }, () => h(Calendar));
-      else if (option.key === 'ai_agents') iconComponent = h(NIcon, { size: 25 }, () => h(Robot));
-      else if (option.key === 'document-tree') iconComponent = h(NIcon, { size: 25 }, () => h(Tornado));
-      else if (option.key === 'scripts') iconComponent = h(NIcon, { size: 25 }, () => h(LayersLinked));
-      else if (option.key === 'scenes') iconComponent = h(NIcon, { size: 25 }, () => h(Gauge));
-      else if (option.key === 'prompts') iconComponent = h(NIcon, { size: 25 }, () => h(Prompt));
-      else if (option.key === 'drafts') iconComponent = h(NIcon, { size: 25 }, () => h(ToiletPaper));
-      else if (option.key === 'environment_profiles') iconComponent = h(NIcon, { size: 25 }, () => h(BrandAirtable));
       else if (option.key === 'profile') iconComponent = h(NIcon, { size: 25 }, () => h(Fall));
       else if (option.key === 'logout') iconComponent = h(NIcon, { size: 25 }, () => h(Logout));
       
